@@ -1,121 +1,72 @@
 .section .text
 # ------------------------------------------------------------------------------
-# Initialise the UART interface for logging over serial port
+# Initialise the Mini UART interface for logging over serial port.
+# Note, this is Broadcomm's own UART, not the ARM licenced UART interface.
 # ------------------------------------------------------------------------------
 .global setup_uart
 setup_uart:
-  stp     x29, x30, [sp, #-32]!
-  mov     x29, sp
-  mov     x0, #0x4                        // #4
-  movk    x0, #0x3f20, lsl #16
-  // w0 = [0x3f200004-7]
-  ldr     w0, [x0]
-  str     w0, [x29, #28]
-  ldr     w0, [x29, #28]
-  // unset bits 12, 13, 14 (FSEL14 => GPIO Pin 14 is an input)
-  and     w0, w0, #0xffff8fff
-  str     w0, [x29, #28]
-  ldr     w0, [x29, #28]
-  // set bit 13 (FSEL14 => GPIO Pin 14 takes alternate function 5)
-  orr     w0, w0, #0x2000
-  str     w0, [x29, #28]
-  ldr     w0, [x29, #28]
-  // unset bits 15, 16, 17 (FSEL15 => GPIO Pin 15 is an input)
-  and     w0, w0, #0xfffc7fff
-  str     w0, [x29, #28]
-  ldr     w0, [x29, #28]
-  // set bit 16
-  orr     w0, w0, #0x00010000 // (FSEL15 => GPIO Pin 15 takes alternative function 5)
-  str     w0, [x29, #28]
-  // w1 = ([0x3f200004-7] OR 0x00012000) AND 0xfffc0fff
-  ldr     w1, [x29, #28]
-  // x0 = [0x000000003f200004]
-  mov     x0, #0x4                        // #4
-  movk    x0, #0x3f20, lsl #16
-  // write back changes to [0x3f200004-7] => enabled UART 1 (mini UART - Broadcomm's own UART, not the ARM licenced UART)
-  str     w1, [x0]
-  mov     w1, #0x0                        // #0
-  // x0 = 0x000000003f200094
-  mov     x0, #0x94                       // #148
-  movk    x0, #0x3f20, lsl #16
-  // [0x000000003f200094] = 0x00000000
-  str     w1, [x0]
-  // delay 150 instruction cycles
-  mov     x0, #0x96                       // #150
-  bl      delay
-  // w1 = 0x0000c000
-  mov     w1, #0xc000                     // #49152
-  // x0 = 0x000000003f200098
-  mov     x0, #0x98                       // #152
-  movk    x0, #0x3f20, lsl #16
-  // [0x000000003f200098] = 0x0000c000
-  str     w1, [x0]
-  // delay 150 instruction cycles
-  mov     x0, #0x96                       // #150
-  bl      delay
-  // w1 = 0x00000000
-  mov     w1, #0x0                        // #0
-  // x0 = 0x000000003f200098
-  mov     x0, #0x98                       // #152
-  movk    x0, #0x3f20, lsl #16
-  // [0x000000003f200098] = 0x00000000
-  str     w1, [x0]
-  // w1 = 0x00000001
-  mov     w1, #0x1                        // #1
-  // x0 = 0x000000003f215004
-  mov     x0, #0x5004                     // #20484
-  movk    x0, #0x3f21, lsl #16
-  // [0x000000003f215004] = 0x00000001
-  str     w1, [x0]
-  // w1 = 0x00000000
-  mov     w1, #0x0                        // #0
-  // x0 = 0x000000003f215060
-  mov     x0, #0x5060                     // #20576
-  movk    x0, #0x3f21, lsl #16
-  // [0x000000003f215060] = 0x00000000
-  str     w1, [x0]
-  // w1 = 0x00000000
-  mov     w1, #0x0                        // #0
-  // x0 = 0x000000003f215044
-  mov     x0, #0x5044                     // #20548
-  movk    x0, #0x3f21, lsl #16
-  // [0x000000003f215044] = 0x00000000
-  str     w1, [x0]
-  // w1 = 0x00000003
-  mov     w1, #0x3                        // #3
-  // x0 = 0x000000003f21504c
-  mov     x0, #0x504c                     // #20556
-  movk    x0, #0x3f21, lsl #16
-  // [0x000000003f21504c] = 0x00000003
-  str     w1, [x0]
-  // w1 = 0x00000000
-  mov     w1, #0x0                        // #0
-  // x0 = 0x000000003f215050
-  mov     x0, #0x5050                     // #20560
-  movk    x0, #0x3f21, lsl #16
-  // [0x000000003f215050] = 0x00000000
-  str     w1, [x0]
-  // w1 = 0x0000010e (270)
-  mov     w1, #0x10e                      // #270
-  // x0 = 0x000000003f215068
-  mov     x0, #0x5068                     // #20584
-  movk    x0, #0x3f21, lsl #16
-  // [0x000000003f215068] = 0x0000010e
-  str     w1, [x0]
-  // w1 = 0x00000003
-  mov     w1, #0x3                        // #3
-  // x0 = 0x000000003f215060
-  mov     x0, #0x5060                     // #20576
-  movk    x0, #0x3f21, lsl #16
-  // [0x000000003f215060] = 0x00000003
-  str     w1, [x0]
-  // restore frame pointer, link register
-  ldp     x29, x30, [sp], #32
-  ret
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  mov     x1, #0x4
+  movk    x1, #0x3f20, lsl #16            // x1 = 0x3f200004 = GPFSEL1 (GPIO Function Select 1)
+  ldr     w2, [x1]                        // w2 = [GPFSEL1]
+  and     w2, w2, #0xfffc0fff             // Unset bits 12, 13, 14 (FSEL14 => GPIO Pin 14 is an input).
+                                          // Unset bits 15, 16, 17 (FSEL15 => GPIO Pin 15 is an input).
+  orr     w2, w2, #0x00002000             // Set bit 13 (FSEL14 => GPIO Pin 14 takes alternate function 5).
+  orr     w2, w2, #0x00010000             // Set bit 16 (FSEL15 => GPIO Pin 15 takes alternative function 5).
+  str     w2, [x1]                        // [GPFSEL1] = updated value => Enable UART 1.
 
+  movk    x1, #0x94                       // x1 = 0x3f200094 = GPPUD (GPIO Pin Pull-up/down Enable)
+  str     wzr, [x1]                       // [GPPUD] = 0x00000000 => GPIO Pull up/down = OFF
+
+  mov     x0, #0x96                       // x0 = 150
+  bl      delay                           // Wait 150 instruction cycles.
+
+  mov     w2, #0xc000                     // w2 = 2^14 + 2^15
+  movk    x1, #0x98                       // x1 = 0x3f200098 = GPPUDCLK0 (GPIO Pin Pull-up/down Enable Clock 0)
+  str     w2, [x1]                        // [GPPUDCLK0] = 0x0000c000 => Control signal to lines 14, 15.
+
+  mov     x0, #0x96                       // x0 = 150
+  bl      delay                           // Wait 150 instruction cycles.
+
+  str     wzr, [x1]                       // [GPPUDCLK0] = 0x00000000 => Remove control signal to lines 14, 15.
+
+  mov     w2, #0x1                        // w2 = 1
+  mov     x1, #0x5004
+  movk    x1, #0x3f21, lsl #16            // x1 = 0x3f215004 = AUX_ENABLES (Auxiliary enables)
+  str     w2, [x1]                        // [AUX_ENABLES] = 0x00000001 => Enable Mini UART.
+
+  movk    x1, #0x5060                     // x1 = 0x3f215060 = AUX_MU_CNTL_REG (Mini UART Extra Control)
+  str     wzr, [x1]                       // [AUX_MU_CNTL_REG] = 0x00000000 => Disable Mini UART Tx/Rx
+
+  movk    x1, #0x5044                     // x1 = 0x3f215044 = AUX_MU_IER_REG (Mini UART Interrupt Enable)
+  str     wzr, [x1]                       // [AUX_MU_IER_REG] = 0x00000000 => Disable interrupts.
+
+  mov     w2, #0x6                        // w2 = 6
+  movk    x1, #0x5048                     // x1 = 0x3f215048 = AUX_MU_IIR_REG (Mini UART Interrupt Identify)
+  str     w2, [x1]                        // [AUX_MU_IIR_REG] = 0x00000006 => Mini UART clear Tx, Rx FIFOs
+
+  mov     w3, #0x3                        // w3 = 3
+  movk    x1, #0x504c                     // x1 = 0x3f21504c = AUX_MU_LCR_REG (Mini UART Line Control)
+  str     w3, [x1]                        // [AUX_MU_LCR_REG] = 0x00000003 => Mini UART in 8-bit mode.
+
+  movk    x1, #0x5050                     // x1 = 0x3f215050 = AUX_MU_MCR_REG (Mini UART Modem Control)
+  str     wzr, [x1]                       // [AUX_MU_MCR_REG] = 0x00000000 => Set UART1_RTS line high.
+
+  mov     w2, #0x10e                      // w2 = 270
+  movk    x1, #0x5068                     // x1 = 0x3f215068 = AUX_MU_BAUD_REG (Mini UART Baudrate)
+  str     w2, [x1]                        // [AUX_MU_BAUD_REG] = 0x0000010e => baudrate = system_clock_freq/(8*(270+1))
+
+  movk    x1, #0x5060                     // x1 = 0x3f215060 = AUX_MU_CNTL_REG (Mini UART Extra Control)
+  str     w3, [x1]                        // [AUX_MU_CNTL_REG] = 0x00000003 => Enable Mini UART Tx/Rx
+
+  ldp     x29, x30, [sp], #16             // Restore frame pointer, link register.
+  ret                                     // Return.
+
+# ------------------------------------------------------------------------------
+# Wait (at least) x0 instruction cycles.
+# ------------------------------------------------------------------------------
 delay:
-  // decrease x0
-  subs    x0, x0, #0x1 
-  // repeat until x0 = 0
-  b.ne    delay
-  ret  
+  subs    x0, x0, #0x1                    // x0 -= 1
+  b.ne    delay                           // Repeat until x0 == 0.
+  ret                                     // Return.

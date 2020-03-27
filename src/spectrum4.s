@@ -1,3 +1,7 @@
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2019 Spectrum +4 Authors. All rights reserved.
+
 .set SCREEN_WIDTH,     1920
 .set SCREEN_HEIGHT,    1200
 .set BORDER_LEFT,      96
@@ -105,15 +109,8 @@ _start:
 
   bl      init_framebuffer                // Allocate a frame buffer with chosen screen settings.
   bl      clear_screen                    // Paint the main window (everything except border)
+  bl      init_ramdisk
 
-# from R0_0137:
-  mov     x9, RAM_DISK_SIZE               // x9 = size of ramdisk.
-  sub     x9, x9, #0x60                   // x9 = offset from start of RAM disk to last journal entry; RAM disk entries are 96 (0x60) bytes and journal grows downwards from end of ramdisk.
-  adr     x10, ram_disk                   // x10 = start address of ramdisk.
-  add     x11, x9, x10                    // x11 = absolute address of last journal entry of RAM disk.
-  str     x11, [x28, SFNEXT-sysvars]      // Store current journal entry in SFNEXT.
-  str     x10, [x11, #0x40]               // Store RAM_DISK start location in first RAM Disk Catalogue journal entry.
-  str     x9, [x28, SFSPACE-sysvars]      // Store free space in SFSPACE.
   adr     x14, arm_size
   ldr     w14, [x14]                      // x14 = first byte of shared GPU memory, for determining where CPU dedicated RAM ends (one byte below).
   sub     x14, x14, 1                     // x14 = last byte of dedicated RAM (not shared with GPU).

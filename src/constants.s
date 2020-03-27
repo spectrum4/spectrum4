@@ -1,3 +1,7 @@
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2019 Spectrum +4 Authors. All rights reserved.
+
 # The base of the stack, located at the top of dedicated CPU RAM.
 #
 # Note, the stack grows downwards, below stack_base, i.e. the highest

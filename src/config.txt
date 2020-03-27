@@ -1,3 +1,7 @@
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2019 Spectrum +4 Authors. All rights reserved.
+#
 # See https://www.raspberrypi.org/documentation/configuration/config-txt/ for
 # an explanation of the purpose and format of this file.
 #
@@ -20,9 +24,9 @@ disable_commandline_tags=1
 #
 gpu_mem=64
 #
-# Loads the kernel to the memory address 0x0.
+# Uncomment to load the kernel to the memory address 0x0.
 #
-####### kernel_old=1
+#### kernel_old=1
 #
 # Ensure the bootloader loads a 64-bit kernel (not entirely necessary but a
 # good safety check).

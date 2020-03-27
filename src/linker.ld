@@ -1,28 +1,28 @@
+/*
+ * This file is part of the Spectrum +4 Project.
+ * Licencing information can be found in the LICENCE file
+ * (C) 2019 Spectrum +4 Authors. All rights reserved.
+ */
 SECTIONS
 {
-  /**
+  /*
    * Start address of the kernel.
    *
-   * We can place executable code directly at RAM address 0 and tell start.elf
-   * not to populate any ATAGs. Note, this requires the following two settings
-   * in config.txt:
+   * The GPU firmware by default loads kernel8.img at address 0x80000, and
+   * therefore we set the start address to this location.
+   *
+   * If we wanted to load and execute the A64 kernel code directly at RAM
+   * address 0, we would need to tell start.elf not populate ATAGs and to use
+   * address 0x0, which could be done with the two following settings in
+   * config.txt:
    *
    *   disable_commandline_tags=1
    *   kernel_old=1
-   *
-   * Technically, we don't need to explicitly include this line below, since by
-   * default the start address is already 0x0, but it makes the linker script a
-   * little more explicit, and simplifies relocation to a different address if
-   * wanted later.
-   *
-   * Without the above config.txt settings, the aarch64 kernel image would be
-   * loaded at address 0x80000, in which case we would need to set to 0x80000
-   * here instead of 0x0.
    */
   . = 0x80000;
 
 
-  /**
+  /*
    * Executable code.
    *
    * All text segments are copied here. The first .text segment included by all.s
@@ -34,7 +34,7 @@ SECTIONS
   }
 
 
-  /**
+  /*
    * Global variables that are initialised to non-zero values.
    *
    * All .data segments are copied here.
@@ -49,7 +49,7 @@ SECTIONS
   }
 
 
-  /**
+  /*
    * Global variables that are initialised to zero.
    *
    * All .bss segments are copied here.
@@ -62,7 +62,7 @@ SECTIONS
   }
 
 
-  /**
+  /*
    * The lowest allowed address for the tip of the (downwards-growing) stack.
    *
    * Matches the RAM drive end.

@@ -1,5 +1,9 @@
 #!/bin/bash -eu
 
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2019 Spectrum +4 Authors. All rights reserved.
+
 # This bash script builds spectrum4 kernel and places all files for SD card
 # under 'dist' directory. To specify a custom toolchain for assembling/linking
 # etc, export environment variable TOOLCHAIN_PREFIX.

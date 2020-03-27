@@ -60,12 +60,8 @@ cd "$(dirname "${0}")"
 rm -rf build
 mkdir build
 
-# Assemble all `*.s` files in `src` directory to a `.o` file in `build`
-# directory.
-find src -name '*.s' | while read assembly_file; do
-  object_file=build/${assembly_file#src/}.o
-  "${TOOLCHAIN_PREFIX}as" -o "${object_file}" "${assembly_file}"
-done
+# Assemble `src/all.s` to `build/all.o`
+"${TOOLCHAIN_PREFIX}as" -o "build/all.o" "src/all.s"
 
 # Ensure dist directory exists, leaving in place if already there from previous
 # run.
@@ -97,17 +93,17 @@ fetch_firmware 'start.elf'
 #   -M: display kernel map
 #   -T: specifies linker script to use
 #   -o: elf file to generate
-"${TOOLCHAIN_PREFIX}ld" -n -M -T src/linker.ld -o build/kernel8.elf  build/*.o
+"${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x80000 -M -T src/linker.ld -o build/kernel8.elf  build/*.o
 
 # Log some useful information about the generated elf file.
 "${TOOLCHAIN_PREFIX}readelf" -a build/kernel8.elf
 
 # Extract the final kernel raw binary into file dist/kernel8.img
-"${TOOLCHAIN_PREFIX}objcopy" build/kernel8.elf -O binary dist/kernel8.img
+"${TOOLCHAIN_PREFIX}objcopy" --set-start=0x80000 build/kernel8.elf -O binary dist/kernel8.img
 
 # Log disassembly of generated raw binary dist/kernel8.img to aid sanity
 # checking.
-"${TOOLCHAIN_PREFIX}objdump" -b binary --adjust-vma=0x0 -maarch64 -D dist/kernel8.img
+# "${TOOLCHAIN_PREFIX}objdump" -b binary -z --adjust-vma=0x80000 -maarch64 -D dist/kernel8.img
 
 # Log disassembly of kernel elf file. This is like above, but additionally
 # contains symbol names, etc.

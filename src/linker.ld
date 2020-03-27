@@ -19,19 +19,17 @@ SECTIONS
    * loaded at address 0x80000, in which case we would need to set to 0x80000
    * here instead of 0x0.
    */
-  . = 0x0;
+  . = 0x80000;
 
 
   /**
    * Executable code.
    *
-   * All text segments are copied here. The first .text segment in kernel.s
-   * starts with the `kernel` function, which is the entry point to the kernel,
-   * so that segment is copied first.
+   * All text segments are copied here. The first .text segment included by all.s
+   * starts with the `_start` function, which is the entry point to the kernel.
    */
   .text :
   {
-    build/kernel.s.o(.text)
     *(.text)
   }
 
@@ -62,17 +60,6 @@ SECTIONS
     *(.bss*)
     bss_end = .;
   }
-
-
-  /**
-   * Reserve 512MB for RAM disk
-   *
-   * Align RAM disk to a 8 byte (64 bit) boundary
-   */
-  . = ALIGN(0x8);
-  ram_drive_begin = .;
-  . = . + 0x20000000;
-  ram_drive_end = .;
 
 
   /**

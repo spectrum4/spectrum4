@@ -130,7 +130,7 @@ _start:
   mov     w12, 0x40
   strb    w12, [x28, RASP-sysvars]        // [RASP]=0x40
   strb    wzr, [x28, PIP-sysvars]         // [PIP]=0x00
-  sub     x13, x18, 1
+  sub     x13, x18, 1 + UDG_COUNT * 32
   str     x13, [x28, RAMTOP-sysvars]      // [RAMPTOP] = UDG - 1 (address of last byte before UDG starts).
   bl      new
 4:
@@ -194,12 +194,41 @@ new:
 
   movl    w0, BORDER_COLOUR               // w0 = default border colour
   bl      paint_border
+
+  mov     w13, 0x0523                     // The values five and thirty five.
+  strh    w13, [x28, REPDEL-sysvars]      // REPDEL. Set the default values for key delay and key repeat.
+//
+//
+//         DEC  (IY-0x3A)     // Set KSTATE+0 to 0xFF.
+//         DEC  (IY-0x36)     // Set KSTATE+4 to 0xFF.
+//
+//
+  adr     x5, STRMS
+  mov     x6, (R0_059E_END - R0_059E)/2   // x6 = number of half words (2 bytes) in R0_059E block
+  adr     x7, R0_059E
+
+# Copy R0_059E block to [STRMS]
+  1:
+    ldrh    w8, [x7], 2
+    strh    w8, [x5], 2
+    subs    x6, x6, 1
+    b.ne    1b
+
+//         RES  1,(IY+0x01)   // FLAGS. Signal printer not is use.
+
+  mov     w5, 255
+  strb    w5, [x28, ERR_NR-sysvars]       // Signal no error.
+  mov     w5, 2
+  strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
+
+//   bl      cls                             // Clear the screen.
+
   bl      paint_copyright                 // Paint the copyright text ((C) 1982 Amstrad....)
-  mov     w0, 0x02000000
-  bl      wait_cycles
+//  mov     w0, 0x02000000
+//  bl      wait_cycles
   bl      display_zx_screen
-  mov     w0, 0x01000000
-  bl      wait_cycles
+//  mov     w0, 0x01000000
+//  bl      wait_cycles
   bl      clear_screen
   mov     x0, sp
   mov     x1, #1
@@ -216,42 +245,15 @@ new:
   adrp    x0, heap
   add     x0, x0, #:lo12:heap             // x0 = heap
   sub     x0, x0, #0x60
-  mov     x1, #6
+  mov     x1, #8
   mov     x2, #22
   bl      display_memory
   ldr     x0, [x28, UDG-sysvars]
   mov     x1, UDG_COUNT
-  mov     x2, #30
+  mov     x2, #32
   bl      display_memory
-
-//   mov     w13, 0x0523                     // The values five and thirty five.
-//   strh    w12, [x28, REPDEL-sysvars]      // REPDEL. Set the default values for key delay and key repeat.
-// 
-// #
-// #         DEC  (IY-0x3A)     // Set KSTATE+0 to 0xFF.
-// #         DEC  (IY-0x36)     // Set KSTATE+4 to 0xFF.
-// #
-// 
-//   adr     x5, STRMS
-//   mov     x6, (R0_059E_END - R0_059E)/2   // x6 = number of half words (2 bytes) in R0_059E block
-//   adr     x7, R0_059E
-// 
-// # Copy R0_059E block to [STRMS]
-//   1:
-//     ldrh    w8, [x7], 2
-//     strh    w8, [x5], 2
-//     subs    x6, x6, 1
-//     b.ne    1b
-// 
-// #         RES  1,(IY+0x01)   // FLAGS. Signal printer not is use.
-// 
-//   mov     w5, 255
-//   strb    w5, [x28, ERR_NR-sysvars]       // Signal no error.
-//   mov     w5, 2
-//   strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
-// 
-//   bl      cls                             // Clear the screen.
-//   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  bl      display_sysvars
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
 # On entry:
@@ -303,7 +305,7 @@ cls_lower:
 # ---------------------------
 # Clear text lines of display
 # ---------------------------
-# This subroutine, called from cl_all, cls_lower and auto_list and above,                                     
+# This subroutine, called from cl_all, cls_lower and auto_list and above,
 # clears text lines at bottom of display.
 #
 # On entry:
@@ -883,7 +885,7 @@ clear_screen:
   bl      paint_window
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
-  
+
 
 display_zx_screen:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
@@ -986,3 +988,56 @@ wait_cycles:
   subs    x0, x0, #0x1                    // x0 -= 1
   b.ne    wait_cycles                     // Repeat until x0 == 0.
   ret                                     // Return.
+
+display_sysvars:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  stp     x19, x20, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  stp     x21, x22, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  sub     sp, sp, #32                     // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
+  adr     x0, msg_title_sysvars
+  bl      uart_puts
+  adr     x0, sysvarnames                 // x0 = address of first sys var name
+  adr     x20, sysvaraddresses            // x20 = address of first sys var pointer
+1:
+  bl      uart_puts
+  ldrb    w21, [x0], #1                   // x21 = size of sysvar data in bytes
+  mov     x19, x0                         // x19 = address of next sysvar name
+  adr     x0, msg_colon0x
+  bl      uart_puts
+  ldr     x0, [x20], #8                   // x0 = address of sys var
+  tbnz    w21, #0, size1
+  tbnz    w21, #1, size2
+  tbnz    w21, #2, size4
+  tbnz    w21, #3, size8
+  ret
+
+size1:
+  ldrb    w0, [x0]
+  b       2f
+size2:
+  ldrh    w0, [x0]
+  b       2f
+size4:
+  ldr     w0, [x0]
+  b       2f
+size8:
+  ldr     x0, [x0]
+
+2:
+  mov     x1, sp
+  mov     x2, x21, lsl #3                 // x2 = size of sysvar data in bits
+  bl      hex_x0
+  strb    wzr, [x1]                       // add a trailing zero
+  mov     x0, sp
+  bl      uart_puts
+  bl      uart_newline
+  mov     x0, x19
+  ldrb    w1, [x0]
+  cbnz    w1, 1b
+  bl      uart_newline
+  add     sp, sp, #32                     // Free buffer
+  ldp     x21, x22, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ldp     x19, x20, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret

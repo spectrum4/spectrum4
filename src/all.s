@@ -11,8 +11,8 @@
 .include "src/data.s"
 .include "src/font.s"
 .include "src/screen.s"
+.include "src/sysvars.s"
 
 # .include "src/constants.s"
 # .include "src/macros.s"
 # .include "src/kernel.s"
-# .include "src/sysvars.s"

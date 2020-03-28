@@ -4,6 +4,15 @@
 
 .data
 
+msg_colon0x:
+.asciz ": 0x"
+
+msg_title_sysvars:
+.ascii "System Variables"
+.byte 10,13
+.ascii "================"
+.byte 10,13,0
+
 msg_copyright:
   .asciz "1982, 1986, 1987 Amstrad Plc."
 
@@ -50,7 +59,7 @@ R0_0589:
   .byte 'R',0,0,0,0,0,0,0                 // 0x52      - Channel identifier 'R'.
   .quad R1_5B34                           // POUT      - P Channel output routine.
   .quad R1_5B2F                           // PIN       - P Channel input routine.
-  .byte 'P',0,0,0,0,0,0,80                // 0x50      - Channel identifier 'P'.
+  .byte 'P',0,0,0,0,0,0,0x80              // 0x50      - Channel identifier 'P'.
 R0_0589_END:
 
 # --------------------------
@@ -127,7 +136,6 @@ sysvars:
   COL:            .space 1                // Current column from 1 to WIDTH. Set to 0 by NEW command.
   WIDTH:          .space 1                // Paper column width. Default value of 80.
   TVPARS:         .space 1                // Number of inline parameters expected by RS232 (e.g. 2 for AT).
-  REPDEL:         .space 1                // Time (in 50ths of a second) that a key must be held down before it repeats. This starts off at 35.
   RASP:           .space 1                // Length of warning buzz.
   PIP:            .space 1                // Length of keyboard click.
   FLAGS:          .space 1                // Flags to control the BASIC system:
@@ -161,6 +169,9 @@ sysvars:
   DF_SZ:          .space 1                // The number of lines (including one blank line) in the lower part of the screen. (1-60)
 
 .align 1
+  REPDEL:         .space 1                // Place REPDEL in .align 1 section since REPDEL+REPPER is read/written together as a halfword.
+                                          // Time (in 50ths of a second) that a key must be held down before it repeats. This starts off at 35.
+  REPPER:         .space 1                // Delay (in 50ths of a second) between successive repeats of a key held down - initially 5.
   BAUD:           .space 2                // Baud rate timing constant for RS232 socket. Default value of 11. [Name clash with ZX Interface 1 system variable at 0x5CC3]
   SERFL:          .space 2                // Byte 0: Second character received flag:
                                           //           Bit 0   : 1=Character in buffer.

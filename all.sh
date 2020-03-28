@@ -97,7 +97,7 @@ fetch_firmware 'start.elf'
 #   -M: display kernel map
 #   -T: specifies linker script to use
 #   -o: elf file to generate
-"${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x80000 -M -T src/linker.ld -o build/kernel8.elf  build/*.o
+"${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x80000 -M -o build/kernel8.elf  build/*.o
 
 # Log some useful information about the generated elf file.
 "${TOOLCHAIN_PREFIX}readelf" -a build/kernel8.elf

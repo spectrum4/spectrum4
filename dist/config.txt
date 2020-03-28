@@ -26,7 +26,7 @@ gpu_mem=64
 #
 # Uncomment to load the kernel to the memory address 0x0.
 #
-#### kernel_old=1
+kernel_old=1
 #
 # Ensure the bootloader loads a 64-bit kernel (not entirely necessary but a
 # good safety check).

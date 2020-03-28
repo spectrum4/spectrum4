@@ -122,17 +122,17 @@ fetch_firmware 'start.elf'
 #   -M: display kernel map
 #   -T: specifies linker script to use
 #   -o: elf file to generate
-"${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x80000 -M -o build/kernel8.elf  build/*.o
+"${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -M -o build/kernel8.elf  build/*.o
 
 # Log some useful information about the generated elf file.
 "${TOOLCHAIN_PREFIX}readelf" -a build/kernel8.elf
 
 # Extract the final kernel raw binary into file dist/kernel8.img
-"${TOOLCHAIN_PREFIX}objcopy" --set-start=0x80000 build/kernel8.elf -O binary dist/kernel8.img
+"${TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/kernel8.elf -O binary dist/kernel8.img
 
 # Log disassembly of generated raw binary dist/kernel8.img to aid sanity
 # checking.
-# "${TOOLCHAIN_PREFIX}objdump" -b binary -z --adjust-vma=0x80000 -maarch64 -D dist/kernel8.img
+# "${TOOLCHAIN_PREFIX}objdump" -b binary -z --adjust-vma=0x0 -maarch64 -D dist/kernel8.img
 
 # Log disassembly of kernel elf file. This is like above, but additionally
 # contains symbol names, etc.

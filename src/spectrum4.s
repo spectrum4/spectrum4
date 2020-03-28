@@ -16,8 +16,6 @@
 .set MAILBOX_EMPTY_BIT,30
 .set MAILBOX_FULL_BIT, 31
 
-.set STACK,            0x80000
-
 .set RAM_DISK_SIZE,    0x10000000
 .set HEAP_SIZE,        0x10000000
 
@@ -46,14 +44,70 @@ _start:
   mrs     x0, mpidr_el1                   // x0 = Multiprocessor Affinity Register.
   ands    x0, x0, #0x3                    // x0 = core number.
   b.ne    4f                              // Put all cores except core 0 to sleep.
-  mov     sp, STACK                       // Set initial Stack Pointer address.
   mov     x29, 0                          // Frame pointer 0 indicates end of stack.
-  mrs     x0, CurrentEL
+  adr     x28, sysvars                    // x28 will remain at this constant value to make all sys vars via an immediate offset.
+  mov     x0, x28
+  adr     x1, sysvars_end
+3:
+  strb    wzr, [x0], #1
+  cmp     x0, x1
+  b.ne    3b
+  bl      uart_init                       // Initialise UART interface.
+
+# Should enable interrupts, set up vector jump tables, switch execution
+# level etc, and all the kinds of things to initialise the processor system
+# registers, memory virtualisation, initialise sound chip, USB, etc.
+# Test memory banks?
+# Clear memory (set to 0's)?
+# Init usb/keyboard?
+# Init sound?
+
+  bl      init_framebuffer                // Allocate a frame buffer with chosen screen settings.
+  bl      init_ramdisk
+
+  adr     x14, arm_size
+  ldr     w14, [x14]                      // x14 = first byte of shared GPU memory, for determining where CPU dedicated RAM ends (one byte below).
+  sub     x14, x14, 1                     // x14 = last byte of dedicated RAM (not shared with GPU).
+  str     x14, [x28, P_RAMT-sysvars]      // [P_RAMT] = 0x3bffffff.
+  mov     x15, UDG_COUNT * 4              // x15 = number of double words (8 bytes) of characters to copy to the user defined graphics region.
+  adr     x16, R1_3D00 + (FIRST_UDG_CHAR - 32) * 32 // x16 = address of first UDG char to copy.
+  sub     x18, x14, UDG_COUNT * 32 - 1    // x18 = first byte of user defined graphics.
+  str     x18, [x28, UDG-sysvars]         // [UDG] = first byte of user defined graphics.
+
+# Copy UDG_COUNT characters into User Defined Graphics memory region at end of RAM.
+3:
+  ldr     x17, [x16], 8
+  str     x17, [x18], 8
+  subs    x15, x15, 1
+  b.ne    3b
+
+  mov     w12, 0x40
+  strb    w12, [x28, RASP-sysvars]        // [RASP]=0x40
+  strb    wzr, [x28, PIP-sysvars]         // [PIP]=0x00
+  sub     x13, x18, 1 + UDG_COUNT * 32
+  str     x13, [x28, RAMTOP-sysvars]      // [RAMPTOP] = UDG - 1 (address of last byte before UDG starts).
+  bl      new
+4:
+  wfe                                     // Sleep until woken.
+  b       4b                              // Go to sleep; it has been a long day.
+
+# Entry point for NEW (with interrupts disabled when running in bare metal since this routine will enable interrupts)
+new:
+  adr     x0, R1_3D00 - (0x20 * 0x20)     // x0 = where, in theory character zero would be.
+  str     x0, [x28, CHARS-sysvars]        // [CHARS] = theoretical address of char zero.
+  ldr     x1, [x28, RAMTOP-sysvars]       // x1 = [RAMTOP].
+  add     x1, x1, 1                       // x1 = [RAMTOP] + 1.
+  and     sp, x1, 0xfffffff0              // sp = highest 16-byte aligned address equal to or lower than ([RAMTOP] + 1).
+  mrs     x0, currentel
   str     x0, [sp, -16]!
   lsr     x0, x0, #2
   cmp     x0, 3
   b.ne    1f
-  mrs     x0, sctlr_el3
+# Start L1 Cache
+  mrs     x0, sctlr_el3                   // x0 = System Control Register
+  orr     x0, x0, 0x0004                  // Data Cache (Bit 2)
+  orr     x0, x0, 0x1000                  // Instruction Caches (Bit 12)
+  msr     sctlr_el3, x0                   // System Control Register = x0
   str     x0, [sp, 8]
   b       2f
 1:
@@ -90,62 +144,8 @@ _start:
                                           // A: 0b0 => UNKNOWN since PE resets to EL2 (alignment checking)
                                           // M: 0b0 => EL2 stage 1 address translation disabled
 2:
-  adr     x28, sysvars                    // x28 will remain at this constant value to make all sys vars via an immediate offset.
-  mov     x0, x28
-  adr     x1, sysvars_end
-3:
-  strb    wzr, [x0], #1
-  cmp     x0, x1
-  b.ne    3b
-  bl      uart_init                       // Initialise UART interface.
-
-# Should enable interrupts, set up vector jump tables, switch execution
-# level etc, and all the kinds of things to initialise the processor system
-# registers, memory virtualisation, initialise sound chip, USB, etc.
-# Test memory banks?
-# Clear memory (set to 0's)?
-# Init usb/keyboard?
-# Init sound?
-
-  bl      init_framebuffer                // Allocate a frame buffer with chosen screen settings.
-  bl      clear_screen                    // Paint the main window (everything except border)
-  bl      init_ramdisk
-
-  adr     x14, arm_size
-  ldr     w14, [x14]                      // x14 = first byte of shared GPU memory, for determining where CPU dedicated RAM ends (one byte below).
-  sub     x14, x14, 1                     // x14 = last byte of dedicated RAM (not shared with GPU).
-  str     x14, [x28, P_RAMT-sysvars]      // [P_RAMT] = 0x3bffffff.
-  mov     x15, UDG_COUNT * 4              // x15 = number of double words (8 bytes) of characters to copy to the user defined graphics region.
-  adr     x16, R1_3D00 + (FIRST_UDG_CHAR - 32) * 32 // x16 = address of first UDG char to copy.
-  sub     x18, x14, UDG_COUNT * 32 - 1    // x18 = first byte of user defined graphics.
-  str     x18, [x28, UDG-sysvars]         // [UDG] = first byte of user defined graphics.
-
-# Copy UDG_COUNT characters into User Defined Graphics memory region at end of RAM.
-3:
-  ldr     x17, [x16], 8
-  str     x17, [x18], 8
-  subs    x15, x15, 1
-  b.ne    3b
-
-  mov     w12, 0x40
-  strb    w12, [x28, RASP-sysvars]        // [RASP]=0x40
-  strb    wzr, [x28, PIP-sysvars]         // [PIP]=0x00
-  sub     x13, x18, 1 + UDG_COUNT * 32
-  str     x13, [x28, RAMTOP-sysvars]      // [RAMPTOP] = UDG - 1 (address of last byte before UDG starts).
-  bl      new
-4:
-  wfe                                     // Sleep until woken.
-  b       4b                              // Go to sleep; it has been a long day.
-
-# Entry point for NEW (with interrupts disabled when running in bare metal since this routine will enable interrupts)
-new:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  adr     x0, R1_3D00 - (0x20 * 0x20)     // x0 = where, in theory character zero would be.
-  str     x0, [x28, CHARS-sysvars]        // [CHARS] = theoretical address of char zero.
-  ldr     x1, [x28, RAMTOP-sysvars]       // x1 = [RAMTOP].
-  add     x1, x1, 1                       // x1 = [RAMTOP] + 1.
-//  and     sp, x1, 0xfffffff0              // sp = highest 16-byte aligned address equal to or lower than ([RAMTOP] + 1).
   ldrb    w1, [x28, FLAGS-sysvars]        // w1 = [FLAGS].
   orr     w1, w1, #0x10                   // w1 = [FLAGS] with bit 4 set.
                                           // [This bit is unused by 48K BASIC].
@@ -168,11 +168,11 @@ new:
   adr     x7, R0_0589
 
 # Copy R0_0589 block to [CHANS] = start of heap = heap
-  1:
+  3:
     ldr     x8, [x7], 8
     str     x8, [x5], 8
     subs    x6, x6, 1
-    b.ne    1b
+    b.ne    3b
 
   sub     x9, x5, 1
   str     x9, [x28, DATADD-sysvars]
@@ -194,6 +194,7 @@ new:
 
   movl    w0, BORDER_COLOUR               // w0 = default border colour
   bl      paint_border
+  bl      clear_screen
 
   mov     w13, 0x0523                     // The values five and thirty five.
   strh    w13, [x28, REPDEL-sysvars]      // REPDEL. Set the default values for key delay and key repeat.
@@ -224,11 +225,11 @@ new:
 //   bl      cls                             // Clear the screen.
 
   bl      paint_copyright                 // Paint the copyright text ((C) 1982 Amstrad....)
-//  mov     w0, 0x02000000
-//  bl      wait_cycles
+  mov     w0, 0x20000000
+  bl      wait_cycles
   bl      display_zx_screen
-//  mov     w0, 0x01000000
-//  bl      wait_cycles
+  mov     w0, 0x10000000
+  bl      wait_cycles
   bl      clear_screen
   mov     x0, sp
   mov     x1, #1

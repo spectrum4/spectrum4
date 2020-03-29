@@ -58,7 +58,6 @@ _start:
 # level etc, and all the kinds of things to initialise the processor system
 # registers, memory virtualisation, initialise sound chip, USB, etc.
 # Test memory banks?
-# Clear memory (set to 0's)?
 # Init usb/keyboard?
 # Init sound?
 
@@ -224,14 +223,14 @@ new:
   mov     w5, 2
   strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
 
-//   bl      cls                             // Clear the screen.
+  bl      cls                             // Clear the screen.
 
   bl      paint_copyright                 // Paint the copyright text ((C) 1982 Amstrad....)
-  mov     w0, 0x20000000
-  bl      wait_cycles
+//mov     w0, 0x20000000
+//bl      wait_cycles
   bl      display_zx_screen
-  mov     w0, 0x10000000
-  bl      wait_cycles
+//mov     w0, 0x10000000
+//bl      wait_cycles
   bl      clear_screen
   mov     x0, sp
   mov     x1, #1
@@ -293,10 +292,10 @@ cls:
 cls_lower:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  ldrb    w9, [x29, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
+  ldrb    w9, [x28, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
   and     w9, w9, #0xffffffdf             // Reset bit 5 - signal do not clear lower screen.
   orr     w9, w9, #0x00000001             // Set bit 0 - signal lower screen in use.
-  strb    w9, [x29, TV_FLAG-sysvars]      // [TV_FLAG] = w9[0-7]
+  strb    w9, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w9[0-7]
   bl      TEMPS                           // Routine TEMPS picks up temporary colours.
   ldrb    w0, [x28, DF_SZ-sysvars]        // fetch lower screen DF_SZ
   bl      cl_line                         // routine CL-LINE clears lower part and sets permanent attributes.
@@ -316,54 +315,54 @@ cls_lower:
 cl_line:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  mov     x12, x0                         // x12 = number of text lines to be cleared.
-  add     x12, x12, x12, lsl #1           // x12 = x12 + x12 * 2 (= 3 * line count)
-  add     x12, x12, x12, lsl #3           // x12 = x12 + x12 * 8 (= 9 * x12 = 27 * line count)
-  mov     x15, x12                        // x15 = 27 * number of text lines to be cleared.
-  bl      cl_addr                         // Routine CL-ADDR gets top address.
-  mov     x9, x0                          // x9 = start address of top line to be cleared.
-  mov     w10, #16                        // There are 16 screen lines to a text line.
-  mov     x11, #0                         // x11 = number of screen sections (20 text lines) touched.
-2:
-  add     x11, x11, #1                    // Increase number of screen sections affected by one.
-  subs    x12, x12, #540                  // Screen is divided into 3 sections, each having 20 text lines.
-  b.hi    2b                              // Keep subtracting 540 until zero or a negative number reached.
-  add     x12, x12, #540                  // Add 540 back on, to get number of lines in top section * 27 to
-                                          // be cleared, between 27 and 540.
-                                          // (= Number of double words per pixel row * line count)
-  mov     x13, x11                        // Backup x11 in x13
-  mov     x14, x12                        // Backup x12 in x14
-3:
-  ldr     xzr, [x9], 8                    // Clear double word at x9, and bump x9 to next double word address.
-  subs    x12, x12, 1                     // Reduce double word counter.
-  b.ne    3b                              // Repeat until all rows are cleared.
-  add     x9, x9, #0x00f, lsl #12         // 216 * 15 * 20 = 64800 = 0xfd20 bytes gets us to start of next
-  add     x9, x9, #0xd20                  // screen section.
-  mov     x12, #540                       // x12 = 20 lines * 27 double words = 540 double words
-  subs    x11, x11, #1                    // x11 = number of remaining sections to update
-  b.ne    3b                              // Repeat if more sections to update
-  mov     x12, x14                        // Restore first section double word clearing length.
-  mov     x11, x13                        // Restore number of sections count.
-  add     x0, x0, #0x001, lsl #12         // Next row pixel address = previous base address + 216 bytes * 20 rows
-  add     x0, x0, #0x0e0                  // = previous base address + 4320 bytes = previous + 0x10e0 bytes
-  mov     x9, x0                          // Restore previous top address
-  subs    w10, w10, #1                    // Decrease text line pixel counter.
-  b.ne    3b                              // Repeat if not all screen lines of text have been cleared.
-  adr     x9, attributes_file_end         // x9 = first byte after end of attributes file.
-  sub     x10, x9, x15, lsl #2            // x10 = start address in attributes file to clear
-  ldrb    w9, [x29, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
-  tbz     w9, #0, 4f                      // If bit 0 is clear, lower screen is in use; jump ahead to 4:.
-  ldrb    w11, [x29, BORDCR-sysvars]
-  b       5f
-4:
-  ldrb    w11, [x29, ATTR_P-sysvars]
-5:
-  bfm     w11, w11, #24, #7               // copy bits 0-7 to bits 8-15
-  bfm     w11, w11, #16, #15              // copy bits 0-15 to bits 16-31
-6:
-  ldr     w11, [x10], #4
-  cmp     x10, x9
-  b.lt    6b
+//   mov     x12, x0                         // x12 = number of text lines to be cleared.
+//   add     x12, x12, x12, lsl #1           // x12 = x12 + x12 * 2 (= 3 * line count)
+//   add     x12, x12, x12, lsl #3           // x12 = x12 + x12 * 8 (= 9 * x12 = 27 * line count)
+//   mov     x15, x12                        // x15 = 27 * number of text lines to be cleared.
+//   bl      cl_addr                         // Routine CL-ADDR gets top address.
+//   mov     x9, x0                          // x9 = start address of top line to be cleared.
+//   mov     w10, #16                        // There are 16 screen lines to a text line.
+//   mov     x11, #0                         // x11 = number of screen sections (20 text lines) touched.
+// 2:
+//   add     x11, x11, #1                    // Increase number of screen sections affected by one.
+//   subs    x12, x12, #540                  // Screen is divided into 3 sections, each having 20 text lines.
+//   b.hi    2b                              // Keep subtracting 540 until zero or a negative number reached.
+//   add     x12, x12, #540                  // Add 540 back on, to get number of lines in top section * 27 to
+//                                           // be cleared, between 27 and 540.
+//                                           // (= Number of double words per pixel row * line count)
+//   mov     x13, x11                        // Backup x11 in x13
+//   mov     x14, x12                        // Backup x12 in x14
+// 3:
+//   ldr     xzr, [x9], 8                    // Clear double word at x9, and bump x9 to next double word address.
+//   subs    x12, x12, 1                     // Reduce double word counter.
+//   b.ne    3b                              // Repeat until all rows are cleared.
+//   add     x9, x9, #0x00f, lsl #12         // 216 * 15 * 20 = 64800 = 0xfd20 bytes gets us to start of next
+//   add     x9, x9, #0xd20                  // screen section.
+//   mov     x12, #540                       // x12 = 20 lines * 27 double words = 540 double words
+//   subs    x11, x11, #1                    // x11 = number of remaining sections to update
+//   b.ne    3b                              // Repeat if more sections to update
+//   mov     x12, x14                        // Restore first section double word clearing length.
+//   mov     x11, x13                        // Restore number of sections count.
+//   add     x0, x0, #0x001, lsl #12         // Next row pixel address = previous base address + 216 bytes * 20 rows
+//   add     x0, x0, #0x0e0                  // = previous base address + 4320 bytes = previous + 0x10e0 bytes
+//   mov     x9, x0                          // Restore previous top address
+//   subs    w10, w10, #1                    // Decrease text line pixel counter.
+//   b.ne    3b                              // Repeat if not all screen lines of text have been cleared.
+//   adr     x9, attributes_file_end         // x9 = first byte after end of attributes file.
+//   sub     x10, x9, x15, lsl #2            // x10 = start address in attributes file to clear
+//   ldrb    w9, [x28, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
+//   tbz     w9, #0, 4f                      // If bit 0 is clear, lower screen is in use; jump ahead to 4:.
+//   ldrb    w11, [x28, BORDCR-sysvars]
+//   b       5f
+// 4:
+//   ldrb    w11, [x28, ATTR_P-sysvars]
+// 5:
+//   bfm     w11, w11, #24, #7               // copy bits 0-7 to bits 8-15
+//   bfm     w11, w11, #16, #15              // copy bits 0-15 to bits 16-31
+// 6:
+//   ldr     w11, [x10], #4
+//   cmp     x10, x9
+//   b.lt    6b
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -680,17 +679,17 @@ R1_5B34:
 R1_1634:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  ldrb    w9, [x29, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
+  ldrb    w9, [x28, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
   orr     w9, w9, #0x00000001             // Set bit 0 - signal lower screen in use.
-  strb    w9, [x29, TV_FLAG-sysvars]      // [TV_FLAG] = w9[0-7]
-  ldrb    w9, [x29, FLAGS-sysvars]        // w9[0-7] = [FLAGS]
+  strb    w9, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w9[0-7]
+  ldrb    w9, [x28, FLAGS-sysvars]        // w9[0-7] = [FLAGS]
   and     w9, w9, #0xdddddddd             // Reset bit 1 (printer not in use) and bit 5 (no new key).
                                           // See https://dinfuehr.github.io/blog/encoding-of-immediate-values-on-aarch64
                                           // for choice of #0xdddddddd
-  strb    w9, [x29, FLAGS-sysvars]        // [FLAGS] = w9[0-7]
-  ldrb    w9, [x29, FLAGS2-sysvars]       // w9[0-7] = [FLAGS2]
+  strb    w9, [x28, FLAGS-sysvars]        // [FLAGS] = w9[0-7]
+  ldrb    w9, [x28, FLAGS2-sysvars]       // w9[0-7] = [FLAGS2]
   orr     w9, w9, #0x00000010             // Set bit 4 of FLAGS2 - signal K channel in use.
-  strb    w9, [x29, FLAGS2-sysvars]       // [FLAGS2] = w9[0-7]
+  strb    w9, [x28, FLAGS2-sysvars]       // [FLAGS2] = w9[0-7]
   bl      TEMPS                           // Set temporary attributes.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret

@@ -36,7 +36,7 @@
 #   Bytes 0x10-0x17: Start of code block/screen$
 #   Bytes 0x18-0x1F: Offset to the variables (i.e. length of program) if a program. For an array, 0x18 holds the variable name.
 
-.section .text
+.text
 # ------------------------------------------------------------------------------
 # Initialises the ram disk
 # ------------------------------------------------------------------------------

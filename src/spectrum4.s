@@ -43,7 +43,7 @@ _start:
 # Disable interrupts, or assume they are already disabled?
   mrs     x0, mpidr_el1                   // x0 = Multiprocessor Affinity Register.
   ands    x0, x0, #0x3                    // x0 = core number.
-  b.ne    4f                              // Put all cores except core 0 to sleep.
+  b.ne    sleep                           // Put all cores except core 0 to sleep.
   mov     x29, 0                          // Frame pointer 0 indicates end of stack.
   adr     x28, sysvars                    // x28 will remain at this constant value to make all sys vars via an immediate offset.
   mov     x0, x28
@@ -86,9 +86,11 @@ _start:
   sub     x13, x18, 1 + UDG_COUNT * 32
   str     x13, [x28, RAMTOP-sysvars]      // [RAMPTOP] = UDG - 1 (address of last byte before UDG starts).
   bl      new
-4:
+  b       reboot
+
+sleep:
   wfe                                     // Sleep until woken.
-  b       4b                              // Go to sleep; it has been a long day.
+  b       sleep                           // Go to sleep; it has been a long day.
 
 # Entry point for NEW (with interrupts disabled when running in bare metal since this routine will enable interrupts)
 new:
@@ -226,11 +228,11 @@ new:
   bl      cls                             // Clear the screen.
 
   bl      paint_copyright                 // Paint the copyright text ((C) 1982 Amstrad....)
-//mov     w0, 0x20000000
-//bl      wait_cycles
+  mov     w0, 0x20000000
+  bl      wait_cycles
   bl      display_zx_screen
-//mov     w0, 0x10000000
-//bl      wait_cycles
+  mov     w0, 0x10000000
+  bl      wait_cycles
   bl      clear_screen
   mov     x0, sp
   mov     x1, #1
@@ -479,24 +481,36 @@ indexer:
 
 
 init_framebuffer:
+  adr     x0, mbreq                       // x0 = memory block pointer for mailbox call.
+  mov     x27, x30
+  bl      mbox_call
+  mov     x30, x27
+  ldr     w11, [x0, framebuffer-mbreq]    // w11 = allocated framebuffer address
+  and     w11, w11, #0x3fffffff           // Clear upper bits beyond addressable memory
+  str     w11, [x0, framebuffer-mbreq]    // Store framebuffer address in framebuffer system variable.
+  ret
+
+
+# On entry:
+#   x0 = address of mailbox request
+# On exit:
+#   x0 unchanged
+mbox_call:
   movl     w9, MAILBOX_BASE               // x9 = 0x3f00b880 (Mailbox Peripheral Address)
-  1:                                      // Wait for mailbox FULL flag to be clear.
-    ldr     w10, [x9, MAILBOX_STATUS]     // w10 = mailbox status.
-    tbnz    w10, MAILBOX_FULL_BIT, 1b     // If FULL flag set (bit 31), try again...
-  adr     x10, mbreq                      // x10 = memory block pointer for mailbox call.
+1:                                        // Wait for mailbox FULL flag to be clear.
+  ldr     w10, [x9, MAILBOX_STATUS]       // w10 = mailbox status.
+  tbnz    w10, MAILBOX_FULL_BIT, 1b       // If FULL flag set (bit 31), try again...
   mov     w11, 8                          // Mailbox channel 8.
-  orr     w11, w10, w11                   // w11 = encoded request address + channel number.
+  orr     w11, w0, w11                    // w11 = encoded request address + channel number.
   str     w11, [x9, MAILBOX_WRITE]        // Write request address / channel number to mailbox write register.
-  2:                                      // Wait for mailbox EMPTY flag to be clear.
-    ldr     w12, [x9, MAILBOX_STATUS]     // w12 = mailbox status.
-    tbnz    w12, MAILBOX_EMPTY_BIT, 2b    // If EMPTY flag set (bit 30), try again...
+2:                                        // Wait for mailbox EMPTY flag to be clear.
+  ldr     w12, [x9, MAILBOX_STATUS]       // w12 = mailbox status.
+  tbnz    w12, MAILBOX_EMPTY_BIT, 2b      // If EMPTY flag set (bit 30), try again...
   ldr     w12, [x9, MAILBOX_REQ_ADDR]     // w12 = message request address + channel number.
   cmp     w11, w12                        // See if the message is for us.
   b.ne    2b                              // If not, try again.
-  ldr     w11, [x10, framebuffer-mbreq]   // w11 = allocated framebuffer address
-  and     w11, w11, #0x3fffffff           // Clear upper bits beyond addressable memory
-  str     w11, [x10, framebuffer-mbreq]   // Store framebuffer address in framebuffer system variable.
   ret
+
 
 # On entry:
 #   w0 = colour to paint border
@@ -993,8 +1007,8 @@ wait_cycles:
 
 display_sysvars:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  stp     x19, x20, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  stp     x21, x22, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  stp     x19, x20, [sp, #-16]!           // callee-saved registers used later on.
+  stp     x21, x22, [sp, #-16]!           // callee-saved registers used later on.
   mov     x29, sp                         // Update frame pointer to new stack location.
   sub     sp, sp, #32                     // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
   adr     x0, msg_title_sysvars
@@ -1030,7 +1044,7 @@ size8:
   mov     x1, sp
   mov     x2, x21, lsl #3                 // x2 = size of sysvar data in bits
   bl      hex_x0
-  strb    wzr, [x1]                       // add a trailing zero
+  strb    wzr, [x1]                       // Add a trailing zero.
   mov     x0, sp
   bl      uart_puts
   bl      uart_newline
@@ -1038,8 +1052,8 @@ size8:
   ldrb    w1, [x0]
   cbnz    w1, 1b
   bl      uart_newline
-  add     sp, sp, #32                     // Free buffer
-  ldp     x21, x22, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  ldp     x19, x20, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  add     sp, sp, #32                     // Free buffer.
+  ldp     x21, x22, [sp], #16             // Pop callee-saved registers.
+  ldp     x19, x20, [sp], #16             // Pop callee-saved registers.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret

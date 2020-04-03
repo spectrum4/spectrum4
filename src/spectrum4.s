@@ -107,7 +107,7 @@ new:
 # Start L1 Cache
   mrs     x0, sctlr_el3                   // x0 = System Control Register
   orr     x0, x0, 0x0004                  // Data Cache (Bit 2)
-  orr     x0, x0, 0x0800                  // Branch Prediction (Bit 11) - this seems to be undocumented in ARM ARM
+# orr     x0, x0, 0x0800                  // Branch Prediction (Bit 11) - this seems to be undocumented in ARM ARM
                                           // see: https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=269441
   orr     x0, x0, 0x1000                  // Instruction Caches (Bit 12)
   msr     sctlr_el3, x0                   // System Control Register = x0

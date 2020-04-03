@@ -28,6 +28,9 @@ reboot:
   bl      wait_cycles
   adr     x0, mbox_reboot
   bl      mbox_call
+  mov     x1, #1
+  mov     x2, #59
+  bl      display_memory
   mov     x0, PM_BASE
   mov     w1, PM_PASSWORD
   mov     w2, 0x0a

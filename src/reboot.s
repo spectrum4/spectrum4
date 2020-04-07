@@ -28,19 +28,16 @@ reboot:
   bl      wait_cycles
   adr     x0, mbox_reboot
   bl      mbox_call
-  mov     x1, #1
-  mov     x2, #59
-  bl      display_memory
   mov     x0, PM_BASE
   mov     w1, PM_PASSWORD
-  mov     w2, 0x0a
-  orr     w2, w2, w1
+  orr     w2, w1, #0x0c
   str     w2, [x0, PM_WDOG]               // [0x3f100024] = 0x5a00000a
   ldr     w3, [x0, PM_RSTC]
   and     w3, w3, PM_RSTC_WRCFG_CLR
   orr     w3, w3, w1
   orr     w3, w3, PM_RSTC_WRCFG_FULL_RESET
   str     w3, [x0, PM_RSTC]               // [0x3f10001c] = ([0x3f10001c] & 0xffffffcf) | 0x5a000020
+# msr     daifset, #2
   b       sleep
 
 .data

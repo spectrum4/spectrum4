@@ -13,6 +13,7 @@
 .include "src/screen.s"
 .include "src/sysvars.s"
 .include "src/reboot.s"
+.include "src/paint.s"
 
 # .include "src/constants.s"
 # .include "src/macros.s"

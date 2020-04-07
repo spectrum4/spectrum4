@@ -46,12 +46,12 @@ _start:
   b.ne    sleep                           // Put all cores except core 0 to sleep.
   mov     x29, 0                          // Frame pointer 0 indicates end of stack.
   adr     x28, sysvars                    // x28 will remain at this constant value to make all sys vars via an immediate offset.
-  mov     x0, x28
-  adr     x1, sysvars_end
-3:
-  strb    wzr, [x0], #1
-  cmp     x0, x1
-  b.ne    3b
+  mov     x0, x28                         // Zero
+  adr     x1, sysvars_end                 // Out
+3:                                        // System
+  strb    wzr, [x0], #1                   // Variables
+  cmp     x0, x1                          // ...
+  b.ne    3b                              // ...
   bl      uart_init                       // Initialise UART interface.
 
 # Should enable interrupts, set up vector jump tables, switch execution
@@ -171,11 +171,11 @@ new:
   adr     x7, R0_0589
 
 # Copy R0_0589 block to [CHANS] = start of heap = heap
-  3:
-    ldr     x8, [x7], 8
-    str     x8, [x5], 8
-    subs    x6, x6, 1
-    b.ne    3b
+3:
+  ldr     x8, [x7], 8
+  str     x8, [x5], 8
+  subs    x6, x6, 1
+  b.ne    3b
 
   sub     x9, x5, 1
   str     x9, [x28, DATADD-sysvars]
@@ -212,11 +212,11 @@ new:
   adr     x7, R0_059E
 
 # Copy R0_059E block to [STRMS]
-  1:
-    ldrh    w8, [x7], 2
-    strh    w8, [x5], 2
-    subs    x6, x6, 1
-    b.ne    1b
+1:
+  ldrh    w8, [x7], 2
+  strh    w8, [x5], 2
+  subs    x6, x6, 1
+  b.ne    1b
 
 //         RES  1,(IY+0x01)   // FLAGS. Signal printer not is use.
 
@@ -225,12 +225,14 @@ new:
   mov     w5, 2
   strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
 
-  bl      cls                             // Clear the screen.
-
   bl      paint_copyright                 // Paint the copyright text ((C) 1982 Amstrad....)
   mov     w0, 0x20000000
   bl      wait_cycles
   bl      display_zx_screen
+  mov     w0, 0x10000000
+  bl      wait_cycles
+  mov     x0, 46
+  bl      cl_line
   mov     w0, 0x10000000
   bl      wait_cycles
   bl      clear_screen
@@ -317,61 +319,94 @@ cls_lower:
 cl_line:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-//   mov     x12, x0                         // x12 = number of text lines to be cleared.
-//   add     x12, x12, x12, lsl #1           // x12 = x12 + x12 * 2 (= 3 * line count)
-//   add     x12, x12, x12, lsl #3           // x12 = x12 + x12 * 8 (= 9 * x12 = 27 * line count)
-//   mov     x15, x12                        // x15 = 27 * number of text lines to be cleared.
-//   bl      cl_addr                         // Routine CL-ADDR gets top address.
-//   mov     x9, x0                          // x9 = start address of top line to be cleared.
-//   mov     w10, #16                        // There are 16 screen lines to a text line.
-//   mov     x11, #0                         // x11 = number of screen sections (20 text lines) touched.
-// 2:
-//   add     x11, x11, #1                    // Increase number of screen sections affected by one.
-//   subs    x12, x12, #540                  // Screen is divided into 3 sections, each having 20 text lines.
-//   b.hi    2b                              // Keep subtracting 540 until zero or a negative number reached.
-//   add     x12, x12, #540                  // Add 540 back on, to get number of lines in top section * 27 to
-//                                           // be cleared, between 27 and 540.
-//                                           // (= Number of double words per pixel row * line count)
-//   mov     x13, x11                        // Backup x11 in x13
-//   mov     x14, x12                        // Backup x12 in x14
-// 3:
-//   ldr     xzr, [x9], 8                    // Clear double word at x9, and bump x9 to next double word address.
-//   subs    x12, x12, 1                     // Reduce double word counter.
-//   b.ne    3b                              // Repeat until all rows are cleared.
-//   add     x9, x9, #0x00f, lsl #12         // 216 * 15 * 20 = 64800 = 0xfd20 bytes gets us to start of next
-//   add     x9, x9, #0xd20                  // screen section.
-//   mov     x12, #540                       // x12 = 20 lines * 27 double words = 540 double words
-//   subs    x11, x11, #1                    // x11 = number of remaining sections to update
-//   b.ne    3b                              // Repeat if more sections to update
-//   mov     x12, x14                        // Restore first section double word clearing length.
-//   mov     x11, x13                        // Restore number of sections count.
-//   add     x0, x0, #0x001, lsl #12         // Next row pixel address = previous base address + 216 bytes * 20 rows
-//   add     x0, x0, #0x0e0                  // = previous base address + 4320 bytes = previous + 0x10e0 bytes
-//   mov     x9, x0                          // Restore previous top address
-//   subs    w10, w10, #1                    // Decrease text line pixel counter.
-//   b.ne    3b                              // Repeat if not all screen lines of text have been cleared.
-//   adr     x9, attributes_file_end         // x9 = first byte after end of attributes file.
-//   sub     x10, x9, x15, lsl #2            // x10 = start address in attributes file to clear
-//   ldrb    w9, [x28, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
-//   tbz     w9, #0, 4f                      // If bit 0 is clear, lower screen is in use; jump ahead to 4:.
-//   ldrb    w11, [x28, BORDCR-sysvars]
-//   b       5f
-// 4:
-//   ldrb    w11, [x28, ATTR_P-sysvars]
-// 5:
-//   bfm     w11, w11, #24, #7               // copy bits 0-7 to bits 8-15
-//   bfm     w11, w11, #16, #15              // copy bits 0-15 to bits 16-31
-// 6:
-//   ldr     w11, [x10], #4
-//   cmp     x10, x9
-//   b.lt    6b
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack
+  stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack
+  stp     x23, x24, [sp, #-16]!           // Backup x23 / x24 on stack
+  stp     x25, x26, [sp, #-16]!           // Backup x25 / x26 on stack
+  mov     x19, x0                         // x19 = number of lines to be cleared (1-60)
+  bl      cl_addr                         // Routine CL-ADDR gets top address.
+                                          //   x0 = number of lines to be cleared (1-60)
+                                          //   x1 = start line number to clear
+                                          //   x2 = address of top left pixel of line to clear inside display file
+                                          //   x3 = first screen third to clear (0-2)
+                                          //   x4 = start char line inside first screen third to clear (0-19)
+  mov     x5, #216
+  mov     x6, #0x10e0
+  umsubl  x19, w4, w5, x6                 // x19 = number of lines in top screen third * 216 = byte count for one pixel row across first screen third
+  umull   x20, w0, w5                     // x20 = 216 * line count
+  mov     x22, x3                         // x22 = top screen section (0/1/2)
+
+  // counters
+  mov     x26, x2                         // x26 = address of first pixel in first section of current pixel row
+  mov     w23, #16                        // x23 = number of remaining pixel lines to clear (0-15)
+2:
+  mov     x21, x26                        // x21 = address of next byte to clear
+  mov     x24, x19                        // x24 = number of remaining bytes to clear in current loop
+  mov     x25, x22                        // x25 = current screen section (0-2)
+3:
+  mov     x0, x21
+  mov     x1, #0
+  bl      poke_address
+  add     x21, x21, #1
+  subs    x24, x24, #1                    // Reduce byte counter.
+  b.ne    3b                              // Repeat until all rows are cleared.
+  add     x21, x21, #0x00f, lsl #12       // x21 += 216*15*20 (=0xfd20) to reach same pixel row in first char line of next
+  add     x21, x21, #0xd20                // screen third.
+  mov     x24, #4320                      // x24 = 20 lines * 216 bytes = 4320 bytes
+  add     x25, x25, #1                    // x22 = next screen third to update
+  cmp     x25, #3
+  b.ne    3b                              // Repeat if more sections to update
+  add     x26, x26, #0x001, lsl #12       // Next row pixel address = previous base address + 216 bytes * 20 rows
+  add     x26, x26, #0x0e0                // = previous base address + 4320 bytes = previous + 0x10e0 bytes
+  subs    w23, w23, #1                    // Decrease text line pixel counter.
+  b.ne    2b                              // Repeat if not all screen lines of text have been cleared.
+  adr     x21, attributes_file_end        // x21 = first byte after end of attributes file.
+  sub     x22, x21, x20, lsr #1           // x22 = start address in attributes file to clear
+  ldrb    w19, [x28, TV_FLAG-sysvars]     // w19[0-7] = [TV_FLAG]
+  tbz     w19, #0, 4f                     // If bit 0 is clear, lower screen is in use; jump ahead to 4:.
+  ldrb    w20, [x28, BORDCR-sysvars]
+  b       5f
+4:
+  ldrb    w20, [x28, ATTR_P-sysvars]
+5:
+  mov     x0, x22
+  mov     w1, w20
+  bl      poke_address
+  add     x22, x22, #1
+  cmp     x22, x21
+  b.lt    5b
+  ldp     x25, x26, [sp], #0x10           // Restore old x25, x26.
+  ldp     x23, x24, [sp], #0x10           // Restore old x23, x24.
+  ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
+# On entry:
+#   x0 = number of lines to be cleared (1-60)
+# On exit:
+#   x0 unchanged
+#   x1 = start line number to clear
+#   x2 = address of top left pixel of line to clear inside display file
+#   x3 = start char line / 20
+#   x4 = start char line % 20
 cl_addr:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  // TODO: a lot to do here
+  mov     x1, #60
+  sub     x1, x1, x0
+  adr     x2, display_file
+  mov     x3, #0xcccccccccccccccc
+  add     x3, x3, #1                      // x3 = 0x0xcccccccccccccccd
+  umulh   x3, x3, x1                      // x3 = 14757395258967641293 * x1 / 2^64 = int(0.8*x1)
+  lsr     x3, x3, #4                      // x3 = int(x1/20)
+  add     x4, x3, x3, lsl #2              // x4 = 5 * int(x1/20)
+  sub     x4, x1, x4, lsl #2              // x4 = x1 - 20 * int(x1/20) = x1%20
+  mov     x5, #216
+  umaddl  x2, w4, w5, x2                  // x2 = display_file + (x1%20)*216
+  mov     x6, 0x00010000
+  movk    x6, 0xe00
+  umaddl  x2, w6, w3, x2                  // x2 = display_file + (x1%20)*216 + (x1/20)*69120
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -512,147 +547,6 @@ mbox_call:
   ret
 
 
-# On entry:
-#   w0 = colour to paint border
-paint_border:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  stp     x19, x20, [sp, #-16]!           // Push x19, x20 on the stack so x19 can be used in this function.
-  mov     w19, w0                         // w19 = w0 (colour to paint border)
-  mov     w0, 0                           // Paint rectangle from 0,0 (top left of screen) with width
-  mov     w1, 0                           // SCREEN_WIDTH and height BORDER_TOP in colour w19 (border colour).
-  mov     w2, SCREEN_WIDTH                // This is the border across the top of the screen.
-  mov     w3, BORDER_TOP
-  mov     w4, w19
-  bl      paint_rectangle
-  mov     w0, 0                           // Paint left border in border colour. This starts below the top
-  mov     w1, BORDER_TOP                  // border (0, BORDER_TOP) and is BORDER_LEFT wide and stops above
-  mov     w2, BORDER_LEFT                 // the bottom border (drawn later in function).
-  mov     w3, SCREEN_HEIGHT-BORDER_TOP-BORDER_BOTTOM
-  mov     w4, w19
-  bl      paint_rectangle
-  mov     w0, SCREEN_WIDTH-BORDER_RIGHT   // Paint the right border in border colour. This also starts below
-  mov     w1, BORDER_TOP                  // the top border, but on the right of the screen, and is
-  mov     w2, BORDER_RIGHT                // BORDER_RIGHT wide. It also stops immediately above bottom border.
-  mov     w3, SCREEN_HEIGHT-BORDER_TOP-BORDER_BOTTOM
-  mov     w4, w19
-  bl      paint_rectangle
-  mov     w0, 0                           // Paint the bottom border in border colour. This is BORDER_BOTTOM
-  mov     w1, SCREEN_HEIGHT-BORDER_BOTTOM // high, and is as wide as the screen.
-  mov     w2, SCREEN_WIDTH
-  mov     w3, BORDER_BOTTOM
-  mov     w4, w19
-  bl      paint_rectangle
-  ldp     x19, x20, [sp], #0x10           // Restore x19 so no calling function is affected.
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
-
-# On entry:
-#   w0 = x
-#   w1 = y
-#   w2 = width (pixels)
-#   w3 = height (pixels)
-#   w4 = colour
-paint_rectangle:
-  adr     x9, mbreq                       // x9 = address of mailbox request.
-  ldr     w10, [x9, framebuffer-mbreq]    // w10 = address of framebuffer
-  ldr     w11, [x9, pitch-mbreq]          // w11 = pitch
-  umaddl  x10, w1, w11, x10               // x10 = address of framebuffer + y*pitch
-  add     w10, w10, w0, lsl #2            // w10 = address of framebuffer + y*pitch + x*4
-  fill_rectangle:                         // Fills entire rectangle
-    mov     w12, w10                      // w12 = reference to start of line
-    mov     w13, w2                       // w13 = width of line
-    fill_line:                            // Fill a single row of the rectangle with colour.
-      str     w4, [x10], 4                // Colour current point, and update x10 to next point.
-      subs    w13, w13, 1                 // Decrease horizontal pixel counter.
-      b.ne    fill_line                   // Repeat until line complete.
-    add     w10, w12, w11                 // x10 = start of current line + pitch = start of new line.
-    subs    w3, w3, 1                     // Decrease vertical pixel counter.
-    b.ne    fill_rectangle                // Repeat until all framebuffer lines complete.
-  ret
-
-# On entry:
-#   w0 = colour to paint main screen
-paint_window:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  mov     w4, w0                          // Paint a single rectange that fills the gap inside the
-  mov     w0, BORDER_LEFT                 // four borders of the screen.
-  mov     w1, BORDER_TOP
-  mov     w2, SCREEN_WIDTH-BORDER_LEFT-BORDER_RIGHT
-  mov     w3, SCREEN_HEIGHT-BORDER_TOP-BORDER_BOTTOM
-  bl      paint_rectangle
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
-
-# paint_string paints the zero byte delimited text string pointed to by x0 to the screen in the
-# system font (16x16 pixels) at the screen print coordinates given by w1, w2. The ink colour is
-# taken from w3 and paper colour from w4.
-#
-# On entry:
-#   x0 = pointer to string
-#   w1 = x
-#   w2 = y
-#   w3 = ink colour
-#   w4 = paper colour
-paint_string:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  stp     x0, x1, [sp, #-16]!
-  stp     x2, x3, [sp, #-16]!
-  str     x4, [sp, #-16]!
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  bl      uart_puts
-  bl      uart_newline
-  ldr     x4, [sp], #0x10
-  ldp     x2, x3, [sp], #0x10
-  ldp     x0, x1, [sp], #0x10
-  adr     x9, mbreq                       // x9 = address of mailbox request.
-  ldr     w10, [x9, framebuffer-mbreq]    // w10 = address of framebuffer
-  ldr     w9, [x9, pitch-mbreq]           // w9 = pitch
-  adr     x11, chars-32*32                // x11 = theoretical start of character table for char 0
-//   ldr     x11, [x28, CHARS-sysvars]       // x11 = theoretical start of character table for char 0
-1:
-  ldrb    w12, [x0], 1                    // w12 = char from string, and update x0 to next char
-  cbz     w12, 2f                         // if found end marker, jump to end of function and return
-  add     x13, x11, x12, lsl #5           // x13 = address of character bitmap
-  mov     w14, BORDER_TOP                 // w14 = BORDER_TOP
-  add     w14, w14, w2, lsl #4            // w14 = BORDER_TOP + y * 16
-  mov     w15, BORDER_LEFT                // w15 = BORDER_LEFT
-  add     w15, w15, w1, lsl #4            // w15 = BORDER_LEFT + x * 16
-  add     w15, w10, w15, lsl #2           // w15 = address of framebuffer + 4* (BORDER_LEFT + x * 16)
-  umaddl  x14, w9, w14, x15               // w14 = pitch*(BORDER_TOP + y * 16) + address of framebuffer + 4 * (BORDER_LEFT + x*16)
-  mov     w15, 16                         // w15 = y counter
-  paint_char:
-    mov     w16, w14                      // w16 = leftmost pixel of current row address
-    mov     w12, 1 << 15                  // w12 = mask for current pixel
-    ldrh    w17, [x13], 2                 // w17 = bitmap for current row, and update x13 to next bitmap pattern
-    paint_line:                           // Paint a horizontal row of pixels of character
-      tst     w17, w12                    // apply pixel mask
-      csel    w18, w3, w4, ne             // if pixel set, colour w3 (ink colour) else colour w4 (paper colour)
-      str     w18, [x14], 4               // Colour current point, and update x14 to next point.
-      lsr     w12, w12, 1                 // Shift bit mask to next pixel
-      cbnz    w12, paint_line             // Repeat until line complete.
-    add     w14, w16, w9                  // x14 = start of current line + pitch = start of new line.
-    subs    w15, w15, 1                   // Decrease vertical pixel counter.
-    b.ne    paint_char                    // Repeat until all framebuffer lines complete.
-  add     w1, w1, 1                       // Increment w1 (x print position) so that the next char starts to the right of the current char.
-  b       1b                              // Repeat outer loop.
-2:
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
-
-paint_copyright:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  adr     x0, msg_copyright               // x0 = location of system copyright message.
-  mov     w1, 38                          // Print at x=38.
-  mov     w2, 40                          // Print at y=40.
-  movl    w3, INK_COLOUR                  // Ink colour is default system ink colour.
-  movl    w4, PAPER_COLOUR                // Paper colour is default system paper colour.
-  bl      paint_string                    // Paint the copyright string to screen.
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
-
 R1_09F4:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -737,9 +631,12 @@ TEMPS:
 poke_address:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack
+  stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack
+  stp     x23, x24, [sp, #-16]!           // Backup x23 / x24 on stack
   strb    w1, [x0]                        // Poke address
   adr     x9, display_file                // Check if address is in display file
-  adr     x25, attributes_file
+  adr     x24, attributes_file
   subs    x11, x0, x9                     // x11 = display file offset
   b.lo    1f                              // if negative, jump ahead since before display file
   adr     x10, display_file_end           // Now compare address to upper limit of display file
@@ -789,7 +686,7 @@ poke_address:
   msub    x10, x12, x14, x10              // x10 = int(x11/2)-108*int((x11/2)/108)=(x11/2)%108
   add     x16, x16, x18, lsl #2           // x16 = (x11/216)%20+20*int(x11/(216*20*16))
   madd    x16, x16, x12, x10              // x16 = 108*(((x11/216)%20+20*int(x11/(216*20*16))) + (x11/2)%108
-  ldrb    w17, [x25, x16]                 // w17 = attribute data
+  ldrb    w17, [x24, x16]                 // w17 = attribute data
   mov     w20, #0xcc             // dim
   mov     w21, #0xff             // bright
   tst     w17, #0x40             // bright set?
@@ -822,7 +719,7 @@ poke_address:
   b.ne    3b
   b       2f
 1:
-  subs    x11, x0, x25                    // x11 = attributes file offset
+  subs    x11, x0, x24                    // x11 = attributes file offset
   b.lo    2f                              // if negative, jump ahead since before attributes file
   adr     x10, attributes_file_end        // Now compare address to upper limit of attributes file
   cmp     x0, x10                         // is address >= attributes_file_end?
@@ -877,6 +774,9 @@ poke_address:
   b.ne    4b
 
 2:
+  ldp     x23, x24, [sp], #0x10           // Restore old x23, x24.
+  ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -902,7 +802,6 @@ clear_screen:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
-
 display_zx_screen:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -912,8 +811,6 @@ display_zx_screen:
   ldrb    w1, [x9], #1
   stp     x0, x9, [sp, #-16]!
   bl      poke_address
-  // mov     x0, 0x200
-  // bl      wait_cycles
   ldp     x0, x9, [sp], #16
   add     x0, x0, #1
   adr     x2, attributes_file_end
@@ -928,11 +825,11 @@ display_zx_screen:
 #   x2 = screen line to start at
 display_memory:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!           // Store old x19, x20 on the the stack.
   stp     x21, x22, [sp, #-16]!           // Store old x21, x22 on the the stack.
   stp     x23, x24, [sp, #-16]!           // Store old x23, x24 on the the stack.
   sub     sp, sp, #112                    // 112 bytes for screen line buffer
-  mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x19, x0                         // x19 = start address
   mov     x20, x1                         // x20 = number of rows to print
   mov     x21, x2                         // x21 = screen line to start at
@@ -1007,9 +904,9 @@ wait_cycles:
 
 display_sysvars:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!           // callee-saved registers used later on.
   stp     x21, x22, [sp, #-16]!           // callee-saved registers used later on.
-  mov     x29, sp                         // Update frame pointer to new stack location.
   sub     sp, sp, #32                     // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
   adr     x0, msg_title_sysvars
   bl      uart_puts

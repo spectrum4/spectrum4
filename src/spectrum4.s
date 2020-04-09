@@ -86,7 +86,7 @@ _start:
   sub     x13, x18, 1 + UDG_COUNT * 32
   str     x13, [x28, RAMTOP-sysvars]      // [RAMPTOP] = UDG - 1 (address of last byte before UDG starts).
   bl      new
-  b       reboot
+# b       reboot
 
 sleep:
   wfe                                     // Sleep until woken.
@@ -231,7 +231,7 @@ new:
   bl      display_zx_screen
   mov     w0, 0x10000000
   bl      wait_cycles
-  mov     x0, 46
+  mov     x0, #60
   bl      cl_line
   mov     w0, 0x10000000
   bl      wait_cycles
@@ -296,15 +296,33 @@ cls:
 cls_lower:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
+  stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack.
   ldrb    w9, [x28, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
   and     w9, w9, #0xffffffdf             // Reset bit 5 - signal do not clear lower screen.
   orr     w9, w9, #0x00000001             // Set bit 0 - signal lower screen in use.
   strb    w9, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w9[0-7]
-  bl      TEMPS                           // Routine TEMPS picks up temporary colours.
-  ldrb    w0, [x28, DF_SZ-sysvars]        // fetch lower screen DF_SZ
-  bl      cl_line                         // routine CL-LINE clears lower part and sets permanent attributes.
-
+  bl      temps                           // Routine temps picks up temporary colours.
+  ldrb    w0, [x28, DF_SZ-sysvars]        // Fetch lower screen DF_SZ.
+  bl      cl_line                         // Routine CL-LINE clears lower part and sets permanent attributes.
+  adr     x0, attributes_file_end         // x0 = address of first byte after attributes file
+  sub     x19, x0, 108*2                  // x19 = attribute address leftmost cell, second line up (first byte after last cell to clear)
+  ldrb    w2, [x28, DF_SZ-sysvars]        // Fetch lower screen DF_SZ.
+  mov     w3, #108
+  umsubl  x20, w2, w3, x0                 // x20 = first attribute cell to clear
+  ldrb    w21, [x28, ATTR_P-sysvars]      // Fetch permanent attribute from ATTR_P.
+1:                                        // Set attributes file values to [ATTR_P] for lowest [DF_SZ] lines except bottom two lines.
+  cmp     x19, x20
+  b.ls    2f                              // Exit loop if x19 <= x20 (unsigned)
+  sub     x19, x19, #1
+  mov     x0, x19
+  mov     w1, w21
+  bl      poke_address
+  b       1b
+2:
   // TODO: a lot to do here
+  ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -319,10 +337,10 @@ cls_lower:
 cl_line:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack
-  stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack
-  stp     x23, x24, [sp, #-16]!           // Backup x23 / x24 on stack
-  stp     x25, x26, [sp, #-16]!           // Backup x25 / x26 on stack
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
+  stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack.
+  stp     x23, x24, [sp, #-16]!           // Backup x23 / x24 on stack.
+  stp     x25, x26, [sp, #-16]!           // Backup x25 / x26 on stack.
   mov     x19, x0                         // x19 = number of lines to be cleared (1-60)
   bl      cl_addr                         // Routine CL-ADDR gets top address.
                                           //   x0 = number of lines to be cleared (1-60)
@@ -374,7 +392,7 @@ cl_line:
   bl      poke_address
   add     x22, x22, #1
   cmp     x22, x21
-  b.lt    5b
+  b.lo    5b                              // Repeat iff x22 < x21
   ldp     x25, x26, [sp], #0x10           // Restore old x25, x26.
   ldp     x23, x24, [sp], #0x10           // Restore old x23, x24.
   ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
@@ -598,7 +616,7 @@ R1_1634:
   ldrb    w9, [x28, FLAGS2-sysvars]       // w9[0-7] = [FLAGS2]
   orr     w9, w9, #0x00000010             // Set bit 4 of FLAGS2 - signal K channel in use.
   strb    w9, [x28, FLAGS2-sysvars]       // [FLAGS2] = w9[0-7]
-  bl      TEMPS                           // Set temporary attributes.
+  bl      temps                           // Set temporary attributes.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -618,7 +636,7 @@ R1_164D:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
-TEMPS:
+temps:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   // TODO
@@ -638,10 +656,10 @@ poke_address:
   adr     x9, display_file                // Check if address is in display file
   adr     x24, attributes_file
   subs    x11, x0, x9                     // x11 = display file offset
-  b.lo    1f                              // if negative, jump ahead since before display file
+  b.lo    1f                              // if x0 < x9, jump ahead since before display file
   adr     x10, display_file_end           // Now compare address to upper limit of display file
-  cmp     x0, x10                         // is address >= display_file_end?
-  b.hs    1f                              // if so, jump ahead since after display file
+  cmp     x0, x10
+  b.hs    1f                              // if x0 >= x10 (display file end) jump ahead since after display file
 
   // framebuffer addresses = pitch*(BORDER_TOP + 16*((x11/216)%20) + (x11/(216*20))%16 + 320*(x11/(216*20*16))) + address of framebuffer + 4 * (BORDER_LEFT + 8*(x11%216) + [0-7])
   // attribute address = attributes_file+((x11/2)%108)+108*(((x11/216)%20)+20*(x11/(216*20*16)))
@@ -720,10 +738,10 @@ poke_address:
   b       2f
 1:
   subs    x11, x0, x24                    // x11 = attributes file offset
-  b.lo    2f                              // if negative, jump ahead since before attributes file
+  b.lo    2f                              // if x0 < x24, jump ahead since before attributes file
   adr     x10, attributes_file_end        // Now compare address to upper limit of attributes file
-  cmp     x0, x10                         // is address >= attributes_file_end?
-  b.hs    2f                              // if so, jump ahead since after attributes file
+  cmp     x0, x10
+  b.hs    2f                              // if x0 >= x10 (attributes file end), jump ahead since after attributes file
   // TODO: handle attributes file update
 //   mov     w20, #0xcc             // dim
 //   mov     w21, #0xff             // bright

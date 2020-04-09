@@ -66,11 +66,10 @@ setup_system_registers:
 setup_bss:
   adr       x0, bss_begin
   adr       x1, bss_end
-  sub       x1, x1, x0
 1:
   str       xzr, [x0], #8
-  subs      x1, x1, #8
-  b.gt      1b
+  cmp       x0, x1
+  b.lo      1b
   ret
 
 

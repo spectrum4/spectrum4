@@ -320,7 +320,9 @@ cls_lower:
   bl      poke_address
   b       1b
 2:
-  // TODO: a lot to do here
+  mov     w5, 2
+  strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
+  bl      cl_chan
   ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
   ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
@@ -432,8 +434,8 @@ cl_all:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   str     wzr, [x28, COORDS-sysvars]      // set COORDS to 0,0.
-  ldrb    w9, [x28, FLAGS2-sysvars]       // w9 = [FLAGS2].
-  and     w9, w9, #0xfe                   // w9 = [FLAGS2] with bit 0 unset.
+  ldrb    w9, [x28, FLAGS2-sysvars]       // w9 = [FLAGS2]
+  and     w9, w9, #0xfe                   // w9 = [FLAGS2] with bit 0 unset
   strb    w9, [x28, FLAGS2-sysvars]       // Update [FLAGS2] to have bit 0 unset (signal main screen is clear).
   bl      cl_chan
   // TODO: a lot to do here
@@ -444,7 +446,20 @@ cl_chan:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x0, -3                          // Stream -3 (-> channel K)
-  bl      chan_open                       // Open channel K
+  bl      chan_open                       // Open channel K.
+  ldr     x0, [x28, CURCHL-sysvars]       // x0 = [CURCHL]
+  adr     x1, print_out
+  str     x1, [x0], #8                    // Reset output routine to print_out for channel K
+  adr     x1, key_input
+  str     x1, [x0], #8                    // Reset input routine to key_input for channel K
+  mov     x0, 0x1721                      // TODO: update this value when you understand what it represents
+  bl      cl_set
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+cl_set:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
   // TODO: a lot to do here
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
@@ -565,37 +580,37 @@ mbox_call:
   ret
 
 
-R1_09F4:
+print_out:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
-R1_0F81:
+add_char:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
-R1_10A8:
+key_input:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
-R1_15C4:
+report_j:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
-R1_5B2F:
+pin:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
-R1_5B34:
+pout:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.

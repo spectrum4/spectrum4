@@ -48,17 +48,17 @@ R0_059E_END:
 # ZX Printer.
 # Used at 0x01DD (ROM 0).
 R0_0589:
-  .quad R1_09F4                           // PRINT_OUT - K channel output routine.
-  .quad R1_10A8                           // KEY_INPUT - K channel input routine.
+  .quad print_out                         // PRINT_OUT - K channel output routine.
+  .quad key_input                         // KEY_INPUT - K channel input routine.
   .byte 'K',0,0,0,0,0,0,0                 // 0x4B      - Channel identifier 'K'.
-  .quad R1_09F4                           // PRINT_OUT - S channel output routine.
-  .quad R1_15C4                           // REPORT_J  - S channel input routine.
+  .quad print_out                         // PRINT_OUT - S channel output routine.
+  .quad report_j                          // REPORT_J  - S channel input routine.
   .byte 'S',0,0,0,0,0,0,0                 // 0x53      - Channel identifier 'S'.
-  .quad R1_0F81                           // ADD_CHAR  - R channel output routine.
-  .quad R1_15C4                           // REPORT_J  - R channel input routine.
+  .quad add_char                          // ADD_CHAR  - R channel output routine.
+  .quad report_j                          // REPORT_J  - R channel input routine.
   .byte 'R',0,0,0,0,0,0,0                 // 0x52      - Channel identifier 'R'.
-  .quad R1_5B34                           // POUT      - P Channel output routine.
-  .quad R1_5B2F                           // PIN       - P Channel input routine.
+  .quad pout                              // POUT      - P Channel output routine.
+  .quad pin                               // PIN       - P Channel input routine.
   .byte 'P',0,0,0,0,0,0,0x80              // 0x50      - Channel identifier 'P'.
 R0_0589_END:
 

@@ -448,7 +448,7 @@ cl_all:
   str     x1, [x0], #8                    // Reset output routine to print_out for channel S.
   mov     w0, 1
   strb    w0, [x28, SCR_CT-sysvars]       // Reset SCR_CT (scroll count) to default of 1.
-  mov     x0, 0x1821                      // TODO: update this value when you understand what it represents
+  mov     x0, 0x3c6d                      // 0x3c => row 60 (off screen?), 0x6d = 109 => column 0, strangely (col = 109-x).
   bl      cl_set
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
@@ -463,7 +463,7 @@ cl_chan:
   str     x1, [x0], #8                    // Reset output routine to print_out for channel K.
   adr     x1, key_input
   str     x1, [x0], #8                    // Reset input routine to key_input for channel K.
-  mov     x0, 0x1721                      // TODO: update this value when you understand what it represents
+  mov     x0, 0x3b6d                      // 0x3b => row 59, 0x6d = 109 => column 0, strangely (col = 109-x).
   bl      cl_set
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret

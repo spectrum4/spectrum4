@@ -34,6 +34,8 @@ sysvarnames:
   .byte 1
   .asciz "DF_SZ"
   .byte 1
+  .asciz "SCR_CT"
+  .byte 1
   .asciz "REPDEL"
   .byte 1
   .asciz "REPPER"
@@ -103,6 +105,7 @@ sysvaraddresses:
   .quad MASK_P
   .quad ERR_NR
   .quad DF_SZ
+  .quad SCR_CT
   .quad REPDEL
   .quad REPPER
   .quad BAUD

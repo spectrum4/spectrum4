@@ -167,6 +167,8 @@ sysvars:
   MASK_P:         .space 1                // Used for transparent colours, etc. Any bit that is 1 shows that the corresponding attribute.
   ERR_NR:         .space 1                // 1 less than the report code. Starts off at 255 (for -1).
   DF_SZ:          .space 1                // The number of lines (including one blank line) in the lower part of the screen. (1-60)
+  SCR_CT:         .space 1                // Counts scrolls - it is always 1 more than the number of scrolls that will be done before
+                                          // stopping with 'scroll?'.
 
 .align 1
   REPDEL:         .space 1                // Place REPDEL in .align 1 section since REPDEL+REPPER is read/written together as a halfword.

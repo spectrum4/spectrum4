@@ -438,7 +438,18 @@ cl_all:
   and     w9, w9, #0xfe                   // w9 = [FLAGS2] with bit 0 unset
   strb    w9, [x28, FLAGS2-sysvars]       // Update [FLAGS2] to have bit 0 unset (signal main screen is clear).
   bl      cl_chan
-  // TODO: a lot to do here
+  mov     x0, #-2                         // Select system channel 'S'.
+  bl      chan_open                       // Routine chan_open opens it.
+  bl      temps                           // Routine temps picks up permanent values.
+  mov     x0, #60                         // There are 60 lines.
+  bl      cl_line                         // Routine cl_line clears all 60 lines.
+  ldr     x0, [x28, CURCHL-sysvars]       // x0 = [CURCHL] (channel 'S')
+  adr     x1, print_out
+  str     x1, [x0], #8                    // Reset output routine to print_out for channel S.
+  mov     w0, 1
+  strb    w0, [x28, SCR_CT-sysvars]       // Reset SCR_CT (scroll count) to default of 1.
+  mov     x0, 0x1821                      // TODO: update this value when you understand what it represents
+  bl      cl_set
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -449,9 +460,9 @@ cl_chan:
   bl      chan_open                       // Open channel K.
   ldr     x0, [x28, CURCHL-sysvars]       // x0 = [CURCHL]
   adr     x1, print_out
-  str     x1, [x0], #8                    // Reset output routine to print_out for channel K
+  str     x1, [x0], #8                    // Reset output routine to print_out for channel K.
   adr     x1, key_input
-  str     x1, [x0], #8                    // Reset input routine to key_input for channel K
+  str     x1, [x0], #8                    // Reset input routine to key_input for channel K.
   mov     x0, 0x1721                      // TODO: update this value when you understand what it represents
   bl      cl_set
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.

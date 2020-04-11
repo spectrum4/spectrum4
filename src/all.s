@@ -5,6 +5,8 @@
 .arch armv8-a
 .cpu cortex-a53
 
+.include "src/constants.s"
+.include "src/macros.s"
 .include "src/spectrum4.s"
 .include "src/ramdisk.s"
 .include "src/uart.s"
@@ -15,6 +17,4 @@
 .include "src/reboot.s"
 .include "src/paint.s"
 
-# .include "src/constants.s"
-# .include "src/macros.s"
 # .include "src/kernel.s"

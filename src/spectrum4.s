@@ -2,38 +2,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
-.set SCREEN_WIDTH,     1920
-.set SCREEN_HEIGHT,    1200
-.set BORDER_LEFT,      96
-.set BORDER_RIGHT,     96
-.set BORDER_TOP,       128
-.set BORDER_BOTTOM,    112
-
-.set MAILBOX_BASE,     0x3f00b880
-.set MAILBOX_REQ_ADDR, 0x0
-.set MAILBOX_WRITE,    0x20
-.set MAILBOX_STATUS,   0x118
-.set MAILBOX_EMPTY_BIT,30
-.set MAILBOX_FULL_BIT, 31
-
-.set RAM_DISK_SIZE,    0x10000000
-.set HEAP_SIZE,        0x10000000
-
-.set FIRST_UDG_CHAR,   'A'                // Character 'A'
-.set UDG_COUNT,        21                 // Number of User Defined Graphics to copy (=> 'A'-'U').
-
-.set BORDER_COLOUR,    0x00cc0000         // Default border colour around screen.
-.set PAPER_COLOUR,     0x00cccccc         // Default paper colour (background colour of screen).
-.set INK_COLOUR,       0x00000000         // Default ink colour (foreground colour of text on screen).
-
-# Load a 32-bit immediate using mov.
-.macro movl Wn, imm
-  movz    \Wn,  \imm & 0xFFFF
-  movk    \Wn, (\imm >> 16) & 0xFFFF, lsl #16
-.endm
-
-.arch armv8-a
-.cpu cortex-a53
 .global _start
 
 .align 2
@@ -64,8 +32,7 @@ _start:
   bl      init_framebuffer                // Allocate a frame buffer with chosen screen settings.
   bl      init_ramdisk
 
-  adr     x14, arm_size
-  ldr     w14, [x14]                      // x14 = first byte of shared GPU memory, for determining where CPU dedicated RAM ends (one byte below).
+  ldr     w14, arm_size                   // x14 = first byte of shared GPU memory, for determining where CPU dedicated RAM ends (one byte below).
   sub     x14, x14, 1                     // x14 = last byte of dedicated RAM (not shared with GPU).
   str     x14, [x28, P_RAMT-sysvars]      // [P_RAMT] = 0x3bffffff.
   mov     x15, UDG_COUNT * 4              // x15 = number of double words (8 bytes) of characters to copy to the user defined graphics region.

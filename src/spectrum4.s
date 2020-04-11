@@ -448,7 +448,8 @@ cl_all:
   str     x1, [x0], #8                    // Reset output routine to print_out for channel S.
   mov     w0, 1
   strb    w0, [x28, SCR_CT-sysvars]       // Reset SCR_CT (scroll count) to default of 1.
-  mov     x0, 0x3c6d                      // 0x3c => row 60 (off screen?), 0x6d = 109 => column 0, strangely (col = 109-x).
+  mov     x0, 0x3c                        // 0x3c => row 60 (off screen?).
+  mov     x1, 0x6d                        // 0x6d = 109 => column 0, strangely (col = 109-x).
   bl      cl_set
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
@@ -463,15 +464,45 @@ cl_chan:
   str     x1, [x0], #8                    // Reset output routine to print_out for channel K.
   adr     x1, key_input
   str     x1, [x0], #8                    // Reset input routine to key_input for channel K.
-  mov     x0, 0x3b6d                      // 0x3b => row 59, 0x6d = 109 => column 0, strangely (col = 109-x).
+  mov     x0, 0x3b                        // 0x3b => row 59.
+  mov     x1, 0x6d                        // 0x6d = 109 => column 0, strangely (col = 109-x).
   bl      cl_set
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
+# On entry:
+#   x0 = row 0-60 / 1-60 ?
+#   x1 = column (1-109) ?
 cl_set:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  // TODO: a lot to do here
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack
+  mov     x19, x0
+  mov     x20, x1
+  adr     x2, printer_buffer
+  ldrb    w3, [x28, FLAGS-sysvars]
+  tbnz    w3, #1, 2f
+  ldrb    w4, [x28, TV_FLAG-sysvars]
+  tbz     w4, #0, 1f
+  ldrb    w5, [x28, DF_SZ-sysvars]
+  add     w0, w0, w5
+  sub     w0, w0, #60
+1:
+  bl      cl_addr
+2:
+  mov     x3, #109
+  sub     x3, x3, x1
+  add     x0, x2, x3
+  bl      po_store
+  ldp     x19, x20, [sp], #16             // Restore old x19, x20.
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+# On entry:
+po_store:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  // TODO
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 

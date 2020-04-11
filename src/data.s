@@ -218,6 +218,8 @@ sysvars:
 
 sysvars_end:
 
+  printer_buffer: .space 0x100            // Printer buffer used by 48K Basic but not by 128K Basic (apparently)
+
 # Memory regions
   display_file:   .space (SCREEN_HEIGHT-BORDER_TOP-BORDER_BOTTOM)*(SCREEN_WIDTH-BORDER_LEFT-BORDER_RIGHT)/8
                                           // One pixel per bit => 8 pixels per byte

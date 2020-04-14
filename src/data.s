@@ -169,6 +169,13 @@ sysvars:
   DF_SZ:          .space 1                // The number of lines (including one blank line) in the lower part of the screen. (1-60)
   SCR_CT:         .space 1                // Counts scrolls - it is always 1 more than the number of scrolls that will be done before
                                           // stopping with 'scroll?'.
+  P_POSN:         .space 1                // 109-column number of printer position.
+  ECHO_E_COLUMN:  .space 1                // 109-column number (in lower half) of end of input buffer.
+  ECHO_E_ROW:     .space 1                // 60-line number (in lower half) of end of input buffer.
+  S_POSN_COLUMN:  .space 1                // 109-column number for PRINT position.
+  S_POSN_ROW:     .space 1                // 60-line number for PRINT position.
+  S_POSNL_COLUMN: .space 1                // Like S_POSN_COLUMN for lower part.
+  S_POSNL_ROW:    .space 1                // Like S_POSN_ROW for lower part.
 
 .align 1
   REPDEL:         .space 1                // Place REPDEL in .align 1 section since REPDEL+REPPER is read/written together as a halfword.
@@ -216,6 +223,11 @@ sysvars:
   UDG:            .space 8                // Address of first user-defined graphic. Can be changed to save space by having fewer.
   ERR_SP:         .space 8                // Address of item on machine stack to be used as error return.
 
+# Editor
+  DF_CC:          .space 8                // Address in display file of PRINT position.
+  DF_CCL:         .space 8                // Like DF CC for lower part of screen.
+  PR_CC:          .space 8                // Full address of next position for LPRINT to print at (in ZX Printer buffer).
+                                          // Legal values in printer_buffer range. [Not used in 128K mode]
 sysvars_end:
 
   printer_buffer: .space 0x100            // Printer buffer used by 48K Basic but not by 128K Basic (apparently)

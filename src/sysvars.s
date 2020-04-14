@@ -36,6 +36,20 @@ sysvarnames:
   .byte 1
   .asciz "SCR_CT"
   .byte 1
+  .asciz "P_POSN"
+  .byte 1
+  .asciz "ECHO_E_COLUMN"
+  .byte 1
+  .asciz "ECHO_E_ROW"
+  .byte 1
+  .asciz "S_POSN_COLUMN"
+  .byte 1
+  .asciz "S_POSN_ROW"
+  .byte 1
+  .asciz "S_POSNL_COLUMN"
+  .byte 1
+  .asciz "S_POSNL_ROW"
+  .byte 1
   .asciz "REPDEL"
   .byte 1
   .asciz "REPPER"
@@ -88,6 +102,12 @@ sysvarnames:
   .byte 8
   .asciz "ERR_SP"
   .byte 8
+  .asciz "DF_CC"
+  .byte 8
+  .asciz "DF_CCL"
+  .byte 8
+  .asciz "PR_CC"
+  .byte 8
   .byte 0 // end marker
 
 .align 3
@@ -106,6 +126,13 @@ sysvaraddresses:
   .quad ERR_NR
   .quad DF_SZ
   .quad SCR_CT
+  .quad P_POSN
+  .quad ECHO_E_COLUMN
+  .quad ECHO_E_ROW
+  .quad S_POSN_COLUMN
+  .quad S_POSN_ROW
+  .quad S_POSNL_COLUMN
+  .quad S_POSNL_ROW
   .quad REPDEL
   .quad REPPER
   .quad BAUD
@@ -132,3 +159,6 @@ sysvaraddresses:
   .quad P_RAMT
   .quad UDG
   .quad ERR_SP
+  .quad DF_CC
+  .quad DF_CCL
+  .quad PR_CC

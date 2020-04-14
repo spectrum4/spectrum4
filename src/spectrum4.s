@@ -164,7 +164,7 @@ new:
 
   movl    w0, BORDER_COLOUR               // w0 = default border colour
   bl      paint_border
-  bl      clear_screen
+//bl      clear_screen
 
   mov     w13, 0x0523                     // The values five and thirty five.
   strh    w13, [x28, REPDEL-sysvars]      // REPDEL. Set the default values for key delay and key repeat.
@@ -192,6 +192,7 @@ new:
   mov     w5, 2
   strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
 
+  bl      cls
   bl      paint_copyright                 // Paint the copyright text ((C) 1982 Amstrad....)
   mov     w0, 0x20000000
   bl      wait_cycles
@@ -199,10 +200,7 @@ new:
   mov     w0, 0x10000000
   bl      wait_cycles
   mov     x0, #60
-  bl      cl_line
-  mov     w0, 0x10000000
-  bl      wait_cycles
-  bl      clear_screen
+  bl      cls
   mov     x0, sp
   mov     x1, #1
   mov     x2, #0
@@ -380,6 +378,9 @@ cl_line:
 cl_addr:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
+  stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack.
+  stp     x23, x24, [sp, #-16]!           // Backup x23 / x24 on stack.
   mov     x1, #60
   sub     x1, x1, x0
   adr     x2, display_file
@@ -394,6 +395,33 @@ cl_addr:
   mov     x6, 0x00010000
   movk    x6, 0xe00
   umaddl  x2, w6, w3, x2                  // x2 = display_file + (x1%20)*216 + (x1/20)*69120
+  mov     x19, x0
+  mov     x20, x1
+  mov     x21, x2
+  mov     x22, x3
+  mov     x23, x4
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, x20
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, x21
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, x22
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, x23
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, x19
+  mov     x1, x20
+  mov     x2, x21
+  mov     x3, x22
+  mov     x4, x23
+  ldp     x23, x24, [sp], #0x10           // Restore old x23, x24.
+  ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -444,8 +472,6 @@ cl_set:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack
-  mov     x19, x0
-  mov     x20, x1
   adr     x2, printer_buffer
   ldrb    w3, [x28, FLAGS-sysvars]
   tbnz    w3, #1, 2f
@@ -455,21 +481,44 @@ cl_set:
   add     w0, w0, w5
   sub     w0, w0, #60
 1:
+  mov     x19, x1
   bl      cl_addr
+  mov     x1, x19
 2:
   mov     x3, #109
   sub     x3, x3, x1
-  add     x0, x2, x3
+  add     x2, x2, x3, lsl #1
   bl      po_store
   ldp     x19, x20, [sp], #16             // Restore old x19, x20.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
 # On entry:
+#   x0 = row
+#   x1 = column
+#   x2 = address in display file
 po_store:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  // TODO
+  ldrb    w3, [x28, FLAGS-sysvars]
+  tbnz    w3, #1, 2f
+  ldrb    w3, [x28, TV_FLAG-sysvars]
+  tbnz    w3, #0, 1f
+  strb    w0, [x28, S_POSN_ROW-sysvars]
+  strb    w1, [x28, S_POSN_COLUMN-sysvars]
+  str     x2, [x28, DF_CC-sysvars]
+  b       3f
+1:
+  strb    w0, [x28, S_POSNL_ROW-sysvars]
+  strb    w1, [x28, S_POSNL_COLUMN-sysvars]
+  strb    w0, [x28, ECHO_E_ROW-sysvars]
+  strb    w1, [x28, ECHO_E_COLUMN-sysvars]
+  str     x2, [x28, DF_CCL-sysvars]
+  b       3f
+2:
+  strb    w1, [x28, P_POSN-sysvars]
+  str     x2, [x28, PR_CC-sysvars]
+3:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -766,30 +815,7 @@ poke_address:
   adr     x10, attributes_file_end        // Now compare address to upper limit of attributes file
   cmp     x0, x10
   b.hs    2f                              // if x0 >= x10 (attributes file end), jump ahead since after attributes file
-  // TODO: handle attributes file update
-//   mov     w20, #0xcc             // dim
-//   mov     w21, #0xff             // bright
-//   tst     w1, #0x40              // bright set?
-//   csel    w22, w20, w21, eq      // x22 = brightness
-// // w15 = foreground colour
-//   tst     w1, #0x02                       // red set?
-//   csel    w13, wzr, w22, eq
-//   tst     w1, #0x04                       // green set?
-//   csel    w14, wzr, w22, eq
-//   tst     w1, #0x01                       // blue set?
-//   csel    w15, wzr, w22, eq
-//   add     w15, w15, w14, lsl #8
-//   add     w15, w15, w13, lsl #16
-// // w7 = background colour
-//   tst     w1, #0x10                       // red set?
-//   csel    w5, wzr, w22, eq
-//   tst     w1, #0x20                       // green set?
-//   csel    w6, wzr, w22, eq
-//   tst     w1, #0x08                       // blue set?
-//   csel    w7, wzr, w22, eq
-//   add     w7, w7, w6, lsl #8
-//   add     w7, w7, w5, lsl #16
-
+// TODO: rewrite this section to be more efficient (don't call poke_address recursively)
   add     x10, x9, x11, lsl #1            // x10 = disp base address + attr offset * 2
   mov     x8, #64800                      // 216 * 20 * 15
   cmp     x11, #2160

@@ -26,10 +26,6 @@ sysvarnames:
   .byte 1
   .asciz "BORDCR"
   .byte 1
-  .asciz "ATTR_P"
-  .byte 1
-  .asciz "MASK_P"
-  .byte 1
   .asciz "ERR_NR"
   .byte 1
   .asciz "DF_SZ"
@@ -50,9 +46,19 @@ sysvarnames:
   .byte 1
   .asciz "S_POSNL_ROW"
   .byte 1
+  .asciz "P_FLAG"
+  .byte 1
   .asciz "REPDEL"
   .byte 1
   .asciz "REPPER"
+  .byte 1
+  .asciz "ATTR_P"
+  .byte 1
+  .asciz "MASK_P"
+  .byte 1
+  .asciz "ATTR_T"
+  .byte 1
+  .asciz "MASK_T"
   .byte 1
   .asciz "BAUD"
   .byte 2
@@ -121,8 +127,6 @@ sysvaraddresses:
   .quad FLAGS2
   .quad TV_FLAG
   .quad BORDCR
-  .quad ATTR_P
-  .quad MASK_P
   .quad ERR_NR
   .quad DF_SZ
   .quad SCR_CT
@@ -133,8 +137,13 @@ sysvaraddresses:
   .quad S_POSN_ROW
   .quad S_POSNL_COLUMN
   .quad S_POSNL_ROW
+  .quad P_FLAG
   .quad REPDEL
   .quad REPPER
+  .quad ATTR_P
+  .quad MASK_P
+  .quad ATTR_T
+  .quad MASK_T
   .quad BAUD
   .quad SERFL
   .quad RNFIRST

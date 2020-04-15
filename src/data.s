@@ -163,8 +163,6 @@ sysvars:
                                           //   Bit 6  : 1=Tape Loader option selected (set but never tested). [Always 0 on 48K Spectrum]
                                           //   Bit 7  : Not used (always 0).
   BORDCR:         .space 1                // Border colour multiplied by 8; also contains the attributes normally used for the lower half.
-  ATTR_P:         .space 1                // Permanent current colours, etc, as set up by colour statements.
-  MASK_P:         .space 1                // Used for transparent colours, etc. Any bit that is 1 shows that the corresponding attribute.
   ERR_NR:         .space 1                // 1 less than the report code. Starts off at 255 (for -1).
   DF_SZ:          .space 1                // The number of lines (including one blank line) in the lower part of the screen. (1-60)
   SCR_CT:         .space 1                // Counts scrolls - it is always 1 more than the number of scrolls that will be done before
@@ -176,11 +174,26 @@ sysvars:
   S_POSN_ROW:     .space 1                // 60-line number for PRINT position.
   S_POSNL_COLUMN: .space 1                // Like S_POSN_COLUMN for lower part.
   S_POSNL_ROW:    .space 1                // Like S_POSN_ROW for lower part.
+  P_FLAG:         .space 1                // Flags:
+                                          //   Bit 0: Temporary 1=OVER 1, 0=OVER 0.
+                                          //   Bit 1: Permanent 1=OVER 1, 0=OVER 0.
+                                          //   Bit 2: Temporary 1=INVERSE 1, 0=INVERSE 0.
+                                          //   Bit 3: Permanent 1=INVERSE 1, 0=INVERSE 0.
+                                          //   Bit 4: Temporary 1=Using INK 9.
+                                          //   Bit 5: Permanent 1=Using INK 9.
+                                          //   Bit 6: Temporary 1=Using PAPER 9.
+                                          //   Bit 7: Permanent 1=Using PAPER 9.
 
 .align 1
   REPDEL:         .space 1                // Place REPDEL in .align 1 section since REPDEL+REPPER is read/written together as a halfword.
                                           // Time (in 50ths of a second) that a key must be held down before it repeats. This starts off at 35.
   REPPER:         .space 1                // Delay (in 50ths of a second) between successive repeats of a key held down - initially 5.
+  ATTR_P:         .space 1                // Permanent current colours, etc, as set up by colour statements.
+  MASK_P:         .space 1                // Used for transparent colours, etc. Any bit that is 1 shows that the corresponding attribute.
+  ATTR_T:         .space 1                // Temporary current colours (as set up by colour items).
+  MASK_T:         .space 1                // Like MASK_P, but temporary.
+
+
   BAUD:           .space 2                // Baud rate timing constant for RS232 socket. Default value of 11. [Name clash with ZX Interface 1 system variable at 0x5CC3]
   SERFL:          .space 2                // Byte 0: Second character received flag:
                                           //           Bit 0   : 1=Character in buffer.

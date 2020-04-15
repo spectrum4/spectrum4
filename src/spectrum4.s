@@ -697,7 +697,13 @@ R1_1634:
 R1_1642:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  // TODO
+  ldrb    w0, [x28, TV_FLAG-sysvars]
+  and     w0, w0, #0xfffffffe             // Clear bit 0 - signal main screen in use.
+  strb    w0, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w0[0-7]
+  ldrb    w0, [x28, FLAGS-sysvars]
+  and     w0, w0, #0xfffffffd             // Clear bit 1 - signal printer not in use.
+  strb    w0, [x28, FLAGS-sysvars]        // [FLAGS] = w0[0-7]
+  bl      temps
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -712,7 +718,22 @@ R1_164D:
 temps:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  // TODO
+  ldrh    w0, [x28, ATTR_P-sysvars]       // w0 = ATTR_P + MASK_P
+  ldrb    w1, [x28, TV_FLAG-sysvars]
+  tbz     w1, #0, 1f
+  ldrb    w0, [x28, BORDCR-sysvars]       // attr = BORDCR, mask = 0
+1:
+  strh    w0, [x28, ATTR_T-sysvars]       // Store ATTR_P/MASK_P in ATTR_T/MASK_T if upper screen, BORDCR/0 if lower screen.
+  mov     w0, 0
+  tbnz    w1, #0, 2f
+  ldrb    w0, [x28, P_FLAG-sysvars]
+  lsr     w0, w0, #1
+2:
+  ldrb    w1, [x28, P_FLAG-sysvars]
+  eor     w0, w0, w1
+  and     w0, w0, 0x55555555
+  eor     w0, w0, w1
+  strb    w0, [x28, P_FLAG-sysvars]
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 

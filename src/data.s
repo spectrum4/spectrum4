@@ -72,11 +72,11 @@ R0_0589_END:
 R1_162D:
   .quad 0x0000000000000003                // 3 records
   .byte 'K',0,0,0,0,0,0,0                 // 0x4B      - Channel identifier 'K'.
-  .quad R1_1634
+  .quad chan_k
   .byte 'S',0,0,0,0,0,0,0                 // 0x53      - Channel identifier 'S'.
-  .quad R1_1642
+  .quad chan_s
   .byte 'P',0,0,0,0,0,0,0                 // 0x50      - Channel identifier 'P'.
-  .quad R1_164D
+  .quad chan_p
 
 # Memory block for GPU mailbox call to allocate framebuffer
 .align 4

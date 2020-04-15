@@ -675,7 +675,7 @@ pout:
   ret
 
 # 'K' channel flag setting routine
-R1_1634:
+chan_k:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldrb    w9, [x28, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
@@ -694,7 +694,7 @@ R1_1634:
   ret
 
 # 'S' channel flag setting routine
-R1_1642:
+chan_s:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldrb    w0, [x28, TV_FLAG-sysvars]
@@ -708,7 +708,7 @@ R1_1642:
   ret
 
 # 'P' channel flag setting routine
-R1_164D:
+chan_p:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldrb    w0, [x28, FLAGS-sysvars]

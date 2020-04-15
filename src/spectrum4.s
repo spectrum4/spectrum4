@@ -711,7 +711,9 @@ R1_1642:
 R1_164D:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  // TODO
+  ldrb    w0, [x28, FLAGS-sysvars]
+  orr     w0, w0, #2                      // Set bit 1 of FLAGS - signal printer in use.
+  strb    w0, [x28, FLAGS-sysvars]
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 

@@ -26,7 +26,7 @@ msg_hex_header:
 # Initially there are seven streams - 0xFD to 0x03.
 # This table is identical to that in ROM 1 at 0x15C6.
 # Used at 0x0226 (ROM 0).
-R0_059E:
+initial_stream_data:
   .byte 0x01, 0x00                        // Stream -3 leads to channel 'K'.
   .byte 0x19, 0x00                        // Stream -2 leads to channel 'S'.
   .byte 0x31, 0x00                        // Stream -1 leads to channel 'R'.
@@ -34,7 +34,7 @@ R0_059E:
   .byte 0x01, 0x00                        // Stream  1 leads to channel 'K'.
   .byte 0x19, 0x00                        // Stream  2 leads to channel 'S'.
   .byte 0x49, 0x00                        // Stream  3 leads to channel 'P'.
-R0_059E_END:
+initial_stream_data_END:
 
 .align 3
 # ---------------------------------
@@ -47,7 +47,7 @@ R0_059E_END:
 # with changes to the channel P routines to use the RS232 port instead of the
 # ZX Printer.
 # Used at 0x01DD (ROM 0).
-R0_0589:
+initial_channel_info:
   .quad print_out                         // PRINT_OUT - K channel output routine.
   .quad key_input                         // KEY_INPUT - K channel input routine.
   .byte 'K',0,0,0,0,0,0,0                 // 0x4B      - Channel identifier 'K'.
@@ -60,7 +60,7 @@ R0_0589:
   .quad pout                              // POUT      - P Channel output routine.
   .quad pin                               // PIN       - P Channel input routine.
   .byte 'P',0,0,0,0,0,0,0x80              // 0x50      - Channel identifier 'P'.
-R0_0589_END:
+initial_channel_info_END:
 
 # --------------------------
 # Channel code look-up table
@@ -69,7 +69,7 @@ R0_0589_END:
 # end-marker is required as channel 'R' is not present.
 
 #// chn-cd-lu
-R1_162D:
+chn_cd_lu:
   .quad 0x0000000000000003                // 3 records
   .byte 'K',0,0,0,0,0,0,0                 // 0x4B      - Channel identifier 'K'.
   .quad chan_k

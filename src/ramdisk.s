@@ -41,16 +41,6 @@
 # Initialises the ram disk
 # ------------------------------------------------------------------------------
 init_ramdisk:
-  # from R0_0137:
-  #   LD   IX,$EBEC      ; First free entry in RAM disk.
-  #   LD   (SFNEXT),IX   ; $5B83.
-  #   LD   (IX+$0A),$00  ;
-  #   LD   (IX+$0B),$C0  ;
-  #   LD   (IX+$0C),$00  ;
-  #   LD   HL,$2BEC      ;
-  #   LD   A,$01         ; AHL=Free space in RAM disk.
-  #   LD   (SFSPACE),HL  ; $5B85. Current address.
-  #   LD   (SFSPACE+2),A ; $5B87. Current RAM bank.
   mov     x9, RAM_DISK_SIZE               // x9 = size of ramdisk.
   sub     x9, x9, #0x60                   // x9 = offset from start of RAM disk to last journal entry; RAM disk entries are 96 (0x60) bytes and journal grows downwards from end of ramdisk.
   adr     x10, ram_disk                   // x10 = start address of ramdisk.

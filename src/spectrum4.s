@@ -36,7 +36,7 @@ _start:
   sub     x14, x14, 1                     // x14 = last byte of dedicated RAM (not shared with GPU).
   str     x14, [x28, P_RAMT-sysvars]      // [P_RAMT] = 0x3bffffff.
   mov     x15, UDG_COUNT * 4              // x15 = number of double words (8 bytes) of characters to copy to the user defined graphics region.
-  adr     x16, R1_3D00 + (FIRST_UDG_CHAR - 32) * 32 // x16 = address of first UDG char to copy.
+  adr     x16, chars + (FIRST_UDG_CHAR - 32) * 32 // x16 = address of first UDG char to copy.
   sub     x18, x14, UDG_COUNT * 32 - 1    // x18 = first byte of user defined graphics.
   str     x18, [x28, UDG-sysvars]         // [UDG] = first byte of user defined graphics.
 
@@ -61,7 +61,7 @@ sleep:
 
 # Entry point for NEW (with interrupts disabled when running in bare metal since this routine will enable interrupts)
 new:
-  adr     x0, R1_3D00 - (0x20 * 0x20)     // x0 = where, in theory character zero would be.
+  adr     x0, chars - (0x20 * 0x20)     // x0 = where, in theory character zero would be.
   str     x0, [x28, CHARS-sysvars]        // [CHARS] = theoretical address of char zero.
   ldr     x1, [x28, RAMTOP-sysvars]       // x1 = [RAMTOP].
   add     x1, x1, 1                       // x1 = [RAMTOP] + 1.
@@ -134,10 +134,10 @@ new:
   adrp    x5, heap
   add     x5, x5, #:lo12:heap             // x5 = start of heap
   str     x5, [x28, CHANS-sysvars]        // [CHANS] = start of heap
-  mov     x6, (R0_0589_END - R0_0589)/8   // x6 = number of double words (8 bytes) in R0_0589 block
-  adr     x7, R0_0589
+  mov     x6, (initial_channel_info_END - initial_channel_info)/8   // x6 = number of double words (8 bytes) in initial_channel_info block
+  adr     x7, initial_channel_info
 
-# Copy R0_0589 block to [CHANS] = start of heap = heap
+# Copy initial_channel_info block to [CHANS] = start of heap = heap
 3:
   ldr     x8, [x7], 8
   str     x8, [x5], 8
@@ -175,10 +175,10 @@ new:
 //
 //
   adr     x5, STRMS
-  mov     x6, (R0_059E_END - R0_059E)/2   // x6 = number of half words (2 bytes) in R0_059E block
-  adr     x7, R0_059E
+  mov     x6, (initial_stream_data_END - initial_stream_data)/2   // x6 = number of half words (2 bytes) in initial_stream_data block
+  adr     x7, initial_stream_data
 
-# Copy R0_059E block to [STRMS]
+# Copy initial_stream_data block to [STRMS]
 1:
   ldrh    w8, [x7], 2
   strh    w8, [x5], 2
@@ -553,7 +553,7 @@ chan_flag:
   and     w9, w9, #0xffffffef             // w9 = [FLAGS2] with bit 4 unset.
   strb    w9, [x28, FLAGS2-sysvars]       // Update [FLAGS2] to have bit 4 unset (signal K channel not in use).
   ldr     x0, [x0, 16]                    // w0 = channel letter (stored at CHANS record address + 16)
-  adr     x1, R1_162D                     // x1 = address of flag setting routine lookup table
+  adr     x1, chn_cd_lu                     // x1 = address of flag setting routine lookup table
   bl      indexer                         // look up flag setting routine
   cbz     x1, 1f                          // If not found then there is no routine (channel 'R') to call.
   blr     x2                              // Call flag setting routine.

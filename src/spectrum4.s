@@ -8,7 +8,7 @@
 .text
 
 _start:
-# Disable interrupts, or assume they are already disabled?
+  msr     daifset, #3                     // Disable (mask) interrupts and fast interrupts
   mrs     x0, mpidr_el1                   // x0 = Multiprocessor Affinity Register.
   ands    x0, x0, #0x3                    // x0 = core number.
   b.ne    sleep                           // Put all cores except core 0 to sleep.

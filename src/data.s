@@ -14,10 +14,46 @@ msg_title_sysvars:
 .byte 10,13,0
 
 msg_copyright:
-  .asciz "1982, 1986, 1987 Amstrad Plc."
+  .byte 0x7f                           // '(c)'.
+  .asciz " 1986 Sinclair Research Ltd"
 
 msg_hex_header:
   .asciz "           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f  "
+
+# -----------------------
+# New Error Message Table
+# -----------------------
+
+msg_merge_error:
+  .asciz "MERGE error"                 // Report 'a'.
+msg_wrong_file_type:
+  .asciz "Wrong file type"             // Report 'b'.
+msg_code_error:
+  .asciz "CODE error"                  // Report 'c'.
+msg_too_many_brackets:
+  .asciz "Too many brackets"           // Report 'd'.
+msg_file_already_exists:
+  .asciz "File already exists"         // Report 'e'.
+msg_invalid_name:
+  .asciz "Invalid name"                // Report 'f'.
+msg_file_does_not_exist:
+  .asciz "File does not exist"         // Report 'g' & 'h'.
+msg_invalid_device:
+  .asciz "Invalid device"              // Report 'i'.
+msg_invalid_baud_rate:
+  .asciz "Invalid baud rate"           // Report 'j'.
+msg_invalid_note_name:
+  .asciz "Invalid note name"           // Report 'k'.
+msg_number_too_big:
+  .asciz "Number too big"              // Report 'l'.
+msg_note_out_of_range:
+  .asciz "Note out of range"           // Report 'm'.
+msg_out_of_range:
+  .asciz "Out of range"                // Report 'n'.
+msg_too_many_tied_notes:
+  .asciz "Too many tied notes"         // Report 'o'.
+msg_bad_parameter:
+  .asciz "Bad parameter"               // Report 'p'.
 
 .align 1
 # -------------------------

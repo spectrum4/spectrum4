@@ -641,36 +641,42 @@ mbox_call:
 print_out:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+// TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 add_char:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+// TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 key_input:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+// TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 report_j:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+// TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 pin:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+// TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 pout:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+// TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -738,6 +744,39 @@ temps:
   strb    w0, [x28, P_FLAG-sysvars]
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
+
+# Print zero byte delimited string stored at memory location x0 to current channel.
+# On entry:
+#   x0 = address of zero byte delimited string
+print_message:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack
+  mov     x19, x0
+  b       2f
+1:
+  mov     w0, w1
+  bl      print_w0
+2:
+  ldrb    w1, [x19], #1
+  cbnz    w1, 1b
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+# Print character in lower 8 bits of w0 to current channel.
+# On entry:
+#   w0 = char to print (lower 8 bits)
+print_w0:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  ldr     x1, [x28, CURCHL-sysvars]
+  blr     x1
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
 
 # On entry:
 #   x0 = address

@@ -139,9 +139,9 @@ new:
 
 # Copy initial_channel_info block to [CHANS] = start of heap = heap
 3:
-  ldr     x8, [x7], 8
-  str     x8, [x5], 8
-  subs    x6, x6, 1
+  ldr     x8, [x7], #8
+  str     x8, [x5], #8
+  subs    x6, x6, #1
   b.ne    3b
 
   sub     x9, x5, 1
@@ -179,11 +179,11 @@ new:
   adr     x7, initial_stream_data
 
 # Copy initial_stream_data block to [STRMS]
-1:
-  ldrh    w8, [x7], 2
-  strh    w8, [x5], 2
-  subs    x6, x6, 1
-  b.ne    1b
+4:
+  ldrh    w8, [x7], #2
+  strh    w8, [x5], #2
+  subs    x6, x6, #1
+  b.ne    4b
 
 //         RES  1,(IY+0x01)   // FLAGS. Signal printer not is use.
 
@@ -219,9 +219,13 @@ new:
   mov     x1, #8
   mov     x2, #22
   bl      display_memory
-  ldr     x0, [x28, UDG-sysvars]
-  mov     x1, UDG_COUNT
+  adr     x0, STRMS
+  mov     x1, #2
   mov     x2, #32
+  bl      display_memory
+  ldr     x0, [x28, CHANS-sysvars]
+  mov     x1, #2
+  mov     x2, #36
   bl      display_memory
   bl      display_sysvars
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
@@ -536,8 +540,9 @@ chan_open:
 //   bl      error_1
   b       2f
 1:
-  add     x10, x10, CHANS-sysvars-1       // w10 = CHANS offset + 1 + CHANS - sysvars - 1 = address in CHANS - sysvars
-  add     x0, x28, x10                    // x0 = address of channel data in CHANS
+  ldr     x9, [x28, CHANS-sysvars]        // x9 = [CHANS]
+  add     x10, x10, x9                    // w10 = [CHANS] + CHANS offset + 1
+  sub     x0, x10, #1                     // x0 = address of channel data in CHANS
   bl      chan_flag
 2:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
@@ -553,7 +558,7 @@ chan_flag:
   and     w9, w9, #0xffffffef             // w9 = [FLAGS2] with bit 4 unset.
   strb    w9, [x28, FLAGS2-sysvars]       // Update [FLAGS2] to have bit 4 unset (signal K channel not in use).
   ldr     x0, [x0, 16]                    // w0 = channel letter (stored at CHANS record address + 16)
-  adr     x1, chn_cd_lu                     // x1 = address of flag setting routine lookup table
+  adr     x1, chn_cd_lu                   // x1 = address of flag setting routine lookup table
   bl      indexer                         // look up flag setting routine
   cbz     x1, 1f                          // If not found then there is no routine (channel 'R') to call.
   blr     x2                              // Call flag setting routine.
@@ -591,9 +596,26 @@ chan_flag:
 #   x1 = address of 64 bit key if found, otherwise 0
 #   x2 = 64 bit value for key if found, otherwise undefined value
 indexer:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack
+  mov     x19, x0
+  mov     x20, x1
+  bl      uart_newline
+  mov     x0, 'I'
+  bl      uart_send
+  bl      uart_newline
+  mov     x0, x19
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, x20
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, x19
+  mov     x1, x20
   ldr     x9, [x1], #-8                   // x9 = number of records. Set x1 to lookup table address - 8 = address of first record - 16.
 1:
-  cbz     x9, 2b                          // If all records have been exhausted, jump forward to 2:.
+  cbz     x9, 2f                          // If all records have been exhausted, jump forward to 2:.
   ldr     x10, [x1, #16]!                 // Load key at x1+16 into x10, and proactively increase x1 by 16 for the next iteration.
   sub     x9, x9, 1                       // x9 = number of remaining records to check (which is now one less)
   cmp     x0, x10                         // Check if key matches wanted key.
@@ -603,6 +625,8 @@ indexer:
 2:
   mov     x1, 0                           // Set x1 to zero to indicate value wasn't found.
 3:
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 
@@ -684,6 +708,9 @@ pout:
 chan_k:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  mov     x0, 'K'
+  bl      uart_send
+  bl      uart_newline
   ldrb    w9, [x28, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
   orr     w9, w9, #0x00000001             // Set bit 0 - signal lower screen in use.
   strb    w9, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w9[0-7]
@@ -703,6 +730,9 @@ chan_k:
 chan_s:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  mov     x0, 'S'
+  bl      uart_send
+  bl      uart_newline
   ldrb    w0, [x28, TV_FLAG-sysvars]
   and     w0, w0, #0xfffffffe             // Clear bit 0 - signal main screen in use.
   strb    w0, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w0[0-7]
@@ -717,6 +747,9 @@ chan_s:
 chan_p:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  mov     x0, 'P'
+  bl      uart_send
+  bl      uart_newline
   ldrb    w0, [x28, FLAGS-sysvars]
   orr     w0, w0, #2                      // Set bit 1 of FLAGS - signal printer in use.
   strb    w0, [x28, FLAGS-sysvars]

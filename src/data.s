@@ -103,8 +103,6 @@ initial_channel_info_END:
 # --------------------------
 # This table is used to find one of the three flag setting routines. A zero
 # end-marker is required as channel 'R' is not present.
-
-#// chn-cd-lu
 chn_cd_lu:
   .quad 0x0000000000000003                // 3 records
   .byte 'K',0,0,0,0,0,0,0                 // 0x4B      - Channel identifier 'K'.
@@ -113,6 +111,32 @@ chn_cd_lu:
   .quad chan_s
   .byte 'P',0,0,0,0,0,0,0                 // 0x50      - Channel identifier 'P'.
   .quad chan_p
+
+# -----------------------
+# Control character table
+# -----------------------
+# For control characters in the range 6 - 23 the following table
+# is indexed to provide an offset to the handling routine that
+# follows the table.
+ctlchrtab:
+  .quad po_comma                          // chr 0x06
+  .quad po_quest                          // chr 0x07
+  .quad po_back_1                         // chr 0x08
+  .quad po_right                          // chr 0x09
+  .quad po_quest                          // chr 0x0a
+  .quad po_quest                          // chr 0x0b
+  .quad po_quest                          // chr 0x0c
+  .quad po_enter                          // chr 0x0d
+  .quad po_quest                          // chr 0x0e
+  .quad po_quest                          // chr 0x0f
+  .quad po_1_oper                         // chr 0x10
+  .quad po_1_oper                         // chr 0x11
+  .quad po_1_oper                         // chr 0x12
+  .quad po_1_oper                         // chr 0x13
+  .quad po_1_oper                         // chr 0x14
+  .quad po_1_oper                         // chr 0x15
+  .quad po_2_oper                         // chr 0x16
+  .quad po_2_oper                         // chr 0x17
 
 # Memory block for GPU mailbox call to allocate framebuffer
 .align 4

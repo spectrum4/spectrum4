@@ -22,12 +22,11 @@ error_1:
                                           // or  ED-ERROR when editing.
                                           // or   ED-FULL during ed-enter.
                                           // or  IN-VAR-1 during runtime input etc.
-
   // TODO - a lot to implement here, skipping for now as I haven't understood
   // how the stack swapping works yet.
-
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
 
 cls:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
@@ -36,6 +35,7 @@ cls:
   bl      cls_lower
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
 
 cls_lower:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
@@ -71,6 +71,7 @@ cls_lower:
   ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
 
 # ---------------------------
 # Clear text lines of display
@@ -146,6 +147,7 @@ cl_line:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
+
 # On entry:
 #   x0 = number of lines to be cleared (1-60)
 # On exit:
@@ -204,6 +206,7 @@ cl_addr:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
+
 cl_all:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -222,11 +225,15 @@ cl_all:
   str     x1, [x0], #8                    // Reset output routine to print_out for channel S.
   mov     w0, 1
   strb    w0, [x28, SCR_CT-sysvars]       // Reset SCR_CT (scroll count) to default of 1.
-  mov     x0, 0x3c                        // 0x3c => row 60 (off screen?).
-  mov     x1, 0x6d                        // 0x6d = 109 => column 0, strangely (col = 109-x).
+# Set cursor position for upper screen, using strange reversed coordinates.
+# Note, reversed row ranges from 60 (top), presumably down to 1+DF_SZ (bottom row).
+# However, the reversed column ranges from 109 (leftmost column) down to 2 (rightmost column).
+  mov     x0, 60                          // reversed row = 60 => row = 0 (60-row)
+  mov     x1, 109                         // reversed column = 109 => column = 0 (109-column)
   bl      cl_set
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
 
 cl_chan:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
@@ -238,19 +245,29 @@ cl_chan:
   str     x1, [x0], #8                    // Reset output routine to print_out for channel K.
   adr     x1, key_input
   str     x1, [x0], #8                    // Reset input routine to key_input for channel K.
-  mov     x0, 0x3b                        // 0x3b => row 59.
-  mov     x1, 0x6d                        // 0x6d = 109 => column 0, strangely (col = 109-x).
+# Set cursor position for lower screen, using strange half-reversed coordinates.
+# The row seems not to be reversed, and match the actual row number.
+# The reversed column seems to range from 109 (leftmost column) down to 2 (rightmost column).
+  mov     x0, 59                          // row 59, (actual row, seemingly not reversed, for channel K)
+  mov     x1, 109                         // reversed column = 109 => column = 0 (109-column)
   bl      cl_set
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
+
+# Sets the cursor position for the currently active K/S/P channel.
 # On entry:
-#   x0 = row 0-60 / 1-60 ?
-#   x1 = column (1-109) ?
+#   x0 = row indicator
+#     for K: this seems to match actual screen row
+#     for S: this seems to be 60 minus actual screen row
+#     for P: I'm not sure yet
+#   x1 = reversed column
+#     for K: I'm not sure yet
+#     for S and P: this seems to be from 109 (leftmost column) to 2 (rightmost column)
 cl_set:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
   adr     x2, printer_buffer
   ldrb    w3, [x28, FLAGS-sysvars]
   tbnz    w3, #1, 2f
@@ -271,6 +288,7 @@ cl_set:
   ldp     x19, x20, [sp], #16             // Restore old x19, x20.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
 
 # On entry:
 #   x0 = row
@@ -301,6 +319,7 @@ po_store:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
+
 # On entry:
 #   x0 = stream number in range [-3,15]
 # On exit:
@@ -323,6 +342,7 @@ chan_open:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
+
 # On entry:
 #   x0 = address of channel information inside CHANS
 chan_flag:
@@ -340,6 +360,7 @@ chan_flag:
 1:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
 
 # Routine indexer searches an in-memory key/value store for x0.
 #
@@ -373,7 +394,7 @@ chan_flag:
 indexer:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
   mov     x19, x0
   mov     x20, x1
   bl      uart_newline
@@ -404,6 +425,11 @@ indexer:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
+
+# On exit:
+#   w0 = column (1 byte)
+#   w1 = row (1 byte)
+#   x2 = address
 po_fetch:
   ldrb    w0, [x28, FLAGS-sysvars]
   tbnz    w0, #1, 2f
@@ -428,13 +454,77 @@ po_fetch:
   ret
 
 
+# On entry:
+#   w0 = char (1 byte)
 print_out:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
+  mov     x19, x0                         // Stash x0.
   bl      po_fetch
+  mov     x3, x19
+  cmp     x3, #0x20
+  b.hs    1f
+  cmp     x3, #0x06
+  b.lo    2f
+  cmp     x3, #0x18
+  b.hs    2f
+  adr     x4, ctlchrtab-(6*8)
+  add     x4, x4, x3, lsl #3
+  blr     x4
+  b       3f
+1:
+  bl      po_able
+  b       3f
+2:
+  bl      po_quest
+3:
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+# On entry:
+#   w0 = column (1 byte)
+#   w1 = row (1 byte)
+#   x2 = address
+#   w3 = 0x08 (chr 8)
+po_back_1:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  add     w0, w0, #1
 // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
+
+po_able:
+// TODO
+
+
+po_comma:
+// TODO
+
+
+po_quest:
+// TODO
+
+
+po_right:
+// TODO
+
+
+po_enter:
+// TODO
+
+
+po_1_oper:
+// TODO
+
+
+po_2_oper:
+// TODO
+
 
 add_char:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
@@ -443,12 +533,14 @@ add_char:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
+
 key_input:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
 // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
 
 report_j:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
@@ -457,6 +549,7 @@ report_j:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
+
 pin:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -464,12 +557,14 @@ pin:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
+
 pout:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
 // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
 
 # 'K' channel flag setting routine
 chan_k:
@@ -493,6 +588,7 @@ chan_k:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
+
 # 'S' channel flag setting routine
 chan_s:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
@@ -510,6 +606,7 @@ chan_s:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
+
 # 'P' channel flag setting routine
 chan_p:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
@@ -522,6 +619,7 @@ chan_p:
   strb    w0, [x28, FLAGS-sysvars]
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
 
 temps:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
@@ -552,7 +650,7 @@ temps:
 print_message:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
   mov     x19, x0
   b       2f
 1:

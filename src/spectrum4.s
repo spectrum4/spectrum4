@@ -661,10 +661,34 @@ mbox_call:
   b.ne    2b                              // If not, try again.
   ret
 
+po_fetch:
+  ldrb    w0, [x28, FLAGS-sysvars]
+  tbnz    w0, #1, 2f
+  ldrb    w0, [x28, TV_FLAG-sysvars]
+  tbnz    w0, #0, 1f
+  // upper screen
+  ldrb    w0, [x28, S_POSNL_COLUMN-sysvars]
+  ldrb    w1, [x28, S_POSNL_ROW-sysvars]
+  ldr     x2, [x28, DF_CCL]
+  b       3f
+1:
+  // lower screen
+  ldrb    w0, [x28, S_POSN_COLUMN-sysvars]
+  ldrb    w1, [x28, S_POSN_ROW-sysvars]
+  ldr     x2, [x28, DF_CC]
+  b 4f
+2:
+  // printer
+  ldrb    w0, [x28, P_POSN-sysvars]
+  ldr     x2, [x28, PR_CC]
+3:
+  ret
+
 
 print_out:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  bl      po_fetch
 // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret

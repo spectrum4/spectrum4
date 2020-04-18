@@ -7,7 +7,9 @@
 
 .include "src/constants.s"
 .include "src/macros.s"
-.include "src/spectrum4.s"
+.include "src/kernel.s"
+.include "src/rom0.s"
+.include "src/rom1.s"
 .include "src/ramdisk.s"
 .include "src/uart.s"
 .include "src/data.s"
@@ -16,5 +18,3 @@
 .include "src/sysvars.s"
 .include "src/reboot.s"
 .include "src/paint.s"
-
-# .include "src/kernel.s"

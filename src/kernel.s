@@ -195,53 +195,30 @@
 # 
 #   ret
 
-restart:
-  msr     daifset, #3                     // Disable (mask) interrupts and fast interrupts
-  mrs     x0, mpidr_el1                   // x0 = Multiprocessor Affinity Register.
-  ands    x0, x0, #0x3                    // x0 = core number.
-  b.ne    sleep                           // Put all cores except core 0 to sleep.
-  mov     x29, 0                          // Frame pointer 0 indicates end of stack.
-  adr     x28, sysvars                    // x28 will remain at this constant value to make all sys vars via an immediate offset.
-  mov     x0, x28                         // Zero
-  adr     x1, sysvars_end                 // Out
-1:                                        // System
-  strb    wzr, [x0], #1                   // Variables
-  cmp     x0, x1                          // ...
-  b.ne    1b                              // ...
-  bl      uart_init                       // Initialise UART interface.
+kernel:
 
 # Should enable interrupts, set up vector jump tables, switch execution
 # level etc, and all the kinds of things to initialise the processor system
 # registers, memory virtualisation, initialise sound chip, USB, etc.
-# Test memory banks?
-# Init usb/keyboard?
-# Init sound?
 
+  mrs     x0, mpidr_el1                   // x0 = Multiprocessor Affinity Register.
+  ands    x0, x0, #0x3                    // x0 = core number.
+  b.ne    sleep                           // Put all cores except core 0 to sleep.
+  adr     x28, sysvars                    // x28 will remain at this constant value to make all sys vars via an immediate offset.
+  bl      uart_init                       // Initialise UART interface.
   bl      init_framebuffer                // Allocate a frame buffer with chosen screen settings.
-  bl      init_ramdisk
+  mrs     x0, currentel
+  lsr     x0, x0, #2
+  cmp     x0, 3
+  b.ne    1f
+# Start L1 Caches if in EL3...
+  mrs     x0, sctlr_el3                   // x0 = System Control Register
+  orr     x0, x0, 0x0004                  // Data Cache (Bit 2)
+  orr     x0, x0, 0x1000                  // Instruction Caches (Bit 12)
+  msr     sctlr_el3, x0                   // System Control Register = x0
+1:
+  b       restart
 
-  ldr     w14, arm_size                   // x14 = first byte of shared GPU memory, for determining where CPU dedicated RAM ends (one byte below).
-  sub     x14, x14, 1                     // x14 = last byte of dedicated RAM (not shared with GPU).
-  str     x14, [x28, P_RAMT-sysvars]      // [P_RAMT] = 0x3bffffff.
-  mov     x15, UDG_COUNT * 4              // x15 = number of double words (8 bytes) of characters to copy to the user defined graphics region.
-  adr     x16, chars + (FIRST_UDG_CHAR - 32) * 32 // x16 = address of first UDG char to copy.
-  sub     x18, x14, UDG_COUNT * 32 - 1    // x18 = first byte of user defined graphics.
-  str     x18, [x28, UDG-sysvars]         // [UDG] = first byte of user defined graphics.
-
-# Copy UDG_COUNT characters into User Defined Graphics memory region at end of RAM.
-2:
-  ldr     x17, [x16], 8
-  str     x17, [x18], 8
-  subs    x15, x15, 1
-  b.ne    2b
-
-  mov     w12, 0x40
-  strb    w12, [x28, RASP-sysvars]        // [RASP]=0x40
-  strb    wzr, [x28, PIP-sysvars]         // [PIP]=0x00
-  sub     x13, x18, 1 + UDG_COUNT * 32
-  str     x13, [x28, RAMTOP-sysvars]      // [RAMPTOP] = UDG - 1 (address of last byte before UDG starts).
-  bl      new
-# b       reboot
 
 sleep:
   wfe                                     // Sleep until woken.

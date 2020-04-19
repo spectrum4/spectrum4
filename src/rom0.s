@@ -6,6 +6,52 @@
 .text
 
 
+restart:                         // L0000
+  msr     daifset, #3                     // Disable (mask) interrupts and fast interrupts
+  mov     x0, x28                         // Zero
+  adr     x1, sysvars_end                 // Out
+1:                                        // System
+  strb    wzr, [x0], #1                   // Variables
+  cmp     x0, x1                          // ...
+  b.ne    1b                              // ...
+  bl      init_ramdisk
+  ldr     w14, arm_size                   // x14 = first byte of shared GPU memory, for determining where CPU dedicated RAM ends (one byte below).
+  sub     x14, x14, 1                     // x14 = last byte of dedicated RAM (not shared with GPU).
+  str     x14, [x28, P_RAMT-sysvars]      // [P_RAMT] = 0x3bffffff.
+  mov     x15, UDG_COUNT * 4              // x15 = number of double words (8 bytes) of characters to copy to the user defined graphics region.
+  adr     x16, chars + (FIRST_UDG_CHAR - 32) * 32 // x16 = address of first UDG char to copy.
+  sub     x18, x14, UDG_COUNT * 32 - 1    // x18 = first byte of user defined graphics.
+  str     x18, [x28, UDG-sysvars]         // [UDG] = first byte of user defined graphics.
+# Copy UDG_COUNT characters into User Defined Graphics memory region at end of RAM.
+2:
+  ldr     x17, [x16], 8
+  str     x17, [x18], 8
+  subs    x15, x15, 1
+  b.ne    2b
+  mov     w12, 0x40
+  strb    w12, [x28, RASP-sysvars]        // [RASP]=0x40
+  strb    wzr, [x28, PIP-sysvars]         // [PIP]=0x00
+  sub     x13, x18, 1 + UDG_COUNT * 32
+  str     x13, [x28, RAMTOP-sysvars]      // [RAMPTOP] = UDG - 1 (address of last byte before UDG starts).
+  b       new
+
+
+pin:                             // L009A
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+// TODO
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+pout:                            // L009F
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+// TODO
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
 # Entry point for NEW (with interrupts disabled when running in bare metal since this routine will enable interrupts)
 new:                             // L019D
   adr     x0, chars - (0x20 * 0x20)       // x0 = where, in theory character zero would be.
@@ -13,61 +59,11 @@ new:                             // L019D
   ldr     x1, [x28, RAMTOP-sysvars]       // x1 = [RAMTOP].
   add     x1, x1, 1                       // x1 = [RAMTOP] + 1.
   and     sp, x1, 0xfffffff0              // sp = highest 16-byte aligned address equal to or lower than ([RAMTOP] + 1).
-  mrs     x0, currentel
-  str     x0, [sp, -16]!
-  lsr     x0, x0, #2
-  cmp     x0, 3
-  b.ne    1f
-# Start L1 Cache
-  mrs     x0, sctlr_el3                   // x0 = System Control Register
-  orr     x0, x0, 0x0004                  // Data Cache (Bit 2)
-# orr     x0, x0, 0x0800                  // Branch Prediction (Bit 11) - this seems to be undocumented in ARM ARM
-                                          // see: https://www.raspberrypi.org/forums/viewtopic.php?f=72&t=269441
-  orr     x0, x0, 0x1000                  // Instruction Caches (Bit 12)
-  msr     sctlr_el3, x0                   // System Control Register = x0
-  str     x0, [sp, 8]
-  b       2f
-1:
-  cmp     x0, 2
-  b.ne    2f
-  mrs     x0, sctlr_el2                   // 0000000030c50830
-  str     x0, [sp, 8]                     // 0000 0000 0000 0000 0000 0000 0000 0000
-                                          // 0011 0000 1100 0101 0000 1000 0011 0000
-                                          //
-                                          // RES0: 0b00000000000000000000000000000000
-                                          // EnIA: 0b0 => RES0 in v8.0 (pointer auth)
-                                          // EnIB: 0b0 => RES0 in v8.0 (pointer auth)
-                                          // RES1: 0b11
-                                          // EnDA: 0b0 => RES0 in v8.0 (pointer auth)
-                                          // RES0: 0b0
-                                          // EE: 0b0 => little endian translation table walks
-                                          // RES0: 0b0
-                                          // RES1: 0b11
-                                          // IESB: 0b0 => RES0 in v8.0 (error sync event / debug)
-                                          // RES0: 0b0
-                                          // WXN: 0b0 => UNKNOWN since PE resets to EL2 (write execute never)
-                                          // RES1: 0b1
-                                          // RES0: 0b0
-                                          // RES1: 0b1
-                                          // RES0: 0b00
-                                          // EnDB: 0b0 => RES0 in v8.0 (pointer auth)
-                                          // I: 0b0 => Instruction cache disabled
-                                          // RES1: 0b1
-                                          // RES0: 0b0000
-                                          // nAA: 0b0 => RES0 in v8.0
-                                          // RES1: 0b11
-                                          // SA: 0b0 => UNKNOWN since PE resets to EL2 (SP alignment checking)
-                                          // C: 0b0 => data cache disabled
-                                          // A: 0b0 => UNKNOWN since PE resets to EL2 (alignment checking)
-                                          // M: 0b0 => EL2 stage 1 address translation disabled
-2:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
+  mov     x29, 0                          // Frame pointer 0 indicates end of stack.
   ldrb    w1, [x28, FLAGS-sysvars]        // w1 = [FLAGS].
   orr     w1, w1, #0x10                   // w1 = [FLAGS] with bit 4 set.
                                           // [This bit is unused by 48K BASIC].
   strb    w1, [x28, FLAGS-sysvars]        // Update [FLAGS] to have bit 4 set.
-# Here we should also set interuppt mode, and enable interrupts, and initialise printer
   mov     w2, 0x000B                      // = 11; timing constant for 9600 baud. Maybe useful for UART?
   strh    w2, [x28, BAUD-sysvars]         // [BAUD] = 0x000B
   strb    wzr, [x28, SERFL-sysvars]       // 0x5B61. Indicate no byte waiting in RS232 receive buffer.
@@ -83,14 +79,12 @@ new:                             // L019D
   str     x5, [x28, CHANS-sysvars]        // [CHANS] = start of heap
   mov     x6, (initial_channel_info_END - initial_channel_info)/8   // x6 = number of double words (8 bytes) in initial_channel_info block
   adr     x7, initial_channel_info
-
 # Copy initial_channel_info block to [CHANS] = start of heap = heap
 3:
   ldr     x8, [x7], #8
   str     x8, [x5], #8
   subs    x6, x6, #1
   b.ne    3b
-
   sub     x9, x5, 1
   str     x9, [x28, DATADD-sysvars]
   str     x5, [x28, PROG-sysvars]
@@ -108,11 +102,8 @@ new:                             // L019D
   strb    w12, [x28, ATTR_P-sysvars]
   strb    w12, [x28, MASK_P-sysvars]
   strb    w12, [x28, BORDCR-sysvars]
-
   movl    w0, BORDER_COLOUR               // w0 = default border colour
   bl      paint_border
-//bl      clear_screen
-
   mov     w13, 0x0523                     // The values five and thirty five.
   strh    w13, [x28, REPDEL-sysvars]      // REPDEL. Set the default values for key delay and key repeat.
 //
@@ -124,22 +115,26 @@ new:                             // L019D
   adr     x5, STRMS
   mov     x6, (initial_stream_data_END - initial_stream_data)/2   // x6 = number of half words (2 bytes) in initial_stream_data block
   adr     x7, initial_stream_data
-
 # Copy initial_stream_data block to [STRMS]
 4:
   ldrh    w8, [x7], #2
   strh    w8, [x5], #2
   subs    x6, x6, #1
   b.ne    4b
-
 //         RES  1,(IY+0x01)   // FLAGS. Signal printer not is use.
-
   mov     w5, 255
   strb    w5, [x28, ERR_NR-sysvars]       // Signal no error.
   mov     w5, 2
   strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
 
   bl      cls
+
+  // TODO
+
+/////////////////////////////////////////////////////////////////////////
+// The following code is all just for demonstration / testing purposes...
+/////////////////////////////////////////////////////////////////////////
+
   bl      paint_copyright                 // Paint the copyright text ((C) 1982 Amstrad....)
   mov     w0, 0x20000000
   bl      wait_cycles
@@ -196,21 +191,5 @@ print_message:                   // L057D
   ldrb    w1, [x19], #1
   cbnz    w1, 1b
   ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
-
-
-pin:                             // L009A
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-// TODO
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
-
-
-pout:                            // L009F
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-// TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret

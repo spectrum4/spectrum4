@@ -7,8 +7,8 @@
 
 
 # Entry point for NEW (with interrupts disabled when running in bare metal since this routine will enable interrupts)
-new:
-  adr     x0, chars - (0x20 * 0x20)     // x0 = where, in theory character zero would be.
+new:                             // L019D
+  adr     x0, chars - (0x20 * 0x20)       // x0 = where, in theory character zero would be.
   str     x0, [x28, CHARS-sysvars]        // [CHARS] = theoretical address of char zero.
   ldr     x1, [x28, RAMTOP-sysvars]       // x1 = [RAMTOP].
   add     x1, x1, 1                       // x1 = [RAMTOP] + 1.
@@ -178,3 +178,23 @@ new:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
+
+
+# Print zero byte delimited string stored at memory location x0 to current channel.
+# On entry:
+#   x0 = address of zero byte delimited string
+print_message:                   // L057D
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
+  mov     x19, x0
+  b       2f
+1:
+  mov     w0, w1
+  bl      print_w0
+2:
+  ldrb    w1, [x19], #1
+  cbnz    w1, 1b
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret

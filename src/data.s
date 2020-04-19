@@ -121,7 +121,7 @@ chn_cd_lu:
 ctlchrtab:
   .quad po_comma                          // chr 0x06
   .quad po_quest                          // chr 0x07
-  .quad po_back_1                         // chr 0x08
+  .quad po_back                         // chr 0x08
   .quad po_right                          // chr 0x09
   .quad po_quest                          // chr 0x0a
   .quad po_quest                          // chr 0x0b

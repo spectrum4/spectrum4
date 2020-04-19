@@ -489,15 +489,27 @@ print_out:
 
 
 # On entry:
-#   w0 = column (1 byte)
-#   w1 = row (1 byte)
-#   x2 = address
+#   w0 = 109 - column 
+#   w1 = 60 - row
+#   x2 = address in display file / printer buffer(?)
 #   w3 = 0x08 (chr 8)
-po_back_1:
+po_back:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   add     w0, w0, #1
-// TODO
+  cmp     w0, #110
+  b.ne    3f
+  ldrb    w4, [x28, FLAGS-sysvars]        // w9[0-7] = [FLAGS]
+  tbnz    w4, #1, 2f
+  add     w1, w1, #1
+  mov     w0, #2
+  cmp     w1, #61
+  b.ne    3f
+  sub     w1, w1, #1
+2:
+  mov     w0, #109
+3:
+  bl      cl_set
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 

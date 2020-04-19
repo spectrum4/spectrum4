@@ -228,8 +228,8 @@ cl_all:
 # Set cursor position for upper screen, using strange reversed coordinates.
 # Note, reversed row ranges from 60 (top), presumably down to 1+DF_SZ (bottom row).
 # However, the reversed column ranges from 109 (leftmost column) down to 2 (rightmost column).
-  mov     x0, 60                          // reversed row = 60 => row = 0 (60-row)
-  mov     x1, 109                         // reversed column = 109 => column = 0 (109-column)
+  mov     x0, 60                          // reversed row = 60 => row = 0 (row = 60 - reversed row)
+  mov     x1, 109                         // reversed column = 109 => column = 0 (column = 109 - reversed column)
   bl      cl_set
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
@@ -248,7 +248,7 @@ cl_chan:
 # Set cursor position for lower screen, using strange half-reversed coordinates.
 # The row seems not to be reversed, and match the actual row number.
 # The reversed column seems to range from 109 (leftmost column) down to 2 (rightmost column).
-  mov     x0, 59                          // row 59, (actual row, seemingly not reversed, for channel K)
+  mov     x0, 59                          // screen row (120-[DF_SZ]-59)=screen row 59 for channel K.
   mov     x1, 109                         // reversed column = 109 => column = 0 (109-column)
   bl      cl_set
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
@@ -257,33 +257,37 @@ cl_chan:
 
 # Sets the cursor position for the currently active K/S/P channel.
 # On entry:
-#   x0 = row indicator
-#     for K: this seems to match actual screen row
-#     for S: this seems to be 60 minus actual screen row
-#     for P: I'm not sure yet
-#   x1 = reversed column
-#     for K: I'm not sure yet
-#     for S and P: this seems to be from 109 (leftmost column) to 2 (rightmost column)
+#   x0 = 60 - line offset into section
+#     for K: x0 = 120 - [DF_SZ] - actual screen row (x0 range: 1 -> 60)
+#     for S: x0 = 60 - actual screen row (x0 range: 1 -> 60)
+#     for P: I suspect the same, although maybe x0 range might be bigger.
+#   x1 = 109 - actual column
+#     for S and K: from 109 (leftmost column) to 2 (rightmost column)
+#     for P: I think the same.
 cl_set:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
-  adr     x2, printer_buffer
+  adr     x2, printer_buffer+109
+  sub     x2, x2, x1                      // x2 = address inside printer buffer to write char
   ldrb    w3, [x28, FLAGS-sysvars]
-  tbnz    w3, #1, 2f
+  tbnz    w3, #1, 2f                      // if printer is in use, jump to 2:
   ldrb    w4, [x28, TV_FLAG-sysvars]
-  tbz     w4, #0, 1f
+  tbz     w4, #0, 1f                      // if upper screen in use, jump to 1:
+# lower screen in use
   ldrb    w5, [x28, DF_SZ-sysvars]
   add     w0, w0, w5
-  sub     w0, w0, #60
+  sub     w0, w0, #60                     // w0 = 60 - actual row number
 1:
   mov     x19, x1
-  bl      cl_addr
-  mov     x1, x19
-2:
+  bl      cl_addr                         // x2 = address of top left pixel of row
+  mov     x1, x19                         // x1 = reversed column
   mov     x3, #109
-  sub     x3, x3, x1
-  add     x2, x2, x3, lsl #1
+  sub     x3, x3, x1                      // x3 = actual column (0-107)
+  add     x2, x2, x3, lsl #1              // x2 = address of top left pixel of char
+                                          // x1 = 109 - actual column number
+                                          // x0 = 60 - actual row number
+2:
   bl      po_store
   ldp     x19, x20, [sp], #16             // Restore old x19, x20.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
@@ -291,9 +295,9 @@ cl_set:
 
 
 # On entry:
-#   x0 = row
-#   x1 = column
-#   x2 = address in display file
+#   x0 = 60 - screen row (for channel S / K)
+#   x1 = 109 - screen column (for channel S / K)
+#   x2 = address in display file or printer buffer
 po_store:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.

@@ -171,7 +171,7 @@ new:                             // L019D
   bl      display_memory
   bl      display_sysvars
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  ret
+  b       sleep
 
 
 

@@ -217,7 +217,9 @@ kernel:
   orr     x0, x0, 0x1000                  // Instruction Caches (Bit 12)
   msr     sctlr_el3, x0                   // System Control Register = x0
 1:
-  b       restart
+  b       restart                         // Raspberry Pi 3B initialisation complete.
+                                          // Now call entry point in rom0.s which
+                                          // is the converted ZX Spectrum 128k code.
 
 
 sleep:

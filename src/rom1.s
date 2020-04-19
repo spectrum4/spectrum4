@@ -96,6 +96,30 @@ po_back:                         // L0A23
   ret
 
 
+po_right:                        // L0A3D
+// TODO
+
+
+po_enter:                        // L0A4F
+// TODO
+
+
+po_comma:                        // L0A5F
+// TODO
+
+
+po_quest:                        // L0A69
+// TODO
+
+
+po_2_oper:                       // L0A75
+// TODO
+
+
+po_1_oper:                       // L0A7A
+// TODO
+
+
 # On entry:
 #   w0 = 60 - row
 #   w1 = 109 - column
@@ -184,6 +208,14 @@ po_any:                          // L0B24
   // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
+
+po_t_udg:                        // L0B52
+  // TODO
+
+
+po_char:                         // L0B65
+  // TODO
 
 
 temps:                           // L0D4D
@@ -311,7 +343,7 @@ cl_all:                          // L0DAF
 #   x1 = 109 - actual column
 #     for S and K: from 109 (leftmost column) to 2 (rightmost column)
 #     for P: I think the same.
-cl_set:
+cl_set:                          // L0DD9
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
@@ -349,7 +381,7 @@ cl_set:
 #
 # On entry:
 #   x0 = number of lines to be cleared (1-60)
-cl_line:
+cl_line:                         // L0E44
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
@@ -475,6 +507,14 @@ cl_addr:                         // L0E9B
   ret
 
 
+add_char:                        // L0F81
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+// TODO
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
 key_input:                       // L10A8
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -508,7 +548,7 @@ chan_open:                       // L1601
 
 # On entry:
 #   x0 = address of channel information inside CHANS
-chan_flag:
+chan_flag:                       // L1615
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   str     x0, [x28, CURCHL-sysvars]       // set CURCHL system variable to CHANS record address
@@ -526,7 +566,7 @@ chan_flag:
 
 
 # 'K' channel flag setting routine
-chan_k:
+chan_k:                          // L1634
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x0, 'K'
@@ -549,7 +589,7 @@ chan_k:
 
 
 # 'S' channel flag setting routine
-chan_s:
+chan_s:                          // L1642
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x0, 'S'
@@ -567,7 +607,7 @@ chan_s:
 
 
 # 'P' channel flag setting routine
-chan_p:
+chan_p:                          // L164D
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x0, 'P'
@@ -609,7 +649,7 @@ chan_p:
 #   x0 unchanged
 #   x1 = address of 64 bit key if found, otherwise 0
 #   x2 = 64 bit value for key if found, otherwise undefined value
-indexer:
+indexer:                         // L16DC
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
@@ -644,55 +684,7 @@ indexer:
   ret
 
 
-po_comma:
-// TODO
-
-
-po_quest:
-// TODO
-
-
-po_right:
-// TODO
-
-
-po_enter:
-// TODO
-
-
-po_1_oper:
-// TODO
-
-
-po_2_oper:
-// TODO
-
-
-add_char:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-// TODO
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
-
-
-report_j:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-// TODO
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
-
-
-pin:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-// TODO
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
-
-
-pout:
+report_j:                        // L15C4
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
 // TODO

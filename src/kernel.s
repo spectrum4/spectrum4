@@ -8,16 +8,8 @@
 # # ------------------------------------------------------------------------------
 # kernel:
 #   bl        hang_non_primary_cores
-#   # L0000:
 #   bl        disable_interrupts
-#   # L0004: delay to allow screen to settle - not needed
-#   # L00C7: 1) test RAM banks - can implement later or skip entirely
-#   #        2) reset keypad - not needed
-#   # L0137: 1) reset sound - not needed
-#   #        2) copy paging routines from ROM -> RAM - not needed
-#   #        3) setup stack
 #   bl        setup_stack_pointers
-#   #        4) initialise RAM disk
 #   bl        setup_ramdisk
 #   bl        setup_system_registers
 #   bl        setup_bss
@@ -85,9 +77,7 @@
 # # Sets up the kernel
 # # ------------------------------------------------------------------------------
 # setup_kernel:
-#   ldr       x0, Var2
-#   ldr       x3, Var1
-#   sub       x4, x4, #20
+#   ....
 #   ret
 # 
 # 
@@ -195,16 +185,15 @@
 # 
 #   ret
 
-kernel:
 
+kernel:
 # Should enable interrupts, set up vector jump tables, switch execution
 # level etc, and all the kinds of things to initialise the processor system
 # registers, memory virtualisation, initialise sound chip, USB, etc.
-
   mrs     x0, mpidr_el1                   // x0 = Multiprocessor Affinity Register.
   ands    x0, x0, #0x3                    // x0 = core number.
   b.ne    sleep                           // Put all cores except core 0 to sleep.
-  adr     x28, sysvars                    // x28 will remain at this constant value to make all sys vars via an immediate offset.
+  adr     x28, sysvars                    // x28 will remain at this constant value to make all sys vars available via an immediate offset.
   bl      uart_init                       // Initialise UART interface.
   bl      init_framebuffer                // Allocate a frame buffer with chosen screen settings.
   mrs     x0, currentel
@@ -276,10 +265,8 @@ poke_address:
   adr     x10, display_file_end           // Now compare address to upper limit of display file
   cmp     x0, x10
   b.hs    1f                              // if x0 >= x10 (display file end) jump ahead since after display file
-
   // framebuffer addresses = pitch*(BORDER_TOP + 16*((x11/216)%20) + (x11/(216*20))%16 + 320*(x11/(216*20*16))) + address of framebuffer + 4 * (BORDER_LEFT + 8*(x11%216) + [0-7])
   // attribute address = attributes_file+((x11/2)%108)+108*(((x11/216)%20)+20*(x11/(216*20*16)))
-
   adr     x9, mbreq                       // x9 = address of mailbox request.
   ldr     w10, [x9, framebuffer-mbreq]    // w10 = address of framebuffer
   ldr     w12, [x9, pitch-mbreq]          // w12 = pitch
@@ -312,7 +299,6 @@ poke_address:
   mov     x22, BORDER_LEFT
   add     x22, x22, x21, lsl #3           // x22 = BORDER_LEFT + 8*(x11%216)
   add     x23, x19, x22, lsl #2           // x23 = pitch*(BORDER_TOP + 16*((x11/216)%20) + (x11/(216*20))%16 + 320*(x11/(216*20*16))) + address of framebuffer + 4*(BORDER_LEFT + 8*(x11%216))
-
   lsr     x10, x11, #1                    // x10 = int(x11/2)
   umulh   x14, x13, x10                   // x14 = int(int(x11/2)*16/27)
   lsr     x14, x14, #6                    // x14 = int(x11/216)
@@ -368,7 +354,6 @@ poke_address:
   cmp     x11, x3
   csel    x12, x8, xzr, hs
   add     x0, x10, x12
-
   mov     x3, #16
 4:
   stp     x3, x0, [sp, #-16]!
@@ -383,7 +368,6 @@ poke_address:
   add     x0, x0, #320
   subs    x3, x3, #1
   b.ne    4b
-
 2:
   ldp     x23, x24, [sp], #0x10           // Restore old x23, x24.
   ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
@@ -391,27 +375,6 @@ poke_address:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
-clear_screen:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  adr     x0, display_file
-  adr     x2, display_file_end
-1:
-  str     xzr, [x0], #8
-  cmp     x0, x2
-  b.ne    1b
-
-  adr     x0, attributes_file
-  mov     x1, #0x3838383838383838
-  adr     x2, attributes_file_end
-2:
-  str     x1, [x0], #8
-  cmp     x0, x2
-  b.ne    2b
-  movl    w0, PAPER_COLOUR                // w0 = default paper colour
-  bl      paint_window
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
 
 display_zx_screen:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
@@ -429,6 +392,7 @@ display_zx_screen:
   b.ne    1b
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
 
 # On entry:
 #   x0 = start address
@@ -483,6 +447,7 @@ display_memory:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
+
 # On entry:
 #   x0 = hex value to convert to text
 #   x1 = address to write text to (no trailing 0)
@@ -513,6 +478,7 @@ wait_cycles:
   b.ne    wait_cycles                     // Repeat until x0 == 0.
   ret                                     // Return.
 
+
 display_sysvars:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -535,7 +501,6 @@ display_sysvars:
   tbnz    w21, #2, size4
   tbnz    w21, #3, size8
   ret
-
 size1:
   ldrb    w0, [x0]
   b       2f
@@ -547,7 +512,6 @@ size4:
   b       2f
 size8:
   ldr     x0, [x0]
-
 2:
   mov     x1, sp
   mov     x2, x21, lsl #3                 // x2 = size of sysvar data in bits
@@ -565,3 +529,46 @@ size8:
   ldp     x19, x20, [sp], #16             // Pop callee-saved registers.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
+
+/////////////////////////////////////////////////////////////////////////
+// The following code is all just for demonstration / testing purposes...
+/////////////////////////////////////////////////////////////////////////
+demo:
+  bl      paint_copyright                 // Paint the copyright text ((C) 1982 Amstrad....)
+  mov     w0, 0x20000000
+  bl      wait_cycles
+  bl      display_zx_screen
+  mov     w0, 0x10000000
+  bl      wait_cycles
+  mov     x0, #60
+  bl      cls
+  mov     x0, sp
+  mov     x1, #1
+  mov     x2, #0
+  bl      display_memory
+  adr     x0, mbreq
+  mov     x1, #5
+  mov     x2, #3
+  bl      display_memory
+  adr     x0, sysvars
+  mov     x1, #10
+  mov     x2, #10
+  bl      display_memory
+  adrp    x0, heap
+  add     x0, x0, #:lo12:heap             // x0 = heap
+  sub     x0, x0, #0x60
+  mov     x1, #8
+  mov     x2, #22
+  bl      display_memory
+  adr     x0, STRMS
+  mov     x1, #2
+  mov     x2, #32
+  bl      display_memory
+  ldr     x0, [x28, CHANS-sysvars]
+  mov     x1, #2
+  mov     x2, #36
+  bl      display_memory
+  bl      display_sysvars
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  b       sleep

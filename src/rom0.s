@@ -128,51 +128,7 @@ new:                             // L019D
   strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
 
   bl      cls
-
-  // TODO
-
-/////////////////////////////////////////////////////////////////////////
-// The following code is all just for demonstration / testing purposes...
-/////////////////////////////////////////////////////////////////////////
-
-  bl      paint_copyright                 // Paint the copyright text ((C) 1982 Amstrad....)
-  mov     w0, 0x20000000
-  bl      wait_cycles
-  bl      display_zx_screen
-  mov     w0, 0x10000000
-  bl      wait_cycles
-  mov     x0, #60
-  bl      cls
-  mov     x0, sp
-  mov     x1, #1
-  mov     x2, #0
-  bl      display_memory
-  adr     x0, mbreq
-  mov     x1, #5
-  mov     x2, #3
-  bl      display_memory
-  adr     x0, sysvars
-  mov     x1, #10
-  mov     x2, #10
-  bl      display_memory
-  adrp    x0, heap
-  add     x0, x0, #:lo12:heap             // x0 = heap
-  sub     x0, x0, #0x60
-  mov     x1, #8
-  mov     x2, #22
-  bl      display_memory
-  adr     x0, STRMS
-  mov     x1, #2
-  mov     x2, #32
-  bl      display_memory
-  ldr     x0, [x28, CHANS-sysvars]
-  mov     x1, #2
-  mov     x2, #36
-  bl      display_memory
-  bl      display_sysvars
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  b       sleep
-
+  b       demo                            // This is demo code for testing purposes only
 
 
 # Print zero byte delimited string stored at memory location x0 to current channel.

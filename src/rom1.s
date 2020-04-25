@@ -6,8 +6,18 @@
 .text
 
 
+# -------------------
+# THE 'ERROR' RESTART
+# -------------------
+# [X_PTR] = [CH_ADD]
+# [ERR_NO] = w0 (8 bits)
+# stack pointer = [ERR_SP]
+# ....
+#
 # On entry:
-#   x0 = error number
+#   w0 = error number (8 bits)
+# On exit:
+#   x9 = [CH_ADD]
 error_1:                         // L0008
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -29,25 +39,34 @@ error_1:                         // L0008
 
 
 # Print character in lower 8 bits of w0 to current channel.
+# Calls function pointer at [[CURCHL]].
+#
 # On entry:
 #   w0 = char to print (lower 8 bits)
+# On exit:
+#   Any amount of damage, depends on function at [[CURCHL]]
 print_w0:                        // L0010
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldr     x1, [x28, CURCHL-sysvars]
+  ldr     x1, [x1]
   blr     x1
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 
+# General print routine.
+#
 # On entry:
 #   w0 = char (1 byte)
+# On exit:
+#   Depends on function in ctlchrtab
 print_out:                       // L09F4
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
   mov     x19, x0                         // Stash x0.
-  bl      po_fetch
+  bl      po_fetch                        // Fetch x0, x1, x2 (print coordinates and address)
   mov     x3, x19
   cmp     x3, #0x20
   b.hs    1f
@@ -96,12 +115,52 @@ po_back:                         // L0A23
   ret
 
 
+# This mimics original implementation, and is highly inefficient.
+#
+# On entry:
+#   w0 = 60 - row
+#   w1 = 109 - column
+#   x2 = address in display file / printer buffer
+#   w3 = 0x09 (chr 9)
 po_right:                        // L0A3D
-// TODO
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
+  ldrb    w19, [x28, P_FLAG-sysvars]
+  mov     x4, #1
+  strb    w4, [x28, P_FLAG-sysvars]
+  mov     x0, #0x80
+  bl      po_able
+  strb    w19, [x28, P_FLAG-sysvars]
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
 
 
+# On entry:
+#   w0 = 60 - row
+#   w1 = 109 - column
+#   x2 = address in display file / printer buffer
+#   w3 = 0x0d (chr 13)
 po_enter:                        // L0A4F
-// TODO
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
+  stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack.
+  mov     x19, x0
+  mov     x20, x1
+  mov     x21, x2
+  mov     x22, x3
+  ldrb    w4, [x28, FLAGS-sysvars]
+  tbnz    w4, #1, copy_buff
+  mov     w1, #109
+  bl      po_scr
+  sub     w0, w0, #1
+  bl      cl_set
+  ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
 
 
 po_comma:                        // L0A5F
@@ -138,9 +197,10 @@ po_able:                         // L0AD9
 #   x0 = 60 - screen row (for channel S / K)
 #   x1 = 109 - screen column (for channel S / K)
 #   x2 = address in display file or printer buffer
+# On exit:
+#   w3 = [FLAGS] if printer in use or [TV_FLAG] if not
+#   <no other changes>
 po_store:                        // L0ADC
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
   ldrb    w3, [x28, FLAGS-sysvars]
   tbnz    w3, #1, 2f
   ldrb    w3, [x28, TV_FLAG-sysvars]
@@ -160,14 +220,16 @@ po_store:                        // L0ADC
   strb    w1, [x28, P_POSN-sysvars]
   str     x2, [x28, PR_CC-sysvars]
 3:
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
 
+# On entry:
+#   <nothing>
 # On exit:
 #   w0 = 60 - actual row (not set if printing)
 #   w1 = 109 - actual column
 #   x2 = address in printer buffer or display file
+#   <no other changes>
 po_fetch:                        // L0B03
   ldrb    w0, [x28, FLAGS-sysvars]
   tbnz    w0, #1, 2f
@@ -218,9 +280,26 @@ po_char:                         // L0B65
   // TODO
 
 
+po_scr:                          // L0C55
+  // TODO
+
+
+# ----------------------
+# Temporary colour items
+# ----------------------
+# This subroutine copies the permanent colour items to the temporary ones.
+# Updates:
+#   [ATTR_T] = [ATTR_P] if upper screen; [BORDCR] if lower screen
+#   [MASK_T] = [MASK_P] if upper screen; 0 if lower screen
+#   [P_FLAG] = perm copied to temp bits if upper screen; temp bits set to zero if lower screen
+#
+# On entry:
+#   <nothing>
+# On exit:
+#   w0 = new [P_FLAG]
+#   w1 = old [P_FLAG]
+#   <no other changes>
 temps:                           // L0D4D
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
   ldrh    w0, [x28, ATTR_P-sysvars]       // w0 = ATTR_P + MASK_P
   ldrb    w1, [x28, TV_FLAG-sysvars]
   tbz     w1, #0, 1f
@@ -237,7 +316,6 @@ temps:                           // L0D4D
   and     w0, w0, 0x55555555
   eor     w0, w0, w1
   strb    w0, [x28, P_FLAG-sysvars]
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 
@@ -456,12 +534,10 @@ cl_line:                         // L0E44
 #   x2 = address of top left pixel of line to clear inside display file
 #   x3 = start char line / 20
 #   x4 = start char line % 20
+#   x5 = 216
+#   x6 = 69120 (0x10e00)
+#   <no other changes>
 cl_addr:                         // L0E9B
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
-  stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack.
-  stp     x23, x24, [sp, #-16]!           // Backup x23 / x24 on stack.
   mov     x1, #60
   sub     x1, x1, x0
   adr     x2, display_file
@@ -476,35 +552,11 @@ cl_addr:                         // L0E9B
   mov     x6, 0x00010000
   movk    x6, 0xe00
   umaddl  x2, w6, w3, x2                  // x2 = display_file + (x1%20)*216 + (x1/20)*69120
-  mov     x19, x0
-  mov     x20, x1
-  mov     x21, x2
-  mov     x22, x3
-  mov     x23, x4
-  bl      uart_x0
-  bl      uart_newline
-  mov     x0, x20
-  bl      uart_x0
-  bl      uart_newline
-  mov     x0, x21
-  bl      uart_x0
-  bl      uart_newline
-  mov     x0, x22
-  bl      uart_x0
-  bl      uart_newline
-  mov     x0, x23
-  bl      uart_x0
-  bl      uart_newline
-  mov     x0, x19
-  mov     x1, x20
-  mov     x2, x21
-  mov     x3, x22
-  mov     x4, x23
-  ldp     x23, x24, [sp], #0x10           // Restore old x23, x24.
-  ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
-  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
+
+copy_buff:                       // L0ECD
+// TODO
 
 
 add_char:                        // L0F81
@@ -566,12 +618,15 @@ chan_flag:                       // L1615
 
 
 # 'K' channel flag setting routine
+# Updates:
+#
+# On entry:
+#
+# On exit:
+#
 chan_k:                          // L1634
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  mov     x0, 'K'
-  bl      uart_send
-  bl      uart_newline
   ldrb    w9, [x28, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
   orr     w9, w9, #0x00000001             // Set bit 0 - signal lower screen in use.
   strb    w9, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w9[0-7]
@@ -589,12 +644,22 @@ chan_k:                          // L1634
 
 
 # 'S' channel flag setting routine
+# Updates:
+#   [TV_FLAG] - clears bit 0 to signal main screen in use.
+#   [FLAGS] - clears bit 1 to signal printer not in use.
+#   [ATTR_T] = [ATTR_P]
+#   [MASK_T] = [MASK_P]
+#   [P_FLAG] = perm copied to temp bits
+#
+# On entry:
+#   <nothing>
+# On exit:
+#   w0 = new [P_FLAG]
+#   w1 = old [P_FLAG]
+#   <no other changes>
 chan_s:                          // L1642
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  mov     x0, 'S'
-  bl      uart_send
-  bl      uart_newline
   ldrb    w0, [x28, TV_FLAG-sysvars]
   and     w0, w0, #0xfffffffe             // Clear bit 0 - signal main screen in use.
   strb    w0, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w0[0-7]
@@ -606,17 +671,18 @@ chan_s:                          // L1642
   ret
 
 
-# 'P' channel flag setting routine
+# 'P' channel flag setting routine.
+# Updates:
+#   [FLAGS] - sets bit 1 to signal printer in use.
+#
+# On entry:
+#   <nothing>
+# On exit:
+#   w0 = new [FLAGS]
 chan_p:                          // L164D
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  mov     x0, 'P'
-  bl      uart_send
-  bl      uart_newline
   ldrb    w0, [x28, FLAGS-sysvars]
   orr     w0, w0, #2                      // Set bit 1 of FLAGS - signal printer in use.
   strb    w0, [x28, FLAGS-sysvars]
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 
@@ -649,25 +715,12 @@ chan_p:                          // L164D
 #   x0 unchanged
 #   x1 = address of 64 bit key if found, otherwise 0
 #   x2 = 64 bit value for key if found, otherwise undefined value
+#   x9 = number of records not checked
+#  x10 = last 64 bit key checked
+#   <no other changes>
 indexer:                         // L16DC
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
-  mov     x19, x0
-  mov     x20, x1
-  bl      uart_newline
-  mov     x0, 'I'
-  bl      uart_send
-  bl      uart_newline
-  mov     x0, x19
-  bl      uart_x0
-  bl      uart_newline
-  mov     x0, x20
-  bl      uart_x0
-  bl      uart_newline
-  mov     x0, x19
-  mov     x1, x20
-  ldr     x9, [x1], #-8                   // x9 = number of records. Set x1 to lookup table address - 8 = address of first record - 16.
+  ldr     x9, [x1], #-8                   // x9 = number of records
+                                          // x1 = lookup table address - 8 = address of first record - 16
 1:
   cbz     x9, 2f                          // If all records have been exhausted, jump forward to 2:.
   ldr     x10, [x1, #16]!                 // Load key at x1+16 into x10, and proactively increase x1 by 16 for the next iteration.
@@ -679,8 +732,6 @@ indexer:                         // L16DC
 2:
   mov     x1, 0                           // Set x1 to zero to indicate value wasn't found.
 3:
-  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 

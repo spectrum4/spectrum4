@@ -16,8 +16,8 @@
 #   bl        setup_uart
 #   bl        setup_kernel
 #   b         hang_core
-# 
-# 
+#
+#
 # # ------------------------------------------------------------------------------
 # # Puts non-primary cores to sleep
 # # ------------------------------------------------------------------------------
@@ -26,14 +26,14 @@
 #   and       x0, x0, #0xff     // Check processor id
 #   cbnz      x0, hang_core     // Hang non-primary cores
 #   ret
-# 
-# 
+#
+#
 # # ------------------------------------------------------------------------------
 # # Disables interrupts
 # # ------------------------------------------------------------------------------
 # disable_interrupts:
 #   ret
-# 
+#
 # # ------------------------------------------------------------------------------
 # # Sets up system registers
 # # ------------------------------------------------------------------------------
@@ -50,8 +50,8 @@
 #   # x30 is link register; returns control to calling function when exiting EL3
 #   msr       elr_el3, x30
 #   eret
-# 
-# 
+#
+#
 # # ------------------------------------------------------------------------------
 # # Zeros bss memory for system variables
 # # ------------------------------------------------------------------------------
@@ -63,24 +63,24 @@
 #   cmp       x0, x1
 #   b.lo      1b
 #   ret
-# 
-# 
+#
+#
 # # ------------------------------------------------------------------------------
 # # Sets up stack pointers
 # # ------------------------------------------------------------------------------
 # setup_stack_pointers:
 #   mov       sp, stack_base
 #   ret
-# 
-# 
+#
+#
 # # ------------------------------------------------------------------------------
 # # Sets up the kernel
 # # ------------------------------------------------------------------------------
 # setup_kernel:
 #   ....
 #   ret
-# 
-# 
+#
+#
 # # ------------------------------------------------------------------------------
 # # Never returns; loops forever, waiting for interrupts
 # # ------------------------------------------------------------------------------
@@ -88,8 +88,8 @@
 # 1:
 #   wfi                         // Wait for interrupt; like 'wfe' but more sleepy
 #   b         1b
-# 
-# 
+#
+#
 # # ------------------------------------------------------------------------------
 # # Exception vectors.
 # # ------------------------------------------------------------------------------
@@ -99,90 +99,90 @@
 #   ventry    irq_invalid_el1t
 #   ventry    fiq_invalid_el1t
 #   ventry    error_invalid_el1t
-# 
+#
 #   ventry    sync_invalid_el1h
 #   ventry    el1_irq
 #   ventry    fiq_invalid_el1h
 #   ventry    error_invalid_el1h
-# 
+#
 #   ventry    sync_invalid_el0_64
 #   ventry    irq_invalid_el0_64
 #   ventry    fiq_invalid_el0_64
 #   ventry    error_invalid_el0_64
-# 
+#
 #   ventry    sync_invalid_el0_32
 #   ventry    irq_invalid_el0_32
 #   ventry    fiq_invalid_el0_32
 #   ventry    error_invalid_el0_32
-# 
+#
 # sync_invalid_el1t:
 #   handle_invalid_entry  SYNC_INVALID_EL1t
-# 
+#
 # irq_invalid_el1t:
 #   handle_invalid_entry  IRQ_INVALID_EL1t
-# 
+#
 # fiq_invalid_el1t:
 #   handle_invalid_entry  FIQ_INVALID_EL1t
-# 
+#
 # error_invalid_el1t:
 #   handle_invalid_entry  ERROR_INVALID_EL1t
-# 
+#
 # sync_invalid_el1h:
 #   handle_invalid_entry  SYNC_INVALID_EL1h
-# 
+#
 # fiq_invalid_el1h:
 #   handle_invalid_entry  FIQ_INVALID_EL1h
-# 
+#
 # error_invalid_el1h:
 #   handle_invalid_entry  ERROR_INVALID_EL1h
-# 
+#
 # sync_invalid_el0_64:
 #   handle_invalid_entry  SYNC_INVALID_EL0_64
-# 
+#
 # irq_invalid_el0_64:
 #   handle_invalid_entry  IRQ_INVALID_EL0_64
-# 
+#
 # fiq_invalid_el0_64:
 #   handle_invalid_entry  FIQ_INVALID_EL0_64
-# 
+#
 # error_invalid_el0_64:
 #   handle_invalid_entry  ERROR_INVALID_EL0_64
-# 
+#
 # sync_invalid_el0_32:
 #   handle_invalid_entry  SYNC_INVALID_EL0_32
-# 
+#
 # irq_invalid_el0_32:
 #   handle_invalid_entry  IRQ_INVALID_EL0_32
-# 
+#
 # fiq_invalid_el0_32:
 #   handle_invalid_entry  FIQ_INVALID_EL0_32
-# 
+#
 # error_invalid_el0_32:
 #   handle_invalid_entry  ERROR_INVALID_EL0_32
-# 
+#
 # el1_irq:
 #   kernel_entry
 #   bl        handle_irq
 #   kernel_exit
-# 
+#
 # show_invalid_entry_message:
 #   # should output x0, x1, x2 to uart
 #   ret
-# 
+#
 # handle_irq:
 #   # IRQ_PENDING_1 = 3f00b204
 #   mov       x0, #0xb204
 #   movk      x0, #0x3f00, lsl #16
-# 
+#
 #   ldr       w0, [x0]
 #   cmp       w0, #0x2
 #   b.ne      1f
 #   # handle expected IRQ here
-# 
+#
 #   ret
 # 1:
 #   # handle unexpected IRQ here
-# 
+#
 #   ret
 
 

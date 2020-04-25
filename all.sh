@@ -89,6 +89,12 @@ cat src/data.s | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space [1248] .*$/\1/
 done
 } > src/sysvars.s
 
+find src -name '*.s' | while read sourcefile; do
+  cat "${sourcefile}" > x
+  cat x | sed 's/  *$//' > "${sourcefile}"
+  rm x
+done
+
 # Assemble `src/all.s` to `build/all.o`
 "${TOOLCHAIN_PREFIX}as" -o "build/all.o" "src/all.s"
 

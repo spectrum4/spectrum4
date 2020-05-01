@@ -9,10 +9,11 @@
 # -------------------
 # THE 'ERROR' RESTART
 # -------------------
-# [X_PTR] = [CH_ADD]
-# [ERR_NO] = w0 (8 bits)
-# stack pointer = [ERR_SP]
-# ....
+# Updates:
+#   [X_PTR] = [CH_ADD]
+#   [ERR_NO] = w0
+#   stack pointer = [ERR_SP]
+#   ....
 #
 # On entry:
 #   w0 = error number (8 bits)
@@ -459,6 +460,9 @@ cl_set:                          // L0DD9
 #
 # On entry:
 #   x0 = number of lines to be cleared (1-60)
+# On exit:
+#   x0/x1/x2/x3/x4/x5/x6 corrupted
+#   plus whatever poke_address also corrupts
 cl_line:                         // L0E44
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -578,7 +582,7 @@ key_input:                       // L10A8
 # On entry:
 #   x0 = stream number in range [-3,15]
 # On exit:
-#   x0 = ?
+#   x0/x1/x2/x9/x10 potentially corrupted
 chan_open:                       // L1601
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -600,6 +604,25 @@ chan_open:                       // L1601
 
 # On entry:
 #   x0 = address of channel information inside CHANS
+# On exit:
+#   K Channel:
+#     w0 = new [P_FLAG]
+#     w1 = old [P_FLAG]
+#     x2 = chan_k
+#     w9 = [FLAGS2]
+#    x10 = 0x000000000000004B
+#   S Channel:
+#     w0 = new [P_FLAG]
+#     w1 = old [P_FLAG]
+#     x2 = chan_s
+#     w9 = 1
+#    x10 = 0x0000000000000053
+#   P Channel:
+#     w0 = new [P_FLAG]
+#     x1 = chn_cd_lu + 0x28
+#     x2 = chan_p
+#     x9 = 0
+#    x10 = 0x0000000000000050
 chan_flag:                       // L1615
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -621,9 +644,12 @@ chan_flag:                       // L1615
 # Updates:
 #
 # On entry:
-#
+#   <nothing>
 # On exit:
-#
+#   w0 = new [P_FLAG] (channel S/K)
+#   w1 = old [P_FLAG]
+#   w9 = [FLAGS2]
+#   <no other changes>
 chan_k:                          // L1634
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -679,6 +705,7 @@ chan_s:                          // L1642
 #   <nothing>
 # On exit:
 #   w0 = new [FLAGS]
+#   <no other changes>
 chan_p:                          // L164D
   ldrb    w0, [x28, FLAGS-sysvars]
   orr     w0, w0, #2                      // Set bit 1 of FLAGS - signal printer in use.

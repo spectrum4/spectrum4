@@ -129,14 +129,14 @@ ctlchrtab:
   .quad po_enter                          // chr 0x0d
   .quad po_quest                          // chr 0x0e
   .quad po_quest                          // chr 0x0f
-  .quad po_1_oper                         // chr 0x10
-  .quad po_1_oper                         // chr 0x11
-  .quad po_1_oper                         // chr 0x12
-  .quad po_1_oper                         // chr 0x13
-  .quad po_1_oper                         // chr 0x14
-  .quad po_1_oper                         // chr 0x15
-  .quad po_2_oper                         // chr 0x16
-  .quad po_2_oper                         // chr 0x17
+  .quad po_1_oper                         // chr 0x10 -> INK
+  .quad po_1_oper                         // chr 0x11 -> PAPER
+  .quad po_1_oper                         // chr 0x12 -> FLASH
+  .quad po_1_oper                         // chr 0x13 -> BRIGHT
+  .quad po_1_oper                         // chr 0x14 -> INVERSE
+  .quad po_1_oper                         // chr 0x15 -> OVER
+  .quad po_2_oper                         // chr 0x16 -> AT
+  .quad po_2_oper                         // chr 0x17 -> TAB (strangely po_2_oper since TAB seems to only have one operand according to BASIC manual)
 
 # Memory block for GPU mailbox call to allocate framebuffer
 .align 4

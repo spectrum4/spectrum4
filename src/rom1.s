@@ -56,7 +56,7 @@ print_w0:                        // L0010
   ret
 
 
-# General print routine.
+# Default print routine for channels S/K, to print a single byte.
 #
 # On entry:
 #   w0 = char (1 byte)
@@ -90,6 +90,12 @@ print_out:                       // L09F4
   ret
 
 
+# -------------------
+# Cursor left routine
+# -------------------
+# Backspace and up a line if that action is from the left of screen.
+# For ZX printer backspace up to first column but not beyond.
+#
 # On entry:
 #   w0 = 60 - row
 #   w1 = 109 - column
@@ -116,7 +122,10 @@ po_back:                         // L0A23
   ret
 
 
-# This mimics original implementation, and is highly inefficient.
+# --------------------
+# Cursor right routine
+# --------------------
+# This implementation could probably be optimised.
 #
 # On entry:
 #   w0 = 60 - row
@@ -138,6 +147,11 @@ po_right:                        // L0A3D
   ret
 
 
+# -----------------------
+# Perform carriage return
+# -----------------------
+# A carriage return is 'printed' to screen or printer buffer.
+#
 # On entry:
 #   w0 = 60 - row
 #   w1 = 109 - column
@@ -195,22 +209,43 @@ po_comma:                        // L0A5F
   ret
 
 
+# -------------------
+# Print question mark
+# -------------------
+# This routine prints a question mark which is commonly
+# used to print an unassigned control character in range 0-31d.
+# there are a surprising number yet to be assigned.
+#
+# On entry:
+#   w0 = 60 - row
+#   w1 = 109 - column
+#   x2 = address in display file / printer buffer(?)
+#   w3 = char (32-255)
 po_quest:                        // L0A69
-// TODO
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  mov     w3, #0x3f                       // char '?'
+  bl      po_able
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
 
 
+# This initial entry point deals with two operands - AT or TAB.
 po_2_oper:                       // L0A75
 // TODO
 
 
+# This initial entry point deals with one operand INK to OVER.
 po_1_oper:                       // L0A7A
 // TODO
 
 
-po_fill:                         // L0AC3
-// TODO
-
-
+# ----------------------
+# Printable character(s)
+# ----------------------
+# This routine prints printable characters and continues into
+# the position store routine.
+#
 # On entry:
 #   w0 = 60 - row
 #   w1 = 109 - column
@@ -225,6 +260,12 @@ po_able:                         // L0AD9
   ret
 
 
+# -------------------------------------
+# Store line, column, and pixel address
+# -------------------------------------
+# This routine updates the system variables associated with
+# The main screen, lower screen/input buffer or printer.
+#
 # On entry:
 #   x0 = 60 - screen row (for channel S / K)
 #   x1 = 109 - screen column (for channel S / K)
@@ -255,6 +296,13 @@ po_store:                        // L0ADC
   ret
 
 
+# -------------------------
+# Fetch position parameters
+# -------------------------
+# This routine fetches the line/column and display file address
+# of the upper and lower screen or, if the printer is in use,
+# the column position and absolute memory address.
+#
 # On entry:
 #   <nothing>
 # On exit:
@@ -286,6 +334,12 @@ po_fetch:                        // L0B03
   ret
 
 
+# -------------------
+# Print any character
+# -------------------
+# This routine is used to print any character in range 32 - 255.
+# It is only called from po_able which then calls po_store.
+#
 # On entry:
 #   w0 = 60 - row
 #   w1 = 109 - column
@@ -304,14 +358,22 @@ po_any:                          // L0B24
   ret
 
 
+# Print tokens and user defined graphics.
 po_t_udg:                        // L0B52
   // TODO
 
 
+# Print characters 32 - 127.
 po_char:                         // L0B65
   // TODO
 
 
+# ---------------
+# Test for scroll
+# ---------------
+# This test routine is called when printing carriage return, when considering
+# PRINT AT and from the general PRINT ALL characters routine to test if
+# scrolling is required, prompting the user if necessary.
 po_scr:                          // L0C55
   // TODO
 
@@ -351,6 +413,11 @@ temps:                           // L0D4D
   ret
 
 
+# ------------------
+# Handle CLS command
+# ------------------
+# clears the display.
+# if it's difficult to write it should be difficult to read.
 cls:                             // L0D6B
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -358,6 +425,7 @@ cls:                             // L0D6B
   bl      cls_lower
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
 
 
 cls_lower:                       // L0D6E
@@ -396,6 +464,7 @@ cls_lower:                       // L0D6E
   ret
 
 
+# Reset the system channel input and output addresses.
 cl_chan:                         // L0D94
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -416,6 +485,12 @@ cl_chan:                         // L0D94
   ret
 
 
+# ---------------------------
+# Clearing whole display area
+# ---------------------------
+# This subroutine called from CLS, AUTO-LIST and MAIN-3
+# clears 24 lines of the display and resets the relevant system variables
+# and system channels.
 cl_all:                          // L0DAF
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -444,7 +519,12 @@ cl_all:                          // L0DAF
   ret
 
 
-# Sets the cursor position for the currently active K/S/P channel.
+# ---------------------------
+# Set line and column numbers
+# ---------------------------
+# Calculate the character output address for screens or printer based on the
+# line/column for screens for current K/S/P channel.
+#
 # On entry:
 #   x0 = 60 - line offset into section
 #     for K: x0 = 120 - [DF_SZ] - actual screen row (x0 range: 1 -> 60)
@@ -561,6 +641,12 @@ cl_line:                         // L0E44
   ret
 
 
+# -------------------------------
+# Handle display with line number
+# -------------------------------
+# This subroutine is called from four places to calculate the address
+# of the start of a screen character line which is supplied in B.
+#
 # On entry:
 #   x0 = number of lines to be cleared (1-60)
 # On exit:
@@ -590,10 +676,21 @@ cl_addr:                         // L0E9B
   ret
 
 
+# ------------------------------
+# Pass printer buffer to printer
+# ------------------------------
+# This routine is used to copy 8 text lines from the printer buffer
+# to the printer.
 copy_buff:                       // L0ECD
 // TODO
 
 
+# ------------------------
+# Add code to current line
+# ------------------------
+# this is the branch used to add normal non-control characters
+# with ED-LOOP as the stacked return address.
+# it is also the OUTPUT service routine for system channel 'R'.
 add_char:                        // L0F81
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -602,6 +699,11 @@ add_char:                        // L0F81
   ret
 
 
+# ---------------------
+# Handle keyboard input
+# ---------------------
+# This is the service routine for the input stream of the keyboard
+# channel 'K'.
 key_input:                       // L10A8
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -610,6 +712,14 @@ key_input:                       // L10A8
   ret
 
 
+# ------------
+# Open channel
+# ------------
+# This subroutine opens channel 'K', 'S', 'R' or 'P'. This is either called
+# directly, or in response to a user's request, for example, when '#' is
+# encountered with output - PRINT/LIST/... or with input - INPUT/INKEY$/...
+# it is entered with a system stream -3 to -1, or a user stream 0 to 15.
+#
 # On entry:
 #   x0 = stream number in range [-3,15]
 # On exit:
@@ -633,6 +743,12 @@ chan_open:                       // L1601
   ret
 
 
+# -----------------
+# Set channel flags
+# -----------------
+# This subroutine is used from ED-EDIT, str$ and read-in to reset the
+# current channel when it has been temporarily altered.
+#
 # On entry:
 #   x0 = address of channel information inside CHANS
 # On exit:
@@ -671,9 +787,13 @@ chan_flag:                       // L1615
   ret
 
 
-# 'K' channel flag setting routine
-# Updates:
+# --------------
+# Channel K flag
+# --------------
+# Flag setting routine for lower screen/keyboard channel ('K' channel).
 #
+# Updates:
+#   TODO
 # On entry:
 #   <nothing>
 # On exit:
@@ -700,7 +820,11 @@ chan_k:                          // L1634
   ret
 
 
-# 'S' channel flag setting routine
+# --------------
+# Channel S flag
+# --------------
+# Flag setting routine for upper screen channel ('S' channel).
+#
 # Updates:
 #   [TV_FLAG] - clears bit 0 to signal main screen in use.
 #   [FLAGS] - clears bit 1 to signal printer not in use.
@@ -728,7 +852,11 @@ chan_s:                          // L1642
   ret
 
 
-# 'P' channel flag setting routine.
+# --------------
+# Channel P flag
+# --------------
+# Flag setting routine for printer channel ('P' channel).
+#
 # Updates:
 #   [FLAGS] - sets bit 1 to signal printer in use.
 #
@@ -744,6 +872,9 @@ chan_p:                          // L164D
   ret
 
 
+# --------------------------
+# The Table INDEXING routine
+# --------------------------
 # Routine indexer searches an in-memory key/value store for x0.
 #
 # Keys and values are double words (64 bit values). Each record contains a single

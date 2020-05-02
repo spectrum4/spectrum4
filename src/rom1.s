@@ -179,12 +179,9 @@ po_comma:                        // L0A5F
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   sub     w1, w1, #2
-  mov     x3, #0xe38f
-  movk    x3, #0x8e38, lsl #16
-  movk    x3, #0x38e3, lsl #32
-  movk    x3, #0xe38e, lsl #48            // x3 = 16397105843297379215
-  umulh   x4, x3, x1                      // x4 = x1 * 16397105843297379215 / 18446744073709551616 = x1 / 1.125
-  lsr     x4, x4, #4                      // x4 = x4 / 16 = x1 / 18
+  mov     w3, #0xe38f                     // x3 = 58255
+  umull   x4, w3, w1                      // x4 = 58255 * w1
+  lsr     x4, x4, #20                     // x4 = w1 * 58255 / 1048576 = w1/18
 // TODO
   bl      po_fill
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.

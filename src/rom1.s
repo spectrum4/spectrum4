@@ -352,6 +352,14 @@ po_any:                          // L0B24
   b.lo    po_char
   cmp     w3, #0x90
   b.hs    po_t_udg
+  mov     x4, 0x00ff00ff00ff00ff
+  tst     w3, #1
+  csel    x4, x4, xzr, ne
+  mov     x5, 0xff00ff00ff00ff00
+  tst     w3, #2
+  csel    x5, x5, xzr, ne
+  orr     x4, x4, x5
+
 
   // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.

@@ -301,6 +301,8 @@ sysvars:
   DF_CCL:         .space 8                // Like DF CC for lower part of screen.
   PR_CC:          .space 8                // Full address of next position for LPRINT to print at (in ZX Printer buffer).
                                           // Legal values in printer_buffer range. [Not used in 128K mode]
+  MEMBOT:         .space 32               // Calculator's memory area - used to store numbers that cannot conveniently be put on the
+                                          // calculator stack.
 sysvars_end:
 
   printer_buffer: .space 0x100            // Printer buffer used by 48K Basic but not by 128K Basic (apparently)

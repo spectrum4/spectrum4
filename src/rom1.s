@@ -352,6 +352,40 @@ po_any:                          // L0B24
   b.lo    po_char
   cmp     w3, #0x90
   b.hs    po_t_udg
+  adr     x6, MEMBOT
+  bl      po_mosaic_half
+  bl      po_mosaic_half
+  adr     x4, MEMBOT
+  bl      pr_all
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+# --------------------------------
+# Generate half a mosaic character
+# --------------------------------
+# The 16 2*2 mosaic characters 128-143 are formed from bits 0-3 of the
+# character number. For example, char 134 is:
+#
+#     1111111100000000
+#     1111111100000000
+#     1111111100000000
+#     1111111100000000
+#     1111111100000000  <bit 1> <bit 0>
+#     1111111100000000
+#     1111111100000000
+#     1111111100000000
+#     0000000011111111
+#     0000000011111111
+#     0000000011111111
+#     0000000011111111
+#     0000000011111111  <bit 3> <bit 2>
+#     0000000011111111
+#     0000000011111111
+#     0000000011111111
+#
+# This routine generates either the top or bottom half of the character.
+po_mosaic_half:
   mov     x4, 0x00ff00ff00ff00ff
   tst     w3, #1
   csel    x4, x4, xzr, ne
@@ -359,10 +393,9 @@ po_any:                          // L0B24
   tst     w3, #2
   csel    x5, x5, xzr, ne
   orr     x4, x4, x5
-
-
-  // TODO
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  str     x4, [x6], #8
+  str     x4, [x6], #8
+  ror     w3, w3, #2
   ret
 
 
@@ -372,9 +405,31 @@ po_t_udg:                        // L0B52
 
 
 # Print characters 32 - 127.
+#
+# On entry:
+#   w0 = 60 - row
+#   w1 = 109 - column
+#   x2 = address in display file / printer buffer(?)
+#   w3 = char (32-255)
 po_char:                         // L0B65
+
   // TODO
 
+
+# --------------------
+# Print all characters
+# --------------------
+# This entry point entered from above to print ASCII and UDGs
+# but also from earlier to print mosaic characters.
+#
+# On entry:
+#   w0 = 60 - row
+#   w1 = 109 - column
+#   x2 = address in display file / printer buffer(?)
+#   w3 = char (32-255)
+#   w4 = character source
+pr_all:                          // L0B7F
+  // TODO
 
 # ---------------
 # Test for scroll
@@ -433,7 +488,6 @@ cls:                             // L0D6B
   bl      cls_lower
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
-
 
 
 cls_lower:                       // L0D6E

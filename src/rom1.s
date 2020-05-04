@@ -49,9 +49,9 @@ error_1:                         // L0008
 print_w0:                        // L0010
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  ldr     x1, [x28, CURCHL-sysvars]
-  ldr     x1, [x1]
-  blr     x1
+  ldr     x1, [x28, CURCHL-sysvars]       // x1 = [CURCHL]
+  ldr     x1, [x1]                        // x1 = [[CURCHL]]
+  blr     x1                              // bl [[CURCHL]]
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -68,22 +68,22 @@ print_out:                       // L09F4
   stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
   mov     x19, x0                         // Stash x0.
   bl      po_fetch                        // Fetch x0, x1, x2 (print coordinates and address)
-  mov     x3, x19
-  cmp     x3, #0x20
-  b.hs    1f
-  cmp     x3, #0x06
-  b.lo    2f
-  cmp     x3, #0x18
-  b.hs    2f
-  adr     x4, ctlchrtab-(6*8)
-  add     x4, x4, x3, lsl #3
-  blr     x4
-  b       3f
+  mov     x3, x19                         // x3 = char to print
+  cmp     x3, #0x20                       // Is character a space or higher (directly printable)?
+  b.hs    1f                              // If so, to 1: to print char.
+  cmp     x3, #0x06                       // Is character in range 0 - 5?
+  b.lo    2f                              // If so, to 2: to print '?'.
+  cmp     x3, #0x18                       // Is character in range 24 - 31?
+  b.hs    2f                              // If so, to 2: to print '?'.
+  adr     x4, ctlchrtab-(6*8)             // x4 = theorectical address of control character table char 0
+  add     x4, x4, x3, lsl #3              // x4 = address of control character routine for char passed in w0
+  blr     x4                              // Call control character routine.
+  b       3f                              // Return from routine.
 1:
-  bl      po_able
-  b       3f
+  bl      po_able                         // Print printable character.
+  b       3f                              // Return from routine.
 2:
-  bl      po_quest
+  bl      po_quest                        // Print question mark.
 3:
   ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
@@ -93,25 +93,38 @@ print_out:                       // L09F4
 # -------------------
 # Cursor left routine
 # -------------------
-# Backspace and up a line if that action is from the left of screen.
-# For ZX printer backspace up to first column but not beyond.
+# For screen:
+#   If in leftmost column:
+#     If on first line:
+#       No change
+#     Otherwise:
+#       To rightmost column of previous line
+#   Otherwise:
+#     Backspace a char
+# For ZX printer:
+#   If in leftmost column:
+#     No change
+#   Otherwise:
+#     Backspace a char
 #
 # On entry:
 #   w0 = 60 - row
-#   w1 = 109 - column
+#   w1 = 109 - column or / 1 for end-of-line
 #   x2 = address in display file / printer buffer
 #   w3 = 0x08 (chr 8)
 po_back:                         // L0A23
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  add     w1, w1, #1
-  cmp     w1, #110
-  b.ne    3f
-  ldrb    w4, [x28, FLAGS-sysvars]        // w9[0-7] = [FLAGS]
-  tbnz    w4, #1, 2f
-  add     w0, w0, #1
-  mov     w1, #2
-  cmp     w0, #61
+  add     w1, w1, #1                      // Move left one column.
+  cmp     w1, #110                        // Were we already in leftmost column?
+  b.ne    3f                              // If not, jump forward to 3:.
+                                          // We started in leftmost column.
+  ldrb    w4, [x28, FLAGS-sysvars]
+  tbnz    w4, #1, 2f                      // If printer in use, jump forward to 2:.
+                                          // We started in leftmost column, on screen.
+  add     w0, w0, #1                      // Move up one screen line.
+  mov     w1, #2                          // w1 = rightmost column position
+  cmp     w0, #61                         // Were we on first line of upper screen?
   b.ne    3f
   mov     w0, #60
 2:
@@ -129,7 +142,7 @@ po_back:                         // L0A23
 #
 # On entry:
 #   w0 = 60 - row
-#   w1 = 109 - column
+#   w1 = 109 - column or / 1 for end-of-line
 #   x2 = address in display file / printer buffer
 #   w3 = 0x09 (chr 9)
 po_right:                        // L0A3D
@@ -154,7 +167,7 @@ po_right:                        // L0A3D
 #
 # On entry:
 #   w0 = 60 - row
-#   w1 = 109 - column
+#   w1 = 109 - column or / 1 for end-of-line
 #   x2 = address in display file / printer buffer
 #   w3 = 0x0d (chr 13)
 po_enter:                        // L0A4F
@@ -186,7 +199,7 @@ po_enter:                        // L0A4F
 #
 # On entry:
 #   w0 = 60 - row
-#   w1 = 109 - column
+#   w1 = 109 - column or / 1 for end-of-line
 #   x2 = address in display file / printer buffer
 #   w3 = 0x06 (chr 6)
 po_comma:                        // L0A5F
@@ -218,7 +231,7 @@ po_comma:                        // L0A5F
 #
 # On entry:
 #   w0 = 60 - row
-#   w1 = 109 - column
+#   w1 = 109 - column or / 1 for end-of-line
 #   x2 = address in display file / printer buffer(?)
 #   w3 = char (32-255)
 po_quest:                        // L0A69
@@ -248,7 +261,7 @@ po_1_oper:                       // L0A7A
 #
 # On entry:
 #   w0 = 60 - row
-#   w1 = 109 - column
+#   w1 = 109 - column or / 1 for end-of-line
 #   x2 = address in display file / printer buffer(?)
 #   w3 = char (32-255)
 po_able:                         // L0AD9
@@ -300,7 +313,7 @@ po_store:                        // L0ADC
 # Fetch position parameters
 # -------------------------
 # This routine fetches the line/column and display file address
-# of the upper and lower screen or, if the printer is in use,
+# of the upper or lower screen or, if the printer is in use,
 # the column position and absolute memory address.
 #
 # On entry:
@@ -342,7 +355,7 @@ po_fetch:                        // L0B03
 #
 # On entry:
 #   w0 = 60 - row
-#   w1 = 109 - column
+#   w1 = 109 - column or / 1 for end-of-line
 #   x2 = address in display file / printer buffer(?)
 #   w3 = char (32-255)
 po_any:                          // L0B24
@@ -408,7 +421,7 @@ po_t_udg:                        // L0B52
 #
 # On entry:
 #   w0 = 60 - row
-#   w1 = 109 - column
+#   w1 = 109 - column or / 1 for end-of-line
 #   x2 = address in display file / printer buffer(?)
 #   w3 = char (32-255)
 po_char:                         // L0B65
@@ -424,7 +437,7 @@ po_char:                         // L0B65
 #
 # On entry:
 #   w0 = 60 - row
-#   w1 = 109 - column
+#   w1 = 109 - column or / 1 for end-of-line
 #   x2 = address in display file / printer buffer(?)
 #   w3 = char (32-255)
 #   w4 = character source
@@ -602,10 +615,10 @@ cl_set:                          // L0DD9
   adr     x2, printer_buffer+109
   sub     x2, x2, x1                      // x2 = address inside printer buffer to write char
   ldrb    w3, [x28, FLAGS-sysvars]
-  tbnz    w3, #1, 2f                      // if printer is in use, jump to 2:
+  tbnz    w3, #1, 2f                      // If printer is in use, jump to 2:.
   ldrb    w4, [x28, TV_FLAG-sysvars]
-  tbz     w4, #0, 1f                      // if upper screen in use, jump to 1:
-# lower screen in use
+  tbz     w4, #0, 1f                      // If upper screen in use, jump to 1:.
+                                          // Lower screen in use.
   ldrb    w5, [x28, DF_SZ-sysvars]
   add     w0, w0, w5
   sub     w0, w0, #60                     // w0 = 60 - actual row number

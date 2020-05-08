@@ -999,7 +999,7 @@ chan_open:                       // L1601
 #     [FLAGS2] : set bit 4
 #     [ATTR_T] = [BORDCR]
 #     [MASK_T] = 0
-#     [P_FLAG] : temp bits set to zero
+#     [P_FLAG] : temp bits cleared
 #   If Channel P:
 #     [CURCHL] = x0
 #     [FLAGS2] : bit 4 cleared
@@ -1011,7 +1011,7 @@ chan_open:                       // L1601
 #     [FLAGS] - clears bit 1 to signal printer not in use.
 #     [ATTR_T] = [ATTR_P]
 #     [MASK_T] = [MASK_P]
-#     [P_FLAG] = perm copied to temp bits
+#     [P_FLAG] = perm bits copied to temp bits
 #
 # On entry:
 #   x0 = address of channel information inside CHANS

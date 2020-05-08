@@ -32,6 +32,8 @@ Spectrum +4 and the original ZX Spectrum 128K.
 
 ## Graphics
 
+![Screen loading demo](animated.gif)
+
 In order to retain the spirit of the original Spectrum computers, the video
 display preserves many of the original Spectrum principles:
 

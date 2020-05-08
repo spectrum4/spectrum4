@@ -34,15 +34,15 @@ sysvarnames:
   .byte 1
   .asciz "P_POSN"
   .byte 1
-  .asciz "ECHO_E_COLUMN"
+  .asciz "ECHO_E_COL"
   .byte 1
   .asciz "ECHO_E_ROW"
   .byte 1
-  .asciz "S_POSN_COLUMN"
+  .asciz "S_POSN_COL"
   .byte 1
   .asciz "S_POSN_ROW"
   .byte 1
-  .asciz "S_POSNL_COLUMN"
+  .asciz "S_POSNL_COL"
   .byte 1
   .asciz "S_POSNL_ROW"
   .byte 1
@@ -131,11 +131,11 @@ sysvaraddresses:
   .quad DF_SZ
   .quad SCR_CT
   .quad P_POSN
-  .quad ECHO_E_COLUMN
+  .quad ECHO_E_COL
   .quad ECHO_E_ROW
-  .quad S_POSN_COLUMN
+  .quad S_POSN_COL
   .quad S_POSN_ROW
-  .quad S_POSNL_COLUMN
+  .quad S_POSNL_COL
   .quad S_POSNL_ROW
   .quad P_FLAG
   .quad REPDEL

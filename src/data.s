@@ -228,11 +228,11 @@ sysvars:
   SCR_CT:         .space 1                // Counts scrolls - it is always 1 more than the number of scrolls that will be done before
                                           // stopping with 'scroll?'.
   P_POSN:         .space 1                // 109-column number of printer position.
-  ECHO_E_COLUMN:  .space 1                // 109-column number (in lower half) of end of input buffer.
+  ECHO_E_COL:     .space 1                // 109-column number (in lower half) of end of input buffer.
   ECHO_E_ROW:     .space 1                // 60-line number (in lower half) of end of input buffer.
-  S_POSN_COLUMN:  .space 1                // 109-column number for PRINT position.
+  S_POSN_COL:     .space 1                // 109-column number for PRINT position.
   S_POSN_ROW:     .space 1                // 60-line number for PRINT position.
-  S_POSNL_COLUMN: .space 1                // Like S_POSN_COLUMN for lower part.
+  S_POSNL_COL:    .space 1                // Like S_POSN_COL for lower part.
   S_POSNL_ROW:    .space 1                // Like S_POSN_ROW for lower part.
   P_FLAG:         .space 1                // Flags:
                                           //   Bit 0: Temporary 1=OVER 1, 0=OVER 0.

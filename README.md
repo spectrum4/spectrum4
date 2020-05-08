@@ -11,7 +11,24 @@ emulators that you can run directly in your browser.
 For more information about the history and development of this project, see
 https://github.com/spectrum4/notes.
 
-# Variations from the original Spectrum 128K.
+# Variations from the Spectrum 128K
+
+The Spectrum +4 is intentionally incompatible with the original Spectrum. If
+you wish to run original ZX Spectrum software, there are some excellent
+emulators available such as [Retro Virtual
+Machine](https://www.retrovirtualmachine.org/en/), or for the Raspberry Pi see
+[ZXBaremulator](http://zxmini.speccy.org/en/index.html), as well as new
+[compatible hardware](https://www.specnext.com/shop/).
+
+The idea behind this project is to imagine what Sinclair/Amstrad might have
+developed for their next Spectrum, if Raspberry Pi 3B hardware had been
+available at the time, rather than to reproduce what they already had.
+
+It is also an excuse for me to learn bare metal programming and aarch64
+assembly. :-)
+
+With that in mind, the following sections outline the differences between
+Spectrum +4 and the original ZX Spectrum 128K.
 
 ## Graphics
 
@@ -32,35 +49,34 @@ However, the screen geometry has changed a little:
   * The screen now is 108 character cells wide instead of 32
   * The screen now is 60 character cells high instead of 24
 
-The border thickness is equivalent to the original Spectrum 128K with respect
-to equivalent character cell counts:
+The border thickness is equivalent to the original Spectrum 128K in terms of
+equivalent character cell counts:
 
-  * Left border: width of 6 character cells
-  * Right border: width of 6 character cells
-  * Top border: height of 8 character cells
-  * Bottom border: height of 7 character cells
+  * Left border: 6 characters wide
+  * Right border: 6 characters wide
+  * Top border: 8 characters high
+  * Bottom border: 7 characters high
 
-This is designed to match the video display information in:
+This matches the original screen geometry (which had 8 pixels per character):
   * http://www.zxdesign.info/vidparam.shtml
 
-In order to enforce the video restrictions, the current implementation wraps
-updates to the display file / attributes file via the `poke_address` routine
-which keeps the VideoCore IV GPU firmware framebuffer in sync with the new
-display file and attributes file when updating these memory regions. This is
-rather inefficient, but I don't know a better way to handle this for now.
+In order to enforce the video restrictions, updates to the display file and
+attributes file are trapped by the `poke_address` routine which syncs the
+VideoCore IV GPU firmware framebuffer with the display file and attributes
+file. This is rather inefficient, but I don't know a better way (yet) to handle
+this for now.
 
-Due to the changes screen dimensions, the display file and attributes file are
-affected in the following ways: layout, with the following differences:
+The display file and attributes file differ from the Spectrum 128K as follows:
 
   * Each vertical screen third is now 20 character cells high rather than 8
   * Each cell now has 16 pixel rows instead of 8
   * A single pixel row of a character cell now requires 2 bytes instead of 1
 
-Due to the new values often not being powers of two, the mechanics of
-converting a memory address to x,y coordinates no longer is achieved with
-simple bit manipulation. However, sequencially updating bytes in the display
-and attributes file simulates the original screen loading mechanics, which is
-nice to have preserved.
+The mechanics of converting memory addresses to `(x, y)` coordinates is no
+longer a matter of simple bit manipulation. This is a consequence of the
+dimensions no longer being powers of 2. However, sequencially updating bytes in
+the display and attributes file simulates the original screen loading
+mechanics, which is nice to have preserved.
 
 
 ## Memory

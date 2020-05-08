@@ -487,7 +487,7 @@ po_any:                          // L0B24
 #
 # This routine generates either the top or bottom half of the character.
 # Each half is comprised of 16 bytes (8 pixel rows; 2 bytes per row).
-# It rotates w3 two bits right after processing bits 0 and 1, so that it 
+# It rotates w3 two bits right after processing bits 0 and 1, so that it
 # can be called twice in succession to generate top half # from bits 0/1
 # and then the bottom half from bits 2/3.
 #

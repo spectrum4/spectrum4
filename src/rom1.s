@@ -135,6 +135,21 @@ print_out:                       // L09F4
 #   Otherwise:
 #     Backspace a char
 #
+# Updates:
+#   If upper screen in use:
+#     [S_POSN_ROW]
+#     [S_POSN_COL]
+#     [DF_CC]
+#   If lower screen in use:
+#     [S_POSNL_ROW]
+#     [S_POSNL_COL]
+#     [ECHO_E_ROW]
+#     [ECHO_E_COL]
+#     [DF_CCL]
+#   If printer in use:
+#     [P_POSN]
+#     [PR_CC]
+#
 # On entry:
 #   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
 #   w1 = (109 - column), or 1 for end-of-line
@@ -320,6 +335,21 @@ po_able:                         // L0AD9
 # -------------------------------------
 # This routine updates the system variables associated with
 # The main screen, lower screen/input buffer or printer.
+#
+# Updates:
+#   If upper screen in use:
+#     [S_POSN_ROW]
+#     [S_POSN_COL]
+#     [DF_CC]
+#   If lower screen in use:
+#     [S_POSNL_ROW]
+#     [S_POSNL_COL]
+#     [ECHO_E_ROW]
+#     [ECHO_E_COL]
+#     [DF_CCL]
+#   If printer in use:
+#     [P_POSN]
+#     [PR_CC]
 #
 # On entry:
 #   w0 = (60 - actual row) for 'S'; 120 - actual row - [DF_SZ] for 'K'; not set for 'P'
@@ -623,6 +653,22 @@ cls_lower:                       // L0D6E
 
 
 # Reset the system channel input and output addresses.
+#
+# Updates:
+#     [CURCHL] : K
+#     [TV_FLAG] : set bit 0
+#     [FLAGS] : clear bit 1 and bit 5
+#     [FLAGS2] : set bit 4
+#     [ATTR_T] = [BORDCR]
+#     [MASK_T] = 0
+#     [P_FLAG] : temp bits set to zero
+#     [S_POSNL_ROW]
+#     [S_POSNL_COL]
+#     [ECHO_E_ROW]
+#     [ECHO_E_COL]
+#     [DF_CCL]
+#     Channel K output -> print_out
+#     Channel K input -> key_input
 cl_chan:                         // L0D94
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -633,9 +679,6 @@ cl_chan:                         // L0D94
   str     x1, [x0], #8                    // Reset output routine to print_out for channel K.
   adr     x1, key_input
   str     x1, [x0], #8                    // Reset input routine to key_input for channel K.
-# Set cursor position for lower screen, using strange half-reversed coordinates.
-# The row seems not to be reversed, and match the actual row number.
-# The reversed column seems to range from 109 (leftmost column) down to 2 (rightmost column).
   mov     x0, 59                          // screen row (120-[DF_SZ]-59)=screen row 59 for channel K.
   mov     x1, 109                         // reversed column = 109 => column = 0 (109-column)
   bl      cl_set                          // Save new position in system variables.
@@ -682,6 +725,21 @@ cl_all:                          // L0DAF
 # ---------------------------
 # Calculate the character output address for screens or printer based on the
 # line/column for screens for current K/S/P channel.
+#
+# Updates:
+#   If upper screen in use:
+#     [S_POSN_ROW]
+#     [S_POSN_COL]
+#     [DF_CC]
+#   If lower screen in use:
+#     [S_POSNL_ROW]
+#     [S_POSNL_COL]
+#     [ECHO_E_ROW]
+#     [ECHO_E_COL]
+#     [DF_CCL]
+#   If printer in use:
+#     [P_POSN]
+#     [PR_CC]
 #
 # On entry:
 #   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
@@ -881,6 +939,29 @@ key_input:                       // L10A8
 # encountered with output - PRINT/LIST/... or with input - INPUT/INKEY$/...
 # it is entered with a system stream -3 to -1, or a user stream 0 to 15.
 #
+# Updates:
+#   If Channel K:
+#     [CURCHL]
+#     [TV_FLAG] : set bit 0
+#     [FLAGS] : clear bit 1 and bit 5
+#     [FLAGS2] : set bit 4
+#     [ATTR_T] = [BORDCR]
+#     [MASK_T] = 0
+#     [P_FLAG] : temp bits set to zero
+#   If Channel P:
+#     [CURCHL]
+#     [FLAGS2] : bit 4 cleared
+#     [FLAGS] - sets bit 1 to signal printer in use.
+#   If Channel S:
+#     [CURCHL]
+#     [FLAGS2] : bit 4 cleared
+#     [TV_FLAG] - clears bit 0 to signal main screen in use.
+#     [FLAGS] - clears bit 1 to signal printer not in use.
+#     [ATTR_T] = [ATTR_P]
+#     [MASK_T] = [MASK_P]
+#     [P_FLAG] = perm copied to temp bits
+#
+#
 # On entry:
 #   x0 = stream number in range [-3,15]
 # On exit:
@@ -909,6 +990,28 @@ chan_open:                       // L1601
 # -----------------
 # This subroutine is used from ED-EDIT, str$ and read-in to reset the
 # current channel when it has been temporarily altered.
+#
+# Updates:
+#   If Channel K:
+#     [CURCHL] = x0
+#     [TV_FLAG] : set bit 0
+#     [FLAGS] : clear bit 1 and bit 5
+#     [FLAGS2] : set bit 4
+#     [ATTR_T] = [BORDCR]
+#     [MASK_T] = 0
+#     [P_FLAG] : temp bits set to zero
+#   If Channel P:
+#     [CURCHL] = x0
+#     [FLAGS2] : bit 4 cleared
+#     [FLAGS] - sets bit 1 to signal printer in use.
+#   If Channel S:
+#     [CURCHL] = x0
+#     [FLAGS2] : bit 4 cleared
+#     [TV_FLAG] - clears bit 0 to signal main screen in use.
+#     [FLAGS] - clears bit 1 to signal printer not in use.
+#     [ATTR_T] = [ATTR_P]
+#     [MASK_T] = [MASK_P]
+#     [P_FLAG] = perm copied to temp bits
 #
 # On entry:
 #   x0 = address of channel information inside CHANS
@@ -954,7 +1057,13 @@ chan_flag:                       // L1615
 # Flag setting routine for lower screen/keyboard channel ('K' channel).
 #
 # Updates:
-#   TODO
+#   [TV_FLAG] : set bit 0
+#   [FLAGS] : clear bit 1 and bit 5
+#   [FLAGS2] : set bit 4
+#   [ATTR_T] = [BORDCR]
+#   [MASK_T] = 0
+#   [P_FLAG] : temp bits set to zero
+#
 # On entry:
 #   <nothing>
 # On exit:

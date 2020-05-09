@@ -2,6 +2,9 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
+.global _start
+
+.align 2
 .text
 # # ------------------------------------------------------------------------------
 # # Entry point of the application
@@ -186,7 +189,7 @@
 #   ret
 
 
-kernel:
+_start:
 # Should enable interrupts, set up vector jump tables, switch execution
 # level etc, and all the kinds of things to initialise the processor system
 # registers, memory virtualisation, initialise sound chip, USB, etc.
@@ -572,3 +575,68 @@ demo:
   bl      display_sysvars
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   b       sleep
+
+.data
+
+# Memory block for GPU mailbox call to allocate framebuffer
+.align 4
+mbreq:
+  .word (mbreq_end-mbreq)                 // Buffer size
+  .word 0                                 // Request/response code
+  .word 0x00048003                        // Tag 0 - Set Screen Size
+  .word 8                                 //   value buffer size
+  .word 0                                 //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+  .word SCREEN_WIDTH                      //   request: width                response: width
+  .word SCREEN_HEIGHT                     //   request: height               response: height
+  .word 0x00048004                        // Tag 1 - Set Virtual Screen Size
+  .word 8                                 //   value buffer size
+  .word 0                                 //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+  .word SCREEN_WIDTH                      //   request: width                response: width
+  .word SCREEN_HEIGHT                     //   request: height               response: height
+  .word 0x00048009                        // Tag 2 - Set Virtual Offset
+  .word 8                                 //   value buffer size
+  .word 0                                 //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+  .word 0                                 //   request: x offset             response: x offset
+  .word 0                                 //   request: y offset             response: y offset
+  .word 0x00048005                        // Tag 3 - Set Colour Depth
+  .word 4                                 //   value buffer size
+  .word 0                                 //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+                                          //                   32 bits per pixel => 8 red, 8 green, 8 blue, 8 alpha
+                                          //                   See https://en.wikipedia.org/wiki/RGBA_color_space
+  .word 32                                //   request: bits per pixel       response: bits per pixel
+  .word 0x00048006                        // Tag 4 - Set Pixel Order (really is "Colour Order", not "Pixel Order")
+  .word 4                                 //   value buffer size
+  .word 0                                 //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+  .word 0                                 //   request: 0 => BGR, 1 => RGB   response: 0 => BGR, 1 => RGB
+  .word 0x00040001                        // Tag 5 - Get (Allocate) Buffer
+  .word 8                                 //   value buffer size (response > request, so use response size)
+  .word 0                                 //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+framebuffer:
+  .word 4096                              //   request: alignment in bytes   response: frame buffer base address
+  .word 0                                 //   request: padding              response: frame buffer size in bytes
+  .word 0x00040008                        // Tag 6 - Get Pitch (bytes per line)
+  .word 4                                 //   value buffer size
+  .word 0                                 //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+pitch:
+  .word 0                                 //   request: padding              response: bytes per line
+  .word 0x00010005                        // Tag 7 - Get ARM memory
+  .word 8                                 //   value buffer size
+  .word 0                                 //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+arm_base:
+  .word 0                                 //   request: padding              response: base address in bytes
+arm_size:
+  .word 0                                 //   request: padding              response: size in bytes
+  .word 0                                 // End Tags
+mbreq_end:
+
+msg_colon0x:
+.asciz ": 0x"
+
+msg_title_sysvars:
+.ascii "System Variables"
+.byte 10,13
+.ascii "================"
+.byte 10,13,0
+
+msg_hex_header:
+  .asciz "           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f  "

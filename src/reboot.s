@@ -2,6 +2,7 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
+.align 2
 .text
 
 .set PM_BASE,                    0x3f100000

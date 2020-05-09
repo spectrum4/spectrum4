@@ -118,6 +118,34 @@ print_out:                       // L09F4
   ret
 
 
+# -----------------------
+# Control character table
+# -----------------------
+# For control characters in the range 6 - 23 the following table
+# is indexed to provide an offset to the handling routine that
+# follows the table.
+.align 3
+ctlchrtab:                       // L0A11
+  .quad po_comma                          // chr 0x06
+  .quad po_quest                          // chr 0x07
+  .quad po_back                           // chr 0x08
+  .quad po_right                          // chr 0x09
+  .quad po_quest                          // chr 0x0a
+  .quad po_quest                          // chr 0x0b
+  .quad po_quest                          // chr 0x0c
+  .quad po_enter                          // chr 0x0d
+  .quad po_quest                          // chr 0x0e
+  .quad po_quest                          // chr 0x0f
+  .quad po_1_oper                         // chr 0x10 -> INK
+  .quad po_1_oper                         // chr 0x11 -> PAPER
+  .quad po_1_oper                         // chr 0x12 -> FLASH
+  .quad po_1_oper                         // chr 0x13 -> BRIGHT
+  .quad po_1_oper                         // chr 0x14 -> INVERSE
+  .quad po_1_oper                         // chr 0x15 -> OVER
+  .quad po_2_oper                         // chr 0x16 -> AT
+  .quad po_2_oper                         // chr 0x17 -> TAB (strangely po_2_oper since TAB seems to only have one operand according to BASIC manual)
+
+
 # -------------------
 # Cursor left routine
 # -------------------
@@ -302,12 +330,12 @@ po_quest:                        // L0A69
 
 # This initial entry point deals with two operands - AT or TAB.
 po_2_oper:                       // L0A75
-// TODO
+  // TODO
 
 
 # This initial entry point deals with one operand INK to OVER.
 po_1_oper:                       // L0A7A
-// TODO
+  // TODO
 
 
 # ----------------------
@@ -468,22 +496,22 @@ po_any:                          // L0B24
 # The 16 2*2 mosaic characters 128-143 are formed from bits 0-3 of the
 # character number. For example, char 134 (0b10000110) is:
 #
-#     1111111100000000
-#     1111111100000000
-#     1111111100000000
-#     1111111100000000
-#     1111111100000000  <bit 1> <bit 0>
-#     1111111100000000
-#     1111111100000000
-#     1111111100000000
-#     0000000011111111
-#     0000000011111111
-#     0000000011111111
-#     0000000011111111
-#     0000000011111111  <bit 3> <bit 2>
-#     0000000011111111
-#     0000000011111111
-#     0000000011111111
+#   0b1111111100000000
+#   0b1111111100000000
+#   0b1111111100000000
+#   0b1111111100000000
+#   0b1111111100000000  <bit 1> <bit 0>
+#   0b1111111100000000
+#   0b1111111100000000
+#   0b1111111100000000
+#   0b0000000011111111
+#   0b0000000011111111
+#   0b0000000011111111
+#   0b0000000011111111
+#   0b0000000011111111  <bit 3> <bit 2>
+#   0b0000000011111111
+#   0b0000000011111111
+#   0b0000000011111111
 #
 # This routine generates either the top or bottom half of the character.
 # Each half is comprised of 16 bytes (8 pixel rows; 2 bytes per row).
@@ -514,8 +542,30 @@ po_mosaic_half:
   ret
 
 
-# Print tokens and user defined graphics.
+# Print tokens and user defined graphics (chars 0x90-0xff).
+#
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = char (144-255)
 po_t_udg:                        // L0B52
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  bl      po_t_udg_128k_patch
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+po_t_udg_1:                      // L0B56
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  // TODO
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+po_t:                            // L0B5F
   // TODO
 
 
@@ -527,7 +577,6 @@ po_t_udg:                        // L0B52
 #   x2 = address in display file / printer buffer(?)
 #   w3 = char (32-255)
 po_char:                         // L0B65
-
   // TODO
 
 
@@ -545,6 +594,11 @@ po_char:                         // L0B65
 #   w4 = character source
 pr_all:                          // L0B7F
   // TODO
+
+
+po_table_1:                      // L0C17
+  // TODO
+
 
 # ---------------
 # Test for scroll
@@ -710,9 +764,6 @@ cl_all:                          // L0DAF
   str     x1, [x0], #8                    // Reset output routine to print_out for channel S.
   mov     w0, 1
   strb    w0, [x28, SCR_CT-sysvars]       // Reset SCR_CT (scroll count) to default of 1.
-# Set cursor position for upper screen, using strange reversed coordinates.
-# Note, reversed row ranges from 60 (top), presumably down to 1+DF_SZ (bottom row).
-# However, the reversed column ranges from 109 (leftmost column) down to 2 (rightmost column).
   mov     x0, 60                          // reversed row = 60 => row = 0 (row = 60 - reversed row)
   mov     x1, 109                         // reversed column = 109 => column = 0 (column = 109 - reversed column)
   bl      cl_set                          // Save new position in system variables.
@@ -812,7 +863,7 @@ cl_line:                         // L0E44
   umsubl  x19, w4, w5, x6                 // x19 = number of lines in top screen third * 216 = byte count for one pixel row across first screen third
   umull   x20, w0, w5                     // x20 = 216 * line count
   mov     x22, x3                         // x22 = top screen section (0/1/2)
-
+#
   // counters
   mov     x26, x2                         // x26 = address of first pixel in first section of current pixel row
   mov     w23, #16                        // x23 = number of remaining pixel lines to clear (0-15)
@@ -901,7 +952,7 @@ cl_addr:                         // L0E9B
 # This routine is used to copy 8 text lines from the printer buffer
 # to the printer.
 copy_buff:                       // L0ECD
-// TODO
+  // TODO
 
 
 # ------------------------
@@ -913,7 +964,7 @@ copy_buff:                       // L0ECD
 add_char:                        // L0F81
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-// TODO
+  // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -926,7 +977,7 @@ add_char:                        // L0F81
 key_input:                       // L10A8
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-// TODO
+  // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -1049,6 +1100,22 @@ chan_flag:                       // L1615
 1:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
+
+# --------------------------
+# Channel code look-up table
+# --------------------------
+# This table is used to find one of the three flag setting routines. A zero
+# end-marker is required as channel 'R' is not present.
+.align 3
+chn_cd_lu:                       // L162D
+  .quad 0x0000000000000003                // 3 records
+  .byte 'K',0,0,0,0,0,0,0                 // 0x4B      - Channel identifier 'K'.
+  .quad chan_k
+  .byte 'S',0,0,0,0,0,0,0                 // 0x53      - Channel identifier 'S'.
+  .quad chan_s
+  .byte 'P',0,0,0,0,0,0,0                 // 0x50      - Channel identifier 'P'.
+  .quad chan_p
 
 
 # --------------
@@ -1197,6 +1264,45 @@ indexer:                         // L16DC
 report_j:                        // L15C4
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-// TODO
+  // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
+
+po_t_udg_128k_patch:             // L3B9F
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  cmp     w3, 0xa3
+  b.eq    2f
+  cmp     w3, 0xa4
+  b.eq    2f
+1:
+  subs    w3, w3, 0xa5
+  b.pl    3f
+  // UDG character
+  bl      po_t_udg_1
+  b       4f
+2:
+  // SPECTRUM or PLAY token (128K mode) or T/U UDG (48K mode)
+  ldrb    w3, [x28, FLAGS-sysvars]
+  tbz     w3, #4, 1b                      // If in 48K mode, jump back to 1:.
+  // SPECTRUM or PLAY token in 128K mode
+  adr     x4, msg_spectrum
+  adr     x5, msg_play
+  subs    w3, w3, 0xa3
+  csel    x4, x4, x5, eq
+  bl      po_table_1
+  // TODO
+3:
+  // Token
+  bl      po_t
+4:
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+msg_spectrum:                    // L3BD2
+  .asciz "SPECTRUM"
+
+msg_play:                        // L3BDA
+  .asciz "PLAY"

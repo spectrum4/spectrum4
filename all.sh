@@ -76,7 +76,7 @@ echo '# This file is part of the Spectrum +4 Project.
 
 .align 0
 sysvarnames:'
-cat src/data.s | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space \([1248]\) .*$/\1 \2/p' | while read sysvar size; do
+cat src/bss.s | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space \([1248]\) .*$/\1 \2/p' | while read sysvar size; do
   echo "  .asciz \"${sysvar}\""
   echo "  .byte ${size}"
 done
@@ -84,7 +84,7 @@ echo '  .byte 0 // end marker
 
 .align 3
 sysvaraddresses:'
-cat src/data.s | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space [1248] .*$/\1/p' | while read sysvar; do
+cat src/bss.s | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space [1248] .*$/\1/p' | while read sysvar; do
   echo "  .quad ${sysvar}"
 done
 } > src/sysvars.s

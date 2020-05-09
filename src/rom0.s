@@ -2,9 +2,44 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
+
+
+# ------------------
+# RAM Disk Catalogue
+# ------------------
+#
+# Both the catalogue and files of the RAMDISK are contained in the RAMDISK
+# section (from RAMDISK to RAMDISK+RAMDISKSIZE):
+#   The catalogue is located at the top of RAMDISK section and grows downwards
+#   The files are located at the bottom of RAMDISK and grow upwards
+#
+# Each catalogue entry contains 96 (0x60) bytes:
+#   Bytes 0x00-0x3F: Filename.
+#   Bytes 0x40-0x47: Start address of file
+#   Bytes 0x48-0x4F: Length of file
+#   Bytes 0x50-0x57: End address of file (used as current position indicator when loading/saving).
+#   Bytes 0x58-0x5F: Flags:
+#                     Bit 0:     1=Entry requires updating.
+#                     Bits 1-63: Not used (always hold 0).
+#
+# When a file is deleted, any file which is stored after it is relocated to a
+# lower memory address to remove the gap of the file contents, and the catalogue
+# entries are moved to a higher memory address to remove the gap in the
+# catalogue. This is clearly suboptimal, but is implemented this way to match the
+# original spectrum. This can be improved later once things are working.
+#
+# A file consists of a 32 byte header (256 bits) followed by the data for the
+# file. The header bytes have the following meaning:
+#   Bytes 0x00-0x07: FLAGS
+#                      Bits 0-15:  File type - 0x00=Program, 0x01=Numeric array, 0x02=Character array, 0x03=Code/Screen$.
+#                      Bits 16-63: Auto-run line number for a program (0xffffffffffff if no auto-run).
+#   Bytes 0x08-0x0F: Length of program/code block/screen$/array
+#   Bytes 0x10-0x17: Start of code block/screen$
+#   Bytes 0x18-0x1F: Offset to the variables (i.e. length of program) if a program. For an array, 0x18 holds the variable name.
+
+
 .align 2
 .text
-
 
 restart:                         // L0000
   msr     daifset, #3                     // Disable (mask) interrupts and fast interrupts
@@ -14,20 +49,32 @@ restart:                         // L0000
   strb    wzr, [x0], #1                   // Variables
   cmp     x0, x1                          // ...
   b.ne    1b                              // ...
-  bl      init_ramdisk
+
+  // Initialise RAM disk
+  mov     x9, RAM_DISK_SIZE               // x9 = size of ramdisk.
+  sub     x9, x9, #0x60                   // x9 = offset from start of RAM disk to last journal entry; RAM disk entries are 96 (0x60) bytes and journal grows downwards from end of ramdisk.
+  adr     x10, ram_disk                   // x10 = start address of ramdisk.
+  add     x11, x9, x10                    // x11 = absolute address of last journal entry of RAM disk.
+  str     x11, [x28, SFNEXT-sysvars]      // Store current journal entry in SFNEXT.
+  str     x10, [x11, #0x40]               // Store RAM_DISK start location in first RAM Disk Catalogue journal entry.
+  str     x9, [x28, SFSPACE-sysvars]      // Store free space in SFSPACE.
+
   ldr     w14, arm_size                   // x14 = first byte of shared GPU memory, for determining where CPU dedicated RAM ends (one byte below).
   sub     x14, x14, 1                     // x14 = last byte of dedicated RAM (not shared with GPU).
   str     x14, [x28, P_RAMT-sysvars]      // [P_RAMT] = 0x3bffffff.
   mov     x15, UDG_COUNT * 4              // x15 = number of double words (8 bytes) of characters to copy to the user defined graphics region.
-  adr     x16, chars + (FIRST_UDG_CHAR - 32) * 32 // x16 = address of first UDG char to copy.
+  adr     x16, chars + (FIRST_UDG_CHAR - 32) * 32
+                                          // x16 = address of first UDG char to copy.
   sub     x18, x14, UDG_COUNT * 32 - 1    // x18 = first byte of user defined graphics.
   str     x18, [x28, UDG-sysvars]         // [UDG] = first byte of user defined graphics.
-# Copy UDG_COUNT characters into User Defined Graphics memory region at end of RAM.
-2:
-  ldr     x17, [x16], 8
-  str     x17, [x18], 8
-  subs    x15, x15, 1
-  b.ne    2b
+
+  // Loop to copy UDG_COUNT characters into User Defined Graphics memory region at end of RAM.
+  2:
+    ldr     x17, [x16], 8
+    str     x17, [x18], 8
+    subs    x15, x15, 1
+    b.ne    2b
+
   mov     w12, 0x40
   strb    w12, [x28, RASP-sysvars]        // [RASP]=0x40
   strb    wzr, [x28, PIP-sysvars]         // [PIP]=0x00
@@ -39,7 +86,7 @@ restart:                         // L0000
 pin:                             // L009A
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-// TODO
+  // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -47,7 +94,7 @@ pin:                             // L009A
 pout:                            // L009F
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-// TODO
+  // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -79,12 +126,14 @@ new:                             // L019D
   str     x5, [x28, CHANS-sysvars]        // [CHANS] = start of heap
   mov     x6, (initial_channel_info_END - initial_channel_info)/8   // x6 = number of double words (8 bytes) in initial_channel_info block
   adr     x7, initial_channel_info
-# Copy initial_channel_info block to [CHANS] = start of heap = heap
-3:
-  ldr     x8, [x7], #8
-  str     x8, [x5], #8
-  subs    x6, x6, #1
-  b.ne    3b
+
+  // Loop to copy initial_channel_info block to [CHANS] = start of heap = heap
+  3:
+    ldr     x8, [x7], #8
+    str     x8, [x5], #8
+    subs    x6, x6, #1
+    b.ne    3b
+
   sub     x9, x5, 1
   str     x9, [x28, DATADD-sysvars]
   str     x5, [x28, PROG-sysvars]
@@ -115,12 +164,14 @@ new:                             // L019D
   adr     x5, STRMS
   mov     x6, (initial_stream_data_END - initial_stream_data)/2   // x6 = number of half words (2 bytes) in initial_stream_data block
   adr     x7, initial_stream_data
-# Copy initial_stream_data block to [STRMS]
-4:
-  ldrh    w8, [x7], #2
-  strh    w8, [x5], #2
-  subs    x6, x6, #1
-  b.ne    4b
+
+  // Loop to copy initial_stream_data block to [STRMS]
+  4:
+    ldrh    w8, [x7], #2
+    strh    w8, [x5], #2
+    subs    x6, x6, #1
+    b.ne    4b
+
 //         RES  1,(IY+0x01)   // FLAGS. Signal printer not is use.
   mov     w5, 255
   strb    w5, [x28, ERR_NR-sysvars]       // Signal no error.
@@ -129,6 +180,45 @@ new:                             // L019D
 
   bl      cls
   b       demo                            // This is demo code for testing purposes only
+
+
+# -----------------------
+# New Error Message Table
+# -----------------------
+
+msg_merge_error:                 // L048C
+  .asciz "MERGE error"                    // Report 'a'.
+msg_wrong_file_type:             // L0497
+  .asciz "Wrong file type"                // Report 'b'.
+msg_code_error:                  // L04A6
+  .asciz "CODE error"                     // Report 'c'.
+msg_too_many_brackets:           // L04B0
+  .asciz "Too many brackets"              // Report 'd'.
+msg_file_already_exists:         // L04C1
+  .asciz "File already exists"            // Report 'e'.
+msg_invalid_name:                // L04D4
+  .asciz "Invalid name"                   // Report 'f'.
+msg_file_does_not_exist:         // L04E0
+  .asciz "File does not exist"            // Report 'g' & 'h'.
+msg_invalid_device:              // L04F3
+  .asciz "Invalid device"                 // Report 'i'.
+msg_invalid_baud_rate:           // L0501
+  .asciz "Invalid baud rate"              // Report 'j'.
+msg_invalid_note_name:           // L0512
+  .asciz "Invalid note name"              // Report 'k'.
+msg_number_too_big:              // L0523
+  .asciz "Number too big"                 // Report 'l'.
+msg_note_out_of_range:           // L0531
+  .asciz "Note out of range"              // Report 'm'.
+msg_out_of_range:                // L0542
+  .asciz "Out of range"                   // Report 'n'.
+msg_too_many_tied_notes:         // L054E
+  .asciz "Too many tied notes"            // Report 'o'.
+msg_bad_parameter:               // <missing>
+  .asciz "Bad parameter"                  // Report 'p'.
+msg_copyright:                   // L0561
+  .byte 0x7f                              // '(c)'.
+  .asciz " 1986 Sinclair Research Ltd"
 
 
 # Print zero byte delimited string stored at memory location x0 to current channel.
@@ -149,3 +239,47 @@ print_message:                   // L057D
   ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
+
+.align 3
+# ---------------------------------
+# The 'Initial Channel Information'
+# ---------------------------------
+# Initially there are four channels ('K', 'S', 'R', & 'P') for communicating
+# with the 'keyboard', 'screen', 'workspace' and 'printer'. For each channel
+# the output routine address comes before the input routine address and the
+# channel's code. This table is almost identical to that in ROM 1 at 0x15AF but
+# with changes to the channel P routines to use the RS232 port instead of the
+# ZX Printer.
+# Used at 0x01DD (ROM 0).
+initial_channel_info:            // L0589
+  .quad print_out                         // PRINT_OUT - K channel output routine.
+  .quad key_input                         // KEY_INPUT - K channel input routine.
+  .byte 'K',0,0,0,0,0,0,0                 // 0x4B      - Channel identifier 'K'.
+  .quad print_out                         // PRINT_OUT - S channel output routine.
+  .quad report_j                          // REPORT_J  - S channel input routine.
+  .byte 'S',0,0,0,0,0,0,0                 // 0x53      - Channel identifier 'S'.
+  .quad add_char                          // ADD_CHAR  - R channel output routine.
+  .quad report_j                          // REPORT_J  - R channel input routine.
+  .byte 'R',0,0,0,0,0,0,0                 // 0x52      - Channel identifier 'R'.
+  .quad pout                              // POUT      - P Channel output routine.
+  .quad pin                               // PIN       - P Channel input routine.
+  .byte 'P',0,0,0,0,0,0,0x80              // 0x50      - Channel identifier 'P'.
+initial_channel_info_END:
+
+
+.align 1
+# -------------------------
+# The 'Initial Stream Data'
+# -------------------------
+# Initially there are seven streams: -3 to 3.
+# This table is identical to that in ROM 1 at 0x15C6.
+initial_stream_data:             // L059E
+  .byte 0x01, 0x00                        // Stream -3 leads to channel 'K'.
+  .byte 0x19, 0x00                        // Stream -2 leads to channel 'S'.
+  .byte 0x31, 0x00                        // Stream -1 leads to channel 'R'.
+  .byte 0x01, 0x00                        // Stream  0 leads to channel 'K'.
+  .byte 0x01, 0x00                        // Stream  1 leads to channel 'K'.
+  .byte 0x19, 0x00                        // Stream  2 leads to channel 'S'.
+  .byte 0x49, 0x00                        // Stream  3 leads to channel 'P'.
+initial_stream_data_END:

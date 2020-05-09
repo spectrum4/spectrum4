@@ -347,7 +347,7 @@ poke_address:
   adr     x10, attributes_file_end        // Now compare address to upper limit of attributes file
   cmp     x0, x10
   b.hs    2f                              // if x0 >= x10 (attributes file end), jump ahead since after attributes file
-// TODO: rewrite this section to be more efficient (don't call poke_address recursively)
+  // TODO: rewrite this section to be more efficient (don't call poke_address recursively)
   add     x10, x9, x11, lsl #1            // x10 = disp base address + attr offset * 2
   mov     x8, #64800                      // 216 * 20 * 15
   cmp     x11, #2160

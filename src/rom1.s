@@ -557,10 +557,19 @@ po_t_udg:                        // L0B52
   ret
 
 
+# Print UDG (chars 0x90-0xa4).
+#
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = (char-165) (-21 to -1)
 po_t_udg_1:                      // L0B56
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  // TODO
+  add     w3, w3, #21                     // w3 now in range 0 to 20
+  ldr     x4, [x28, UDG-sysvars]          // x4 = [UDG]
+  bl      po_char_2
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -575,9 +584,37 @@ po_t:                            // L0B5F
 #   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
 #   w1 = (109 - column), or 1 for end-of-line
 #   x2 = address in display file / printer buffer(?)
-#   w3 = char (32-255)
+#   w3 = char (32-127)
 po_char:                         // L0B65
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  ldr     x4, [x28, CHARS-sysvars]        // x4 = [CHARS]
+  bl      po_char_2
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+# Print character from bitmap pattern.
+#
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = zero-based character index from bit pattern base address
+#   x4 = bit pattern base address
+po_char_2:                       // L0B6A
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  ldrb    w5, [x28, FLAGS-sysvars]        // w5 = [FLAGS]
+  and     w5, w5, 0xfe                    // Clear bit 0
+  cmp     w3, #0x20                       // Space character?
+  b.ne    1f
+  orr     w5, w5, 0x1
+1:
+  strb    w5, [x28, FLAGS-sysvars]
   // TODO
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
 
 
 # --------------------
@@ -1110,11 +1147,11 @@ chan_flag:                       // L1615
 .align 3
 chn_cd_lu:                       // L162D
   .quad 0x0000000000000003                // 3 records
-  .byte 'K',0,0,0,0,0,0,0                 // 0x4B      - Channel identifier 'K'.
+  .byte 'K',0,0,0,0,0,0,0                 // 0x4B - Channel identifier 'K'.
   .quad chan_k
-  .byte 'S',0,0,0,0,0,0,0                 // 0x53      - Channel identifier 'S'.
+  .byte 'S',0,0,0,0,0,0,0                 // 0x53 - Channel identifier 'S'.
   .quad chan_s
-  .byte 'P',0,0,0,0,0,0,0                 // 0x50      - Channel identifier 'P'.
+  .byte 'P',0,0,0,0,0,0,0                 // 0x50 - Channel identifier 'P'.
   .quad chan_p
 
 
@@ -1269,21 +1306,28 @@ report_j:                        // L15C4
   ret
 
 
+# Print tokens and user defined graphics (chars 0x90-0xff).
+#
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = char (144-255)
 po_t_udg_128k_patch:             // L3B9F
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  cmp     w3, 0xa3
-  b.eq    2f
-  cmp     w3, 0xa4
-  b.eq    2f
+  cmp     w3, 0xa3                        // Is char 'SPECTRUM' (128K mode) / UDG T (48K mode)?
+  b.eq    2f                              // If so, jump forward to 2:.
+  cmp     w3, 0xa4                        // Is char 'PLAY' (128K mode) / UDG U (48K mode)?
+  b.eq    2f                              // If so, jump forward to 2:.
 1:
-  subs    w3, w3, 0xa5
-  b.pl    3f
+  subs    w3, w3, 0xa5                    // w3 = (char - 165)
+  b.pl    3f                              // if char is token (w3 >= 0) jump forward to 3:.
   // UDG character
   bl      po_t_udg_1
   b       4f
 2:
-  // SPECTRUM or PLAY token (128K mode) or T/U UDG (48K mode)
+  // SPECTRUM/PLAY token (128K mode) or T/U UDG (48K mode)
   ldrb    w3, [x28, FLAGS-sysvars]
   tbz     w3, #4, 1b                      // If in 48K mode, jump back to 1:.
   // SPECTRUM or PLAY token in 128K mode

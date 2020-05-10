@@ -642,7 +642,7 @@ po_char_2:                       // L0B6A
 #   x2 = address in display file / printer buffer(?)
 #   w3 = char (32-255)
 #   w4 = address of 32 byte character bit pattern
-pr_all:                          // L0B7F.
+pr_all:                          // L0B7F
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   cmp     w1, #1                          // Trailing position at end of line?
@@ -657,9 +657,16 @@ pr_all:                          // L0B7F.
 1:
   cmp     w1, #109                        // Leftmost column?
   b.ne    2f                              // If not, jump ahead to 2:.
-  // Leftmost column
+  // Leftmost column.
   bl      po_scr                          // Consider scrolling
 2:
+  ldrb    w5, [x28, P_FLAG-sysvars]       // w5 = [P_FLAG]
+  tst     w5, #1                          // Test (temporary) OVER status (bit 0).
+  csetm   w6, ne                          // w6 = -1 if (temporary) OVER 1 in [P_FLAG]
+                                          //       0 if (temporary) OVER 0 in [P_FLAG]
+  tst     w5, #4                          // Test (temporary) INVERSE status (bit 2).
+  csetm   w7, ne                          // w7 = -1 if (temporary) INVERSE 1 in [P_FLAG]
+                                          //       0 if (temporary) INVERSE 0 in [P_FLAG]
   // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret

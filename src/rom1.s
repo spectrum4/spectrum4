@@ -256,6 +256,7 @@ po_enter:                        // L0A4F
   ldrb    w4, [x28, FLAGS-sysvars]        // w4 = [FLAGS]
   tbnz    w4, #1, 1f                      // If printer in use, jump forward to 1:.
   mov     w1, #109                        // The leftmost column position.
+  // TODO preserve registers that following routine corrupts
   bl      po_scr                          // Routine po_scr handles any scrolling required.
   sub     w0, w0, #1                      // Down one screen line.
   bl      cl_set                          // Save new position in system variables.
@@ -352,6 +353,7 @@ po_1_oper:                       // L0A7A
 po_able:                         // L0AD9
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  // TODO preserve registers that following routine corrupts
   bl      po_any                          // Print printable character.
   bl      po_store                        // Update stored cursor position.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
@@ -475,6 +477,7 @@ po_any:                          // L0B24
   bl      po_mosaic_half                  // Generate top half (first 8 pixel rows) of mosaic character.
   bl      po_mosaic_half                  // Generate bottom half (last 8 pixel rows) of mosaic character.
   adr     x4, MEMBOT                      // x4 = address of character bit pattern
+  // TODO: check registers are set correctly for this call
   bl      pr_all                          // Print mosaic character 128-143.
   b       3f                              // Exit routine.
 1:
@@ -585,6 +588,7 @@ po_t:                            // L0B5F
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   bl      po_tokens
+  // TODO check if this po_fetch is necessary
   bl      po_fetch
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
@@ -641,7 +645,7 @@ po_char_2:                       // L0B6A
 #   w1 = (109 - column), or 1 for end-of-line
 #   x2 = address in display file / printer buffer(?)
 #   w3 = char (32-255)
-#   w4 = address of 32 byte character bit pattern
+#   x4 = address of 32 byte character bit pattern
 pr_all:                          // L0B7F
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -653,21 +657,38 @@ pr_all:                          // L0B7F
   ldrb    w5, [x28, FLAGS-sysvars]        // w5 = [FLAGS]
   tbz     w5, #1, 1f                      // If printer not in use, jump ahead to 1:.
   // Printer in use.
+  // TODO preserve registers that following routine corrupts
   bl      copy_buff                       // Flush printer buffer and reset print position.
 1:
   cmp     w1, #109                        // Leftmost column?
   b.ne    2f                              // If not, jump ahead to 2:.
   // Leftmost column.
+
+  // TODO preserve registers that following routine corrupts
   bl      po_scr                          // Consider scrolling
 2:
-  ldrb    w5, [x28, P_FLAG-sysvars]       // w5 = [P_FLAG]
-  tst     w5, #1                          // Test (temporary) OVER status (bit 0).
-  csetm   w6, ne                          // w6 = -1 if (temporary) OVER 1 in [P_FLAG]
+  ldrb    w6, [x28, P_FLAG-sysvars]       // w6 = [P_FLAG]
+  tst     w6, #1                          // Test (temporary) OVER status (bit 0).
+  csetm   w7, ne                          // w7 = -1 if (temporary) OVER 1 in [P_FLAG]
                                           //       0 if (temporary) OVER 0 in [P_FLAG]
-  tst     w5, #4                          // Test (temporary) INVERSE status (bit 2).
-  csetm   w7, ne                          // w7 = -1 if (temporary) INVERSE 1 in [P_FLAG]
+  tst     w6, #4                          // Test (temporary) INVERSE status (bit 2).
+  csetm   w8, ne                          // w8 = -1 if (temporary) INVERSE 1 in [P_FLAG]
                                           //       0 if (temporary) INVERSE 0 in [P_FLAG]
-  mov     w8, #16                         // 16 pixel rows to update
+  mov     w9, #16                         // 16 pixel rows to update
+  tbz     w5, #1, 3f                      // If printer not in use, jump ahead to 3:.
+  ldrb    w10, [x28, FLAGS2-sysvars]      // w9 = [FLAGS2]
+  orr     w10, w10, #0x2                  // w9 = [FLAGS2] with bit 1 set
+  strb    w10, [x28, FLAGS2-sysvars]      // Update [FLAGS2] to have bit 1 set (signal printer buffer has been used).
+3:
+  ldrh    w11, [x2]                       // w11 = current screen bit pattern
+  and     w11, w11, w7                    // Consider OVER.
+  ldrh    w10, [x4]                       // w10 = character pixel line bit pattern
+  eor     w11, w11, w10                   // Apply character bit pattern.
+  eor     w11, w11, w8                    // Consider INVERSE.
+// poke x2, w11
+// registers to preserve:
+// x2, x4, w5
+
   // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
@@ -758,6 +779,7 @@ cls:                             // L0D6B
   ret
 
 
+// TODO: check this routine uses correct registers in subroutine calls and that subroutines don't corrupt needed registers
 cls_lower:                       // L0D6E
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -839,8 +861,8 @@ cl_all:                          // L0DAF
   mov     x29, sp                         // Update frame pointer to new stack location.
   str     wzr, [x28, COORDS-sysvars]      // set COORDS to 0,0.
   ldrb    w9, [x28, FLAGS2-sysvars]       // w9 = [FLAGS2]
-  and     w9, w9, #0xfe                   // w9 = [FLAGS2] with bit 0 unset
-  strb    w9, [x28, FLAGS2-sysvars]       // Update [FLAGS2] to have bit 0 unset (signal main screen is clear).
+  and     w9, w9, #0xfe                   // w9 = [FLAGS2] with bit 0 clear
+  strb    w9, [x28, FLAGS2-sysvars]       // Update [FLAGS2] to have bit 0 clear (signal main screen is clear).
   bl      cl_chan
   mov     x0, #-2                         // Select system channel 'S'.
   bl      chan_open                       // Routine chan_open opens it.
@@ -1112,6 +1134,7 @@ chan_open:                       // L1601
   ldrh    w10, [x9, STRMS-sysvars+6]      // w10 = [stream number * 2 + STRMS + 6] = CHANS offset + 1
   cbnz    w10, 1f                         // Non-zero indicates channel open, in which case continue
   mov     x0, 0x17                        // Error Report: Invalid stream
+// TODO: check if this should be `b` instead of `bl` followed by `b 2f`.
 //   bl      error_1
   b       2f
 1:
@@ -1178,8 +1201,8 @@ chan_flag:                       // L1615
   mov     x29, sp                         // Update frame pointer to new stack location.
   str     x0, [x28, CURCHL-sysvars]       // set CURCHL system variable to CHANS record address
   ldrb    w9, [x28, FLAGS2-sysvars]       // w9 = [FLAGS2].
-  and     w9, w9, #0xffffffef             // w9 = [FLAGS2] with bit 4 unset.
-  strb    w9, [x28, FLAGS2-sysvars]       // Update [FLAGS2] to have bit 4 unset (signal K channel not in use).
+  and     w9, w9, #0xffffffef             // w9 = [FLAGS2] with bit 4 clear.
+  strb    w9, [x28, FLAGS2-sysvars]       // Update [FLAGS2] to have bit 4 clear (signal K channel not in use).
   ldr     x0, [x0, 16]                    // w0 = channel letter (stored at CHANS record address + 16)
   adr     x1, chn_cd_lu                   // x1 = address of flag setting routine lookup table
   bl      indexer                         // look up flag setting routine
@@ -1386,6 +1409,7 @@ po_t_udg_128k_patch:             // L3B9F
   adr     x5, msg_play
   subs    w3, w3, 0xa3
   csel    x4, x4, x5, eq
+  // TODO: check if any registers need to be preserved here
   bl      po_table_1
   // TODO
 3:

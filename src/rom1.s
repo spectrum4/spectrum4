@@ -643,19 +643,24 @@ po_char_2:                       // L0B6A
 # On entry:
 #   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
 #   w1 = (109 - column), or 1 for end-of-line
-#   x2 = address in display file / printer buffer(?)
+#   x2 = address in display file / printer buffer
 #   w3 = char (32-255)
 #   x4 = address of 32 byte character bit pattern
 pr_all:                          // L0B7F
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
+  stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack.
+  stp     x23, x24, [sp, #-16]!           // Backup x23 / x24 on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  mov     x21, x2                         // x21 = address in display file / printer buffer
+  mov     x22, x4                         // x22 = address of 32 byte character bit pattern
   cmp     w1, #1                          // Trailing position at end of line?
   b.ne    1f                              // If not trailing, jump ahead to 1:.
   // Trailing at end of line.
   sub     w0, w0, #1                      // Move down a line.
   mov     w1, #109                        // Move cursor to leftmost position.
-  ldrb    w5, [x28, FLAGS-sysvars]        // w5 = [FLAGS]
-  tbz     w5, #1, 1f                      // If printer not in use, jump ahead to 1:.
+  ldrb    w20, [x28, FLAGS-sysvars]       // w20 = [FLAGS]
+  tbz     w20, #1, 1f                     // If printer not in use, jump ahead to 1:.
   // Printer in use.
   // TODO preserve registers that following routine corrupts
   bl      copy_buff                       // Flush printer buffer and reset print position.
@@ -672,26 +677,53 @@ pr_all:                          // L0B7F
   csetm   w7, ne                          // w7 = -1 if (temporary) OVER 1 in [P_FLAG]
                                           //       0 if (temporary) OVER 0 in [P_FLAG]
   tst     w6, #4                          // Test (temporary) INVERSE status (bit 2).
-  csetm   w8, ne                          // w8 = -1 if (temporary) INVERSE 1 in [P_FLAG]
-                                          //       0 if (temporary) INVERSE 0 in [P_FLAG]
-  mov     w9, #16                         // 16 pixel rows to update
-  tbz     w5, #1, 3f                      // If printer not in use, jump ahead to 3:.
+  csetm   w24, ne                         // w24 = -1 if (temporary) INVERSE 1 in [P_FLAG]
+                                          //        0 if (temporary) INVERSE 0 in [P_FLAG]
+  bfi     x24, x7, #32, #32               // Move w7 (OVER mask) into upper 32 bits of x24
+  mov     w19, #16                        // 16 pixel rows to update
+  tbz     w20, #1, 3f                     // If printer not in use, jump ahead to 3:.
   ldrb    w10, [x28, FLAGS2-sysvars]      // w9 = [FLAGS2]
   orr     w10, w10, #0x2                  // w9 = [FLAGS2] with bit 1 set
   strb    w10, [x28, FLAGS2-sysvars]      // Update [FLAGS2] to have bit 1 set (signal printer buffer has been used).
-3:
-  ldrh    w11, [x2]                       // w11 = current screen bit pattern
-  and     w11, w11, w7                    // Consider OVER.
-  ldrh    w10, [x4]                       // w10 = character pixel line bit pattern
-  eor     w11, w11, w10                   // Apply character bit pattern.
-  eor     w11, w11, w8                    // Consider INVERSE.
-// poke x2, w11
-// registers to preserve:
-// x2, x4, w5
-
+  3:
+    ldrh    w11, [x21]                      // w11 = current screen bit pattern
+    and     x11, x11, x24, lsr #32          // Consider OVER.
+    ldrh    w10, [x22], #2                  // w10 = character pixel line bit pattern at [x22]; bump x22
+    eor     w11, w11, w10                   // Apply character bit pattern.
+    eor     w23, w11, w24                   // Consider INVERSE.
+    mov     x0, x21                         // Display file address to update for lefthandside byte
+    bfxil   w1, w23, #8, #8                 // w23 has 16 bytes of bit pattern, left side is bits 8-15
+    bl      poke_address                    // Update LHS byte
+    add     x0, x21, #1                     // RHS target address
+    bfxil   w1, w23, #0, #8                 // Lower 8 bytes of pattern for RHS
+    bl      poke_address                    // Update RHS byte
+    tbnz    w20, #1, 6f                     // If printer in use, jump ahead to 6:.
+    // Printer not in use.
+    add     x21, x21, 10*216                // 20*216 is too big to add in one step, so do it in two steps.
+    add     x21, x21, 10*216                // Gives next pixel line down.
+  5:
+    sub     w19, w19, #1                    // Decrement pixel row loop counter
+    cbnz    w19, 3b                         // Repeat until all 16 pixel rows complete
   // TODO
+6:
+  // TODO
+  ldp     x23, x24, [sp], #0x10           // Restore old x23, x24.
+  ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
+  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
+
+# -------------
+# Set attribute
+# -------------
+# This routine is entered with the HL register holding the last screen
+# address to be updated by PRINT or PLOT.
+# The Spectrum screen arrangement leads to the L register holding
+# the correct value for the attribute file and it is only necessary
+# to manipulate H to form the correct colour attribute address.
+po_attr:                         // L0BDB
+  // TODO
 
 
 # Print token (chars 0xa5-0xff).

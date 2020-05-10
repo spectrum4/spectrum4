@@ -471,10 +471,10 @@ po_any:                          // L0B24
   cmp     w3, #0x90                       // Test if a UDG or keyword token.
   b.hs    2f                              // If so, jump forward to 2:.
   // Mosaic character 128-143.
-  adr     x6, MEMBOT                      // x6 = temporary location to write pixel map to
+  adr     x6, MEMBOT                      // x6 = temporary location to write bit pattern to
   bl      po_mosaic_half                  // Generate top half (first 8 pixel rows) of mosaic character.
   bl      po_mosaic_half                  // Generate bottom half (last 8 pixel rows) of mosaic character.
-  adr     x4, MEMBOT                      // x4 = address of character pixel map
+  adr     x4, MEMBOT                      // x4 = address of character bit pattern
   bl      pr_all                          // Print mosaic character 128-143.
   b       3f                              // Exit routine.
 1:
@@ -521,11 +521,11 @@ po_any:                          // L0B24
 #
 # On entry:
 #   w3 = mosaic character number for upper half; rotated right two bits for lower half
-#   x6 = address to write pixel map to
+#   x6 = address to write bit pattern to
 # On exit:
 #   w3 = input w3 rotated right two bits
-#   x4 = last 8 bytes of pixel map (same as first 8 bytes)
-#   x5 = last 8 bytes of pixel map with character right hand side bits cleared.
+#   x4 = last 8 bytes of bit pattern (same as first 8 bytes)
+#   x5 = last 8 bytes of bit pattern with character right hand side bits cleared.
 po_mosaic_half:
   mov     x4, 0x00ff00ff00ff00ff          // Pattern for first 4 pixel rows if bit 0 set.
   tst     w3, #1                          // Is bit 0 of w3 set?
@@ -574,8 +574,20 @@ po_t_udg_1:                      // L0B56
   ret
 
 
+# Print token (chars 0xa5-0xff) and store position.
+#
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = (char-165) (0 to 90)
 po_t:                            // L0B5F
-  // TODO
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  bl      po_tokens
+  bl      po_fetch
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
 
 
 # Print characters 32 - 127.
@@ -606,13 +618,14 @@ po_char_2:                       // L0B6A
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldrb    w5, [x28, FLAGS-sysvars]        // w5 = [FLAGS]
-  and     w5, w5, 0xfe                    // Clear bit 0
+  and     w5, w5, 0xfe                    // Clear bit 0 (=> allow leading space)
   cmp     w3, #0x20                       // Space character?
-  b.ne    1f
-  orr     w5, w5, 0x1
+  b.ne    1f                              // If not, jump forward to 1:.
+  orr     w5, w5, 0x1                     // Set bit 0 (=> suppress leading space)
 1:
-  strb    w5, [x28, FLAGS-sysvars]
-  // TODO
+  strb    w5, [x28, FLAGS-sysvars]        // Update [FLAGS] with bit 0 clear iff char is a space.
+  add     x4, x4, x3, lsl #5              // x4 = first byte of bit pattern of char
+  bl      pr_all
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -628,8 +641,19 @@ po_char_2:                       // L0B6A
 #   w1 = (109 - column), or 1 for end-of-line
 #   x2 = address in display file / printer buffer(?)
 #   w3 = char (32-255)
-#   w4 = character source
+#   w4 = address of 32 byte character bit pattern
 pr_all:                          // L0B7F
+  // TODO
+
+
+# Print token (chars 0xa5-0xff).
+#
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = (char-165) (0 to 90)
+po_tokens:                       // L0C10
   // TODO
 
 

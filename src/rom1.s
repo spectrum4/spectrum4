@@ -667,6 +667,7 @@ pr_all:                          // L0B7F
   tst     w5, #4                          // Test (temporary) INVERSE status (bit 2).
   csetm   w7, ne                          // w7 = -1 if (temporary) INVERSE 1 in [P_FLAG]
                                           //       0 if (temporary) INVERSE 0 in [P_FLAG]
+  mov     w8, #16                         // 16 pixel rows to update
   // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret

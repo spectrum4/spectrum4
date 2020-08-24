@@ -120,8 +120,12 @@ programs, machine code routines, and RAM disk storage.
 
 ## Building
 
-To build, you will require an aarch64 toolchain in your PATH, including the
-following tools:
+You can either build natively on your host, or build under docker (see below).
+
+### Building natively on your host
+
+You will require an aarch64 toolchain in your PATH, including the following
+tools:
 
   * aarch64-none-elf-as
   * aarch64-none-elf-ld
@@ -143,8 +147,15 @@ explicitly set `TOOLCHAIN_PREFIX` to the empty string:
 $ export TOOLCHAIN_PREFIX=''
 ```
 
-After building the contents of the repository `/dist` directory can be copied
-to an SD card to place in your Raspberry Pi 3B, or for example they can be
-served over TFTP to a suitably configured Raspberry Pi that has been configured
-to network boot. The github.com/spectrum4/notes project has some information
-about that type of setup, if you are interested.
+### Building under Docker (linux/amd64)
+
+Make sure `docker` is in your `PATH` and run `./docker.sh` from the root folder
+to build everything.
+
+## Running
+
+After building using one of the methods above, the contents of the `/dist`
+directory can be copied to an SD card to place in your Raspberry Pi 3B, or for
+example they can be served over TFTP to a suitably configured Raspberry Pi that
+has been configured to network boot. The github.com/spectrum4/notes project has
+some information about that type of setup, if you are interested.

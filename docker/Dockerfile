@@ -6,13 +6,20 @@ RUN wget -nv -O gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf.tar.xz 'https://deve
     && tar xvf gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf.tar.xz \
     && rm gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf.tar.xz
 FROM bash:5.0.18
+
+# the following libraries are needed by the cross compiler executables
 COPY --from=ubuntu /lib/x86_64-linux-gnu/libc.so.6 /lib/x86_64-linux-gnu/libc.so.6
 COPY --from=ubuntu /lib/x86_64-linux-gnu/libdl.so.2 /lib/x86_64-linux-gnu/libdl.so.2
 COPY --from=ubuntu /lib64/ld-linux-x86-64.so.2 /lib64/ld-linux-x86-64.so.2
+
+# the cross compiler tools we need for our project
 COPY --from=ubuntu /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/aarch64-none-elf-as /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/aarch64-none-elf-as
 COPY --from=ubuntu /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/aarch64-none-elf-ld /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/aarch64-none-elf-ld
 COPY --from=ubuntu /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/aarch64-none-elf-objcopy /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/aarch64-none-elf-objcopy
 COPY --from=ubuntu /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/aarch64-none-elf-objdump /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/aarch64-none-elf-objdump
 COPY --from=ubuntu /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/aarch64-none-elf-readelf /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/aarch64-none-elf-readelf
 
-ENV PATH $PATH:/gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin
+# curl has been built as a standalone executable in build.sh
+COPY build/curl /curl/curl
+
+ENV PATH $PATH:/gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin:/curl

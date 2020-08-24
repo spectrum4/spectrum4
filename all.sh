@@ -1,4 +1,5 @@
-#!/bin/bash -eu
+#!/usr/bin/env bash
+set -eu
 
 # This file is part of the Spectrum +4 Project.
 # Licencing information can be found in the LICENCE file
@@ -16,7 +17,7 @@
 #   $2: Executable name (excluding toolchain prefix, if TOOLCHAIN_PREFIX set)
 function verify_and_show_tool {
   if ! which "${TOOLCHAIN_PREFIX}${2}" >/dev/null; then
-    echo "ERROR: Cannot find '${TOOLCHAIN_PREFIX}${2}' in PATH. Have you set TOOLCHAIN_PREFIX appropriately? Exiting." >&2
+    echo "ERROR: Cannot find '${TOOLCHAIN_PREFIX}${2}' in PATH. Have you set TOOLCHAIN_PREFIX appropriately? Alternatively, to build under docker, run docker.sh script instead. Exiting." >&2
     exit 64
   fi
   echo "  ${1}  $(which ${TOOLCHAIN_PREFIX}${2})" >&2

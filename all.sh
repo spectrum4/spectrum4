@@ -146,4 +146,4 @@ fetch_firmware 'start.elf'
 "${TOOLCHAIN_PREFIX}objdump" -d build/kernel8.elf
 
 echo
-echo "Build successful"
+echo "Build successful - see dist directory for results"

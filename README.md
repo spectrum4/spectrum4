@@ -127,13 +127,22 @@ You can either build natively on your host, or build under docker (see below).
 You will require an aarch64 toolchain in your PATH, including the following
 tools:
 
-  * aarch64-none-elf-as
-  * aarch64-none-elf-ld
-  * aarch64-none-elf-readelf
-  * aarch64-none-elf-objcopy
-  * aarch64-none-elf-objdump
+  * `aarch64-none-elf-as`
+  * `aarch64-none-elf-ld`
+  * `aarch64-none-elf-readelf`
+  * `aarch64-none-elf-objcopy`
+  * `aarch64-none-elf-objdump`
 
-You will also need bash installed.
+You will also need the following:
+
+  * `cat`
+  * `cp`
+  * `curl`
+  * `find`
+  * `mkdir`
+  * `rm`
+  * `sed`
+  * `which`
 
 To build, run `./all.sh` from the root folder to build everything.
 

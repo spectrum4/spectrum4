@@ -44,6 +44,21 @@ function fetch_firmware {
   fi
 }
 
+function check_dependencies {
+  echo "Checking system dependencies..."
+  for command in "${@}"; do
+    if ! which "${command}" >/dev/null; then
+      echo -e "  \xE2\x9D\x8C ${command}"
+      echo "${0} requires ${command} to be installed and available in your PATH - please fix and rerun" >&2
+      exit 65
+    else
+      echo -e "  \xE2\x9C\x94 ${command}"
+    fi
+  done
+}
+
+check_dependencies which curl rm mkdir cat sed find cp
+
 # Set default toolchain prefix to `aarch64-none-elf-` if no TOOLCHAIN_PREFIX
 # already set. Note, if no prefix is required, TOOLCHAIN_PREFIX should be
 # explicitly set to the empty string before calling this script (e.g. using

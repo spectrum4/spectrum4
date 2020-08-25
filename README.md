@@ -133,16 +133,19 @@ tools:
   * `aarch64-none-elf-objcopy`
   * `aarch64-none-elf-objdump`
 
-You will also need the following:
+You will also require:
 
+  * `bash`
   * `cat`
   * `cp`
   * `curl`
+  * `dirname`
+  * `env`
   * `find`
   * `mkdir`
   * `rm`
   * `sed`
-  * `which`
+  * `which` (which likely in turn requires `/bin/sh`)
 
 To build, run `./all.sh` from the root folder to build everything.
 

@@ -329,13 +329,52 @@ po_quest:                        // L0A69
   ret
 
 
+# --------------------------------
+# Control characters with operands
+# --------------------------------
+# Certain control characters are followed by 1 or 2 operands.
+# The entry points from control character table are po_1_oper and po_2_oper.
+# The routines alter the output address of the current channel so that
+# subsequent RST 10 instructions take the appropriate action
+# before finally resetting the output address back to PRINT-OUT.
+#
+# On entry:
+#   w0 = first operand
+po_tv_2:                         // L0A6D
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x1, po_cont                     // address: PO-CONT will be next output routine
+  strb    w0, [x28, TVDATA+1-sysvars]     // store first operand in TVDATA high byte
+  bl      po_change
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
 # This initial entry point deals with two operands - AT or TAB.
 po_2_oper:                       // L0A75
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x0, po_tv_2
+  bl      po_tv_1
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
   // TODO
 
 
 # This initial entry point deals with one operand INK to OVER.
 po_1_oper:                       // L0A7A
+  // TODO
+
+
+po_tv_1:                         // L0A7D
+  // TODO
+
+
+po_change:                       // L0A80
+  // TODO
+
+
+po_cont:                         // L0A87
   // TODO
 
 
@@ -519,7 +558,7 @@ po_any:                          // L0B24
 # This routine generates either the top or bottom half of the character.
 # Each half is comprised of 16 bytes (8 pixel rows; 2 bytes per row).
 # It rotates w3 two bits right after processing bits 0 and 1, so that it
-# can be called twice in succession to generate top half # from bits 0/1
+# can be called twice in succession to generate top half from bits 0/1
 # and then the bottom half from bits 2/3.
 #
 # On entry:

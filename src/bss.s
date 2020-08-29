@@ -80,6 +80,7 @@ sysvars:
 .align 2
   COORDS:         .space 2                // X-coordinate of last point plotted.
   COORDS_Y:       .space 2                // Y-coordinate of last point plotted.
+  TVDATA:         .space 2                // Stores bytes of colour, AT and TAB controls going to TV.
 
 .align 3
   SFNEXT:         .space 8                // End of RAM disk catalogue marker. Pointer to first empty catalogue entry.

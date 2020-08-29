@@ -72,6 +72,8 @@ sysvarnames:
   .byte 2
   .asciz "COORDS_Y"
   .byte 2
+  .asciz "TVDATA"
+  .byte 2
   .asciz "SFNEXT"
   .byte 8
   .asciz "SFSPACE"
@@ -150,6 +152,7 @@ sysvaraddresses:
   .quad RNSTEP
   .quad COORDS
   .quad COORDS_Y
+  .quad TVDATA
   .quad SFNEXT
   .quad SFSPACE
   .quad CHARS

@@ -319,7 +319,7 @@ po_comma:                        // L0A5F
 #   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
 #   w1 = (109 - column), or 1 for end-of-line
 #   x2 = address in display file / printer buffer(?)
-#   w3 = char (32-255)
+#   w3 = unassigned char (0/1/2/3/4/5/7/10/11/12/14/15/24/25/26/27/28/29/30/31)
 po_quest:                        // L0A69
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -351,27 +351,65 @@ po_tv_2:                         // L0A6D
 
 
 # This initial entry point deals with two operands - AT or TAB.
+#
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = control char (22/23)
 po_2_oper:                       // L0A75
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  adr     x0, po_tv_2
+  adr     x4, po_tv_2
   bl      po_tv_1
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
-  // TODO
 
 
 # This initial entry point deals with one operand INK to OVER.
+#
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = control char (16/17/18/19/20/21)
 po_1_oper:                       // L0A7A
-  // TODO
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x4, po_cont
+  bl      po_tv_1
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
 
 
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = control char (16/17/18/19/20/21/22/23)
+#   x4 = function pointer for handling 1 or 2 control chars (po_cont or po_tv_2)
 po_tv_1:                         // L0A7D
-  // TODO
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  strb    w3, [x28, TVDATA-sysvars]       // Store control code
+  bl      po_change
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
 
 
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = control char (16/17/18/19/20/21/22/23)
+#   x4 = function pointer for handling 1 or 2 control chars (po_cont or po_tv_2)
 po_change:                       // L0A80
-  // TODO
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  ldr     x5, [x28, CURCHL-sysvars]       // x5 = [CURCHL]
+  str     x4, [x5]                        // Set current channel output routine to po_cont or po_tv_2
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
 
 
 po_cont:                         // L0A87

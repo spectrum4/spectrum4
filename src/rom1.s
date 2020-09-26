@@ -16,7 +16,7 @@
 #   * https://skoolkit.ca/disassemblies/rom/hex/maps/all.html
 #
 # In addition, using the fantastic Retro Virtual Machine v2.0 BETA-1 r7 from Juan Carlos Gonzalez Amestoy:
-#   * http://www.retrovirtualmachine.org/en/downloads)
+#   * http://www.retrovirtualmachine.org/en/downloads
 # it has been possible to run the ROM routines through a debugger, to validate assumptions
 # about the behaviour and fine-tine the descriptions.
 #

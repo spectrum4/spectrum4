@@ -286,25 +286,14 @@ po_enter:                        // L0A4F
 po_comma:                        // L0A5F
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
   add     w1, w1, #16                     // w1 = 125 - column (125 to 18 on screen, 17 for trailing)
   mov     w3, #0xe38f                     // w3 = 58255
-  umull   x4, w3, w1                      // x4 = 58255 * w1
+  umull   x4, w1, w3                      // x4 = w1 * 58255
   lsr     x4, x4, #20                     // x4 = w1 * 58255 / 1048576 = w1/18
   mov     w5, #18
-  umsubl  x19, w5, w4, x1                 // x19 = x1 - w4*w5 = x1-18*(x1/18) = x1%18 = (125-column)%18
-                                          //     = (107-column)%18 = (number of chars - 1) until next tabstop
-  ldrb    w6, [x28, FLAGS-sysvars]        // w6 = [FLAGS]
-  orr     w6, w6, #0x1                    // Set bit 0 (signal suppress leading space)
-  strb    w6, [x28, FLAGS-sysvars]        // [FLAGS] = w6
-  // Loop to print chr$ 128 (w19+1) times.
-  1:
-    mov     x0, #0x80                     // x0 = blank mosaic character (preferable to char 32
-                                          // since it remains blank even if user customises font)
-    bl      print_w0                      // Print it.
-    subs    w19, w19, #1                  // Decrement counter.
-    b.pl    1b                            // Repeat while counter >= 0 (note: '>=' not '>')
-  ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
+  mov     x3, #126
+  umsubl  x4, w5, w4, x3                  // x4 = x3 - w4*w5 = 126-18*((125-col)/18)
+  bl      po_fill                         // Print spaces until x pos (126-18*(125-col)/18)%108)
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -337,83 +326,183 @@ po_quest:                        // L0A69
 # The routines alter the output address of the current channel so that
 # subsequent RST 10 instructions take the appropriate action
 # before finally resetting the output address back to PRINT-OUT.
+
+
+# Updates:
+#   [TVDATA+1] = first byte of 2 byte control code
+#   [[CURCHL]] = po_cont
 #
 # On entry:
-#   w0 = first operand
+#   w0 = first byte of 2 byte control code
+# On exit:
+#   x4 = po_cont
+#   x5 = [CURCHL]
 po_tv_2:                         // L0A6D
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  adr     x1, po_cont                     // address: PO-CONT will be next output routine
+  adr     x4, po_cont                     // po_cont will be next output routine
   strb    w0, [x28, TVDATA+1-sysvars]     // store first operand in TVDATA high byte
-  bl      po_change
+  bl      po_change                       // Set current channel output routine to po_cont
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 
-# This initial entry point deals with two operands - AT or TAB.
+# This initial entry point deals with two operands - AT (0x16) or TAB (0x17).
+#
+# Updates:
+#   [TVDATA] = w3[0-7]
+#   [[CURCHL]] = po_tv_2
 #
 # On entry:
-#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
-#   w1 = (109 - column), or 1 for end-of-line
-#   x2 = address in display file / printer buffer(?)
-#   w3 = control char (22/23)
+#   w3 = control char (0x16/0x17)
 po_2_oper:                       // L0A75
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   adr     x4, po_tv_2
-  bl      po_tv_1
+  bl      po_tv_1                         // Store control character in TVDATA low byte and set
+                                          // current channel output routine to po_tv_2.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 
 # This initial entry point deals with one operand INK to OVER.
 #
+# Updates:
+#   [TVDATA] = w3[0-7]
+#   [[CURCHL]] = po_cont
+#
 # On entry:
-#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
-#   w1 = (109 - column), or 1 for end-of-line
-#   x2 = address in display file / printer buffer(?)
-#   w3 = control char (16/17/18/19/20/21)
+#   w3 = control char (0x10/0x11/0x12/0x13/0x14/0x15)
 po_1_oper:                       // L0A7A
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   adr     x4, po_cont
-  bl      po_tv_1
+  bl      po_tv_1                         // Store control character in TVDATA low byte and set
+                                          // current channel output routine to po_cont.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 
+# Called with the single operand for single byte parameter control codes, or
+# second operand for two byte parameter control codes.
+#
+# Stores control char in [TVDATA] low byte, and updates current channel output
+# routine to address passed in in x4.
+#
+# Updates:
+#   [TVDATA] = w3[0-7]
+#   [[CURCHL]] = x4
+#
 # On entry:
-#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
-#   w1 = (109 - column), or 1 for end-of-line
-#   x2 = address in display file / printer buffer(?)
 #   w3 = control char (16/17/18/19/20/21/22/23)
 #   x4 = function pointer for handling 1 or 2 control chars (po_cont or po_tv_2)
+# On exit:
+#   x5 = [CURCHL]
 po_tv_1:                         // L0A7D
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  strb    w3, [x28, TVDATA-sysvars]       // Store control code
-  bl      po_change
+  strb    w3, [x28, TVDATA-sysvars]       // Store control code character in TVDATA low byte
+  bl      po_change                       // Set current channel output routine to passed in output routine.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 
+# -------------------------------------
+# Update Current Channel Output Routine
+# -------------------------------------
+#
+# Updates:
+#   [[CURCHL]] = x4
+#
 # On entry:
-#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
-#   w1 = (109 - column), or 1 for end-of-line
-#   x2 = address in display file / printer buffer(?)
-#   w3 = control char (16/17/18/19/20/21/22/23)
 #   x4 = function pointer for handling 1 or 2 control chars (po_cont or po_tv_2)
+# On exit:
+#   x5 = [CURCHL]
 po_change:                       // L0A80
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldr     x5, [x28, CURCHL-sysvars]       // x5 = [CURCHL]
-  str     x4, [x5]                        // Set current channel output routine to po_cont or po_tv_2
+  str     x4, [x5]                        // Set current channel output routine
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 
+# On entry:
+#   w0 = first byte of 1 byte control code or second byte of 2 byte control code
 po_cont:                         // L0A87
-  // TODO
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x4, print_out
+  bl      po_change                       // Set current channel output routine to print_out.
+  ldrb    w5, [x28, TVDATA-sysvars]       // w5[0-7] = control char
+                                          // w5[8-15] = first byte of 2 byte control code, if 2 byte
+  lsr     w6, w5, #8                      // w6 = first byte of 2 byte control code, if 2 byte
+  and     w5, w5, #0xff                   // w5 = control char
+  cmp     w5, 0x16                        // control code INK to OVER (1 operand)?
+  b.lo    to_co_temp_5                    // If so, jump forward to ........
+  b.ne    po_tab                          // If control char > 0x16 (=> 0x17 = TAB) jump forward to ..........
+  // Control char = AT (0x16)
+  mov     w1, #107                        // w1 = 107 (max allowed x coordinate)
+  subs    w1, w1, w0                      // w1 = (107-column)
+  b.lo    to_report_bb                    // Jump forward to to_report_bb if column > 107
+  add     w1, w1, #2                      // w1 = (109-column)
+  ldrb    w3, [x28, FLAGS-sysvars]        // w3 = [FLAGS]
+  tbnz    w3, #1, po_at_set               // If printer in use, jump forward to ...........
+  mov     w4, #58
+  subs    w4, w4, w6                      // w4 =(58-row)
+  b.lo    to_report_bb                    // Jump forward to .......... if row > 58
+po_at_set:
+po_tab:
+  // Control char = TAB (0x17)
+to_report_bb:
+  bl      report_bb
+  b       to_end                          // Exit routine.
+to_co_temp_5:
+  // Control char with one operand: between INK (0x10) and OVER (0x15)
+  bl      co_temp_5
+  b       to_end
+to_end:
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+# -------------------------
+# Print spaces up to column
+# -------------------------
+# Keep printing a space character until cursor x position = (w4%108). If at
+# least one space is printed, set system flag to suppress leading spaces.
+#
+# On entry:
+#   w1 = (109 - column), or 1 for end-of-line
+#   w4 = new x character position plus arbitrary multiple of 108 (0-65535)
+po_fill:                         // L0AC3
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  add     w6, w4, w1                      // w6 = newx + 109 - oldx
+  sub     w6, w6, #1                      // w6 = 108 + newx - oldx
+  mov     w2, #0x00010000
+  movk    w2, #0x00002f69                 // w2 = 77673
+  umull   x3, w6, w2                      // x3 = (108 + newx - oldx) * 77673
+  lsr     x3, x3, #23                     // x3 = (108 + newx - oldx) * 77673 / 8388608
+                                          //    = (108 + newx - oldx) / 108
+  mov     w5, #108
+  umsubl  x2, w5, w3, x6                  // x2 = x6 - w5*w3 = (108 + newx - oldx) % 108
+                                          //    = (newx - oldx) % 108
+                                          //    = number of spaces to print
+  cbz     x2, 3f                          // Exit if no spaces to print.
+  ldrb    w6, [x28, FLAGS-sysvars]        // w6 = [FLAGS]
+  orr     w6, w6, #0x1                    // Set bit 0 (signal suppress leading space)
+  strb    w6, [x28, FLAGS-sysvars]        // [FLAGS] = w6
+  // Loop to print chr$ 128 (w19+1) times.
+  2:
+    mov     x0, #0x80                     // x0 = blank mosaic character (preferable to char 32
+                                          // since it remains blank even if user customises font)
+    bl      print_w0                      // Print it.
+    subs    w2, w2, #1                    // Decrement counter.
+    b.ne    2b                            // Repeat while counter != 0
+3:
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
 
 
 # ----------------------
@@ -725,10 +814,10 @@ po_char_2:                       // L0B6A
 #   x4 = address of 32 byte character bit pattern
 pr_all:                          // L0B7F
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
   stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack.
   stp     x23, x24, [sp, #-16]!           // Backup x23 / x24 on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x21, x2                         // x21 = address in display file / printer buffer
   mov     x22, x4                         // x22 = address of 32 byte character bit pattern
   cmp     w1, #1                          // Trailing position at end of line?
@@ -1487,6 +1576,14 @@ report_j:                        // L15C4
   // TODO
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
+
+
+report_bb:                       // L1E9F
+  // TODO
+
+
+co_temp_5:                       // L2211
+  // TODO
 
 
 # Print tokens and user defined graphics (chars 0x90-0xff).

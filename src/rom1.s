@@ -127,9 +127,9 @@ tkn_table:                       // L0095
 
   .asciz    "OR"                          // 197 0xc5
   .asciz    "AND"                         // 198 0xc6
-  .asciz    "<="                          // 199 0xc7 => No leading space
-  .asciz    ">="                          // 200 0xc8 => No leading space
-  .asciz    "<>"                          // 201 0xc9 => No leading space
+  .asciz    "<="                          // 199 0xc7 => No leading space (since first char < 'A')
+  .asciz    ">="                          // 200 0xc8 => No leading space (since first char < 'A')
+  .asciz    "<>"                          // 201 0xc9 => No leading space (since first char < 'A')
   .asciz    "LINE"                        // 202 0xca
   .asciz    "THEN"                        // 203 0xcb
   .asciz    "TO"                          // 204 0xcc
@@ -248,7 +248,7 @@ ctlchrtab:                       // L0A11
   .quad po_1_oper                         // chr 0x14 -> INVERSE
   .quad po_1_oper                         // chr 0x15 -> OVER
   .quad po_2_oper                         // chr 0x16 -> AT
-  .quad po_2_oper                         // chr 0x17 -> TAB (strangely po_2_oper since TAB seems to only have one operand according to BASIC manual)
+  .quad po_2_oper                         // chr 0x17 -> TAB (strangely TAB parameter is a two byte integer)
 
 
 # -------------------
@@ -1010,6 +1010,12 @@ po_tokens:                       // L0C10
   adr     x4, tkn_table                   // Address of table with BASIC keywords
   bl      po_search                       // Routine po_search will set carry for all messages and
                                           // function words.
+  b.hs    1f                              // If carry is set, jump forward to 1:.
+  ldrb    w5, [x28, FLAGS-sysvars]        // w5 = [FLAGS]
+  tbnz    w5, #0, 1f                      // If suppress space, jump forward to 1:.
+  mov     w0, 0x80                        // Mosaic space character
+  bl      po_save                         // Print it
+1:
   // TODO
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
@@ -1018,6 +1024,9 @@ po_tokens:                       // L0C10
 po_table_1:                      // L0C17
   // TODO
 
+
+po_save:                         // L0C3B
+  // TODO
 
 # ------------
 # Table search
@@ -1036,7 +1045,7 @@ po_table_1:                      // L0C17
 po_search:                       // L0C41
   add     w6, w3, #1                      // Adjust for initial step-over token.
 1:
-  ldrb    w5, [x4], #1                    // w5 = [w3]; w3++
+  ldrb    w5, [x4], #1                    // w5 = [w3++]
   cbnz    w5, 1b                          // Jump back to 1: if not zero
   subs    w6, w6, #1                      // Reduce index counter
   b.ne    1b                              // Jump back to 1: if index not zero.

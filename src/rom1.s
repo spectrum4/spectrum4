@@ -84,187 +84,106 @@ print_w0:                        // L0010
 # ------------------
 # THE 'TOKEN TABLES'
 # ------------------
-# The tokenized characters 134 (RND) to 255 (COPY) are expanded using this
-# table. The last byte of a token has bit 7 set to denote the end of the
-# word. The first token '?' is a step-over byte.
+# The tokenized characters 165 (RND) to 255 (COPY) are expanded using this
+# table. The first token '?' is a step-over token.
 
 tkn_table:                       // L0095
-  .byte    '?'+0x80
-  .ascii    "RN"
-  .byte    'D'+0x80
-  .ascii    "INKEY"
-  .byte    '$'+0x80
-  .byte    'P','I'+0x80
-  .byte    'F','N'+0x80
-  .ascii    "POIN"
-  .byte    'T'+0x80
-  .ascii    "SCREEN"
-  .byte    '$'+0x80
-  .ascii    "ATT"
-  .byte    'R'+0x80
-  .byte    'A','T'+0x80
-  .ascii    "TA"
-  .byte    'B'+0x80
-  .ascii    "VAL"
-  .byte    '$'+0x80
-  .ascii    "COD"
-  .byte    'E'+0x80
-  .ascii    "VA"
-  .byte    'L'+0x80
-  .ascii    "LE"
-  .byte    'N'+0x80
-  .ascii    "SI"
-  .byte    'N'+0x80
-  .ascii    "CO"
-  .byte    'S'+0x80
-  .ascii    "TA"
-  .byte    'N'+0x80
-  .ascii    "AS"
-  .byte    'N'+0x80
-  .ascii    "AC"
-  .byte    'S'+0x80
-  .ascii    "AT"
-  .byte    'N'+0x80
-  .byte    'L','N'+0x80
-  .ascii    "EX"
-  .byte    'P'+0x80
-  .ascii    "IN"
-  .byte    'T'+0x80
-  .ascii    "SQ"
-  .byte    'R'+0x80
-  .ascii    "SG"
-  .byte    'N'+0x80
-  .ascii    "AB"
-  .byte    'S'+0x80
-  .ascii    "PEE"
-  .byte    'K'+0x80
-  .byte    'I','N'+0x80
-  .ascii    "US"
-  .byte    'R'+0x80
-  .ascii    "STR"
-  .byte    '$'+0x80
-  .ascii    "CHR"
-  .byte    '$'+0x80
-  .ascii    "NO"
-  .byte    'T'+0x80
-  .ascii    "BI"
-  .byte    'N'+0x80
+  .asciz    "?"
+  .asciz    "RND"                         // 165 0xa5
+  .asciz    "INKEY$"                      // 166 0xa6
+  .asciz    "PI"                          // 167 0xa7
+  .asciz    "FN"                          // 168 0xa8
+  .asciz    "POINT"                       // 169 0xa9
+  .asciz    "SCREEN$"                     // 170 0xaa
+  .asciz    "ATTR"                        // 171 0xab
+  .asciz    "AT"                          // 172 0xac
+  .asciz    "TAB"                         // 173 0xad
+  .asciz    "VAL$"                        // 174 0xae
+  .asciz    "CODE"                        // 175 0xaf
+  .asciz    "VAL"                         // 176 0xb0
+  .asciz    "LEN"                         // 177 0xb1
+  .asciz    "SIN"                         // 178 0xb2
+  .asciz    "COS"                         // 179 0xb3
+  .asciz    "TAN"                         // 180 0xb4
+  .asciz    "ASN"                         // 181 0xb5
+  .asciz    "ACS"                         // 182 0xb6
+  .asciz    "ATN"                         // 183 0xb7
+  .asciz    "LN"                          // 184 0xb8
+  .asciz    "EXP"                         // 185 0xb9
+  .asciz    "INT"                         // 186 0xba
+  .asciz    "SQR"                         // 187 0xbb
+  .asciz    "SGN"                         // 188 0xbc
+  .asciz    "ABS"                         // 189 0xbd
+  .asciz    "PEEK"                        // 190 0xbe
+  .asciz    "IN"                          // 191 0xbf
+  .asciz    "USR"                         // 192 0xc0
+  .asciz    "STR$"                        // 193 0xc1
+  .asciz    "CHR$"                        // 194 0xc2
+  .asciz    "NOT"                         // 195 0xc3
+  .asciz    "BIN"                         // 196 0xc4
 
 # The previous 32 function-type words are printed without a leading space
 # The following have a leading space if they begin with a letter
 
-  .byte    'O','R'+0x80
-  .ascii    "AN"
-  .byte    'D'+0x80
-  .byte    0x3C,'='+0x80            // <=
-  .byte    0x3E,'='+0x80            // >=
-  .byte    0x3C,0x3E+0x80           // <>
-  .ascii    "LIN"
-  .byte    'E'+0x80
-  .ascii    "THE"
-  .byte    'N'+0x80
-  .byte    'T','O'+0x80
-  .ascii    "STE"
-  .byte    'P'+0x80
-  .ascii    "DEF F"
-  .byte    'N'+0x80
-  .ascii    "CA"
-  .byte    'T'+0x80
-  .ascii    "FORMA"
-  .byte    'T'+0x80
-  .ascii    "MOV"
-  .byte    'E'+0x80
-  .ascii    "ERAS"
-  .byte    'E'+0x80
-  .ascii    "OPEN "
-  .byte    '#'+0x80
-  .ascii    "CLOSE "
-  .byte    '#'+0x80
-  .ascii    "MERG"
-  .byte    'E'+0x80
-  .ascii    "VERIF"
-  .byte    'Y'+0x80
-  .ascii    "BEE"
-  .byte    'P'+0x80
-  .ascii    "CIRCL"
-  .byte    'E'+0x80
-  .ascii    "IN"
-  .byte    'K'+0x80
-  .ascii    "PAPE"
-  .byte    'R'+0x80
-  .ascii    "FLAS"
-  .byte    'H'+0x80
-  .ascii    "BRIGH"
-  .byte    'T'+0x80
-  .ascii    "INVERS"
-  .byte    'E'+0x80
-  .ascii    "OVE"
-  .byte    'R'+0x80
-  .ascii    "OU"
-  .byte    'T'+0x80
-  .ascii    "LPRIN"
-  .byte    'T'+0x80
-  .ascii    "LLIS"
-  .byte    'T'+0x80
-  .ascii    "STO"
-  .byte    'P'+0x80
-  .ascii    "REA"
-  .byte    'D'+0x80
-  .ascii    "DAT"
-  .byte    'A'+0x80
-  .ascii    "RESTOR"
-  .byte    'E'+0x80
-  .ascii    "NE"
-  .byte    'W'+0x80
-  .ascii    "BORDE"
-  .byte    'R'+0x80
-  .ascii    "CONTINU"
-  .byte    'E'+0x80
-  .ascii    "DI"
-  .byte    'M'+0x80
-  .ascii    "RE"
-  .byte    'M'+0x80
-  .ascii    "FO"
-  .byte    'R'+0x80
-  .ascii    "GO T"
-  .byte    'O'+0x80
-  .ascii    "GO SU"
-  .byte    'B'+0x80
-  .ascii    "INPU"
-  .byte    'T'+0x80
-  .ascii    "LOA"
-  .byte    'D'+0x80
-  .ascii    "LIS"
-  .byte    'T'+0x80
-  .ascii    "LE"
-  .byte    'T'+0x80
-  .ascii    "PAUS"
-  .byte    'E'+0x80
-  .ascii    "NEX"
-  .byte    'T'+0x80
-  .ascii    "POK"
-  .byte    'E'+0x80
-  .ascii    "PRIN"
-  .byte    'T'+0x80
-  .ascii    "PLO"
-  .byte    'T'+0x80
-  .ascii    "RU"
-  .byte    'N'+0x80
-  .ascii    "SAV"
-  .byte    'E'+0x80
-  .ascii    "RANDOMIZ"
-  .byte    'E'+0x80
-  .byte    'I','F'+0x80
-  .ascii    "CL"
-  .byte    'S'+0x80
-  .ascii    "DRA"
-  .byte    'W'+0x80
-  .ascii    "CLEA"
-  .byte    'R'+0x80
-  .ascii    "RETUR"
-  .byte    'N'+0x80
-  .ascii    "COP"
-  .byte    'Y'+0x80
+  .asciz    "OR"                          // 197 0xc5
+  .asciz    "AND"                         // 198 0xc6
+  .asciz    "<="                          // 199 0xc7 => No leading space
+  .asciz    ">="                          // 200 0xc8 => No leading space
+  .asciz    "<>"                          // 201 0xc9 => No leading space
+  .asciz    "LINE"                        // 202 0xca
+  .asciz    "THEN"                        // 203 0xcb
+  .asciz    "TO"                          // 204 0xcc
+  .asciz    "STEP"                        // 205 0xcd
+  .asciz    "DEF FN"                      // 206 0xce
+  .asciz    "CAT"                         // 207 0xcf
+  .asciz    "FORMAT"                      // 208 0xd0
+  .asciz    "MOVE"                        // 209 0xd1
+  .asciz    "ERASE"                       // 210 0xd2
+  .asciz    "OPEN #"                      // 211 0xd3
+  .asciz    "CLOSE #"                     // 212 0xd4
+  .asciz    "MERGE"                       // 213 0xd5
+  .asciz    "VERIFY"                      // 214 0xd6
+  .asciz    "BEEP"                        // 215 0xd7
+  .asciz    "CIRCLE"                      // 216 0xd8
+  .asciz    "INK"                         // 217 0xd9
+  .asciz    "PAPER"                       // 218 0xda
+  .asciz    "FLASH"                       // 219 0xdb
+  .asciz    "BRIGHT"                      // 220 0xdc
+  .asciz    "INVERSE"                     // 221 0xdd
+  .asciz    "OVER"                        // 222 0xde
+  .asciz    "OUT"                         // 223 0xdf
+  .asciz    "LPRINT"                      // 224 0xe0
+  .asciz    "LLIST"                       // 225 0xe1
+  .asciz    "STOP"                        // 226 0xe2
+  .asciz    "READ"                        // 227 0xe3
+  .asciz    "DATA"                        // 228 0xe4
+  .asciz    "RESTORE"                     // 229 0xe5
+  .asciz    "NEW"                         // 230 0xe6
+  .asciz    "BORDER"                      // 231 0xe7
+  .asciz    "CONTINUE"                    // 232 0xe8
+  .asciz    "DIM"                         // 233 0xe9
+  .asciz    "REM"                         // 234 0xea
+  .asciz    "FOR"                         // 235 0xeb
+  .asciz    "GO TO"                       // 236 0xec
+  .asciz    "GO SUB"                      // 237 0xed
+  .asciz    "INPUT"                       // 238 0xee
+  .asciz    "LOAD"                        // 239 0xef
+  .asciz    "LIST"                        // 240 0xf0
+  .asciz    "LET"                         // 241 0xf1
+  .asciz    "PAUSE"                       // 242 0xf2
+  .asciz    "NEXT"                        // 243 0xf3
+  .asciz    "POKE"                        // 244 0xf4
+  .asciz    "PRINT"                       // 245 0xf5
+  .asciz    "PLOT"                        // 246 0xf6
+  .asciz    "RUN"                         // 247 0xf7
+  .asciz    "SAVE"                        // 248 0xf8
+  .asciz    "RANDOMIZE"                   // 249 0xf9
+  .asciz    "IF"                          // 250 0xfa
+  .asciz    "CLS"                         // 251 0xfb
+  .asciz    "DRAW"                        // 252 0xfc
+  .asciz    "CLEAR"                       // 253 0xfd
+  .asciz    "RETURN"                      // 254 0xfe
+  .asciz    "COPY"                        // 255 0xff
 
 
 # Default print routine for channels S/K, to print a single byte.
@@ -1086,11 +1005,47 @@ pr_all:                          // L0B7F
 #   x2 = address in display file / printer buffer(?)
 #   w3 = (char-165) (0 to 90)
 po_tokens:                       // L0C10
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x4, tkn_table                   // Address of table with BASIC keywords
+  bl      po_search                       // Routine po_search will set carry for all messages and
+                                          // function words.
   // TODO
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
 
 
 po_table_1:                      // L0C17
   // TODO
+
+
+# ------------
+# Table search
+# ------------
+# This subroutine looks up the address of the (w3+1)'th zero-terminated byte sequence
+# starting at address x4. If entry w3 >= 32, carry will be set. Otherwise, the carry
+# will be set if the return address holds a byte with value 65 or higher.
+#
+# On entry:
+#   w3 = index
+#   x4 = start address to search
+# On exit:
+#   x4 = address of result
+#   x5 corrupted
+#   w6 = 0
+po_search:                       // L0C41
+  add     w6, w3, #1                      // Adjust for initial step-over token.
+1:
+  ldrb    w5, [x4], #1                    // w5 = [w3]; w3++
+  cbnz    w5, 1b                          // Jump back to 1: if not zero
+  subs    w6, w6, #1                      // Reduce index counter
+  b.ne    1b                              // Jump back to 1: if index not zero.
+  cmp     w3, 0x20                        // Is entry index >= 32?
+  b.hs    2f                              // If yes, return with carry set.
+  ldrb    w5, [x4]                        // Otherwise, check contents of return address.
+  cmp     w5, 0x41                        // If >= 'A' set carry
+2:
+  ret
 
 
 # ---------------

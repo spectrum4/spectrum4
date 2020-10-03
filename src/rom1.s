@@ -1026,7 +1026,28 @@ po_table_1:                      // L0C17
 
 
 po_save:                         // L0C3B
-  // TODO
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  mov     x8, x0                          // TODO
+  mov     x9, x1                          // TODO
+  mov     x10, x2                         // TODO
+  mov     x11, x3                         // TODO
+  mov     x12, x4                         // TODO
+  mov     x13, x5                         // TODO
+  mov     x14, x6                         // TODO
+  mov     x15, x7                         // TODO
+  bl      print_w0                        // Print it
+  mov     x0, x8                          // TODO
+  mov     x1, x9                          // TODO
+  mov     x2, x10                         // TODO
+  mov     x3, x11                         // TODO
+  mov     x4, x12                         // TODO
+  mov     x5, x13                         // TODO
+  mov     x6, x14                         // TODO
+  mov     x7, x15                         // TODO
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
 
 # ------------
 # Table search

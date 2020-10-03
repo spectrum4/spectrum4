@@ -81,6 +81,192 @@ print_w0:                        // L0010
   ret
 
 
+# ------------------
+# THE 'TOKEN TABLES'
+# ------------------
+# The tokenized characters 134 (RND) to 255 (COPY) are expanded using this
+# table. The last byte of a token has bit 7 set to denote the end of the
+# word. The first token '?' is a step-over byte.
+
+tkn_table:                       // L0095
+  .byte    '?'+0x80
+  .ascii    "RN"
+  .byte    'D'+0x80
+  .ascii    "INKEY"
+  .byte    '$'+0x80
+  .byte    'P','I'+0x80
+  .byte    'F','N'+0x80
+  .ascii    "POIN"
+  .byte    'T'+0x80
+  .ascii    "SCREEN"
+  .byte    '$'+0x80
+  .ascii    "ATT"
+  .byte    'R'+0x80
+  .byte    'A','T'+0x80
+  .ascii    "TA"
+  .byte    'B'+0x80
+  .ascii    "VAL"
+  .byte    '$'+0x80
+  .ascii    "COD"
+  .byte    'E'+0x80
+  .ascii    "VA"
+  .byte    'L'+0x80
+  .ascii    "LE"
+  .byte    'N'+0x80
+  .ascii    "SI"
+  .byte    'N'+0x80
+  .ascii    "CO"
+  .byte    'S'+0x80
+  .ascii    "TA"
+  .byte    'N'+0x80
+  .ascii    "AS"
+  .byte    'N'+0x80
+  .ascii    "AC"
+  .byte    'S'+0x80
+  .ascii    "AT"
+  .byte    'N'+0x80
+  .byte    'L','N'+0x80
+  .ascii    "EX"
+  .byte    'P'+0x80
+  .ascii    "IN"
+  .byte    'T'+0x80
+  .ascii    "SQ"
+  .byte    'R'+0x80
+  .ascii    "SG"
+  .byte    'N'+0x80
+  .ascii    "AB"
+  .byte    'S'+0x80
+  .ascii    "PEE"
+  .byte    'K'+0x80
+  .byte    'I','N'+0x80
+  .ascii    "US"
+  .byte    'R'+0x80
+  .ascii    "STR"
+  .byte    '$'+0x80
+  .ascii    "CHR"
+  .byte    '$'+0x80
+  .ascii    "NO"
+  .byte    'T'+0x80
+  .ascii    "BI"
+  .byte    'N'+0x80
+
+# The previous 32 function-type words are printed without a leading space
+# The following have a leading space if they begin with a letter
+
+  .byte    'O','R'+0x80
+  .ascii    "AN"
+  .byte    'D'+0x80
+  .byte    0x3C,'='+0x80            // <=
+  .byte    0x3E,'='+0x80            // >=
+  .byte    0x3C,0x3E+0x80           // <>
+  .ascii    "LIN"
+  .byte    'E'+0x80
+  .ascii    "THE"
+  .byte    'N'+0x80
+  .byte    'T','O'+0x80
+  .ascii    "STE"
+  .byte    'P'+0x80
+  .ascii    "DEF F"
+  .byte    'N'+0x80
+  .ascii    "CA"
+  .byte    'T'+0x80
+  .ascii    "FORMA"
+  .byte    'T'+0x80
+  .ascii    "MOV"
+  .byte    'E'+0x80
+  .ascii    "ERAS"
+  .byte    'E'+0x80
+  .ascii    "OPEN "
+  .byte    '#'+0x80
+  .ascii    "CLOSE "
+  .byte    '#'+0x80
+  .ascii    "MERG"
+  .byte    'E'+0x80
+  .ascii    "VERIF"
+  .byte    'Y'+0x80
+  .ascii    "BEE"
+  .byte    'P'+0x80
+  .ascii    "CIRCL"
+  .byte    'E'+0x80
+  .ascii    "IN"
+  .byte    'K'+0x80
+  .ascii    "PAPE"
+  .byte    'R'+0x80
+  .ascii    "FLAS"
+  .byte    'H'+0x80
+  .ascii    "BRIGH"
+  .byte    'T'+0x80
+  .ascii    "INVERS"
+  .byte    'E'+0x80
+  .ascii    "OVE"
+  .byte    'R'+0x80
+  .ascii    "OU"
+  .byte    'T'+0x80
+  .ascii    "LPRIN"
+  .byte    'T'+0x80
+  .ascii    "LLIS"
+  .byte    'T'+0x80
+  .ascii    "STO"
+  .byte    'P'+0x80
+  .ascii    "REA"
+  .byte    'D'+0x80
+  .ascii    "DAT"
+  .byte    'A'+0x80
+  .ascii    "RESTOR"
+  .byte    'E'+0x80
+  .ascii    "NE"
+  .byte    'W'+0x80
+  .ascii    "BORDE"
+  .byte    'R'+0x80
+  .ascii    "CONTINU"
+  .byte    'E'+0x80
+  .ascii    "DI"
+  .byte    'M'+0x80
+  .ascii    "RE"
+  .byte    'M'+0x80
+  .ascii    "FO"
+  .byte    'R'+0x80
+  .ascii    "GO T"
+  .byte    'O'+0x80
+  .ascii    "GO SU"
+  .byte    'B'+0x80
+  .ascii    "INPU"
+  .byte    'T'+0x80
+  .ascii    "LOA"
+  .byte    'D'+0x80
+  .ascii    "LIS"
+  .byte    'T'+0x80
+  .ascii    "LE"
+  .byte    'T'+0x80
+  .ascii    "PAUS"
+  .byte    'E'+0x80
+  .ascii    "NEX"
+  .byte    'T'+0x80
+  .ascii    "POK"
+  .byte    'E'+0x80
+  .ascii    "PRIN"
+  .byte    'T'+0x80
+  .ascii    "PLO"
+  .byte    'T'+0x80
+  .ascii    "RU"
+  .byte    'N'+0x80
+  .ascii    "SAV"
+  .byte    'E'+0x80
+  .ascii    "RANDOMIZ"
+  .byte    'E'+0x80
+  .byte    'I','F'+0x80
+  .ascii    "CL"
+  .byte    'S'+0x80
+  .ascii    "DRA"
+  .byte    'W'+0x80
+  .ascii    "CLEA"
+  .byte    'R'+0x80
+  .ascii    "RETUR"
+  .byte    'N'+0x80
+  .ascii    "COP"
+  .byte    'Y'+0x80
+
+
 # Default print routine for channels S/K, to print a single byte.
 #
 # On entry:
@@ -888,8 +1074,8 @@ pr_all:                          // L0B7F
 # The Spectrum screen arrangement leads to the L register holding
 # the correct value for the attribute file and it is only necessary
 # to manipulate H to form the correct colour attribute address.
-po_attr:                         // L0BDB
-  // TODO
+# po_attr:                         // L0BDB
+#   // TODO
 
 
 # Print token (chars 0xa5-0xff).

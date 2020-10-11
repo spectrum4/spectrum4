@@ -88,102 +88,102 @@ print_w0:                        // L0010
 # table. The first token '?' is a step-over token.
 
 tkn_table:                       // L0095
-  .asciz    "?"
-  .asciz    "RND"                         // 165 0xa5
-  .asciz    "INKEY$"                      // 166 0xa6
-  .asciz    "PI"                          // 167 0xa7
-  .asciz    "FN"                          // 168 0xa8
-  .asciz    "POINT"                       // 169 0xa9
-  .asciz    "SCREEN$"                     // 170 0xaa
-  .asciz    "ATTR"                        // 171 0xab
-  .asciz    "AT"                          // 172 0xac
-  .asciz    "TAB"                         // 173 0xad
-  .asciz    "VAL$"                        // 174 0xae
-  .asciz    "CODE"                        // 175 0xaf
-  .asciz    "VAL"                         // 176 0xb0
-  .asciz    "LEN"                         // 177 0xb1
-  .asciz    "SIN"                         // 178 0xb2
-  .asciz    "COS"                         // 179 0xb3
-  .asciz    "TAN"                         // 180 0xb4
-  .asciz    "ASN"                         // 181 0xb5
-  .asciz    "ACS"                         // 182 0xb6
-  .asciz    "ATN"                         // 183 0xb7
-  .asciz    "LN"                          // 184 0xb8
-  .asciz    "EXP"                         // 185 0xb9
-  .asciz    "INT"                         // 186 0xba
-  .asciz    "SQR"                         // 187 0xbb
-  .asciz    "SGN"                         // 188 0xbc
-  .asciz    "ABS"                         // 189 0xbd
-  .asciz    "PEEK"                        // 190 0xbe
-  .asciz    "IN"                          // 191 0xbf
-  .asciz    "USR"                         // 192 0xc0
-  .asciz    "STR$"                        // 193 0xc1
-  .asciz    "CHR$"                        // 194 0xc2
-  .asciz    "NOT"                         // 195 0xc3
-  .asciz    "BIN"                         // 196 0xc4
+  .asciz    "?"                           //          0x00
+  .asciz    "RND"                         // 165 0xa5 0x01
+  .asciz    "INKEY$"                      // 166 0xa6 0x02
+  .asciz    "PI"                          // 167 0xa7 0x03
+  .asciz    "FN"                          // 168 0xa8 0x04
+  .asciz    "POINT"                       // 169 0xa9 0x05
+  .asciz    "SCREEN$"                     // 170 0xaa 0x06
+  .asciz    "ATTR"                        // 171 0xab 0x07
+  .asciz    "AT"                          // 172 0xac 0x08
+  .asciz    "TAB"                         // 173 0xad 0x09
+  .asciz    "VAL$"                        // 174 0xae 0x0a
+  .asciz    "CODE"                        // 175 0xaf 0x0b
+  .asciz    "VAL"                         // 176 0xb0 0x0c
+  .asciz    "LEN"                         // 177 0xb1 0x0d
+  .asciz    "SIN"                         // 178 0xb2 0x0e
+  .asciz    "COS"                         // 179 0xb3 0x0f
+  .asciz    "TAN"                         // 180 0xb4 0x10
+  .asciz    "ASN"                         // 181 0xb5 0x11
+  .asciz    "ACS"                         // 182 0xb6 0x12
+  .asciz    "ATN"                         // 183 0xb7 0x13
+  .asciz    "LN"                          // 184 0xb8 0x14
+  .asciz    "EXP"                         // 185 0xb9 0x15
+  .asciz    "INT"                         // 186 0xba 0x16
+  .asciz    "SQR"                         // 187 0xbb 0x17
+  .asciz    "SGN"                         // 188 0xbc 0x18
+  .asciz    "ABS"                         // 189 0xbd 0x19
+  .asciz    "PEEK"                        // 190 0xbe 0x1a
+  .asciz    "IN"                          // 191 0xbf 0x1b
+  .asciz    "USR"                         // 192 0xc0 0x1c
+  .asciz    "STR$"                        // 193 0xc1 0x1d
+  .asciz    "CHR$"                        // 194 0xc2 0x1e
+  .asciz    "NOT"                         // 195 0xc3 0x1f
+  .asciz    "BIN"                         // 196 0xc4 0x20
 
 # The previous 32 function-type words are printed without a leading space
 # The following have a leading space if they begin with a letter
 
-  .asciz    "OR"                          // 197 0xc5
-  .asciz    "AND"                         // 198 0xc6
-  .asciz    "<="                          // 199 0xc7 => No leading space (since first char < 'A')
-  .asciz    ">="                          // 200 0xc8 => No leading space (since first char < 'A')
-  .asciz    "<>"                          // 201 0xc9 => No leading space (since first char < 'A')
-  .asciz    "LINE"                        // 202 0xca
-  .asciz    "THEN"                        // 203 0xcb
-  .asciz    "TO"                          // 204 0xcc
-  .asciz    "STEP"                        // 205 0xcd
-  .asciz    "DEF FN"                      // 206 0xce
-  .asciz    "CAT"                         // 207 0xcf
-  .asciz    "FORMAT"                      // 208 0xd0
-  .asciz    "MOVE"                        // 209 0xd1
-  .asciz    "ERASE"                       // 210 0xd2
-  .asciz    "OPEN #"                      // 211 0xd3
-  .asciz    "CLOSE #"                     // 212 0xd4
-  .asciz    "MERGE"                       // 213 0xd5
-  .asciz    "VERIFY"                      // 214 0xd6
-  .asciz    "BEEP"                        // 215 0xd7
-  .asciz    "CIRCLE"                      // 216 0xd8
-  .asciz    "INK"                         // 217 0xd9
-  .asciz    "PAPER"                       // 218 0xda
-  .asciz    "FLASH"                       // 219 0xdb
-  .asciz    "BRIGHT"                      // 220 0xdc
-  .asciz    "INVERSE"                     // 221 0xdd
-  .asciz    "OVER"                        // 222 0xde
-  .asciz    "OUT"                         // 223 0xdf
-  .asciz    "LPRINT"                      // 224 0xe0
-  .asciz    "LLIST"                       // 225 0xe1
-  .asciz    "STOP"                        // 226 0xe2
-  .asciz    "READ"                        // 227 0xe3
-  .asciz    "DATA"                        // 228 0xe4
-  .asciz    "RESTORE"                     // 229 0xe5
-  .asciz    "NEW"                         // 230 0xe6
-  .asciz    "BORDER"                      // 231 0xe7
-  .asciz    "CONTINUE"                    // 232 0xe8
-  .asciz    "DIM"                         // 233 0xe9
-  .asciz    "REM"                         // 234 0xea
-  .asciz    "FOR"                         // 235 0xeb
-  .asciz    "GO TO"                       // 236 0xec
-  .asciz    "GO SUB"                      // 237 0xed
-  .asciz    "INPUT"                       // 238 0xee
-  .asciz    "LOAD"                        // 239 0xef
-  .asciz    "LIST"                        // 240 0xf0
-  .asciz    "LET"                         // 241 0xf1
-  .asciz    "PAUSE"                       // 242 0xf2
-  .asciz    "NEXT"                        // 243 0xf3
-  .asciz    "POKE"                        // 244 0xf4
-  .asciz    "PRINT"                       // 245 0xf5
-  .asciz    "PLOT"                        // 246 0xf6
-  .asciz    "RUN"                         // 247 0xf7
-  .asciz    "SAVE"                        // 248 0xf8
-  .asciz    "RANDOMIZE"                   // 249 0xf9
-  .asciz    "IF"                          // 250 0xfa
-  .asciz    "CLS"                         // 251 0xfb
-  .asciz    "DRAW"                        // 252 0xfc
-  .asciz    "CLEAR"                       // 253 0xfd
-  .asciz    "RETURN"                      // 254 0xfe
-  .asciz    "COPY"                        // 255 0xff
+  .asciz    "OR"                          // 197 0xc5 0x21
+  .asciz    "AND"                         // 198 0xc6 0x22
+  .asciz    "<="                          // 199 0xc7 0x23 => No leading space (since first char < 'A')
+  .asciz    ">="                          // 200 0xc8 0x24 => No leading space (since first char < 'A')
+  .asciz    "<>"                          // 201 0xc9 0x25 => No leading space (since first char < 'A')
+  .asciz    "LINE"                        // 202 0xca 0x26
+  .asciz    "THEN"                        // 203 0xcb 0x27
+  .asciz    "TO"                          // 204 0xcc 0x28
+  .asciz    "STEP"                        // 205 0xcd 0x29
+  .asciz    "DEF FN"                      // 206 0xce 0x2a
+  .asciz    "CAT"                         // 207 0xcf 0x2b
+  .asciz    "FORMAT"                      // 208 0xd0 0x2c
+  .asciz    "MOVE"                        // 209 0xd1 0x2d
+  .asciz    "ERASE"                       // 210 0xd2 0x2e
+  .asciz    "OPEN #"                      // 211 0xd3 0x2f
+  .asciz    "CLOSE #"                     // 212 0xd4 0x30
+  .asciz    "MERGE"                       // 213 0xd5 0x31
+  .asciz    "VERIFY"                      // 214 0xd6 0x32
+  .asciz    "BEEP"                        // 215 0xd7 0x33
+  .asciz    "CIRCLE"                      // 216 0xd8 0x34
+  .asciz    "INK"                         // 217 0xd9 0x35
+  .asciz    "PAPER"                       // 218 0xda 0x36
+  .asciz    "FLASH"                       // 219 0xdb 0x37
+  .asciz    "BRIGHT"                      // 220 0xdc 0x38
+  .asciz    "INVERSE"                     // 221 0xdd 0x39
+  .asciz    "OVER"                        // 222 0xde 0x3a
+  .asciz    "OUT"                         // 223 0xdf 0x3b
+  .asciz    "LPRINT"                      // 224 0xe0 0x3c
+  .asciz    "LLIST"                       // 225 0xe1 0x3d
+  .asciz    "STOP"                        // 226 0xe2 0x3e
+  .asciz    "READ"                        // 227 0xe3 0x3f
+  .asciz    "DATA"                        // 228 0xe4 0x40
+  .asciz    "RESTORE"                     // 229 0xe5 0x41
+  .asciz    "NEW"                         // 230 0xe6 0x42
+  .asciz    "BORDER"                      // 231 0xe7 0x43
+  .asciz    "CONTINUE"                    // 232 0xe8 0x44
+  .asciz    "DIM"                         // 233 0xe9 0x45
+  .asciz    "REM"                         // 234 0xea 0x46
+  .asciz    "FOR"                         // 235 0xeb 0x47
+  .asciz    "GO TO"                       // 236 0xec 0x48
+  .asciz    "GO SUB"                      // 237 0xed 0x49
+  .asciz    "INPUT"                       // 238 0xee 0x4a
+  .asciz    "LOAD"                        // 239 0xef 0x4b
+  .asciz    "LIST"                        // 240 0xf0 0x4c
+  .asciz    "LET"                         // 241 0xf1 0x4d
+  .asciz    "PAUSE"                       // 242 0xf2 0x4e
+  .asciz    "NEXT"                        // 243 0xf3 0x4f
+  .asciz    "POKE"                        // 244 0xf4 0x50
+  .asciz    "PRINT"                       // 245 0xf5 0x51
+  .asciz    "PLOT"                        // 246 0xf6 0x52
+  .asciz    "RUN"                         // 247 0xf7 0x53
+  .asciz    "SAVE"                        // 248 0xf8 0x54
+  .asciz    "RANDOMIZE"                   // 249 0xf9 0x55
+  .asciz    "IF"                          // 250 0xfa 0x56
+  .asciz    "CLS"                         // 251 0xfb 0x57
+  .asciz    "DRAW"                        // 252 0xfc 0x58
+  .asciz    "CLEAR"                       // 253 0xfd 0x59
+  .asciz    "RETURN"                      // 254 0xfe 0x5a
+  .asciz    "COPY"                        // 255 0xff 0x5b
 
 
 # Default print routine for channels S/K, to print a single byte.
@@ -329,8 +329,7 @@ po_right:                        // L0A3D
   ldrb    w19, [x28, P_FLAG-sysvars]      // Stash current [P_FLAG] in x19 so we can temporarily change it.
   mov     x4, #1                          // w4 = 1 => 'OVER 1' in [P_FLAG]
   strb    w4, [x28, P_FLAG-sysvars]       // Temporarily set [P_FLAG] to 'OVER 1'
-  mov     x0, #0x80                       // x0 = blank mosaic character (preferable to space ' '
-                                          // since it remains blank even if user customises font)
+  mov     x0, ' '                         // x0 = space character (' ')
   bl      po_able                         // Print it, which updates cursor position without
                                           // painting anything to the screen, albeit rather inefficiently.
   strb    w19, [x28, P_FLAG-sysvars]      // Restore stashed [P_FLAG].
@@ -600,8 +599,7 @@ po_fill:                         // L0AC3
   strb    w6, [x28, FLAGS-sysvars]        // [FLAGS] = w6
   // Loop to print chr$ 128 (w19+1) times.
   2:
-    mov     x0, #0x80                     // x0 = blank mosaic character (preferable to char 32
-                                          // since it remains blank even if user customises font)
+    mov     x0, ' '                       // x0 = space character (' ')
     bl      print_w0                      // Print it.
     subs    w2, w2, #1                    // Decrement counter.
     b.ne    2b                            // Repeat while counter != 0
@@ -1013,10 +1011,27 @@ po_tokens:                       // L0C10
   b.hs    1f                              // If carry is set, jump forward to 1:.
   ldrb    w5, [x28, FLAGS-sysvars]        // w5 = [FLAGS]
   tbnz    w5, #0, 1f                      // If suppress space, jump forward to 1:.
-  mov     w0, 0x80                        // Mosaic space character
+  mov     w0, ' '                         // x0 = space character (' ')
   bl      po_save                         // Print it
-1:
-  // TODO
+  1:
+    ldrb    w0, [x4], #1                  // Fetch ASCII char from token table entry into w0.
+    cbz     w0, 2f                        // If 0, end of string; exit loop; jump forward to 2:.
+    mov     w5, w0                        // Stash "previous" char in w5.
+    bl      po_save                       // Print it, preserving registers.
+    b       1b                            // Repeat loop
+2:
+  cmp       w5, '$'                       // Was last character '$'?
+  b.eq      3f                            // If so, jump forward to 3: to consider trailing space.
+  cmp       w5, 'A'                       // Was it < 'A' i.e. '#', '>', '=' from tokens or ' ', '.'
+                                          // (from tape) or '?' from scroll?
+  b.lo      4f                            // No trailing space, so exit routine.
+3:
+  cmp       w3, #0x03                     // Test against RND, INKEY$ and PI which have no parameters
+                                          // and therefore no trailing space.
+  b.lo      4f                            // If one of them, no trailing space, so jump forward to 4:.
+  mov       w0, ' '                       // Otherwise print a trailing space (' ').
+  bl        po_save
+4:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 

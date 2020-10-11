@@ -986,13 +986,39 @@ pr_all:                          // L0B7F
 # -------------
 # Set attribute
 # -------------
-# This routine is entered with the HL register holding the last screen
-# address to be updated by PRINT or PLOT.
-# The Spectrum screen arrangement leads to the L register holding
-# the correct value for the attribute file and it is only necessary
-# to manipulate H to form the correct colour attribute address.
-# po_attr:                         // L0BDB
-#   // TODO
+# Update the attribute entry in the attributes file for a corresponding display
+# file address, based on attribute characteristics stored in system variables
+# ATTR_T, MASK_T, P_FLAG.
+#
+# On entry:
+#   x0 = address in display file
+po_attr:                         // L0BDB
+  adr     x9, display_file                // x9 = start display file address
+  adr     x24, attributes_file            // x24 = start attributes file address
+  sub     x11, x0, x9                     // x11 = display file offset
+  // attribute address = attributes_file + ((x11/2) % 108) + 108 * (((x11/216) % 20) + 20 * (x11/(216*20*16)))
+  mov     x13, #0x0000684c00000000
+  movk    x13, #0x012f, lsl #48           // x13 = 0x012f684c00000000 = 85401593570131968
+  umulh   x14, x13, x11                   // x14 = (85401593570131968 * x11) / 18446744073709551616 = int(x11/216)
+  mov     x15, #0xcccd000000000000        // x15 = 14757451553962983424
+  umulh   x16, x15, x14                   // x16 = 14757451553962983424 * int(x11/216) / 2^64 = (4/5) * int(x11/216)
+  lsr     x16, x16, #4                    // x16 = int(int(x11/216)/20)
+  add     x16, x16, x16, lsl #2           // x16 = 5 * int(int(x11/216)/20)
+  sub     x16, x14, x16, lsl #2           // x16 = int(x11/216) - 20 * int(int(x11/216)/20) = (x11/216)%20
+  mov     x17, #0x0000f2ba00000000        // x17 = 266880677838848
+  umulh   x18, x17, x11                   // x18 = 266880677838848 * x11 / 2^64 = int(x11/(216*20*16))
+  add     x18, x18, x18, lsl #2           // x18 = 5*int(x11/(216*20*16))
+  mov     x12, #0x6c                      // x12 = 108
+  lsr     x10, x11, #1                    // x10 = int(x11/2)
+  msub    x10, x12, x14, x10              // x10 = int(x11/2)-108*int((x11/2)/108)=(x11/2)%108
+  add     x16, x16, x18, lsl #2           // x16 = (x11/216)%20+20*int(x11/(216*20*16))
+  madd    x16, x16, x12, x10              // x16 = 108*(((x11/216)%20+20*int(x11/(216*20*16))) + (x11/2)%108
+                                          //     = attribute address offset from attributes_file (x24)
+  ldrb    w17, [x24, x16]                 // w17 = attribute data
+  ldrh    w1, [x28, ATTR_T-sysvars]       // w1[0-7] = [ATTR_T]
+                                          // w1[8-15] = [MASK_T]
+  // TODO
+  ret
 
 
 # Print token (chars 0xa5-0xff).
@@ -1409,7 +1435,7 @@ cl_line:                         // L0E44
 # Handle display with line number
 # -------------------------------
 # This subroutine is called from four places to calculate the address
-# of the start of a screen character line which is supplied in B.
+# of the start of a screen character line.
 #
 # On entry:
 #   x0 = 60 - screen line

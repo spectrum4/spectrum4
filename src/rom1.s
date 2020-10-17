@@ -599,10 +599,10 @@ po_fill:                         // L0AC3
   strb    w6, [x28, FLAGS-sysvars]        // [FLAGS] = w6
   // Loop to print chr$ 128 (w19+1) times.
   2:
-    mov     x0, ' '                       // x0 = space character (' ')
-    bl      print_w0                      // Print it.
-    subs    w2, w2, #1                    // Decrement counter.
-    b.ne    2b                            // Repeat while counter != 0
+    mov     x0, ' '                         // x0 = space character (' ')
+    bl      print_w0                        // Print it.
+    subs    w2, w2, #1                      // Decrement counter.
+    b.ne    2b                              // Repeat while counter != 0
 3:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
@@ -992,6 +992,10 @@ pr_all:                          // L0B7F
 #
 # On entry:
 #   x0 = address in display file
+#
+# TODO: we shouldn't need to convert a display file address to an attributes file
+#       address; instead we should just pass the attributes file address into the
+#       routine.
 po_attr:                         // L0BDB
   adr     x9, display_file                // x9 = start display file address
   adr     x24, attributes_file            // x24 = start attributes file address
@@ -1017,7 +1021,33 @@ po_attr:                         // L0BDB
   ldrb    w17, [x24, x16]                 // w17 = attribute data
   ldrh    w1, [x28, ATTR_T-sysvars]       // w1[0-7] = [ATTR_T]
                                           // w1[8-15] = [MASK_T]
-  // TODO
+  eor     w17, w17, w1                    // w17[0-7] = attribute data EOR [ATTR_T]
+                                          // w17[8-15] = [MASK_T]
+  and     w17, w17, w1, lsr #8            // w17 = attribute data EOR [ATTR_T] AND [MASK_T] (bits 8-31 clear)
+  ldrb    w0, [x28, P_FLAG-sysvars]       // w0 = [P_FLAG]
+                                          //   Bit 0: Temporary 1=OVER 1, 0=OVER 0.
+                                          //   Bit 1: Permanent 1=OVER 1, 0=OVER 0.
+                                          //   Bit 2: Temporary 1=INVERSE 1, 0=INVERSE 0.
+                                          //   Bit 3: Permanent 1=INVERSE 1, 0=INVERSE 0.
+                                          //   Bit 4: Temporary 1=Using INK 9.
+                                          //   Bit 5: Permanent 1=Using INK 9.
+                                          //   Bit 6: Temporary 1=Using PAPER 9.
+                                          //   Bit 7: Permanent 1=Using PAPER 9.
+  tbz     w0, #6, 1f                      // Jump forward to 1: if not PAPER 9.
+// PAPER 9
+  and     w17, w17, #~0b00111000          // PAPER = black
+  tbnz    w17, #2, 1f                     // If INK is 4/5/6/7 (green/cyan/yellow/white), jump ahead to 1:.
+// INK is 0/1/2/3 (black/blue/red/magenta)
+  eor     w17, w17, #0b00111000           // PAPER = white
+1:
+  tbz     w0, #4, 2f                      // Jump forward to 2: if not INK 9.
+// INK 9
+  and     w17, w17, #~0b00000111          // INK = black
+  tbnz    w17, #5, 2f                     // If PAPER is 4/5/6/7 (green/cyan/yellow/white), jump ahead to 2:.
+// PAPER is 0/1/2/3 (black/blue/red/magenta)
+  eor     w17, w17, #0b00000111           // INK = white
+2:
+  strb    w17, [x24, x16]                 // Update attribute file entry
   ret
 
 
@@ -1040,11 +1070,11 @@ po_tokens:                       // L0C10
   mov     w0, ' '                         // x0 = space character (' ')
   bl      po_save                         // Print it
   1:
-    ldrb    w0, [x4], #1                  // Fetch ASCII char from token table entry into w0.
-    cbz     w0, 2f                        // If 0, end of string; exit loop; jump forward to 2:.
-    mov     w5, w0                        // Stash "previous" char in w5.
-    bl      po_save                       // Print it, preserving registers.
-    b       1b                            // Repeat loop
+    ldrb    w0, [x4], #1                    // Fetch ASCII char from token table entry into w0.
+    cbz     w0, 2f                          // If 0, end of string; exit loop; jump forward to 2:.
+    mov     w5, w0                          // Stash "previous" char in w5.
+    bl      po_save                         // Print it, preserving registers.
+    b       1b                              // Repeat loop
 2:
   cmp       w5, '$'                       // Was last character '$'?
   b.eq      3f                            // If so, jump forward to 3: to consider trailing space.

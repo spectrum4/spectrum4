@@ -145,4 +145,3 @@ paint_copyright:
   bl      paint_string                    // Paint the copyright string to screen.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
-

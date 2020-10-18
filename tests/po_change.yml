@@ -1,0 +1,25 @@
+tests
+  - setup:
+      heap:
+        - name: old_input_routine
+          size: 8
+          value: 0x12345678
+        - name: new_input_routine
+          size: 8
+          value: 0x87654321
+        - name: channel_block
+          size: 8
+          value: old_input_routine
+      sysvars:
+        CURCHL: channel_block
+      registers:
+        x4: new_input_routine
+    checks:
+      heap:
+        channel_block: new_input_routine
+        corrupted: []
+      sysvars:
+        corrupted: []
+      registers:
+        x5: channel_block
+        corrupted: []

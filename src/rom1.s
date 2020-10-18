@@ -602,18 +602,28 @@ po_cont:                         // L0A87
   subs    w4, w4, w6                      // w4 =(58-row)
   b.lo    to_report_bb                    // Jump forward to .......... if row > 58
   // TODO?
-po_at_set:
+
+
+po_at_set:                       // L0ABF
   // TODO?
-po_tab:
+
+
+po_tab:                          // L0AC2
   // TODO?
   // Control char = TAB (0x17)
+
+
 to_report_bb:
   bl      report_bb
   b       to_end                          // Exit routine.
+
+
 to_co_temp_5:
   // Control char with one operand: between INK (0x10) and OVER (0x15)
   bl      co_temp_5
   b       to_end
+
+
 to_end:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
@@ -847,7 +857,7 @@ po_any:                          // L0B24
 #   w3 = input w3 rotated right two bits
 #   x4 = last 8 bytes of bit pattern (same as first 8 bytes)
 #   x5 = last 8 bytes of bit pattern with character right hand side bits cleared.
-po_mosaic_half:
+po_mosaic_half:                  // L0B3E
   mov     x4, 0x00ff00ff00ff00ff          // Pattern for first 4 pixel rows if bit 0 set.
   tst     w3, #1                          // Is bit 0 of w3 set?
   csel    x4, x4, xzr, ne                 // If so, use prepared bit 0 pattern, otherwise clear bits.

@@ -315,7 +315,8 @@ po_back:                         // L0A23
 # --------------------
 # Cursor right routine
 # --------------------
-# This implementation could probably be optimised.
+# This implementation could probably be optimised, and it is questionable
+# whether the attributes file should really be updated.
 #
 # On entry:
 #   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
@@ -330,8 +331,9 @@ po_right:                        // L0A3D
   mov     x4, #1                          // w4 = 1 => 'OVER 1' in [P_FLAG]
   strb    w4, [x28, P_FLAG-sysvars]       // Temporarily set [P_FLAG] to 'OVER 1'
   mov     x0, ' '                         // x0 = space character (' ')
-  bl      po_able                         // Print it, which updates cursor position without
-                                          // painting anything to the screen, albeit rather inefficiently.
+  bl      po_able                         // Print it, which updates cursor position and attributes file
+                                          // entry, without altering display file (unless space character
+                                          // has been modified).
   strb    w19, [x28, P_FLAG-sysvars]      // Restore stashed [P_FLAG].
   ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.

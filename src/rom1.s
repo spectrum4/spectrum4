@@ -2,7 +2,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
-
 ################################################################################################
 # These routines are a translation of the original Z80 ROM 1 routines on the 128K Spectrum.
 #

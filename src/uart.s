@@ -33,8 +33,8 @@
 .set GPPUD,          0x0094  // GPIO Pin Pull-up/down Enable
 .set GPPUDCLK0,      0x0098  // GPIO Pin Pull-up/down Enable Clock 0
 
-.align 2
 .text
+.align 2
 
 # ------------------------------------------------------------------------------
 # Initialise the Mini UART interface for logging over serial port.

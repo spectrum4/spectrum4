@@ -2,14 +2,8 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
-.align 2
 .text
-
-run_tests:
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
-  ldp     x29, x30, [sp], #16
-  ret
+.align 2
 
 random_registers:
 // TODO
@@ -43,6 +37,10 @@ test_sysvar_is_address:
 // TODO
   ret
 
-test_sysvar_preserved:
+test_sysvars_preserved:
+// TODO
+  ret
+
+check_sp_matches_x29:
 // TODO
   ret

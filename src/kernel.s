@@ -4,8 +4,8 @@
 
 .global _start
 
-.align 2
 .text
+.align 2
 
 
 _start:

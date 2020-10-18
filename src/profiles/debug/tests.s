@@ -10,6 +10,15 @@
 .text
 .align 2
 
+
+run_tests:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
+  bl      test_po_change_case_1
+  ldp     x29, x30, [sp], #16
+  ret
+
+
 test_po_change_case_1:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
@@ -42,182 +51,19 @@ test_po_change_case_1:
   stp     x24, x25, [sp, #-16]!
   stp     x26, x27, [sp, #-16]!
   stp     x28, x29, [sp, #-16]!
-  adr     x0, po_change_1_str
+  bl      check_sp_matches_x29
+  adr     x0, po_change_case_1_str
   bl      log_test_name
-  mov     w0, #0
-  bl      test_register_preserved
-  mov     w0, #1
-  bl      test_register_preserved
-  mov     w0, #2
-  bl      test_register_preserved
-  mov     w0, #3
-  bl      test_register_preserved
-  mov     w0, #4
+# ldr     w0, =0b11000000000000000000000000100000
   bl      test_register_preserved
   mov     w0, #5
   mov     w1, #16
   bl      test_register_is_address
-  mov     w0, #6
-  bl      test_register_preserved
-  mov     w0, #7
-  bl      test_register_preserved
-  mov     w0, #8
-  bl      test_register_preserved
-  mov     w0, #9
-  bl      test_register_preserved
-  mov     w0, #10
-  bl      test_register_preserved
-  mov     w0, #11
-  bl      test_register_preserved
-  mov     w0, #12
-  bl      test_register_preserved
-  mov     w0, #13
-  bl      test_register_preserved
-  mov     w0, #14
-  bl      test_register_preserved
-  mov     w0, #15
-  bl      test_register_preserved
-  mov     w0, #16
-  bl      test_register_preserved
-  mov     w0, #17
-  bl      test_register_preserved
-  mov     w0, #18
-  bl      test_register_preserved
-  mov     w0, #19
-  bl      test_register_preserved
-  mov     w0, #20
-  bl      test_register_preserved
-  mov     w0, #21
-  bl      test_register_preserved
-  mov     w0, #22
-  bl      test_register_preserved
-  mov     w0, #23
-  bl      test_register_preserved
-  mov     w0, #24
-  bl      test_register_preserved
-  mov     w0, #25
-  bl      test_register_preserved
-  mov     w0, #26
-  bl      test_register_preserved
-  mov     w0, #27
-  bl      test_register_preserved
-  mov     w0, #28
-  bl      test_register_preserved
-  mov     w0, #29
-  bl      test_register_preserved
-  mov     w0, #0
-  bl      test_sysvar_preserved
-  mov     w0, #1
-  bl      test_sysvar_preserved
-  mov     w0, #2
-  bl      test_sysvar_preserved
-  mov     w0, #3
-  bl      test_sysvar_preserved
-  mov     w0, #4
-  bl      test_sysvar_preserved
-  mov     w0, #5
-  bl      test_sysvar_preserved
-  mov     w0, #6
-  bl      test_sysvar_preserved
-  mov     w0, #7
-  bl      test_sysvar_preserved
-  mov     w0, #8
-  bl      test_sysvar_preserved
-  mov     w0, #9
-  bl      test_sysvar_preserved
-  mov     w0, #10
-  bl      test_sysvar_preserved
-  mov     w0, #11
-  bl      test_sysvar_preserved
-  mov     w0, #12
-  bl      test_sysvar_preserved
-  mov     w0, #13
-  bl      test_sysvar_preserved
-  mov     w0, #14
-  bl      test_sysvar_preserved
-  mov     w0, #15
-  bl      test_sysvar_preserved
-  mov     w0, #16
-  bl      test_sysvar_preserved
-  mov     w0, #17
-  bl      test_sysvar_preserved
-  mov     w0, #18
-  bl      test_sysvar_preserved
-  mov     w0, #19
-  bl      test_sysvar_preserved
-  mov     w0, #20
-  bl      test_sysvar_preserved
-  mov     w0, #21
-  bl      test_sysvar_preserved
-  mov     w0, #22
-  bl      test_sysvar_preserved
-  mov     w0, #23
-  bl      test_sysvar_preserved
-  mov     w0, #24
-  bl      test_sysvar_preserved
-  mov     w0, #25
-  bl      test_sysvar_preserved
-  mov     w0, #26
-  bl      test_sysvar_preserved
-  mov     w0, #27
-  bl      test_sysvar_preserved
-  mov     w0, #28
-  bl      test_sysvar_preserved
-  mov     w0, #29
-  bl      test_sysvar_preserved
-  mov     w0, #30
-  bl      test_sysvar_preserved
-  mov     w0, #31
-  bl      test_sysvar_preserved
-  mov     w0, #32
-  bl      test_sysvar_preserved
-  mov     w0, #33
-  bl      test_sysvar_preserved
-  mov     w0, #34
-  bl      test_sysvar_preserved
-  mov     w0, #35
-  bl      test_sysvar_preserved
-  mov     w0, #36
-  bl      test_sysvar_preserved
-  mov     w0, #37
-  bl      test_sysvar_preserved
-  mov     w0, #38
-  bl      test_sysvar_preserved
-  mov     w0, #39
-  bl      test_sysvar_preserved
+  ldr     x0, =po_change_case_1_corrupted_sysvars
+  bl      test_sysvars_preserved
   mov     w0, #40
   mov     w1, #16
   bl      test_sysvar_is_address
-  mov     w0, #41
-  bl      test_sysvar_preserved
-  mov     w0, #42
-  bl      test_sysvar_preserved
-  mov     w0, #43
-  bl      test_sysvar_preserved
-  mov     w0, #44
-  bl      test_sysvar_preserved
-  mov     w0, #45
-  bl      test_sysvar_preserved
-  mov     w0, #46
-  bl      test_sysvar_preserved
-  mov     w0, #47
-  bl      test_sysvar_preserved
-  mov     w0, #48
-  bl      test_sysvar_preserved
-  mov     w0, #49
-  bl      test_sysvar_preserved
-  mov     w0, #50
-  bl      test_sysvar_preserved
-  mov     w0, #51
-  bl      test_sysvar_preserved
-  mov     w0, #52
-  bl      test_sysvar_preserved
-  mov     w0, #53
-  bl      test_sysvar_preserved
-  mov     w0, #54
-  bl      test_sysvar_preserved
-  mov     w0, #55
-  bl      test_sysvar_preserved
   mov     w0, #0
   mov     w1, #8
   bl      test_allocated_is_preserved
@@ -232,5 +78,7 @@ test_po_change_case_1:
   ret
 
 
-po_change_1_str:
-  .asciz "po_change_1"
+po_change_case_1_str:
+  .asciz "po_change_case_1"
+po_change_case_1_corrupted_sysvars:
+  .byte 0

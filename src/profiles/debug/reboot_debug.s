@@ -2,7 +2,7 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
-.align 2
 .text
+.align 2
 
 msg_rebooting: .asciz "Rebooting..."

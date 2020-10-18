@@ -35,9 +35,8 @@
 #   Bytes 0x10-0x17: Start of code block/screen$
 #   Bytes 0x18-0x1F: Offset to the variables (i.e. length of program) if a program. For an array, 0x18 holds the variable name.
 
-
-.align 2
 .text
+.align 2
 
 restart:                         // L0000
   msr     daifset, #3                     // Disable (mask) interrupts and fast interrupts.
@@ -177,7 +176,8 @@ new:                             // L019D
   strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
 
   bl      cls
-  .ifdef  demo
+  .ifdef  run_tests
+  bl      run_tests
   b       demo                   // This is demo code for testing purposes only
   .else
   b       sleep

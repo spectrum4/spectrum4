@@ -13,10 +13,12 @@ log_test_name:
 // TODO
   ret
 
+# see https://github.com/bztsrc/raspi3-tutorial/blob/master/06_random/rand.c
 random_registers:
 // TODO
   ret
 
+# see https://github.com/bztsrc/raspi3-tutorial/blob/master/06_random/rand.c
 random_sysvars:
 // TODO
   ret

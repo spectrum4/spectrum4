@@ -1128,22 +1128,6 @@ po_attr:                         // L0BDB
   ret
 
 
-# Print token (chars 0xa5-0xff).
-#
-# On entry:
-#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
-#   w1 = (109 - column), or 1 for end-of-line
-#   x2 = address in display file / printer buffer(?)
-#   w3 = (char-165) (0 to 90)
-po_tokens:                       // L0C10
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  adr     x4, tkn_table                   // Address of table with BASIC keywords
-  bl      po_table
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  ret
-
-
 # ----------------
 # Message printing
 # ----------------
@@ -1151,18 +1135,40 @@ po_tokens:                       // L0C10
 #
 # TODO: if in the end, this routine just calls po_table, let's remove it and
 # call po_table directly.
+#
+# On entry:
+#   w3 = token table index (address of step over token)
+#   x4 = address of token table
 po_msg:                          // L0C0A
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  mov     x3, #0                          // Suppress trailing space.
+  mov     w5, #0                          // Index first entry in table.
   bl      po_table                        // Could just call po_table_1 here (and only need part of it).
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
 
+# Print token (chars 0xa5-0xff).
+#
 # On entry:
-#   w3 = (char-165) (0 to 90)
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+#   w1 = (109 - column), or 1 for end-of-line
+#   x2 = address in display file / printer buffer(?)
+#   w3 = token table index (char-165) (0 to 90)
+po_tokens:                       // L0C10
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x4, tkn_table                   // Address of table with BASIC keywords
+  mov     w5, w3                          // Tokens use the token table index to determine trailing space
+  bl      po_table
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+# On entry:
+#   w3 = token table index (char-165) (0 to 90)
 #   x4 = address of token table
+#   w5 = trailing space indicator (don't ask)
 po_table:                        // L0C14
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -1174,30 +1180,30 @@ po_table:                        // L0C14
 
 
 # On entry:
-#   w3 = (char-165) (0 to 90)
 #   x4 = address of zero-terminated string to print
+#   w5 = trailing space indicator (don't ask)
 po_table_1:                      // L0C17
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   b.hs    1f                              // If carry is set, jump forward to 1:.
-  ldrb    w5, [x28, FLAGS-sysvars]        // w5 = [FLAGS]
-  tbnz    w5, #0, 1f                      // If suppress space, jump forward to 1:.
+  ldrb    w6, [x28, FLAGS-sysvars]        // w6 = [FLAGS]
+  tbnz    w6, #0, 1f                      // If suppress space, jump forward to 1:.
   mov     w0, ' '                         // x0 = space character (' ')
   bl      po_save                         // Print it
   1:
     ldrb    w0, [x4], #1                    // Fetch ASCII char from token table entry into w0.
     cbz     w0, 2f                          // If 0, end of string; exit loop; jump forward to 2:.
-    mov     w5, w0                          // Stash "previous" char in w5.
+    mov     w6, w0                          // Stash "previous" char in w6.
     bl      po_save                         // Print it, preserving registers.
     b       1b                              // Repeat loop
 2:
-  cmp       w5, '$'                       // Was last character '$'?
+  cmp       w6, '$'                       // Was last character '$'?
   b.eq      3f                            // If so, jump forward to 3: to consider trailing space.
-  cmp       w5, 'A'                       // Was it < 'A' i.e. '#', '>', '=' from tokens or ' ', '.'
+  cmp       w6, 'A'                       // Was it < 'A' i.e. '#', '>', '=' from tokens or ' ', '.'
                                           // (from tape) or '?' from scroll?
   b.lo      4f                            // No trailing space, so exit routine.
 3:
-  cmp       w3, #0x03                     // Test against RND, INKEY$ and PI which have no parameters
+  cmp       w5, #0x03                     // Test against RND, INKEY$ and PI which have no parameters
                                           // and therefore no trailing space.
   b.lo      4f                            // If one of them, no trailing space, so jump forward to 4:.
   mov       w0, ' '                       // Otherwise print a trailing space (' ').
@@ -1308,7 +1314,16 @@ po_scr_2:
   ldrb    w10, [x28, P_FLAG-sysvars]      // w10 = [P_FLAG]
   mov     x0, #-3                         // Select system stream -3 (system channel K).
   bl      chan_open                       // Open it.
-
+  adr     x4, scroll_message              // Message table.
+  mov     x3, #0                          // First string in table.
+  bl      po_msg                          // Print it.
+  ldrb    w9, [x28, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
+  orr     w9, w9, #0x20                   // Set bit 5 - signal clear lower screen.
+  strb    w9, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w9[0-7]
+  ldrb    w9, [x28, FLAGS-sysvars]        // w9[0-7] = [FLAGS]
+  orr     w9, w9, #0x08                   // Set bit 3 - signal 'L' mode.
+  and     w9, w9, #~0x20                  // Clear bit 5 - signal no new key.
+  strb    w9, [x28, FLAGS-sysvars]        // [FLAGS] = w9[0-7]
 
 po_scr_3:
 po_scr_4:
@@ -1395,8 +1410,8 @@ cls_lower:                       // L0D6E
   stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
   stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack.
   ldrb    w9, [x28, TV_FLAG-sysvars]      // w9[0-7] = [TV_FLAG]
-  and     w9, w9, #0xffffffdf             // Clear bit 5 - signal do not clear lower screen.
-  orr     w9, w9, #0x00000001             // Set bit 0 - signal lower screen in use.
+  and     w9, w9, #~0x20                  // Clear bit 5 - signal do not clear lower screen.
+  orr     w9, w9, #0x01                   // Set bit 0 - signal lower screen in use.
   strb    w9, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w9[0-7]
   bl      temps                           // Routine temps picks up temporary colours.
   ldrb    w0, [x28, DF_SZ-sysvars]        // Fetch lower screen DF_SZ.
@@ -2007,37 +2022,42 @@ co_temp_5:                       // L2211
 po_t_udg_128k_patch:             // L3B9F
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  cmp     w3, 0xa3                        // Is char 'SPECTRUM' (128K mode) / UDG T (48K mode)?
+  cmp     w3, #0xa3                       // Is char 'SPECTRUM' (128K mode) / UDG T (48K mode)?
   b.eq    2f                              // If so, jump forward to 2:.
-  cmp     w3, 0xa4                        // Is char 'PLAY' (128K mode) / UDG U (48K mode)?
+  cmp     w3, #0xa4                       // Is char 'PLAY' (128K mode) / UDG U (48K mode)?
   b.eq    2f                              // If so, jump forward to 2:.
 1:
-  subs    w3, w3, 0xa5                    // w3 = (char - 165)
-  b.pl    3f                              // if char is token (w3 >= 0) jump forward to 3:.
+  subs    w3, w3, #0xa5                   // w3 = (char - 165)
+  b.pl    3f                              // If char is token (w3 >= 0) jump forward to 3:.
   // UDG character
-  bl      po_t_udg_1
-  b       4f
+  bl      po_t_udg_1                      // Rejoin 48K BASIC routine.
+  b       5f                              // Exit routine.
 2:
   // SPECTRUM/PLAY token (128K mode) or T/U UDG (48K mode)
-  ldrb    w3, [x28, FLAGS-sysvars]
-  tbz     w3, #4, 1b                      // If in 48K mode, jump back to 1:.
+
+  // TODO: See if we can find an alternative unused register for storing FLAGS
+  // in, since we read it multiple times below.
+
+  ldrb    w4, [x28, FLAGS-sysvars]        // w4 = [FLAGS]
+  tbz     w4, #4, 1b                      // If in 48K mode, jump back to 1:.
   // SPECTRUM or PLAY token in 128K mode
-  adr     x4, msg_spectrum
-  adr     x5, msg_play
-  subs    w3, w3, 0xa3
-  csel    x4, x4, x5, eq
-  mov     w3, 0x04
+  adr     x4, msg_spectrum                // x4 = address of "SPECTRUM" string
+  adr     x5, msg_play                    // x5 = address of "PLAY" string
+  subs    w3, w3, #0xa3                   // w3 = 0 for "SPECTRUM" or 1 for "PLAY"
+  csel    x4, x4, x5, eq                  // x4 = correct address for token string
+  mov     w5, #0x04                       // Indicate trailing space required (don't ask).
   // TODO: check if any registers need to be preserved here
-  bl      po_table_1
+  bl      po_table_1                      // Print SPECTRUM or PLAY.
   // TODO: set carry flag??? Why???
   ldrb    w4, [x28, FLAGS-sysvars]        // w4 = [FLAGS]
-  tbnz    w4, #1, 4f                      // If printer in use, jump forward to 4:.
-  bl      po_fetch
+  tbnz    w4, #1, 5f                      // If printer in use, jump forward to 4:.
+  // Printer not in use
   b       4f
 3:
   bl      po_tokens
-  bl      po_fetch
 4:
+  bl      po_fetch
+5:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 

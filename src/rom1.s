@@ -971,13 +971,27 @@ pr_all:                          // L0B7F
     bl      poke_address                    // Update RHS byte
     tbnz    w20, #1, 4f                     // If printer in use, jump ahead to 6:.
   // Printer not in use.
-    add     x21, x21, 10*216                // 20*216 is too big to add in one step, so do it in two steps.
-    add     x21, x21, 10*216                // Gives next pixel line down.
+    add     x21, x21, 0x0870                // 20*216 = 0x10e0 is too big to add in one step, so do it in two steps.
+    add     x21, x21, 0x0870                // Gives next pixel line down.
     b       5f
   // Printer in use
   4:
-    add     x24, x21, #0x20                 // x24 = current printer buffer location + 32
-    bfxil   x21, x24, #0, #8                // x21 = x24 if x24 in printer buffer region, else (x24 - 256)
+    add     x21, x21, #0xd8                 // x21 = current printer buffer location + 216
+
+  //////////////////////////////////////////////////////////////////////////
+  //
+  // TODO: Probably this wholeblock is not needed, since buffer is probably
+  // always flushed at start of new line.
+  //
+  //
+    cmp     x21, printer_buffer_end         // Is x21 now past end of printer buffer?
+    b.lo    5f                              // If not, jump ahead to 5:.
+  // Overshot printer buffer
+    sub     x21, x21, #0xd80                // Correct printer buffer position
+  //
+  //
+  //////////////////////////////////////////////////////////////////////////
+
   5:
     sub     w19, w19, #1                    // Decrement pixel row loop counter
     cbnz    w19, 3b                         // Repeat until all 16 pixel rows complete

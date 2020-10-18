@@ -119,8 +119,7 @@ sysvars:
                                           // calculator stack.
 sysvars_end:
 
-.align 8
-  printer_buffer: .space 0x100            // Printer buffer used by 48K Basic but not by 128K Basic (apparently)
+  printer_buffer: .space 0xd80            // Printer buffer used by 48K Basic but not by 128K Basic (see docs/printer-buffer.md)
   printer_buffer_end:
 
 # Memory regions

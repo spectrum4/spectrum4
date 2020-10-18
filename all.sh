@@ -83,7 +83,7 @@ cd "$(dirname "${0}")"
 rm -rf build
 mkdir build
 
-# Generate src/sysvars.s
+# Generate src/profiles/debug/sysvars.s
 {
 echo '# This file is part of the Spectrum +4 Project.
 # Licencing information can be found in the LICENCE file
@@ -106,7 +106,7 @@ sysvaraddresses:'
 cat src/bss.s | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space [1248] .*$/\1/p' | while read sysvar; do
   echo "  .quad ${sysvar}"
 done
-} > src/sysvars.s
+} > src/profiles/debug/sysvars.s
 
 find src -name '*.s' | while read sourcefile; do
   cat "${sourcefile}" > x

@@ -115,7 +115,8 @@ find src -name '*.s' | while read sourcefile; do
 done
 
 # Assemble `src/all.s` to `build/all.o`
-"${TOOLCHAIN_PREFIX}as" -o "build/all.o" "src/all.s"
+"${TOOLCHAIN_PREFIX}as" -I src -I src/profiles/debug -o "build/debug.o" "src/all.s"
+"${TOOLCHAIN_PREFIX}as" -I src -I src/profiles/release -o "build/release.o" "src/all.s"
 
 # Ensure dist directory exists, leaving in place if already there from previous
 # run.
@@ -140,20 +141,23 @@ fetch_firmware 'start.elf'
 
 # Link binaries that were previously assembled. Options passed to the linker
 # are:
-#   -n: don't page align sections, to save space in generated elf file. Having
+#   -N: don't page align sections, to save space in generated elf file. Having
 #       sections page aligned is only useful when directly executing the file,
 #       but we don't execute the elf file, we extract the kernel binary from
-#       it.
+#       it. Also do not make text section read only. Not sure why I chose this
+#       instead of -n since I guess this effects .elf file but not .img file?
 #   -M: display kernel map
-#   -T: specifies linker script to use
+#   -Ttext: address of text section
 #   -o: elf file to generate
-"${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -M -o build/kernel8.elf  build/*.o
+"${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -o build/kernel8-debug.elf  build/debug.o
+"${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -M -o build/kernel8-release.elf  build/release.o
 
 # Log some useful information about the generated elf file.
-"${TOOLCHAIN_PREFIX}readelf" -a build/kernel8.elf
+"${TOOLCHAIN_PREFIX}readelf" -a build/kernel8-release.elf
 
 # Extract the final kernel raw binary into file dist/kernel8.img
-"${TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/kernel8.elf -O binary dist/kernel8.img
+"${TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/kernel8-debug.elf -O binary dist/kernel8-debug.img
+"${TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/kernel8-release.elf -O binary dist/kernel8-release.img
 
 # Log disassembly of generated raw binary dist/kernel8.img to aid sanity
 # checking.
@@ -161,7 +165,7 @@ fetch_firmware 'start.elf'
 
 # Log disassembly of kernel elf file. This is like above, but additionally
 # contains symbol names, etc.
-"${TOOLCHAIN_PREFIX}objdump" -d build/kernel8.elf
+"${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-release.elf
 
 echo
 echo "Build successful - see dist directory for results"

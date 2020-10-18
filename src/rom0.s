@@ -179,8 +179,11 @@ new:                             // L019D
   strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
 
   bl      cls
-  b       demo                            // This is demo code for testing purposes only
-
+  .ifdef  demo
+  b       demo                   // This is demo code for testing purposes only
+  .else
+  b       sleep
+  .endif
 
 # -----------------------
 # New Error Message Table

@@ -19,12 +19,14 @@
 #   https://github.com/torvalds/linux/blob/366a4e38b8d0d3e8c7673ab5c1b5e76bbfbc0085/drivers/watchdog/bcm2835_wdt.c#L100-L123
 # ------------------------------------------------------------------------------
 reboot:
+.ifdef paint_string
   adr     x0, msg_rebooting
   mov     x1, #48
   mov     x2, #59
   mov     x3, #0x00ffffff
   mov     x4, #0x00ff0000
   bl      paint_string
+.endif
   mov     x0, 0x8000000
   bl      wait_cycles
   adr     x0, mbox_reboot
@@ -42,8 +44,6 @@ reboot:
   b       sleep
 
 .data
-
-msg_rebooting: .asciz "Rebooting..."
 
 # Memory block for GPU mailbox call to advise of incoming reboot
 .align 4

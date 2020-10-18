@@ -1203,8 +1203,42 @@ po_search:                       // L0C41
 # This test routine is called when printing carriage return, when considering
 # PRINT AT and from the general PRINT ALL characters routine to test if
 # scrolling is required, prompting the user if necessary.
+#
+# On entry:
+#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
 po_scr:                          // L0C55
-  // TODO
+  ldrb    w4, [x28, FLAGS-sysvars]        // w4 = [FLAGS]
+  tbnz    w4, #1, 9f                      // If printer in use, jump forward to 9:.
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  ldrb    w1, [x28, TV_FLAG-sysvars]      // w1 = [TV_FLAG]
+  tbnz    w1, #0, 4f                      // If lower screen in use, jump forward to 4:.
+  ldrb    w2, [x28, DF_SZ-sysvars]        // Fetch lower screen DF_SZ.
+  cmp     w0, w2                          // 60 - line offset > DF_SZ?
+  b.lo    report_5
+  b.eq    1f
+  bl      cl_set
+  b       8f
+1:
+  tbz     w1, #4, po_scr_2
+  ldrb    w7, [x28, BREG-sysvars]
+  subs    w7, w7, #1
+  b.eq    po_scr_3
+  mov     x0, #0
+  bl      chan_open
+  ldr     x8, [x28, LIST_SP-sysvars]
+  mov     sp, x8
+  and     w1, w1, #~0x10
+  strb    w1, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w1
+  ret
+// TODO
+report_5:
+po_scr_2:
+po_scr_3:
+8:
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+9:
+  ret
 
 
 # ----------------------

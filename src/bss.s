@@ -56,6 +56,7 @@ sysvars:
                                           //   Bit 5: Permanent 1=Using INK 9.
                                           //   Bit 6: Temporary 1=Using PAPER 9.
                                           //   Bit 7: Permanent 1=Using PAPER 9.
+  BREG:           .space 1                // Calculator's B register.
 
 .align 1
   REPDEL:         .space 1                // Place REPDEL in .align 1 section since REPDEL+REPPER is read/written together as a halfword.
@@ -86,6 +87,7 @@ sysvars:
   SFNEXT:         .space 8                // End of RAM disk catalogue marker. Pointer to first empty catalogue entry.
   SFSPACE:        .space 8                // Number of bytes free in RAM disk.
   CHARS:          .space 8                // 256 less than address of character set, which starts with ' ' and carries on to '©'.
+  LIST_SP:        .space 8                // Address of return address from automatic listing.
 
 # Pointers to inside the HEAP
   VARS:           .space 8                // Address of variables.

@@ -48,6 +48,8 @@ sysvarnames:
   .byte 1
   .asciz "P_FLAG"
   .byte 1
+  .asciz "BREG"
+  .byte 1
   .asciz "REPDEL"
   .byte 1
   .asciz "REPPER"
@@ -79,6 +81,8 @@ sysvarnames:
   .asciz "SFSPACE"
   .byte 8
   .asciz "CHARS"
+  .byte 8
+  .asciz "LIST_SP"
   .byte 8
   .asciz "VARS"
   .byte 8
@@ -140,6 +144,7 @@ sysvaraddresses:
   .quad S_POSNL_COL
   .quad S_POSNL_ROW
   .quad P_FLAG
+  .quad BREG
   .quad REPDEL
   .quad REPPER
   .quad ATTR_P
@@ -156,6 +161,7 @@ sysvaraddresses:
   .quad SFNEXT
   .quad SFSPACE
   .quad CHARS
+  .quad LIST_SP
   .quad VARS
   .quad CHANS
   .quad CURCHL

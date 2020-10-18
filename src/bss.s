@@ -119,7 +119,9 @@ sysvars:
                                           // calculator stack.
 sysvars_end:
 
+.align 8
   printer_buffer: .space 0x100            // Printer buffer used by 48K Basic but not by 128K Basic (apparently)
+  printer_buffer_end:
 
 # Memory regions
   display_file:   .space (SCREEN_HEIGHT-BORDER_TOP-BORDER_BOTTOM)*(SCREEN_WIDTH-BORDER_LEFT-BORDER_RIGHT)/8

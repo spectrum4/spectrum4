@@ -921,8 +921,11 @@ pr_all:                          // L0B7F
   stp     x19, x20, [sp, #-16]!           // Backup x19 / x20 on stack.
   stp     x21, x22, [sp, #-16]!           // Backup x21 / x22 on stack.
   stp     x23, x24, [sp, #-16]!           // Backup x23 / x24 on stack.
+  stp     x0, x1, [sp, #-16]!             // Backup x0 / x1 on stack.
+  stp     x2, x3, [sp, #-16]!             // Backup x2 / x3 on stack.
   mov     x21, x2                         // x21 = address in display file / printer buffer
   mov     x22, x4                         // x22 = address of 32 byte character bit pattern
+  mov     x23, x2                         // x23 = address in display file / printer buffer
   cmp     w1, #1                          // Trailing position at end of line?
   b.ne    1f                              // If not trailing, jump ahead to 1:.
   // Trailing at end of line.
@@ -966,16 +969,27 @@ pr_all:                          // L0B7F
     add     x0, x21, #1                     // RHS target address
     bfxil   w1, w23, #0, #8                 // Lower 8 bytes of pattern for RHS
     bl      poke_address                    // Update RHS byte
-    tbnz    w20, #1, 6f                     // If printer in use, jump ahead to 6:.
-    // Printer not in use.
+    tbnz    w20, #1, 4f                     // If printer in use, jump ahead to 6:.
+  // Printer not in use.
     add     x21, x21, 10*216                // 20*216 is too big to add in one step, so do it in two steps.
     add     x21, x21, 10*216                // Gives next pixel line down.
+    b       5f
+  // Printer in use
+  4:
+    add     x24, x21, #0x20                 // x24 = current printer buffer location + 32
+    bfxil   x21, x24, #0, #8                // x21 = x24 if x24 in printer buffer region, else (x24 - 256)
   5:
     sub     w19, w19, #1                    // Decrement pixel row loop counter
     cbnz    w19, 3b                         // Repeat until all 16 pixel rows complete
-  // TODO
+  tbnz    w20, #1, 6f                     // If printer in use, jump ahead to 7:.
+// Printer not in use
+  mov     x0, x23                         // x0 = original display file address
+  bl      po_attr                         // Call routine po_attr to update corresponding colour attribute.
 6:
-  // TODO
+  ldp     x2, x3, [sp], #0x10             // Restore function inputs x2, x3.
+  ldp     x0, x1, [sp], #0x10             // Restore function inputs x0, x1.
+  sub     w1, w1, #1                      // Move column to the right.
+  add     x2, x2, #1                      // Increase screen/printer position.
   ldp     x23, x24, [sp], #0x10           // Restore old x23, x24.
   ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
   ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.

@@ -29,5 +29,6 @@ Perhaps it might even be possible for the virtual printer to write directly
 to a PDF file.
 
 The Spectrum +4 Printer Buffer will therefore be 16 pixel rows high, and 108
-characters wide, stored in 216 bytes per row, therefore 3456 bytes in size
-(exactly 13 times bigger than the original printer buffer).
+characters wide, stored in 216 bytes per row, i.e. 3456 bytes in size (exactly
+13 times bigger than the original printer buffer), to match the geometry of a
+single character row of the screen, just like the 48K Printer Buffer did.

@@ -24,61 +24,44 @@ test_po_change_case_1:
   mov     x29, sp
   bl      random_registers
   bl      random_sysvars
-# adr     x0, heap
-  ldr     x1, =0x12345678
-  str     x1, [x0]
-  ldr     x1, =0x87654321
-  str     x1, [x0, #8]
-  add     x1, x0, #0
-  str     x1, [x0, #16]
-  add     x1, x0, #16
-  str     x1, [x28, CURCHL-sysvars]
-# adr     x4, heap
-  add     x4, x4, #8
+  adr     x0, po_change_case_1_channel_block
+  str     x0, [x28, CURCHL-sysvars]
+  adr     x4, po_change_case_1_new_input_routine
+  push_registers
   bl      po_change
-  stp     x0, x1, [sp, #-16]!
-  stp     x2, x3, [sp, #-16]!
-  stp     x4, x5, [sp, #-16]!
-  stp     x6, x7, [sp, #-16]!
-  stp     x8, x9, [sp, #-16]!
-  stp     x10, x11, [sp, #-16]!
-  stp     x12, x13, [sp, #-16]!
-  stp     x14, x15, [sp, #-16]!
-  stp     x16, x17, [sp, #-16]!
-  stp     x18, x19, [sp, #-16]!
-  stp     x20, x21, [sp, #-16]!
-  stp     x22, x23, [sp, #-16]!
-  stp     x24, x25, [sp, #-16]!
-  stp     x26, x27, [sp, #-16]!
-  stp     x28, x29, [sp, #-16]!
-  bl      check_sp_matches_x29
+  push_registers
   adr     x0, po_change_case_1_str
   bl      log_test_name
-# ldr     w0, =0b11000000000000000000000000100000
-  bl      test_register_preserved
+  bl      check_sp_matches_x29
+  ldr     w0, =0b00111111111111111111111111011111
+  bl      test_registers_preserved
   mov     w0, #5
-  mov     w1, #16
-  bl      test_register_is_address
-  ldr     x0, =po_change_case_1_corrupted_sysvars
-  bl      test_sysvars_preserved
-  mov     w0, #40
-  mov     w1, #16
-  bl      test_sysvar_is_address
-  mov     w0, #0
-  mov     w1, #8
-  bl      test_allocated_is_preserved
-  mov     x0, #8
-  mov     w1, #8
-  bl      test_allocated_is_preserved
-  mov     w0, #16
-  mov     w1, #8
-  bl      test_allocated_is_address
+  adr     x1, po_change_case_1_channel_block
+  bl      test_register_equals
+  adr     x0, po_change_case_1_corrupted_sysvars
+  bl      test_uncorrupted_sysvars
+  ldr     x0, [x28, CURCHL-sysvars]
+  adr     x1, po_change_case_1_channel_block
+  bl      test_equal
   mov     sp, x29
   ldp     x29, x30, [sp], #16
   ret
 
 
 po_change_case_1_str:
-  .asciz "po_change_case_1"
+  .asciz "po_change test case 1"
+
 po_change_case_1_corrupted_sysvars:
   .byte 0
+
+.align 3
+po_change_case_1_old_input_routine:
+  .quad 0x12345678
+
+.align 3
+po_change_case_1_new_input_routine:
+  .quad 0x87654321
+
+.align 3
+po_change_case_1_channel_block:
+  .quad po_change_case_1_old_input_routine

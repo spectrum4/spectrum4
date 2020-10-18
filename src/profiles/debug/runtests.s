@@ -5,7 +5,7 @@
 .text
 .align 2
 
-random_registers:
+check_sp_matches_x29:
 // TODO
   ret
 
@@ -13,34 +13,26 @@ log_test_name:
 // TODO
   ret
 
+random_registers:
+// TODO
+  ret
+
 random_sysvars:
 // TODO
   ret
 
-test_allocated_is_address:
+test_equal:
 // TODO
   ret
 
-test_allocated_is_preserved:
+test_register_equals:
 // TODO
   ret
 
-test_register_is_address:
+test_registers_preserved:
 // TODO
   ret
 
-test_register_preserved:
-// TODO
-  ret
-
-test_sysvar_is_address:
-// TODO
-  ret
-
-test_sysvars_preserved:
-// TODO
-  ret
-
-check_sp_matches_x29:
+test_uncorrupted_sysvars:
 // TODO
   ret

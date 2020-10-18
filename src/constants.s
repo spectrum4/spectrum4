@@ -2,7 +2,7 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
-# .set S_FRAME_SIZE,            0x0100
+.set S_FRAME_SIZE,            0x0100
 
 # .set SYNC_INVALID_EL1t,         0x00
 # .set IRQ_INVALID_EL1t,          0x01

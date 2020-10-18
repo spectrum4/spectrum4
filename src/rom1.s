@@ -980,7 +980,7 @@ pr_all:                          // L0B7F
 
   //////////////////////////////////////////////////////////////////////////
   //
-  // TODO: Probably this wholeblock is not needed, since buffer is probably
+  // TODO: Probably this whole block is not needed, since buffer is probably
   // always flushed at start of new line.
   //
   //
@@ -1021,7 +1021,7 @@ pr_all:                          // L0B7F
 # On entry:
 #   x0 = address in display file
 #
-# TODO: we shouldn't need to convert a display file address to an attributes file
+# TODO: We shouldn't need to convert a display file address to an attributes file
 #       address; instead we should just pass the attributes file address into the
 #       routine.
 po_attr:                         // L0BDB
@@ -1066,14 +1066,14 @@ po_attr:                         // L0BDB
   and     w17, w17, #~0b00111000          // PAPER = black
   tbnz    w17, #2, 1f                     // If INK is 4/5/6/7 (green/cyan/yellow/white), jump ahead to 1:.
 // INK is 0/1/2/3 (black/blue/red/magenta)
-  eor     w17, w17, #0b00111000           // PAPER = white
+  eor     w17, w17, #0b00111000           // PAPER = white (orr instruction also ok here)
 1:
   tbz     w0, #4, 2f                      // Jump forward to 2: if not INK 9.
 // INK 9
   and     w17, w17, #~0b00000111          // INK = black
   tbnz    w17, #5, 2f                     // If PAPER is 4/5/6/7 (green/cyan/yellow/white), jump ahead to 2:.
 // PAPER is 0/1/2/3 (black/blue/red/magenta)
-  eor     w17, w17, #0b00000111           // INK = white
+  eor     w17, w17, #0b00000111           // INK = white (orr instruction also ok here)
 2:
   strb    w17, [x24, x16]                 // Update attribute file entry
   ret
@@ -1090,8 +1090,30 @@ po_tokens:                       // L0C10
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   adr     x4, tkn_table                   // Address of table with BASIC keywords
+  bl      po_table
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+# On entry:
+#   w3 = (char-165) (0 to 90)
+#   x4 = address of token table
+po_table:                        // L0C14
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
   bl      po_search                       // Routine po_search will set carry for all messages and
                                           // function words.
+  bl      po_table_1
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+# On entry:
+#   w3 = (char-165) (0 to 90)
+#   x4 = address of zero-terminated string to print
+po_table_1:                      // L0C17
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
   b.hs    1f                              // If carry is set, jump forward to 1:.
   ldrb    w5, [x28, FLAGS-sysvars]        // w5 = [FLAGS]
   tbnz    w5, #0, 1f                      // If suppress space, jump forward to 1:.
@@ -1118,10 +1140,6 @@ po_tokens:                       // L0C10
 4:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
-
-
-po_table_1:                      // L0C17
-  // TODO
 
 
 po_save:                         // L0C3B
@@ -1885,12 +1903,17 @@ po_t_udg_128k_patch:             // L3B9F
   adr     x5, msg_play
   subs    w3, w3, 0xa3
   csel    x4, x4, x5, eq
+  mov     w3, 0x04
   // TODO: check if any registers need to be preserved here
   bl      po_table_1
-  // TODO
+  // TODO: set carry flag??? Why???
+  ldrb    w4, [x28, FLAGS-sysvars]        // w4 = [FLAGS]
+  tbnz    w4, #1, 4f                      // If printer in use, jump forward to 4:.
+  bl      po_fetch
+  b       4f
 3:
-  // Token
-  bl      po_t
+  bl      po_tokens
+  bl      po_fetch
 4:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret

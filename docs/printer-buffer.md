@@ -8,11 +8,11 @@ instead the same memory region stored 128K system variables.
 
 It appears the 256 byte buffer stored a single character row of 32 characters,
 as a pixel map, comprised of 8 pixel rows, one row at a time, from top to
-bottom. The pixels inside each 32 byte row went ordered from left to right. In
-other words, if the the offset into the printer buffer is stored in the a byte,
-bits 0-4 would hold the horizontal position from 0-31, and bits 5-7 would hold
-the vertical pixel row position from 0-7, where 0 is the top pixel row of the
-32 characters, and 7 is the lowest row.
+bottom. The pixels inside each 32 byte row were ordered from left to right. In
+other words, if the the offset into the printer buffer is stored in a single
+byte, bits 0-4 would hold the horizontal position from 0-31, and bits 5-7 would
+hold the vertical pixel row position from 0-7, where 0 is the top pixel row of
+the 32 characters, and 7 is the lowest row.
 
 The screen was also 32 characters wide, so the printer buffer was essentially
 designed to be able to buffer a single character row from the screen.

@@ -5,9 +5,9 @@
 .arch armv8-a
 .cpu cortex-a53
 
+.include "profileflags.s"
 .include "constants.s"
 .include "macros.s"
-.include "profile.s"
 .include "kernel.s"
 .include "rom0.s"
 .include "rom1.s"
@@ -16,3 +16,4 @@
 .include "reboot.s"
 .include "paint.s"
 .include "bss.s"
+.include "profile.s"

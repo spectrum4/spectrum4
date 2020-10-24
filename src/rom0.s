@@ -176,9 +176,9 @@ new:                             // L019D
   strb    w5, [x28, DF_SZ-sysvars]        // Set the lower screen size to two rows.
 
   bl      cls
-  .ifdef  run_tests
-  bl      run_tests
+  .if     DEBUG_PROFILE
   b       demo                   // This is demo code for testing purposes only
+# bl      run_tests
   .else
   b       sleep
   .endif

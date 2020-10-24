@@ -19,7 +19,7 @@
 #   https://github.com/torvalds/linux/blob/366a4e38b8d0d3e8c7673ab5c1b5e76bbfbc0085/drivers/watchdog/bcm2835_wdt.c#L100-L123
 # ------------------------------------------------------------------------------
 reboot:
-.ifdef paint_string
+.if       DEBUG_PROFILE
   adr     x0, msg_rebooting
   mov     x1, #48
   mov     x2, #59

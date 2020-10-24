@@ -150,6 +150,7 @@ hex_x0:
   b.ne    1b
   ret
 
+
 /////////////////////////////////////////////////////////////////////////
 // The following code is all just for demonstration / testing purposes...
 /////////////////////////////////////////////////////////////////////////
@@ -162,6 +163,16 @@ demo:
   bl      wait_cycles
   mov     x0, #60
   bl      cls
+
+  bl      populate_random_data
+  adrp    x0, random_data
+  add     x0, x0, #:lo12:random_data      // x0 = random_data
+  mov     x1, #16
+  mov     x2, #0
+  bl      display_memory
+  b       sleep
+
+
   mov     x0, sp
   mov     x1, #1
   mov     x2, #0
@@ -189,6 +200,7 @@ demo:
   mov     x2, #36
   bl      display_memory
   bl      display_sysvars
+  // TODO - check if this ldp should be here - was it really intentional?
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   b       sleep
 
@@ -255,6 +267,20 @@ uart_x0:
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
+populate_random_data:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adrp    x1, random_data
+  add     x1, x1, #:lo12:random_data      // x1 = random_data
+  mov     x2, #256
+  1:
+    bl      rand
+    str     w0, [x1], #4
+    sub     x2, x2, #4
+    cbnz    x2, 1b
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
+
 
 .data
 
@@ -269,3 +295,7 @@ msg_title_sysvars:
 
 msg_hex_header:
   .asciz "           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f  "
+
+.bss
+
+random_data: .space 256

@@ -2,6 +2,7 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
+.include "random.s"
 .include "runtests.s"
 .include "tests.s"
 .include "screen.s"

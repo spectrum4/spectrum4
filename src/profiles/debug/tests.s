@@ -13,7 +13,7 @@
 
 run_tests:
   ldr     w0, arm_size
-  and     sp, x0, ~0x0f
+  and     sp, x0, #~0x0f
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
   bl      test_po_change_case_1
@@ -33,10 +33,10 @@ test_po_change_case_1:
   adr     x28, sysvars
   adr     x4, po_change_case_1_new_input_routine
   push_registers
-  bl      push_sysvars
+  push_sysvars
   bl      po_change
   push_registers
-  bl      push_sysvars
+  push_sysvars
   bl      check_sp_matches_x29
   ldr     w0, =0b01111111111111111111111111011111
   bl      test_registers_preserved

@@ -62,6 +62,23 @@
   add       sp, sp, #0x100
 .endm
 
+.macro push_sysvars
+  sub       sp, sp, (sysvars_end - sysvars)
+  stp       x0, x1, [sp, #-16]!
+  stp       x2, x3, [sp, #-16]!
+  stp       x4, x28, [sp, #-16]!
+  mov       x1, (sysvars_end - sysvars)
+  add       x4, sp, #0x30
+  1:
+    ldp       x2, x3, [x28], #0x10
+    stp       x2, x3, [x4], #0x10
+    subs      x1, x1, #0x10
+    b.ne      1b
+  ldp       x4, x28, [sp], #0x10
+  ldp       x2, x3, [sp], #0x10
+  ldp       x0, x1, [sp], #0x10
+.endm
+
 # .macro kernel_exit
 #   pop_registers
 #   eret

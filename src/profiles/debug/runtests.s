@@ -9,6 +9,7 @@
 check_sp_matches_x29:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
+
 // TODO
   ldp     x29, x30, [sp], #16
   ret
@@ -74,20 +75,43 @@ test_register_equals:
 test_registers_preserved:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
-// TODO
+  add     x2, sp, (16 + sysvars - sysvars_end + 256 + sysvars - sysvars_end)
+                                          // x2 = addres on stack of x0 before calling method
+  add     x3, sp, (16 + sysvars - sysvars_end)
+                                          // x3 = addres on stack of x0 after calling method
+  mov     x1, #0                          // Index of the register to compare
+1:
+  tbnz    x0, #0, 3f                      // bit 0 of x0 set?
+2:
+  lsr     x0, x0, #1
+  add     x1, x1, #1
+  cmp     x1, #31
+  b.ne    1b
+  b       4f
+3:
+// test for equality
+  ldr     x4, [x2, x1, lsl #3]
+  ldr     x5, [x3, x1, lsl #3]
+  bl      report_if_equal
+  b       2b
+4:
   ldp     x29, x30, [sp], #16
   ret
 
 
-test_uncorrupted_sysvars:
+report_if_equal:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
-// TODO
+  mov     x6, '='
+  mov     x7, '!'
+  cmp     x4, x5
+  csel    x0, x6, x7, eq
+  bl      uart_send
+  bl      uart_newline
   ldp     x29, x30, [sp], #16
   ret
 
-
-push_sysvars:
+test_uncorrupted_sysvars:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
 // TODO

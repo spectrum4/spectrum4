@@ -4,6 +4,9 @@
 
 .bss
 
+.align 4                                  // Make sure sysvars at least start at a reasonable boundary (16 byte)
+                                          // to aid caching, simplify copying memory block, etc.
+
 sysvars:
 .align 0
   COL:            .space 1                // Current column from 1 to WIDTH. Set to 0 by NEW command.
@@ -119,6 +122,8 @@ sysvars:
                                           // Legal values in printer_buffer range. [Not used in 128K mode]
   MEMBOT:         .space 32               // Calculator's memory area - used to store numbers that cannot conveniently be put on the
                                           // calculator stack.
+
+.align 4                                  // I'm assuming this ensures sysvars_end will be on a 16 byte boundary (probably should test).
 sysvars_end:
 
   printer_buffer: .space 0xd80            // Printer buffer used by 48K Basic but not by 128K Basic (see docs/printer-buffer.md)

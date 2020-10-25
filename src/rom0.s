@@ -102,7 +102,7 @@ new:                             // L019D
   str     x0, [x28, CHARS-sysvars]        // [CHARS] = theoretical address of char zero.
   ldr     x1, [x28, RAMTOP-sysvars]       // x1 = [RAMTOP].
   add     x1, x1, 1                       // x1 = [RAMTOP] + 1.
-  and     sp, x1, 0xfffffff0              // sp = highest 16-byte aligned address equal to or lower than ([RAMTOP] + 1).
+  and     sp, x1, ~0x0f                   // sp = highest 16-byte aligned address equal to or lower than ([RAMTOP] + 1).
   mov     x29, 0                          // Frame pointer 0 indicates end of stack.
   ldrb    w1, [x28, FLAGS-sysvars]        // w1 = [FLAGS].
   orr     w1, w1, #0x10                   // w1 = [FLAGS] with bit 4 set.
@@ -177,7 +177,6 @@ new:                             // L019D
 
   bl      cls
 .if       DEBUG_PROFILE
-  bl      run_tests
   bl      demo                   // This is demo code for testing purposes only
 .endif
   b       sleep

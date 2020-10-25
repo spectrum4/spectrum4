@@ -30,6 +30,7 @@ _start:
 1:
 .if       DEBUG_PROFILE
   bl      rand_init
+  bl      run_tests
 .endif
   b       restart                         // Raspberry Pi 3B initialisation complete.
                                           // Now call entry point in rom0.s which
@@ -47,7 +48,7 @@ init_framebuffer:
   bl      mbox_call
   mov     x30, x27
   ldr     w11, [x0, framebuffer-mbreq]    // w11 = allocated framebuffer address
-  and     w11, w11, #0x3fffffff           // Clear upper bits beyond addressable memory
+  and     w11, w11, #0x3fffffff           // Translate bus address to physical ARM address.
   str     w11, [x0, framebuffer-mbreq]    // Store framebuffer address in framebuffer system variable.
   ret
 

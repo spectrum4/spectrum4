@@ -12,6 +12,8 @@
 
 
 run_tests:
+  ldr     w0, arm_size
+  and     sp, x0, ~0x0f
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
   bl      test_po_change_case_1

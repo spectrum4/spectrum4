@@ -1833,7 +1833,7 @@ chan_flag:                       // L1615
   mov     x29, sp                         // Update frame pointer to new stack location.
   str     x0, [x28, CURCHL-sysvars]       // set CURCHL system variable to CHANS record address
   ldrb    w9, [x28, FLAGS2-sysvars]       // w9 = [FLAGS2].
-  and     w9, w9, #0xffffffef             // w9 = [FLAGS2] with bit 4 clear.
+  and     w9, w9, #~0x10                  // w9 = [FLAGS2] with bit 4 clear.
   strb    w9, [x28, FLAGS2-sysvars]       // Update [FLAGS2] to have bit 4 clear (signal K channel not in use).
   ldr     x0, [x0, 16]                    // w0 = channel letter (stored at CHANS record address + 16)
   adr     x1, chn_cd_lu                   // x1 = address of flag setting routine lookup table
@@ -1922,7 +1922,7 @@ chan_s:                          // L1642
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldrb    w0, [x28, TV_FLAG-sysvars]
-  and     w0, w0, #0xfffffffe             // Clear bit 0 - signal main screen in use.
+  and     w0, w0, #~0x01                  // Clear bit 0 - signal main screen in use.
   strb    w0, [x28, TV_FLAG-sysvars]      // [TV_FLAG] = w0[0-7]
   ldrb    w0, [x28, FLAGS-sysvars]
   and     w0, w0, #0xfffffffd             // Clear bit 1 - signal printer not in use.

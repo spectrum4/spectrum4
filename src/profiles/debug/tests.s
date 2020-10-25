@@ -31,8 +31,10 @@ test_po_change_case_1:
   adr     x28, sysvars
   adr     x4, po_change_case_1_new_input_routine
   push_registers
+  bl      push_sysvars
   bl      po_change
   push_registers
+  bl      push_sysvars
   bl      check_sp_matches_x29
   ldr     w0, =0b01111111111111111111111111011111
   bl      test_registers_preserved

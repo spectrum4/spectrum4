@@ -27,8 +27,10 @@ log_test_name:
   ldp     x29, x30, [sp], #16
   ret
 
+
 msg_running_test_part_1: .asciz "Running test "
 msg_running_test_part_2: .asciz "...\r\n"
+
 
 .align 2
 random_registers:
@@ -46,7 +48,9 @@ random_registers:
 random_sysvars:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
-// TODO
+  mov     x0, x28
+  mov     x1, (sysvars_end - sysvars)
+  bl      rand_block
   ldp     x29, x30, [sp], #16
   ret
 
@@ -76,6 +80,14 @@ test_registers_preserved:
 
 
 test_uncorrupted_sysvars:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
+// TODO
+  ldp     x29, x30, [sp], #16
+  ret
+
+
+push_sysvars:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
 // TODO

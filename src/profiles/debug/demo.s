@@ -270,12 +270,12 @@ uart_x0:
 populate_random_data:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  adrp    x1, random_data
-  add     x1, x1, #:lo12:random_data      // x1 = random_data
+  adrp    x3, random_data
+  add     x3, x3, #:lo12:random_data      // x3 = random_data
   mov     x2, #256
   1:
     bl      rand
-    str     w0, [x1], #4
+    str     w0, [x3], #4
     sub     x2, x2, #4
     cbnz    x2, 1b
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.

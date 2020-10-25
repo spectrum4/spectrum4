@@ -75,26 +75,34 @@ test_register_equals:
 test_registers_preserved:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
-  add     x2, sp, (16 + sysvars - sysvars_end + 256 + sysvars - sysvars_end)
+  stp     x0, x1, [sp, #-16]!
+  add     x0, sp, (32 + sysvars_end - sysvars + 256 + sysvars_end - sysvars)
+  mov     x1, #8
+  mov     x2, #40
+  bl      display_memory
+  add     x0, sp, (32 + sysvars_end - sysvars)
+  mov     x1, #8
+  mov     x2, #50
+  bl      display_memory
+  ldp     x0, x1, [sp], #16
+  add     x2, sp, (16 + sysvars_end - sysvars + 256 + sysvars_end - sysvars)
                                           // x2 = addres on stack of x0 before calling method
-  add     x3, sp, (16 + sysvars - sysvars_end)
+  add     x3, sp, (16 + sysvars_end - sysvars)
                                           // x3 = addres on stack of x0 after calling method
   mov     x1, #0                          // Index of the register to compare
-1:
-  tbnz    x0, #0, 3f                      // bit 0 of x0 set?
-2:
-  lsr     x0, x0, #1
-  add     x1, x1, #1
-  cmp     x1, #31
-  b.ne    1b
-  b       4f
-3:
-// test for equality
-  ldr     x4, [x2, x1, lsl #3]
-  ldr     x5, [x3, x1, lsl #3]
-  bl      report_if_equal
-  b       2b
-4:
+  1:
+  // test for equality
+    ldr     x4, [x2, x1, lsl #3]
+    ldr     x5, [x3, x1, lsl #3]
+    stp     x0, x1, [sp, #-16]!
+    stp     x2, x3, [sp, #-16]!
+    bl      report_if_equal
+    ldp     x2, x3, [sp], #16
+    ldp     x0, x1, [sp], #16
+    lsr     x0, x0, #1
+    add     x1, x1, #1
+    cmp     x1, #30
+    b.ne    1b
   ldp     x29, x30, [sp], #16
   ret
 
@@ -102,15 +110,38 @@ test_registers_preserved:
 report_if_equal:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
-  mov     x6, '='
-  mov     x7, '!'
-  cmp     x4, x5
+  sub     x1, x4, x5
+  stp     x0, x1, [sp, #-16]!
+  stp     x4, x5, [sp, #-16]!
+  mov     x0, x4
+  bl      uart_x0
+  ldp     x0, x1, [sp, #16]
+  adr     x6, msg_equal
+  adr     x7, msg_not_equal
+  cmp     x1, #0
   csel    x0, x6, x7, eq
-  bl      uart_send
+  bl      uart_puts
+  ldr     x0, [sp, #8]
+  bl      uart_x0
+  ldr     x0, [sp, #16]
+  adr     x6, msg_expected_equal
+  adr     x7, msg_expected_not_equal
+  tst     x0, #1
+  csel    x0, x6, x7, ne
+  bl      uart_puts
   bl      uart_newline
+  add     sp, sp, #32
   ldp     x29, x30, [sp], #16
   ret
 
+
+msg_equal: .asciz " == "
+msg_not_equal: .asciz " != "
+msg_expected_equal: .asciz " and expected them to be equal"
+msg_expected_not_equal: .asciz " and expected them to be different"
+
+
+.align 2
 test_uncorrupted_sysvars:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp

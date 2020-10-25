@@ -34,7 +34,11 @@ msg_running_test_part_2: .asciz "...\r\n"
 random_registers:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
-// TODO
+  sub     sp, sp, #0x100
+  mov     x0, sp
+  mov     x1, #0x100
+  bl      rand_block
+  pop_registers
   ldp     x29, x30, [sp], #16
   ret
 

@@ -22,16 +22,17 @@ run_tests:
 test_po_change_case_1:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
-  bl      random_registers
+  adr     x0, po_change_case_1_str
+  bl      log_test_name
   bl      random_sysvars
   adr     x0, po_change_case_1_channel_block
   str     x0, [x28, CURCHL-sysvars]
+  bl      random_registers
+  adr     x28, sysvars
   adr     x4, po_change_case_1_new_input_routine
   push_registers
   bl      po_change
   push_registers
-  adr     x0, po_change_case_1_str
-  bl      log_test_name
   bl      check_sp_matches_x29
   ldr     w0, =0b01111111111111111111111111011111
   bl      test_registers_preserved

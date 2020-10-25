@@ -14,7 +14,7 @@
 run_tests:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
-//  bl      test_po_change_case_1
+  bl      test_po_change_case_1
   ldp     x29, x30, [sp], #16
   ret
 
@@ -33,7 +33,7 @@ test_po_change_case_1:
   adr     x0, po_change_case_1_str
   bl      log_test_name
   bl      check_sp_matches_x29
-  ldr     w0, =0b00111111111111111111111111011111
+  ldr     w0, =0b01111111111111111111111111011111
   bl      test_registers_preserved
   mov     w0, #5
   adr     x1, po_change_case_1_channel_block

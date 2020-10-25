@@ -7,40 +7,73 @@
 
 
 check_sp_matches_x29:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
 // TODO
+  ldp     x29, x30, [sp], #16
   ret
 
 
 log_test_name:
-// TODO
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
+  mov     x4, x0                          // Back up x0.
+  adr     x0, msg_running_test_part_1
+  bl      uart_puts
+  mov     x0, x4                          // Restore x0.
+  bl      uart_puts
+  adr     x0, msg_running_test_part_2
+  bl      uart_puts
+  ldp     x29, x30, [sp], #16
   ret
 
+msg_running_test_part_1: .asciz "Running test "
+msg_running_test_part_2: .asciz "...\r\n"
 
+.align 2
 random_registers:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
 // TODO
+  ldp     x29, x30, [sp], #16
   ret
 
 
 random_sysvars:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
 // TODO
+  ldp     x29, x30, [sp], #16
   ret
 
 
 test_equal:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
 // TODO
+  ldp     x29, x30, [sp], #16
   ret
 
 
 test_register_equals:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
 // TODO
+  ldp     x29, x30, [sp], #16
   ret
 
 
 test_registers_preserved:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
 // TODO
+  ldp     x29, x30, [sp], #16
   ret
 
 
 test_uncorrupted_sysvars:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
 // TODO
+  ldp     x29, x30, [sp], #16
   ret

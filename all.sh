@@ -165,7 +165,7 @@ fetch_firmware 'start.elf'
 
 # Log disassembly of kernel elf file. This is like above, but additionally
 # contains symbol names, etc.
-"${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-release.elf
+"${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-debug.elf
 
 echo
 echo "Build successful - see dist directory for results"

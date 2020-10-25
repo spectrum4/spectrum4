@@ -155,6 +155,8 @@ hex_x0:
 // The following code is all just for demonstration / testing purposes...
 /////////////////////////////////////////////////////////////////////////
 demo:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
   bl      paint_copyright                 // Paint the copyright text ((C) 1982 Amstrad....)
   mov     w0, 0x20000000
   bl      wait_cycles
@@ -163,16 +165,6 @@ demo:
   bl      wait_cycles
   mov     x0, #60
   bl      cls
-
-  bl      populate_random_data
-  adrp    x0, random_data
-  add     x0, x0, #:lo12:random_data      // x0 = random_data
-  mov     x1, #16
-  mov     x2, #0
-  bl      display_memory
-  b       sleep
-
-
   mov     x0, sp
   mov     x1, #1
   mov     x2, #0
@@ -200,9 +192,8 @@ demo:
   mov     x2, #36
   bl      display_memory
   bl      display_sysvars
-  // TODO - check if this ldp should be here - was it really intentional?
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  b       sleep
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ret
 
 
 # ------------------------------------------------------------------------------
@@ -222,6 +213,14 @@ uart_newline:
 # ------------------------------------------------------------------------------
 # Send a null terminated string over Mini UART.
 # ------------------------------------------------------------------------------
+#
+# On entry:
+#   x0 = address of null terminated string
+# On exit:
+#   x0 = address of null terminated string (unchanged)
+#   x1 = AUX_BASE
+#   x2 = 0
+#   x3 = [AUX_MU_LSR]
 uart_puts:
   mov     x1, AUX_BASE & 0xffff0000
   movk    x1, AUX_BASE & 0x0000ffff       // x1 = 0x3f215000 = AUX_BASE
@@ -264,20 +263,6 @@ uart_x0:
   add     sp, sp, #0x20
   mov     x0, x19                         // Restore x0
   ldp     x19, x20, [sp], #0x10           // Restore x19, x20
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
-  ret
-
-populate_random_data:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  adrp    x3, random_data
-  add     x3, x3, #:lo12:random_data      // x3 = random_data
-  mov     x2, #256
-  1:
-    bl      rand
-    str     w0, [x3], #4
-    sub     x2, x2, #4
-    cbnz    x2, 1b
   ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 

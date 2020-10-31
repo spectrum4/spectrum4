@@ -37,7 +37,9 @@ test_po_change_case_1:
   bl      po_change
   push_registers
   push_sysvars
-  ldr     w0, =0b00111111111111111111111111011111
+# ldr     w0, =0b00111111111111111111111111011111  // real values
+  ldr     w0, =0b00111111111111111111111110101111  // pretend values for testing test framework
+  adr     x8, po_change_case_1_str
   bl      test_registers_preserved
   mov     w0, #5
   adr     x1, po_change_case_1_channel_block

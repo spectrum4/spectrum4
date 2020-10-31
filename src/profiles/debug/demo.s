@@ -22,23 +22,27 @@ display_sysvars:
   adr     x0, msg_colon0x
   bl      uart_puts
   ldr     x0, [x20], #8                   // x0 = address of sys var
-  tbnz    w21, #0, size1
-  tbnz    w21, #1, size2
-  tbnz    w21, #2, size4
-  tbnz    w21, #3, size8
+  tbnz    w21, #0, 2f
+  tbnz    w21, #1, 3f
+  tbnz    w21, #2, 4f
+  tbnz    w21, #3, 5f
   ret
-size1:
-  ldrb    w0, [x0]
-  b       2f
-size2:
-  ldrh    w0, [x0]
-  b       2f
-size4:
-  ldr     w0, [x0]
-  b       2f
-size8:
-  ldr     x0, [x0]
 2:
+  // 1 byte
+  ldrb    w0, [x0]
+  b       6f
+3:
+  // 2 bytes
+  ldrh    w0, [x0]
+  b       6f
+4:
+  // 4 bytes
+  ldr     w0, [x0]
+  b       6f
+5:
+  // 8 bytes
+  ldr     x0, [x0]
+6:
   mov     x1, sp
   mov     x2, x21, lsl #3                 // x2 = size of sysvar data in bits
   bl      hex_x0

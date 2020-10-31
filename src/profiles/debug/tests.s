@@ -37,8 +37,7 @@ test_po_change_case_1:
   bl      po_change
   push_registers
   push_sysvars
-  bl      check_sp_matches_x29
-  ldr     w0, =0b01111111111111111111111111011111
+  ldr     w0, =0b00111111111111111111111111011111
   bl      test_registers_preserved
   mov     w0, #5
   adr     x1, po_change_case_1_channel_block

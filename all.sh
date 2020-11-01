@@ -96,6 +96,7 @@ echo '# This file is part of the Spectrum +4 Project.
 .align 0
 sysvarnames:'
 cat src/bss.s | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space \([1248]\) .*$/\1 \2/p' | while read sysvar size; do
+  echo "sysvar_${sysvar}:"
   echo "  .asciz \"${sysvar}\""
   echo "  .byte ${size}"
 done

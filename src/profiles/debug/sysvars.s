@@ -8,116 +8,172 @@
 
 .align 0
 sysvarnames:
+sysvar_COL:
   .asciz "COL"
   .byte 1
+sysvar_WIDTH:
   .asciz "WIDTH"
   .byte 1
+sysvar_TVPARS:
   .asciz "TVPARS"
   .byte 1
+sysvar_RASP:
   .asciz "RASP"
   .byte 1
+sysvar_PIP:
   .asciz "PIP"
   .byte 1
+sysvar_FLAGS:
   .asciz "FLAGS"
   .byte 1
+sysvar_FLAGS2:
   .asciz "FLAGS2"
   .byte 1
+sysvar_TV_FLAG:
   .asciz "TV_FLAG"
   .byte 1
+sysvar_BORDCR:
   .asciz "BORDCR"
   .byte 1
+sysvar_ERR_NR:
   .asciz "ERR_NR"
   .byte 1
+sysvar_DF_SZ:
   .asciz "DF_SZ"
   .byte 1
+sysvar_SCR_CT:
   .asciz "SCR_CT"
   .byte 1
+sysvar_P_POSN:
   .asciz "P_POSN"
   .byte 1
+sysvar_ECHO_E_COL:
   .asciz "ECHO_E_COL"
   .byte 1
+sysvar_ECHO_E_ROW:
   .asciz "ECHO_E_ROW"
   .byte 1
+sysvar_S_POSN_COL:
   .asciz "S_POSN_COL"
   .byte 1
+sysvar_S_POSN_ROW:
   .asciz "S_POSN_ROW"
   .byte 1
+sysvar_S_POSNL_COL:
   .asciz "S_POSNL_COL"
   .byte 1
+sysvar_S_POSNL_ROW:
   .asciz "S_POSNL_ROW"
   .byte 1
+sysvar_P_FLAG:
   .asciz "P_FLAG"
   .byte 1
+sysvar_BREG:
   .asciz "BREG"
   .byte 1
+sysvar_REPDEL:
   .asciz "REPDEL"
   .byte 1
+sysvar_REPPER:
   .asciz "REPPER"
   .byte 1
+sysvar_ATTR_P:
   .asciz "ATTR_P"
   .byte 1
+sysvar_MASK_P:
   .asciz "MASK_P"
   .byte 1
+sysvar_ATTR_T:
   .asciz "ATTR_T"
   .byte 1
+sysvar_MASK_T:
   .asciz "MASK_T"
   .byte 1
+sysvar_BAUD:
   .asciz "BAUD"
   .byte 2
+sysvar_SERFL:
   .asciz "SERFL"
   .byte 2
+sysvar_RNFIRST:
   .asciz "RNFIRST"
   .byte 2
+sysvar_RNSTEP:
   .asciz "RNSTEP"
   .byte 2
+sysvar_COORDS:
   .asciz "COORDS"
   .byte 2
+sysvar_COORDS_Y:
   .asciz "COORDS_Y"
   .byte 2
+sysvar_TVDATA:
   .asciz "TVDATA"
   .byte 2
+sysvar_SFNEXT:
   .asciz "SFNEXT"
   .byte 8
+sysvar_SFSPACE:
   .asciz "SFSPACE"
   .byte 8
+sysvar_CHARS:
   .asciz "CHARS"
   .byte 8
+sysvar_LIST_SP:
   .asciz "LIST_SP"
   .byte 8
+sysvar_VARS:
   .asciz "VARS"
   .byte 8
+sysvar_CHANS:
   .asciz "CHANS"
   .byte 8
+sysvar_CURCHL:
   .asciz "CURCHL"
   .byte 8
+sysvar_PROG:
   .asciz "PROG"
   .byte 8
+sysvar_DATADD:
   .asciz "DATADD"
   .byte 8
+sysvar_E_LINE:
   .asciz "E_LINE"
   .byte 8
+sysvar_CH_ADD:
   .asciz "CH_ADD"
   .byte 8
+sysvar_X_PTR:
   .asciz "X_PTR"
   .byte 8
+sysvar_WORKSP:
   .asciz "WORKSP"
   .byte 8
+sysvar_STKBOT:
   .asciz "STKBOT"
   .byte 8
+sysvar_STKEND:
   .asciz "STKEND"
   .byte 8
+sysvar_RAMTOP:
   .asciz "RAMTOP"
   .byte 8
+sysvar_P_RAMT:
   .asciz "P_RAMT"
   .byte 8
+sysvar_UDG:
   .asciz "UDG"
   .byte 8
+sysvar_ERR_SP:
   .asciz "ERR_SP"
   .byte 8
+sysvar_DF_CC:
   .asciz "DF_CC"
   .byte 8
+sysvar_DF_CCL:
   .asciz "DF_CCL"
   .byte 8
+sysvar_PR_CC:
   .asciz "PR_CC"
   .byte 8
   .byte 0 // end marker

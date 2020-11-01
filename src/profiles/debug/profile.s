@@ -10,3 +10,4 @@
 .include "demo.s"
 .include "paint_debug.s"
 .include "reboot_debug.s"
+.include "itoa.s"

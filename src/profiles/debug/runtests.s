@@ -159,7 +159,7 @@ msg_reg5: .asciz " to "
 
 
 .align 2
-test_uncorrupted_sysvars:
+test_unmodified_sysvars:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
 // TODO

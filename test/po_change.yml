@@ -1,7 +1,7 @@
 tests
   - name: po_change test case 1
     setup:
-      stack:
+      ram:
         - name: old_input_routine
           size: 8
           value: 0x12345678
@@ -15,12 +15,9 @@ tests
         CURCHL: channel_block
       registers:
         x4: new_input_routine
-    checks:
-      stack:
+    effects:
+      ram:
         channel_block: new_input_routine
-        corrupted: []
       sysvars:
-        corrupted: []
       registers:
         x5: channel_block
-        corrupted: []

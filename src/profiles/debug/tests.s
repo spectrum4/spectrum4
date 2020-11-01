@@ -43,8 +43,8 @@ test_po_change_case_1:
   mov     w0, #5
   adr     x1, po_change_case_1_channel_block
   bl      test_register_equals
-  adr     x0, po_change_case_1_corrupted_sysvars
-  bl      test_uncorrupted_sysvars
+  adr     x0, po_change_case_1_modified_sysvars
+  bl      test_unmodified_sysvars
   mov     sp, x29
   ldp     x29, x30, [sp], #16
   ret
@@ -53,7 +53,7 @@ test_po_change_case_1:
 msg_po_change_case_1:
   .asciz "po_change test case 1"
 
-po_change_case_1_corrupted_sysvars:
+po_change_case_1_modified_sysvars:
   .byte 0
 
 .align 3

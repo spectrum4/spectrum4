@@ -6,86 +6,98 @@
 .align 2
 
 
-# On entry:
-#   x0 = address of test name
-log_test_name:
+run_tests:
+  ldr     w0, arm_size
+  and     sp, x0, #~0x0f                  // Set stack pointer at top of ARM memory
+  adr     x0, all_tests
+  ldr     x10, [x0], #8                   // x10 = number of tests
+  cbz     x10, end_run_tests              // Return if no tests to run
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp
-  mov     x4, x0                          // Back up x0.
-  adr     x0, msg_running_test_part_1
-  bl      uart_puts
-  mov     x0, x4                          // Restore x0.
-  bl      uart_puts
-  adr     x0, msg_running_test_part_2
-  bl      uart_puts
-  ldp     x29, x30, [sp], #16
-  ret
+  1:                                      // Loop executing tests
+    ldr     x11, [x0], #8                 // x11 = address of test definition
+    stp     x0, x10, [sp, #-16]!          // Push position in test list and remaining test count
+    stp     x11, xzr, [sp, #-16]!         // Push address of test definition
+    adr     x0, msg_running_test_part_1
+    bl      uart_puts                     // Log "Running test "
+    ldr     x0, [x11]                     // x0 = address of test name
+    bl      uart_puts                     // Log "<test name>"
+    adr     x0, msg_running_test_part_2
+    bl      uart_puts                     // Log "...\r\n"
+    mov     x0, x28
+    mov     x1, (sysvars_end - sysvars)
+    bl      rand_block                    // Set sysvars to random values
+    ldr     x4, [x11, #16]                // x0 = sysvars setup block
+    adr     x5, sysvarsizes
+    adr     x6, sysvaraddresses
+    mov     x9, #0                        // x9 = sysvar index
+    add     x13, x4, SYSVAR_MASK_BYTES    // x13 = address of first sysvar definition
+  loop_sysvar:
+      tst     x9, #0x3f                   // lower 6 bits of x9 are 0 when we need to read next quad mask
+      b.ne    test_loop1
+      ldr     x7, [x4], #8                // x7 = sysvar setup mask
+    test_loop1:
+      tbz     x7, #0, prepare_loop_sysvar // if sysvar not defined, skip setting it and leave random value in place
+    // sysvar defined, replace random value
+      ldr     x14, [x13], #8              // x14 = value to set sysvar to
+      ldr     x12, [x6, x9, lsr #3]       // x12 = sysvar address
+      ldrb    w15, [x5, x9]               // x15 = sysvar size (in bytes)
+      tbnz    w15, #0, x2f
+      tbnz    w15, #1, x3f
+      tbnz    w15, #2, x4f
+      tbnz    w15, #3, x5f
+      ret
+    x2f:
+      // 1 byte
+      ldrb    w0, [x0]
+      b       x6f
+    x3f:
+      // 2 bytes
+      ldrh    w0, [x0]
+      b       x6f
+    x4f:
+      // 4 bytes
+      ldr     w0, [x0]
+      b       x6f
+    x5f:
+      // 8 bytes
+      ldr     x0, [x0]
+    x6f:
+      str     x0, [x28, CURCHL-sysvars]
+    prepare_loop_sysvar:
+      add     x9, x9, #1                  // Increment sysvar index
+      lsr     x7, x7, #1                  // Shift mask bits right
+      b       loop_sysvar
 
-
-msg_running_test_part_1: .asciz "Running test "
-msg_running_test_part_2: .asciz "...\r\n"
-
-
-.align 2
-random_registers:
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
-  sub     sp, sp, #0x100
-  mov     x0, sp
-  mov     x1, #0x100
-  bl      rand_block
-  pop_registers
-  ldp     x29, x30, [sp], #16
-  ret
-
-
-random_sysvars:
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
-  mov     x0, x28
-  mov     x1, (sysvars_end - sysvars)
-  bl      rand_block
-  ldp     x29, x30, [sp], #16
-  ret
-
-
-test_register_equals:
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
-// TODO
-  ldp     x29, x30, [sp], #16
-  ret
-
-
-# On entry:
+  setup_registers
+    sub     sp, sp, #0x100
+    mov     x0, sp
+    mov     x1, #0x100
+    bl      rand_block
+    pop_registers
+    adr     x28, sysvars
+    adr     x4, po_change_case_1_new_input_routine
+    push_registers
+    push_sysvars
+    bl      po_change
+    push_registers
+    push_sysvars
+    adr     x8, msg_po_change_case_1
+    adr     x0, test_po_change_test_case_1_effects_registers
 #   x0 = bit field for each register: 1 => register preserved / 0 => register should be updated
 #        bit number matches register index
 #   x8 = address of test case name
-test_registers_preserved:
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
-  add     x2, sp, (16 + sysvars_end - sysvars + 256 + sysvars_end - sysvars)
-                                          // x2 = addres on stack of x0 before calling method
-  add     x3, sp, (16 + sysvars_end - sysvars)
-                                          // x3 = addres on stack of x0 after calling method
-  mov     x1, #0                          // Index of the register to compare
+    add     x2, sp, (16 + sysvars_end - sysvars + 256 + sysvars_end - sysvars)
+                                            // x2 = addres on stack of x0 before calling method
+    add     x3, sp, (16 + sysvars_end - sysvars)
+                                            // x3 = addres on stack of x0 after calling method
+    mov     x1, #0                          // Index of the register to compare
   1:
   // test for equality
     ldr     x4, [x2, x1, lsl #3]
     ldr     x5, [x3, x1, lsl #3]
     stp     x0, x1, [sp, #-16]!
     stp     x2, x3, [sp, #-16]!
-    bl      report_if_equal
-    ldp     x2, x3, [sp], #16
-    ldp     x0, x1, [sp], #16
-    lsr     x0, x0, #1
-    add     x1, x1, #1
-    cmp     x1, #30
-    b.ne    1b
-  ldp     x29, x30, [sp], #16
-  ret
-
-
 # Report a failure message to UART if values are equal but should not be, or
 # are not equal but should be. Otherwise do nothing.
 #
@@ -100,7 +112,6 @@ test_registers_preserved:
 #   x4 = register value before routine called
 #   x5 = register value after routine called
 #   x8 = address of test case name
-report_if_equal:
   cmp     x4, x5
   csetm   x9, ne
   add     x6, x0, x9
@@ -147,8 +158,26 @@ report_if_equal:
   add     sp, sp, #32
   ldp     x29, x30, [sp], #16
 3:
+    ldp     x2, x3, [sp], #16
+    ldp     x0, x1, [sp], #16
+    lsr     x0, x0, #1
+    add     x1, x1, #1
+    cmp     x1, #30
+    b.ne    1b
+    adr     x0, test_po_change_test_case_1_modified_sysvars
+    bl      test_sysvar_effects
+    add     sp, sp, 2*(sysvars_end-sysvars+256)
+                                          // Free captured register/sysvar data
+    ldp     x0, x10, [sp], #16            // Pop position in test list and remaining test count
+    sub     x10, x10, #1                  // Decrement remaining test count
+    cbnz    x10, 1b                       // Loop if more tests to run
+  ldp     x29, x30, [sp], #16
+end_run_tests:
   ret
 
+
+msg_running_test_part_1: .asciz "Running test "
+msg_running_test_part_2: .asciz "...\r\n"
 
 msg_fail: .asciz "FAIL: "
 msg_reg1: .asciz ": register x"
@@ -159,14 +188,6 @@ msg_reg5: .asciz " to "
 
 
 .align 2
-test_unmodified_sysvars:
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
-// TODO
-  ldp     x29, x30, [sp], #16
-  ret
-
-
 uart_x0:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.

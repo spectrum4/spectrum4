@@ -11,59 +11,63 @@
 .align 2
 
 
-run_tests:
-  ldr     w0, arm_size
-  and     sp, x0, #~0x0f
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
-  bl      test_po_change_case_1
-  ldp     x29, x30, [sp], #16
-  ret
+all_tests:
+  .quad 1                                 // number of tests
+  .quad test_po_change_test_case_1
 
 
-test_po_change_case_1:
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
-  adr     x0, msg_po_change_case_1
-  bl      log_test_name
-  bl      random_sysvars
-  adr     x0, po_change_case_1_channel_block
-  str     x0, [x28, CURCHL-sysvars]
-  bl      random_registers
-  adr     x28, sysvars
-  adr     x4, po_change_case_1_new_input_routine
-  push_registers
-  push_sysvars
-  bl      po_change
-  push_registers
-  push_sysvars
-  ldr     w0, =0b00111111111111111111111111011111
-  adr     x8, msg_po_change_case_1
-  bl      test_registers_preserved
-  mov     w0, #5
-  adr     x1, po_change_case_1_channel_block
-  bl      test_register_equals
-  adr     x0, po_change_case_1_modified_sysvars
-  bl      test_unmodified_sysvars
-  mov     sp, x29
-  ldp     x29, x30, [sp], #16
-  ret
+##########################################################################
+############# Test po_change test case 1 #################################
+##########################################################################
 
+# Test case definition
+test_po_change_test_case_1:
+  .quad test_po_change_test_case_1_name
+  .quad test_po_change_test_case_1_setup_registers
+  .quad test_po_change_test_case_1_setup_sysvars
+  .quad test_po_change_test_case_1_effects_register
+  .quad test_po_change_test_case_1_effects_sysvars
+  .quad test_po_change_test_case_1_effects_ram
 
-msg_po_change_case_1:
+# Test case name
+test_po_change_test_case_1_name:
   .asciz "po_change test case 1"
 
-po_change_case_1_modified_sysvars:
-  .byte 0
+# Test case setup
+.align 3
+test_po_change_test_case_1_setup_registers:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000010000
+  .quad test_po_change_test_case_1_ram_new_input_routine
+
+test_po_change_test_case_1_setup_sysvars:
+  .quad 0b0000000000000000000000010000000000000000000000000000000000000000
+  .quad po_change_case_1_channel_block
 
 .align 3
-po_change_case_1_old_input_routine:
-  .quad 0x12345678
+test_po_change_test_case_1_ram_old_input_routine:
+  .quad 0x0123456789abcdef
 
 .align 3
-po_change_case_1_new_input_routine:
-  .quad 0x87654321
+test_po_change_test_case_1_ram_new_input_routine:
+  .quad 0xfedcba9876543210
 
 .align 3
-po_change_case_1_channel_block:
-  .quad po_change_case_1_old_input_routine
+test_po_change_test_case_1_ram_channel_block:
+  .quad test_po_change_test_case_1_ram_old_input_routine
+
+# Test case effects
+.align 3
+test_po_change_test_case_1_effects_registers:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000100000
+  .quad test_po_change_test_case_1_ram_channel_block
+
+test_po_change_test_case_1_effects_sysvars:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+
+test_po_change_test_case_1_effects_ram:
+  .quad test_po_change_test_case_1_ram_channel_block
+  .quad 8
+  .quad test_po_change_test_case_1_ram_new_input_routine
+  .quad 0
+
+##########################################################################

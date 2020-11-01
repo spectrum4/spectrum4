@@ -15,44 +15,46 @@ display_sysvars:
   bl      uart_puts
   adr     x0, sysvarnames                 // x0 = address of first sys var name
   adr     x20, sysvaraddresses            // x20 = address of first sys var pointer
-1:
-  bl      uart_puts                       // Print system variable name
-  ldrb    w21, [x0], #1                   // x21 = size of sysvar data in bytes
-  mov     x19, x0                         // x19 = address of next sysvar name
-  adr     x0, msg_colon0x
-  bl      uart_puts                       // Print ": 0x"
-  ldr     x0, [x20], #8                   // x0 = address of sys var
-  tbnz    w21, #0, 2f
-  tbnz    w21, #1, 3f
-  tbnz    w21, #2, 4f
-  tbnz    w21, #3, 5f
-  ret
-2:
-  // 1 byte
-  ldrb    w0, [x0]
-  b       6f
-3:
-  // 2 bytes
-  ldrh    w0, [x0]
-  b       6f
-4:
-  // 4 bytes
-  ldr     w0, [x0]
-  b       6f
-5:
-  // 8 bytes
-  ldr     x0, [x0]
-6:
-  mov     x1, sp
-  mov     x2, x21, lsl #3                 // x2 = size of sysvar data in bits
-  bl      hex_x0
-  strb    wzr, [x1]                       // Add a trailing zero.
-  mov     x0, sp
-  bl      uart_puts
-  bl      uart_newline
-  mov     x0, x19
-  ldrb    w1, [x0]
-  cbnz    w1, 1b
+  adr     x22, syssvarsizes               // x22 = address of first sys var size
+  mov     w23, SYSVAR_COUNT               // x23 = number of system variables to log
+  1:
+    bl      uart_puts                       // Print system variable name
+    ldrb    w21, [x22], #1                  // x21 = size of sysvar data in bytes
+    mov     x19, x0                         // x19 = address of next sysvar name
+    adr     x0, msg_colon0x
+    bl      uart_puts                       // Print ": 0x"
+    ldr     x0, [x20], #8                   // x0 = address of sys var
+    tbnz    w21, #0, 2f
+    tbnz    w21, #1, 3f
+    tbnz    w21, #2, 4f
+    tbnz    w21, #3, 5f
+    ret
+  2:
+    // 1 byte
+    ldrb    w0, [x0]
+    b       6f
+  3:
+    // 2 bytes
+    ldrh    w0, [x0]
+    b       6f
+  4:
+    // 4 bytes
+    ldr     w0, [x0]
+    b       6f
+  5:
+    // 8 bytes
+    ldr     x0, [x0]
+  6:
+    mov     x1, sp
+    mov     x2, x21, lsl #3                 // x2 = size of sysvar data in bits
+    bl      hex_x0
+    strb    wzr, [x1]                       // Add a trailing zero.
+    mov     x0, sp
+    bl      uart_puts
+    bl      uart_newline
+    mov     x0, x19
+    sub     w23, x23, #1
+    cbnz    w23, 1b
   bl      uart_newline
   add     sp, sp, #32                     // Free buffer.
   ldp     x21, x22, [sp], #16             // Pop callee-saved registers.

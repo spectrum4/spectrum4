@@ -49,14 +49,6 @@ random_sysvars:
   ret
 
 
-test_equal:
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
-// TODO
-  ldp     x29, x30, [sp], #16
-  ret
-
-
 test_register_equals:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp

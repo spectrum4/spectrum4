@@ -1,5 +1,6 @@
 tests
-  - setup:
+  - name: po_change test case 1
+    setup:
       stack:
         - name: old_input_routine
           size: 8

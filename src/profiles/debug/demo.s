@@ -16,11 +16,11 @@ display_sysvars:
   adr     x0, sysvarnames                 // x0 = address of first sys var name
   adr     x20, sysvaraddresses            // x20 = address of first sys var pointer
 1:
-  bl      uart_puts
+  bl      uart_puts                       // Print system variable name
   ldrb    w21, [x0], #1                   // x21 = size of sysvar data in bytes
   mov     x19, x0                         // x19 = address of next sysvar name
   adr     x0, msg_colon0x
-  bl      uart_puts
+  bl      uart_puts                       // Print ": 0x"
   ldr     x0, [x20], #8                   // x0 = address of sys var
   tbnz    w21, #0, 2f
   tbnz    w21, #1, 3f
@@ -268,5 +268,3 @@ msg_hex_header:
   .asciz "           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f  "
 
 .bss
-
-random_data: .space 256

@@ -8,6 +8,7 @@
 .include "screen.s"
 .include "sysvars.s"
 .include "demo.s"
+.include "uart_debug.s"
 .include "paint_debug.s"
 .include "reboot_debug.s"
 .include "itoa.s"

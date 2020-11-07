@@ -25,35 +25,113 @@ test_po_change_test_case_1:
   .quad test_po_change_test_case_1_name
   .quad test_po_change_test_case_1_setup_registers
   .quad test_po_change_test_case_1_setup_sysvars
-  .quad test_po_change_test_case_1_effects_register
+  .quad test_po_change_test_case_1_setup_ram
+  .quad test_po_change_test_case_1_effects_registers
   .quad test_po_change_test_case_1_effects_sysvars
   .quad test_po_change_test_case_1_effects_ram
+  .quad test_po_change_test_case_1_exec
 
 # Test case name
 test_po_change_test_case_1_name:
   .asciz "po_change test case 1"
 
-# Test case setup
-.align 3
+# Registers setup
 test_po_change_test_case_1_setup_registers:
   .quad 0b0000000000000000000000000000000000000000000000000000000000010000
   .quad test_po_change_test_case_1_ram_new_input_routine
 
-test_po_change_test_case_1_setup_sysvars:
-  .quad 0b0000000000000000000000010000000000000000000000000000000000000000
-  .quad po_change_case_1_channel_block
-
-.align 3
-test_po_change_test_case_1_ram_old_input_routine:
-  .quad 0x0123456789abcdef
-
-.align 3
-test_po_change_test_case_1_ram_new_input_routine:
-  .quad 0xfedcba9876543210
-
-.align 3
-test_po_change_test_case_1_ram_channel_block:
+# RAM setup
+test_po_change_test_case_1_setup_ram:
+  .byte 3                                 // Number of RAM entries = 3
   .quad test_po_change_test_case_1_ram_old_input_routine
+  .quad test_po_change_test_case_1_ram_new_input_routine
+  .quad test_po_change_test_case_1_ram_channel_block
+
+test_po_change_test_case_1_ram_old_input_routine:
+  .quad 3                                 // 3 => (quad)
+  .quad 0x0123456789abcdef                // quad: 0x0123456789abcdef
+  .asciz "old_input_routine"              // name: "old_input_routine"
+
+test_po_change_test_case_1_ram_new_input_routine:
+  .quad 3                                 // 3 => (quad)
+  .quad 0xfedcba9876543210                // quad: 0xfedcba9876543210
+  .asciz "new_input_routine"              // name: "new_input_routine"
+
+test_po_change_test_case_1_ram_channel_block:
+  .quad 4                                 // 4 => (pointer)
+  .quad test_po_change_test_case_1_ram_old_input_routine
+  .asciz "channel_block"                  // name: "channel_block"
+
+.align 2
+test_po_change_test_case_1_exec:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  pop_registers
+  bl      po_test
+  push_registers
+  ldp     x29, x30, [sp], #16
+  ret
+
+
+
+
+  adr     x0, test_po_change_test_case_1_name
+  bl      log_test_name                   // Log test name
+  sub     sp, sp, ???                     // Allocate space on stack
+                                          //
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+                                          // sp + 0x0000:
+// RAM setup
+  ldr     x0, =0x0123456789abcdef
+  str     x0, [sp]                        // setup [old input routine] = 0x0123456789abcdef
+  ldr     x0, =0xfedbca9876543210
+  str     x0, [sp, #8]                    // setup [new input routine] = 0xfedbca9876543210
+  add     x0, sp, #0
+  str     x0, [sp, #16]                   // setup [channel block] = old input routine
+// RAM expected values
+  ldr     x0, =0x0123456789abcdef
+  str     x0, [sp, #24]                   // expect [old input routine] = 0x0123456789abcdef
+  ldr     x0, =0xfedbca9876543210
+  str     x0, [sp, #32]                   // expect [new input routine] = 0xfedbca9876543210
+  add     x0, sp, #8
+  str     x0, [sp, #40]                   // expect [channel block] = new input routine
+// SYSVAR setup
+  bl      random_sysvars
+  add     x0, sp, #16
+  str     x0, [x28, CURCHL-sysvars]       // setup [CURCHL] = channel block
+  push_sysvars                            // sysvars for test
+// SYSVAR expected changes
+  push_sysvars                            // prepare expected sysvars
+// REGISTER setup
+  bl      random_registers
+  add     x4, sp, #8                      //
+  push_registers
+  add     x5, sp, #16                     // expect x5 = channel block
+  push_registers
+  setup_registers
+  bl po_change
+  push_registers
+  push sysvars
+
+
+  ret
+
+test_po_change_test_case_1_setup_sysvars:
+
 
 # Test case effects
 .align 3
@@ -71,3 +149,7 @@ test_po_change_test_case_1_effects_ram:
   .quad 0
 
 ##########################################################################
+
+
+
+test1:

@@ -3,14 +3,11 @@ tests
     setup:
       ram:
         - name: old_input_routine
-          size: 8
-          value: 0x12345678
+          quad: 0x0123456789abcdef
         - name: new_input_routine
-          size: 8
-          value: 0x87654321
+          quad: 0xfedcba9876543210
         - name: channel_block
-          size: 8
-          value: old_input_routine
+          pointer: old_input_routine
       sysvars:
         CURCHL: channel_block
       registers:

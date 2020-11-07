@@ -33,19 +33,19 @@ display_sysvars:
     mov     x19, x0                         // x19 = address of next sysvar name
     ldr     x24, [x20], #8                  // x24 = address of sys var
     cmp     w21, #1
-    b.eq    2f
-    cmp     w21, #2
     b.eq    3f
-    cmp     w21, #4
+    cmp     w21, #2
     b.eq    4f
-    cmp     w21, #8
+    cmp     w21, #4
     b.eq    5f
+    cmp     w21, #8
+    b.eq    6f
     // not 2/4/8 bytes => print one byte at a time
     mov     x0, ':'
     bl      uart_send
     mov     x0, ' '
     bl      uart_send
-    lx:
+    2:
       ldrb    w0, [x24], #1
       mov     x1, sp
       mov     x2, #8
@@ -55,24 +55,24 @@ display_sysvars:
       mov     x0, sp
       bl      uart_puts
       subs    w21, w21, #1
-      b.ne    lx
-    b       7f
-  2:
+      b.ne    2b
+    b       8f
+  3:
     // 1 byte
     ldrb    w4, [x24]
-    b       6f
-  3:
+    b       7f
+  4:
     // 2 bytes
     ldrh    w4, [x24]
-    b       6f
-  4:
+    b       7f
+  5:
     // 4 bytes
     ldr     w4, [x24]
-    b       6f
-  5:
+    b       7f
+  6:
     // 8 bytes
     ldr     x4, [x24]
-  6:
+  7:
     adr     x0, msg_colon0x
     bl      uart_puts                       // Print ": 0x"
     mov     x0, x4
@@ -82,7 +82,7 @@ display_sysvars:
     strb    wzr, [x1]                       // Add a trailing zero.
     mov     x0, sp
     bl      uart_puts
-  7:
+  8:
     bl      uart_newline
     sub     w23, w23, #1
     cbnz    w23, 1b

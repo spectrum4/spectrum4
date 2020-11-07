@@ -15,7 +15,7 @@ display_sysvars:
   bl      uart_puts
   adr     x0, sysvarnames                 // x0 = address of first sys var name
   adr     x20, sysvaraddresses            // x20 = address of first sys var pointer
-  adr     x22, syssvarsizes               // x22 = address of first sys var size
+  adr     x22, sysvarsizes                // x22 = address of first sys var size
   mov     w23, SYSVAR_COUNT               // x23 = number of system variables to log
   1:
     bl      uart_puts                       // Print system variable name

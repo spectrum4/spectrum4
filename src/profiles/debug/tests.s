@@ -41,9 +41,9 @@ test_po_change_test_case_1_name:
 # RAM setup
 test_po_change_test_case_1_setup_ram:
   .quad 3                                 // Number of RAM entries = 3
-  .quad test_po_change_test_case_1_ram_old_input_routine
-  .quad test_po_change_test_case_1_ram_new_input_routine
-  .quad test_po_change_test_case_1_ram_channel_block
+  .quad test_po_change_test_case_1_setup_ram_old_input_routine
+  .quad test_po_change_test_case_1_setup_ram_new_input_routine
+  .quad test_po_change_test_case_1_setup_ram_channel_block
 
 .align 3
 test_po_change_test_case_1_setup_ram_old_input_routine:
@@ -67,15 +67,18 @@ test_po_change_test_case_1_setup_ram_channel_block:
 # System variables setup
 test_po_change_test_case_1_setup_sysvars:
   .quad 0b0000000000000000000000010000000000000000000000000000000000000000
-  .quad 4                                 // 4 => pointer
-  .quad test_po_change_test_case_1_setup_ram_channel_bloc
+                                          // Index 40 => CURCHL
+  .quad 0b0000000000000000000000010000000000000000000000000000000000000000
+                                          // Index 40: 1 => CURCHL value is pointer
+  .quad 2
+                                          // [CURCHL] = channel_block
 
 .align 3
 # Registers setup
 test_po_change_test_case_1_setup_registers:
   .quad 0b0000000000000000000000000000000000000000000000000000000000010000
-  .quad 4                                 // 4 => pointer
-  .quad test_po_change_test_case_1_ram_new_input_routine
+  .quad 0b0000000000000000000000000000000000000000000000000000000000010000
+  .quad test_po_change_test_case_1_setup_ram_new_input_routine
 
 # Test case effects
 
@@ -83,21 +86,22 @@ test_po_change_test_case_1_setup_registers:
 # RAM effects
 test_po_change_test_case_1_effects_ram:
   .quad 1                                 // Number of RAM entries = 1
-  .quad test_po_change_test_case_1_ram_channel_block
+  .quad test_po_change_test_case_1_setup_ram_channel_block
   .quad 4                                 // 4 => pointer
-  .quad test_po_change_test_case_1_ram_new_input_routine
+  .quad test_po_change_test_case_1_setup_ram_new_input_routine
 
 .align 3
 # System variable effects
 test_po_change_test_case_1_effects_sysvars:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
   .quad 0b0000000000000000000000000000000000000000000000000000000000000000
 
 .align 3
 # Register effects
 test_po_change_test_case_1_effects_registers:
   .quad 0b0000000000000000000000000000000000000000000000000000000000100000
-  .quad 4                                 // 4 => pointer
-  .quad test_po_change_test_case_1_ram_channel_block
+  .quad 0b0000000000000000000000000000000000000000000000000000000000100000
+  .quad test_po_change_test_case_1_setup_ram_channel_block
 
 # Test case execution
 
@@ -106,7 +110,7 @@ test_po_change_test_case_1_exec:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   pop_registers
-  bl      po_test
+  bl      po_change
   push_registers
   ldp     x29, x30, [sp], #16             // Restore
   ret

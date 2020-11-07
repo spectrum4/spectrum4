@@ -2,11 +2,11 @@ tests
   - name: po_change test case 1
     setup:
       ram:
-        - name: old_input_routine
+        old_input_routine:
           quad: 0x0123456789abcdef
-        - name: new_input_routine
+        new_input_routine:
           quad: 0xfedcba9876543210
-        - name: channel_block
+        channel_block:
           pointer: old_input_routine
       sysvars:
         CURCHL: channel_block
@@ -14,7 +14,8 @@ tests
         x4: new_input_routine
     effects:
       ram:
-        channel_block: new_input_routine
+        channel_block:
+          pointer: new_input_routine
       sysvars:
       registers:
         x5: channel_block

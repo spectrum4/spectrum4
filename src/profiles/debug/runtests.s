@@ -12,8 +12,8 @@ run_tests:
   adr     x0, all_tests
   ldr     x10, [x0], #8                   // x10 = number of tests
   cbz     x10, end_run_tests              // Return if no tests to run
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
   1:                                      // Loop executing tests
     ldr     x11, [x0], #8                 // x11 = address of test definition
     stp     x0, x10, [sp, #-16]!          // Push position in test list and remaining test count
@@ -118,8 +118,8 @@ run_tests:
   tst     x6, #1
   b.ne    3f
   // Test FAIL
-  stp     x29, x30, [sp, #-16]!
-  mov     x29, sp
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x0, x1, [sp, #-16]!
   stp     x4, x5, [sp, #-16]!
   adr     x0, msg_fail
@@ -156,7 +156,7 @@ run_tests:
   bl      uart_newline                    // Write "\r\n"
 2:
   add     sp, sp, #32
-  ldp     x29, x30, [sp], #16
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
 3:
     ldp     x2, x3, [sp], #16
     ldp     x0, x1, [sp], #16
@@ -171,7 +171,7 @@ run_tests:
     ldp     x0, x10, [sp], #16            // Pop position in test list and remaining test count
     sub     x10, x10, #1                  // Decrement remaining test count
     cbnz    x10, 1b                       // Loop if more tests to run
-  ldp     x29, x30, [sp], #16
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
 end_run_tests:
   ret
 
@@ -205,6 +205,6 @@ uart_x0:
   bl      uart_puts
   add     sp, sp, #0x20
   mov     x0, x19                         // Restore x0
-  ldp     x19, x20, [sp], #0x10           // Restore x19, x20
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
+  ldp     x19, x20, [sp], #16             // Restore x19, x20
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret

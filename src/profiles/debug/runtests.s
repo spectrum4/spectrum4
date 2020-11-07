@@ -25,7 +25,7 @@
 
 # Register organisation
 # =====================
-# x0-3 // scratch
+# x0-3 scratch registers
 # x4   address inside all_tests
 # x5   sysvarsizes
 # x6   sysvaraddresses
@@ -40,6 +40,7 @@
 # x15  number of RAM setup entries
 # x16  sysvar size in bytes (for literals)
 # x17  sysvars setup block / ram setup block
+# x18  address on stack to set value
 
 
 run_tests:
@@ -52,6 +53,9 @@ run_tests:
   mov     x29, sp                         // Update frame pointer to new stack location.
   sub     sp, sp, (sysvars_end - sysvars)*2 + 256*2
                                           // Allocate space on stack for pre-test/post-test registers and system variables
+  adr     x5, sysvarsizes
+  adr     x6, sysvaraddresses
+
   1:                                      // Loop executing tests
     ldr     x11, [x4], #8                 // x11 = address of test definition
 
@@ -92,61 +96,55 @@ run_tests:
       cmp     x15, x9
       b.ne    2b
 
-
-
+// System variable setup
 
     mov     x0, x28
     mov     x1, (sysvars_end - sysvars)
     bl      rand_block                    // Set sysvars to random values
-
-
-#   ldr     x17, [x11, #16]               // x17 = sysvars setup block
-#   adr     x5, sysvarsizes
-#   adr     x6, sysvaraddresses
-#   mov     x9, #0                        // x9 = sysvar index
-#   add     x13, x17, SYSVAR_MASK_BYTES*2 // x13 = address of first sysvar definition
-#   loop_sysvar:
-#       tst     x9, #0x3f                   // lower 6 bits of x9 are 0 when we need to read next quad mask
-#       b.ne    test_loop1
-#       ldr     x7, [x17], #8               // x7 = sysvar setup mask
-#       ldr     x8, [x17, SYSVAR_MASK_BYTES - 8]
-#                                           // x8 = sysvar setup mask
-#     test_loop1:
-#       tbz     x7, #0, prepare_loop_sysvar // if sysvar not defined, skip setting it and leave random value in place
-#     // sysvar defined, replace random value
-#       ldr     x14, [x13], #8              // x14 = value (pointer or literal value)
-#       tbz     x8, #0, nonpointersysvar
-#     // pointer
-#     nonpointersysvar:
-#       ldr     x12, [x6, x9, lsl #3]       // x12 = sysvar address
-#       ldrb    w16, [x5, x9]               // x16 = sysvar size (in bytes)
-#       tbnz    w16, #0, x2f
-#       tbnz    w16, #1, x3f
-#       tbnz    w16, #2, x4f
-#       tbnz    w16, #3, x5f
-#       ret
-#     x2f:
-#       // 1 byte
-#       ldrb    w0, [x0]
-#       b       x6f
-#     x3f:
-#       // 2 bytes
-#       ldrh    w0, [x0]
-#       b       x6f
-#     x4f:
-#       // 4 bytes
-#       ldr     w0, [x0]
-#       b       x6f
-#     x5f:
-#       // 8 bytes
-#       ldr     x0, [x0]
-#     x6f:
-#       str     x0, [x28, CURCHL-sysvars]
-#     prepare_loop_sysvar:
-#       add     x9, x9, #1                  // Increment sysvar index
-#       lsr     x7, x7, #1                  // Shift sysvar mask bits right
-#       lsr     x8, x8, #1                  // Shift sysvar pointer bits right
-#       b       loop_sysvar
+    ldr     x17, [x11, #16]               // x17 = sysvars setup block
+    mov     x9, #0                        // x9 = sysvar index
+    add     x13, x17, SYSVAR_MASK_BYTES*2 // x13 = address of first sysvar definition
+    loop_sysvar:
+        tst     x9, #0x3f                   // lower 6 bits of x9 are 0 when we need to read next quad mask
+        b.ne    test_loop1
+        ldr     x7, [x17], #8               // x7 = sysvar setup mask
+        ldr     x8, [x17, SYSVAR_MASK_BYTES - 8]
+                                            // x8 = sysvar setup mask
+      test_loop1:
+        tbz     x7, #0, x6f                 // if sysvar not defined, skip setting it and leave random value in place
+      // sysvar defined, replace random value
+        ldr     x14, [x13], #8              // x14 = value (pointer or literal value)
+        ldr     x18, [x6, x9, lsl #3]       // x18 = sysvar address
+        tbz     x8, #0, nonpointersysvar
+      // pointer
+        add     x12, sp, x14, lsl #3        // x12 = pointer value
+        str     x12, [x18]
+        b       x6f
+      nonpointersysvar:
+        ldrb    w16, [x5, x9]               // x16 = sysvar size (in bytes)
+        tbnz    w16, #1, x3f
+        tbnz    w16, #2, x4f
+        tbnz    w16, #3, x5f
+        // 1 byte
+        strb    w14, [x18]
+        b       x6f
+      x3f:
+        // 2 bytes
+        strh    w14, [x18]
+        b       x6f
+      x4f:
+        // 4 bytes
+        str     w14, [x18]
+        b       x6f
+      x5f:
+        // 8 bytes
+        str     x14, [x18]
+      x6f:
+        add     x9, x9, #1                  // Increment sysvar index
+        lsr     x7, x7, #1                  // Shift sysvar mask bits right
+        lsr     x8, x8, #1                  // Shift sysvar pointer bits right
+        cmp     x9, SYSVAR_COUNT
+        b.ne    loop_sysvar
 #
 #   setup_registers:
 #     sub     sp, sp, #0x100
@@ -252,6 +250,14 @@ run_tests:
     sub     x10, x10, #1                  // Decrement remaining test count
     cbnz    x10, 1b                       // Loop if more tests to run
   add     sp, sp, (sysvars_end - sysvars)*2 + 256*2
+
+  sub     sp, sp, #1760
+  mov     x0, sp
+  mov     x1, #55
+  mov     x2, 0
+  bl      display_memory
+  add     sp, sp, #1760
+  bl      display_sysvars
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
 end_run_tests:
   ret

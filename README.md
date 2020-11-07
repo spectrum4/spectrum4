@@ -145,6 +145,7 @@ You will also require:
   * `mkdir`
   * `rm`
   * `sed`
+  * `wc`
   * `which` (which likely in turn requires `/bin/sh`)
 
 To build, run `./all.sh` from the root folder to build everything.

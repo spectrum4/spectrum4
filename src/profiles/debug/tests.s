@@ -112,7 +112,7 @@ test_po_change_test_case_1_exec:
   pop_registers
   bl      po_change
   push_registers
-  ldp     x29, x30, [sp], #16             // Restore
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
 ##########################################################################

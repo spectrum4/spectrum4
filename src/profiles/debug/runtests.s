@@ -29,16 +29,17 @@
 # x4   address inside all_tests
 # x5   sysvarsizes
 # x6   sysvaraddresses
-# x7   sysvar setup mask
+# x7   sysvar setup mask / ram setup entry type
 # x8   sysvar pointer mask
-# x9   sysvar index
+# x9   sysvar index / ram entry index
 # x10  number of remaining tests
 # x11  address of test definition
 # x12  sysvar address
-# x13  address of individual sysvar definition
-# x14  sysvar value
+# x13  address of individual sysvar definition / address of RAM setup entry
+# x14  sysvar value / ram setup value
+# x15  number of RAM setup entries
 # x16  sysvar size in bytes (for literals)
-# x17  sysvars setup block
+# x17  sysvars setup block / ram setup block
 
 
 run_tests:
@@ -53,15 +54,52 @@ run_tests:
                                           // Allocate space on stack for pre-test/post-test registers and system variables
   1:                                      // Loop executing tests
     ldr     x11, [x4], #8                 // x11 = address of test definition
+
+// Log test running
+
     adr     x0, msg_running_test_part_1
     bl      uart_puts                     // Log "Running test "
     ldr     x0, [x11]                     // x0 = address of test name
     bl      uart_puts                     // Log "<test name>"
     adr     x0, msg_running_test_part_2
     bl      uart_puts                     // Log "...\r\n"
+
+// RAM setup
+
+    ldr     x17, [x11, #8]                // x17 = ram setup block
+    ldr     x15, [x17], #8                // x15 = number of RAM setup entries
+    sub     sp, sp, x15, lsl #4           // Allocate 16 bytes per RAM setup entry on stack
+    mov     x9, #0                        // x9 = RAM setup index
+    2:
+      ldr     x13, [x17], #8                // x13 = RAM entry setup block
+      ldr     x7, [x13], #8                 // x7 = RAM entry type (1=byte, 2=halfword, 4=word, 8=quad, 16=pointer)
+      ldr     x14, [x13], #8                // x14 = RAM entry index value
+      add     x18, sp, x9, lsl #3           // x18 = target address to be updated on stack
+      tbz     w7, #4, a2f
+      // pointer
+      add     x12, sp, x14, lsl #3          // x12 = pointer value
+      str     x12, [x18]                    // set RAM pointer
+      str     x12, [x18, x15, lsl #3]       // set RAM pointer copy
+      b       aaa
+    a2f:
+      str     x14, [x18]                    // set RAM literal value
+      str     x14, [x18, x15, lsl #3]       // set RAM literal value copy
+    aaa:
+      mov     x0, x13
+      bl      uart_puts
+      bl      uart_newline
+      add     x9, x9, #1                    // increase RAM setup index counter
+      cmp     x15, x9
+      b.ne    2b
+
+
+
+
     mov     x0, x28
     mov     x1, (sysvars_end - sysvars)
     bl      rand_block                    // Set sysvars to random values
+
+
 #   ldr     x17, [x11, #16]               // x17 = sysvars setup block
 #   adr     x5, sysvarsizes
 #   adr     x6, sysvaraddresses
@@ -208,6 +246,9 @@ run_tests:
 #     bl      test_sysvar_effects
 #     add     sp, sp, 2*(sysvars_end-sysvars+256)
 #                                           // Free captured register/sysvar data
+
+    add     sp, sp, x15, lsl #4            // Free RAM setup entries
+
     sub     x10, x10, #1                  // Decrement remaining test count
     cbnz    x10, 1b                       // Loop if more tests to run
   add     sp, sp, (sysvars_end - sysvars)*2 + 256*2

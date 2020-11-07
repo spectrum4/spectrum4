@@ -47,20 +47,20 @@ test_po_change_test_case_1_setup_ram:
 
 .align 3
 test_po_change_test_case_1_setup_ram_old_input_routine:
-  .quad 3                                 // 3 => quad
+  .quad 8                                 // 8 => quad
   .quad 0x0123456789abcdef                // quad: 0x0123456789abcdef
   .asciz "old_input_routine"              // name: "old_input_routine"
 
 .align 3
 test_po_change_test_case_1_setup_ram_new_input_routine:
-  .quad 3                                 // 3 => quad
+  .quad 8                                 // 8 => quad
   .quad 0xfedcba9876543210                // quad: 0xfedcba9876543210
   .asciz "new_input_routine"              // name: "new_input_routine"
 
 .align 3
 test_po_change_test_case_1_setup_ram_channel_block:
-  .quad 4                                 // 4 => pointer
-  .quad test_po_change_test_case_1_setup_ram_old_input_routine
+  .quad 16                                // 16 => pointer
+  .quad 0                                 // old_input_routine
   .asciz "channel_block"                  // name: "channel_block"
 
 .align 3
@@ -87,7 +87,7 @@ test_po_change_test_case_1_setup_registers:
 test_po_change_test_case_1_effects_ram:
   .quad 1                                 // Number of RAM entries = 1
   .quad test_po_change_test_case_1_setup_ram_channel_block
-  .quad 4                                 // 4 => pointer
+  .quad 16                                // 16 => pointer
   .quad test_po_change_test_case_1_setup_ram_new_input_routine
 
 .align 3

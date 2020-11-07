@@ -40,7 +40,7 @@ run_tests:
       tbz     x7, #0, prepare_loop_sysvar // if sysvar not defined, skip setting it and leave random value in place
     // sysvar defined, replace random value
       ldr     x14, [x13], #8              // x14 = value to set sysvar to
-      ldr     x12, [x6, x9, lsr #3]       // x12 = sysvar address
+      ldr     x12, [x6, x9, lsl #3]       // x12 = sysvar address
       ldrb    w15, [x5, x9]               // x15 = sysvar size (in bytes)
       tbnz    w15, #0, x2f
       tbnz    w15, #1, x3f
@@ -69,14 +69,13 @@ run_tests:
       lsr     x7, x7, #1                  // Shift mask bits right
       b       loop_sysvar
 
-  setup_registers
+  setup_registers:
     sub     sp, sp, #0x100
     mov     x0, sp
     mov     x1, #0x100
     bl      rand_block
     pop_registers
     adr     x28, sysvars
-    adr     x4, po_change_case_1_new_input_routine
     push_registers
     push_sysvars
     bl      po_change

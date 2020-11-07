@@ -53,7 +53,7 @@ display_sysvars:
     bl      uart_puts
     bl      uart_newline
     mov     x0, x19
-    sub     w23, x23, #1
+    sub     w23, w23, #1
     cbnz    w23, 1b
   bl      uart_newline
   add     sp, sp, #32                     // Free buffer.

@@ -13,11 +13,20 @@ display_sysvars:
   sub     sp, sp, #32                     // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
   adr     x0, msg_title_sysvars
   bl      uart_puts
-  adr     x0, sysvarnames                 // x0 = address of first sys var name
+  adr     x19, sysvarnames                // x0 = address of first sys var name
   adr     x20, sysvaraddresses            // x20 = address of first sys var pointer
   adr     x22, sysvarsizes                // x22 = address of first sys var size
   mov     w23, SYSVAR_COUNT               // x23 = number of system variables to log
   1:
+    mov     x0, '['
+    bl      uart_send                       // Print "["
+    ldr     x0, [x20]                       // x0 = address of sys var
+    bl      uart_x0                         // Print "<sys var address>"
+    mov     x0, ']'
+    bl      uart_send                       // Print "]"
+    mov     x0, ' '
+    bl      uart_send                       // Print " "
+    mov     x0, x19
     bl      uart_puts                       // Print system variable name
     ldrb    w21, [x22], #1                  // x21 = size of sysvar data in bytes
     mov     x19, x0                         // x19 = address of next sysvar name
@@ -52,7 +61,6 @@ display_sysvars:
     mov     x0, sp
     bl      uart_puts
     bl      uart_newline
-    mov     x0, x19
     sub     w23, w23, #1
     cbnz    w23, 1b
   bl      uart_newline

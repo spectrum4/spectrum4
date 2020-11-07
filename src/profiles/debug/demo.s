@@ -10,6 +10,7 @@ display_sysvars:
   mov     x29, sp                         // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!           // callee-saved registers used later on.
   stp     x21, x22, [sp, #-16]!           // callee-saved registers used later on.
+  stp     x23, x24, [sp, #-16]!           // callee-saved registers used later on.
   sub     sp, sp, #32                     // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
   adr     x0, msg_title_sysvars
   bl      uart_puts
@@ -28,43 +29,66 @@ display_sysvars:
     bl      uart_send                       // Print " "
     mov     x0, x19
     bl      uart_puts                       // Print system variable name
-    ldrb    w21, [x22], #1                  // x21 = size of sysvar data in bytes
+    ldrb    w21, [x22], #1                  // w21 = size of sysvar data in bytes
     mov     x19, x0                         // x19 = address of next sysvar name
-    adr     x0, msg_colon0x
-    bl      uart_puts                       // Print ": 0x"
-    ldr     x0, [x20], #8                   // x0 = address of sys var
-    tbnz    w21, #0, 2f
-    tbnz    w21, #1, 3f
-    tbnz    w21, #2, 4f
-    tbnz    w21, #3, 5f
-    ret
+    ldr     x24, [x20], #8                  // x24 = address of sys var
+    cmp     w21, #1
+    b.eq    2f
+    cmp     w21, #2
+    b.eq    3f
+    cmp     w21, #4
+    b.eq    4f
+    cmp     w21, #8
+    b.eq    5f
+    // not 2/4/8 bytes => print one byte at a time
+    mov     x0, ':'
+    bl      uart_send
+    mov     x0, ' '
+    bl      uart_send
+    lx:
+      ldrb    w0, [x24], #1
+      mov     x1, sp
+      mov     x2, #8
+      bl      hex_x0
+      mov     w0, #0x0020
+      strh    w0, [x1], #2                  // Add a space and trailing zero.
+      mov     x0, sp
+      bl      uart_puts
+      subs    w21, w21, #1
+      b.ne    lx
+    b       7f
   2:
     // 1 byte
-    ldrb    w0, [x0]
+    ldrb    w4, [x24]
     b       6f
   3:
     // 2 bytes
-    ldrh    w0, [x0]
+    ldrh    w4, [x24]
     b       6f
   4:
     // 4 bytes
-    ldr     w0, [x0]
+    ldr     w4, [x24]
     b       6f
   5:
     // 8 bytes
-    ldr     x0, [x0]
+    ldr     x4, [x24]
   6:
+    adr     x0, msg_colon0x
+    bl      uart_puts                       // Print ": 0x"
+    mov     x0, x4
     mov     x1, sp
     mov     x2, x21, lsl #3                 // x2 = size of sysvar data in bits
     bl      hex_x0
     strb    wzr, [x1]                       // Add a trailing zero.
     mov     x0, sp
     bl      uart_puts
+  7:
     bl      uart_newline
     sub     w23, w23, #1
     cbnz    w23, 1b
   bl      uart_newline
   add     sp, sp, #32                     // Free buffer.
+  ldp     x23, x24, [sp], #16             // Pop callee-saved registers.
   ldp     x21, x22, [sp], #16             // Pop callee-saved registers.
   ldp     x19, x20, [sp], #16             // Pop callee-saved registers.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.

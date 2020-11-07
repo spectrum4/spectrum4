@@ -84,7 +84,7 @@ rm -rf build
 mkdir build
 
 # Generate src/profiles/debug/sysvars.s
-SYSVARS="$(cat src/bss.s | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space \([1248]\) .*$/\1 \2/p')"
+SYSVARS="$(cat src/bss.s | sed -n '/sysvars:/,/sysvars_end:/p' | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space \([^ ]*\) .*$/\1 \2/p')"
 SYSVAR_COUNT=$(echo "${SYSVARS}" | wc -l)
 SYSVAR_MASK_BYTES=$(((SYSVAR_COUNT+63)/64*8))
 {
@@ -116,7 +116,7 @@ done
 echo '
 .align 3
 sysvaraddresses:'
-cat src/bss.s | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space [1248] .*$/\1/p' | while read sysvar; do
+echo "${SYSVARS}" | while read sysvar size; do
   echo "  .quad ${sysvar}"
 done
 } > src/profiles/debug/sysvars.s

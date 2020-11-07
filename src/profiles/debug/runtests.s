@@ -145,6 +145,19 @@ run_tests:
         lsr     x8, x8, #1                  // Shift sysvar pointer bits right
         cmp     x9, SYSVAR_COUNT
         b.ne    loop_sysvar
+
+// Copy sysvars to stack
+
+  mov       x0, x28
+  mov       x1, (sysvars_end - sysvars)
+  add       x9, sp, x15, lsl #4
+  1:
+    ldp       x2, x3, [x0], #0x10
+    stp       x2, x3, [x9], #0x10
+    subs      x1, x1, #0x10
+    b.ne      1b
+
+
 #
 #   setup_registers:
 #     sub     sp, sp, #0x100

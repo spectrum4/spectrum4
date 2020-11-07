@@ -66,10 +66,10 @@ test_po_change_test_case_1_setup_ram_channel_block:
 .align 3
 # System variables setup
 test_po_change_test_case_1_setup_sysvars:
-  .quad 0b0000000000000000000000010000000000000000000000000000000000000000
-                                          // Index 40 => CURCHL
-  .quad 0b0000000000000000000000010000000000000000000000000000000000000000
-                                          // Index 40: 1 => CURCHL value is pointer
+  .quad 0b0000000000000000000000100000000000000000000000000000000000000000
+                                          // Index 41 => CURCHL
+  .quad 0b0000000000000000000000100000000000000000000000000000000000000000
+                                          // Index 41: 1 => CURCHL value is pointer
   .quad 2
                                           // [CURCHL] = channel_block
 

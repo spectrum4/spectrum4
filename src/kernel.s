@@ -59,13 +59,13 @@ init_framebuffer:
 #   x0 unchanged
 mbox_call:
   movl     w9, MAILBOX_BASE               // x9 = 0x3f00b880 (Mailbox Peripheral Address)
-1:                                        // Wait for mailbox FULL flag to be clear.
+1:                                      // Wait for mailbox FULL flag to be clear.
   ldr     w10, [x9, MAILBOX_STATUS]       // w10 = mailbox status.
   tbnz    w10, MAILBOX_FULL_BIT, 1b       // If FULL flag set (bit 31), try again...
   mov     w11, 8                          // Mailbox channel 8.
   orr     w11, w0, w11                    // w11 = encoded request address + channel number.
   str     w11, [x9, MAILBOX_WRITE]        // Write request address / channel number to mailbox write register.
-2:                                        // Wait for mailbox EMPTY flag to be clear.
+2:                                      // Wait for mailbox EMPTY flag to be clear.
   ldr     w12, [x9, MAILBOX_STATUS]       // w12 = mailbox status.
   tbnz    w12, MAILBOX_EMPTY_BIT, 2b      // If EMPTY flag set (bit 30), try again...
   ldr     w12, [x9, MAILBOX_REQ_ADDR]     // w12 = message request address + channel number.
@@ -133,10 +133,10 @@ poke_address:
   add     x16, x16, x18, lsl #2           // x16 = (x11/216)%20+20*int(x11/(216*20*16))
   madd    x16, x16, x12, x10              // x16 = 108*(((x11/216)%20+20*int(x11/(216*20*16))) + (x11/2)%108
   ldrb    w17, [x24, x16]                 // w17 = attribute data
-  mov     w20, #0xcc             // dim
-  mov     w21, #0xff             // bright
-  tst     w17, #0x40             // bright set?
-  csel    w22, w20, w21, eq      // x22 = brightness
+  mov     w20, #0xcc                      // dim
+  mov     w21, #0xff                      // bright
+  tst     w17, #0x40                      // bright set?
+  csel    w22, w20, w21, eq               // x22 = brightness
 // w15 = foreground colour
   tst     w17, #0x02                      // red set?
   csel    w13, wzr, w22, eq
@@ -157,7 +157,7 @@ poke_address:
   add     w7, w7, w5, lsl #16
   mov     w8, #8
 3:
-  tst     x1, #0x80              // pixel set?
+  tst     x1, #0x80                       // pixel set?
   csel    w3, w7, w15, eq
   str     w3, [x23], #4
   lsl     w1, w1, #1

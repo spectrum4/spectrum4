@@ -43,9 +43,9 @@ restart:                         // L0000
   mov     x0, x28                         // x0 = sys variable start address
   adr     x1, sysvars_end                 // x1 = sys variable end marker
   1:                                      // Loop to clear all bits of all system variables.
-    strb    wzr, [x0], #1                 // Clear byte.
-    cmp     x0, x1                        // Check if all bytes updated.
-    b.ne    1b                            // If not, loop back.
+    strb    wzr, [x0], #1                   // Clear byte.
+    cmp     x0, x1                          // Check if all bytes updated.
+    b.ne    1b                              // If not, loop back.
 
   // Initialise RAM disk
   mov     x9, RAM_DISK_SIZE               // x9 = size of RAM disk
@@ -121,7 +121,8 @@ new:                             // L019D
   adrp    x5, heap
   add     x5, x5, #:lo12:heap             // x5 = start of heap
   str     x5, [x28, CHANS-sysvars]        // [CHANS] = start of heap
-  mov     x6, (initial_channel_info_END - initial_channel_info)/8   // x6 = number of double words (8 bytes) in initial_channel_info block
+  mov     x6, (initial_channel_info_END - initial_channel_info)/8
+                                          // x6 = number of double words (8 bytes) in initial_channel_info block
   adr     x7, initial_channel_info
 
   // Loop to copy initial_channel_info block to [CHANS] = start of heap = heap
@@ -159,7 +160,8 @@ new:                             // L019D
 //
 //
   adr     x5, STRMS
-  mov     x6, (initial_stream_data_END - initial_stream_data)/2   // x6 = number of half words (2 bytes) in initial_stream_data block
+  mov     x6, (initial_stream_data_END - initial_stream_data)/2
+                                          // x6 = number of half words (2 bytes) in initial_stream_data block
   adr     x7, initial_stream_data
 
   // Loop to copy initial_stream_data block to [STRMS]
@@ -177,7 +179,7 @@ new:                             // L019D
 
   bl      cls
 .if       DEBUG_PROFILE
-  bl      demo                   // This is demo code for testing purposes only
+  bl      demo                            // Demonstrate features for manual inspection.
 .endif
   b       sleep
 

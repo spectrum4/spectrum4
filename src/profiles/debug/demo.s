@@ -51,7 +51,7 @@ display_sysvars:
       mov     x2, #8
       bl      hex_x0
       mov     w0, #0x0020
-      strh    w0, [x1], #2                  // Add a space and trailing zero.
+      strh    w0, [x1], #2                    // Add a space and trailing zero.
       mov     x0, sp
       bl      uart_puts
       subs    w21, w21, #1

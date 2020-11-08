@@ -26,9 +26,9 @@ rand_x0:
   mov     x1, #0x4000
   movk    x1, #0x3f10, lsl #16            // x1 = 0x3f104000
   1:                                      // Wait until ([0x3f104004] >> 24) >= 2
-    ldr     w0, [x1, #0x04]               // Since bits 24-31 tell us how many words
-    lsr     w0, w0, #25                   // are available, this must be at least one,
-    cbz     w0, 1b                        // before we can safely read two words.
+    ldr     w0, [x1, #0x04]                 // Since bits 24-31 tell us how many words
+    lsr     w0, w0, #25                     // are available, this must be at least one,
+    cbz     w0, 1b                          // before we can safely read two words.
   ldr     w0, [x1, #0x08]                 // w0 = [0x3f104008] (random data)
   ldr     w2, [x1, #0x08]                 // w2 = [0x3f104008] (random data)
   bfi     x0, x2, #32, #32                // Copy bits from w2 into high bits of x0.
@@ -51,12 +51,12 @@ rand_block:
   mov     x2, #0x4000
   movk    x2, #0x3f10, lsl #16            // x2 = 0x3f104000
   1:                                      // Loop until buffer filled
-    2:                                    // Wait until ([0x3f104004] >> 24) >= 1
-      ldr     w3, [x2, #0x04]             // Since bits 24-31 tell us how many words
-      lsr     w3, w3, #24                 // are available, this must be at least one.
+    2:                                      // Wait until ([0x3f104004] >> 24) >= 1
+      ldr     w3, [x2, #0x04]                 // Since bits 24-31 tell us how many words
+      lsr     w3, w3, #24                     // are available, this must be at least one.
       cbz     w3, 2b
-    ldr     w3, [x2, #0x08]               // w3 = [0x3f104008] (random data)
-    str     w3, [x0], #0x04               // Write to buffer.
+    ldr     w3, [x2, #0x08]                 // w3 = [0x3f104008] (random data)
+    str     w3, [x0], #0x04                 // Write to buffer.
     subs    x1, x1, #0x04
     cbnz    x1, 1b
   ret

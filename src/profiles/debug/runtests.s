@@ -8,24 +8,8 @@
 
 run_tests:
 
-# Stack organisation
-# ==================
-#
-# RAM entries
-#   pre-test entries                      // (8 * RAM entries) bytes
-#   post-test entries                     // (8 * RAM entries) bytes
-# System variables
-#   pre-test entries                      // (sysvars_end - sysvars) bytes
-#   post-test entries                     // (sysvars_end - sysvars) bytes
-# Registers
-#   pre-test entries                      // 256 bytes
-#   post-test entries                     // 256 bytes
-#
-# Stack pointer                           // 8 bytes
-# Link Register                           // 8 bytes
-
-# Register organisation
-# =====================
+# Register usage
+# ==============
 # x0-3 scratch registers
 # x4   address inside all_tests
 # x5   sysvarsizes
@@ -43,6 +27,32 @@ run_tests:
 # x17  sysvars setup block / ram setup block / registers setup block
 # x18  address on stack to set value
 
+# Stack organisation
+# ==================
+#
+# RAM entries
+#   sp:
+#     pre-test entries                      // (8 * RAM entries) bytes
+#   sp+8*x15:
+#     post-test entries                     // (8 * RAM entries) bytes
+#
+# System variables
+#   x29-512-2*(sysvars_end-sysvars) == sp+16*x15:
+#     pre-test entries                      // (sysvars_end - sysvars) bytes
+#   x29-512-(sysvars_end-sysvars) == sp+16*x15+(sysvars_end-sysvars):
+#     post-test entries                     // (sysvars_end - sysvars) bytes
+#
+# Registers
+#   x29-512:
+#     pre-test entries                      // 256 bytes
+#   x29-256:
+#     post-test entries                     // 256 bytes
+#
+# x29:
+#
+#   Frame pointer                           // 8 bytes
+#   Link Register                           // 8 bytes
+
   ldr     w0, arm_size
   and     sp, x0, #~0x0f                  // Set stack pointer at top of ARM memory
   adr     x4, all_tests                   // x4 = address of test list
@@ -55,7 +65,7 @@ run_tests:
   adr     x5, sysvarsizes
   adr     x6, sysvaraddresses
 
-  1:                                        // Loop executing tests
+  1:                                      // Loop executing tests
     ldr     x11, [x4], #8                   // x11 = address of test definition
 
   // Log test running
@@ -157,7 +167,8 @@ run_tests:
     add     x0, x9, (sysvars_end - sysvars) // x0 = start of pre-test register block
     mov     x1, #0x100                      // Register storage on stack takes up 256 bytes.
     bl      rand_block                      // Write random bytes to stack so registers are random when popped.
-    str     x28, [x0, #-32]                 // x28 is exceptional: has constant value; replace random value.
+    sub     x0, x0, #0x100                  // Restore x0 to start of pre-test register block
+    str     x28, [x0, 28*8]                 // x28 is exceptional: has constant value; replace random value.
     ldr     x17, [x11, #24]                 // x17 = registers setup block
     mov     x9, #0                          // register index
     ldr     x7, [x17], #8                   // x7 = register setup mask: 2 bits per register
@@ -169,7 +180,6 @@ run_tests:
       add     x14, sp, x14, lsl #3            // Convert x14 from point value to absolute value.
     13:
     // x14 is absolute value
-      sub     x0, x0, #256
       str     x14, [x0, x9, lsl #3]
     14:
       add     x9, x9, #1
@@ -177,6 +187,88 @@ run_tests:
       cmp     x9, #32
       b.ne    12b
 
+    ldr     x1, [x11, #56]                  // x1 = exec routine
+
+  // Backup current registers.
+
+    sub     sp, sp, #0x100
+    stp     x0, x1, [sp, #8 * 0]
+    stp     x2, x3, [sp, #8 * 2]
+    stp     x4, x5, [sp, #8 * 4]
+    stp     x6, x7, [sp, #8 * 6]
+    stp     x8, x9, [sp, #8 * 8]
+    stp     x10, x11, [sp, #8 * 10]
+    stp     x12, x13, [sp, #8 * 12]
+    stp     x14, x15, [sp, #8 * 14]
+    stp     x16, x17, [sp, #8 * 16]
+    stp     x18, x19, [sp, #8 * 18]
+    stp     x20, x21, [sp, #8 * 20]
+    stp     x22, x23, [sp, #8 * 22]
+    stp     x24, x25, [sp, #8 * 24]
+    stp     x26, x27, [sp, #8 * 26]
+    str     x28, [sp, #8 * 28]
+
+  // Replace them with required values, except for x0 and x1 (which is done by shim)
+
+    ldp     x2, x3, [x0, #8 * 2]
+    ldp     x4, x5, [x0, #8 * 4]
+    ldp     x6, x7, [x0, #8 * 6]
+    ldp     x8, x9, [x0, #8 * 8]
+    ldp     x10, x11, [x0, #8 * 10]
+    ldp     x12, x13, [x0, #8 * 12]
+    ldp     x14, x15, [x0, #8 * 14]
+    ldp     x16, x17, [x0, #8 * 16]
+    ldp     x18, x19, [x0, #8 * 18]
+    ldp     x20, x21, [x0, #8 * 20]
+    ldp     x22, x23, [x0, #8 * 22]
+    ldp     x24, x25, [x0, #8 * 24]
+    ldp     x26, x27, [x0, #8 * 26]
+    ldr     x28, [x0, #8 * 28]
+
+  // Call shim.
+
+    blr     x1
+
+  // Store post-test registers
+
+    stp     x0, x1, [x29, (8 * 0) - 256]
+    stp     x2, x3, [x29, (8 * 2) - 256]
+    stp     x4, x5, [x29, (8 * 4) - 256]
+    stp     x6, x7, [x29, (8 * 6) - 256]
+    stp     x8, x9, [x29, (8 * 8) - 256]
+    stp     x10, x11, [x29, (8 * 10) - 256]
+    stp     x12, x13, [x29, (8 * 12) - 256]
+    stp     x14, x15, [x29, (8 * 14) - 256]
+    stp     x16, x17, [x29, (8 * 16) - 256]
+    stp     x18, x19, [x29, (8 * 18) - 256]
+    stp     x20, x21, [x29, (8 * 20) - 256]
+    stp     x22, x23, [x29, (8 * 22) - 256]
+    stp     x24, x25, [x29, (8 * 24) - 256]
+    stp     x26, x27, [x29, (8 * 26) - 256]
+    str     x28, [x29, (8 * 28) - 256]
+
+  // restore previous values
+
+    ldp     x0, x1, [sp, #8 * 0]
+    ldp     x2, x3, [sp, #8 * 2]
+    ldp     x4, x5, [sp, #8 * 4]
+    ldp     x6, x7, [sp, #8 * 6]
+    ldp     x8, x9, [sp, #8 * 8]
+    ldp     x10, x11, [sp, #8 * 10]
+    ldp     x12, x13, [sp, #8 * 12]
+    ldp     x14, x15, [sp, #8 * 14]
+    ldp     x16, x17, [sp, #8 * 16]
+    ldp     x18, x19, [sp, #8 * 18]
+    ldp     x20, x21, [sp, #8 * 20]
+    ldp     x22, x23, [sp, #8 * 22]
+    ldp     x24, x25, [sp, #8 * 24]
+    ldp     x26, x27, [sp, #8 * 26]
+    ldr     x28, [sp, #8 * 28]
+    add     sp, sp, #0x100
+
+  // TODO: Calculate required values
+
+  // TODO: Compare results
 
 #     pop_registers
 #     adr     x28, sysvars
@@ -272,10 +364,10 @@ run_tests:
 #     add     sp, sp, 2*(sysvars_end-sysvars+256)
 #                                           // Free captured register/sysvar data
 
-    add     sp, sp, x15, lsl #4            // Free RAM setup entries
+    add     sp, sp, x15, lsl #4             // Free RAM setup entries
 
-    sub     x10, x10, #1                  // Decrement remaining test count
-    cbnz    x10, 1b                       // Loop if more tests to run
+    sub     x10, x10, #1                    // Decrement remaining test count
+    cbnz    x10, 1b                         // Loop if more tests to run
 
   add     sp, sp, (sysvars_end - sysvars)*2 + 256*2
 

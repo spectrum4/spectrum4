@@ -41,9 +41,9 @@
 .set RAM_DISK_SIZE,    0x10000000
 .set HEAP_SIZE,        0x10000000
 
-.set FIRST_UDG_CHAR,   'A'                // Character 'A'
-.set UDG_COUNT,        21                 // Number of User Defined Graphics to copy (=> 'A'-'U').
+.set FIRST_UDG_CHAR,   'A'
+.set UDG_COUNT,        21               // Number of User Defined Graphics to copy (=> 'A'-'U').
 
-.set BORDER_COLOUR,    0x00cc0000         // Default border colour around screen.
-.set PAPER_COLOUR,     0x00cccccc         // Default paper colour (background colour of screen).
-.set INK_COLOUR,       0x00000000         // Default ink colour (foreground colour of text on screen).
+.set BORDER_COLOUR,    0x00cc0000       // Default border colour around screen.
+.set PAPER_COLOUR,     0x00cccccc       // Default paper colour (background colour of screen).
+.set INK_COLOUR,       0x00000000       // Default ink colour (foreground colour of text on screen).

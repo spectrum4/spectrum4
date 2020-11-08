@@ -107,9 +107,8 @@ test_po_change_test_case_1_effects_registers:
 test_po_change_test_case_1_exec:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  pop_registers
+  ldp     x0, x1, [x0]                    // Restore x0, x1 values
   bl      po_change
-  push_registers
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 

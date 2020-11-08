@@ -1430,7 +1430,7 @@ cls_lower:                       // L0D6E
   mov     w3, #108
   umsubl  x20, w2, w3, x0                 // x20 = first attribute cell to clear
   ldrb    w21, [x28, ATTR_P-sysvars]      // Fetch permanent attribute from ATTR_P.
-1:                                        // Set attributes file values to [ATTR_P] for lowest [DF_SZ] lines except bottom two lines.
+1:                                      // Set attributes file values to [ATTR_P] for lowest [DF_SZ] lines except bottom two lines.
   cmp     x19, x20
   b.ls    2f                              // Exit loop if x19 <= x20 (unsigned)
   sub     x19, x19, #1

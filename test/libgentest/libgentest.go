@@ -28,7 +28,7 @@ func (generator *Generator) LoadFiles() error {
 				return err
 			}
 			if strings.HasSuffix(path, ".yml") {
-				fmt.Printf("Loading %v...", path)
+				fmt.Printf("Loading %v...\n", path)
 			}
 			return nil
 		})
@@ -43,6 +43,7 @@ func (generator *Generator) GenerateFile() error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Generating %v...\n", generator.outputFile)
 	generator.writer = file
 	generator.Header()
 	generator.Test()

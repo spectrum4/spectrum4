@@ -70,8 +70,7 @@ test_po_change_test_case_1_setup_sysvars:
                                           // Index 41 => CURCHL
   .quad 0b0000000000000000000000100000000000000000000000000000000000000000
                                           // Index 41: 1 => CURCHL value is pointer
-  .quad 2
-                                          // [CURCHL] = channel_block
+  .quad 2                                 // [CURCHL] = channel_block
 
 .align 3
 # Registers setup

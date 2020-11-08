@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -200,7 +201,7 @@ func (unitTest *UnitTest) Test() ([]byte, error) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# RAM setup")
-	fmt.Fprintf(w, symbolName+"_setup_ram:\n")
+	fmt.Fprintf(w, "%v_setup_ram:\n", symbolName)
 
 	ramEntryCount := len(unitTest.Setup.RAM)
 
@@ -237,18 +238,39 @@ func (unitTest *UnitTest) Test() ([]byte, error) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# System variables setup")
-	fmt.Fprintln(w, symbolName+"_setup_sysvars:")
+	fmt.Fprintf(w, "%v_setup_sysvars:\n", symbolName)
 	fmt.Fprintln(w, "  .quad 0b0000000000000000000000100000000000000000000000000000000000000000")
 	fmt.Fprintln(w, "                                          // Index 41 => CURCHL")
 	fmt.Fprintln(w, "  .quad 0b0000000000000000000000100000000000000000000000000000000000000000")
 	fmt.Fprintln(w, "                                          // Index 41: 1 => CURCHL value is pointer")
-	fmt.Fprintln(w, "  .quad 2")
-	fmt.Fprintln(w, "                                          // [CURCHL] = channel_block")
+	fmt.Fprintln(w, "  .quad 2                                 // [CURCHL] = channel_block")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# Registers setup")
-	fmt.Fprintln(w, symbolName+"_setup_registers:")
-	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000001100000000")
+	fmt.Fprintf(w, "%v_setup_registers:\n", symbolName)
+
+	registerEntries := unitTest.Setup.Registers
+
+	var updatedRegisters uint64
+	for k, v := range registerEntries {
+		e := fmt.Errorf("Unknown register %v (name must be 'x<0-31>')", k)
+		if k[0] != 'x' {
+			return nil, e
+		}
+		registerIndex, err := strconv.Atoi(k[1:])
+		if err != nil {
+			return nil, e
+		}
+		if registerIndex < 0 || registerIndex > 30 {
+			return nil, e
+		}
+		updatedRegisters |= 1 << (registerIndex * 2)
+		if v.Pointer != nil {
+			updatedRegisters |= 1 << (registerIndex*2 + 1)
+		}
+	}
+
+	fmt.Fprintf(w, "  .quad 0b%064b\n", updatedRegisters)
 	fmt.Fprintln(w, "  .quad 1")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "# Test case effects")

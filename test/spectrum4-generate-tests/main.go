@@ -15,6 +15,10 @@ func main() {
 		log.Fatal(Usage())
 	}
 	generator := libgentest.New(os.Args[1], os.Args[2])
+	err := generator.FindFiles()
+	if err != nil {
+		log.Fatal(err)
+	}
 	err := generator.LoadFiles()
 	if err != nil {
 		log.Fatal(err)

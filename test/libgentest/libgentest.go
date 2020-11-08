@@ -182,7 +182,7 @@ func (generator *Generator) LoadFiles() error {
 	return nil
 }
 
-func (generator *Generator) GenerateFile() error {
+func (generator *Generator) GenerateFile(sysVars []string) error {
 	file, err := os.Create(generator.outputFile)
 	if err != nil {
 		return err
@@ -191,7 +191,7 @@ func (generator *Generator) GenerateFile() error {
 	generator.writer = file
 	generator.Header()
 	for _, unitTest := range generator.unitTests {
-		testCode, err := unitTest.Test()
+		testCode, err := unitTest.Test(sysVars)
 		if err != nil {
 			return err
 		}
@@ -232,7 +232,7 @@ func (unitTest *UnitTest) SymbolName() string {
 	return "test_" + strings.Replace(unitTest.Name, " ", "_", -1)
 }
 
-func (unitTest *UnitTest) Test() ([]byte, error) {
+func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	symbolName := unitTest.SymbolName()
 	w := new(bytes.Buffer)
 	fmt.Fprintln(w, "")
@@ -327,7 +327,6 @@ func (unitTest *UnitTest) Test() ([]byte, error) {
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# Register effects")
 	fmt.Fprintf(w, "%v_effects_registers:\n", symbolName)
-	// TODO
 	err = unitTest.Effects.Registers.WriteRegisters(w, ramSetupEntries)
 	if err != nil {
 		return nil, err

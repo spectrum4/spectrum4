@@ -122,7 +122,7 @@ done
 } > src/profiles/debug/sysvars.s
 
 # Generate unit tests as part of debug profile
-go run test/spectrum4-generate-tests/main.go test src/profiles/debug/tests.s
+go run test/spectrum4-generate-tests/main.go test src/bss.s src/profiles/debug/tests.s
 
 find src -name '*.s' | while read sourcefile; do
   cat "${sourcefile}" > x

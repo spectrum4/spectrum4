@@ -39,7 +39,7 @@
 # x14  sysvar value / ram setup value
 # x15  number of RAM setup entries
 # x16  sysvar size in bytes (for literals)
-# x17  sysvars setup block / ram setup block
+# x17  sysvars setup block / ram setup block / registers setup block
 # x18  address on stack to set value
 
 
@@ -81,14 +81,10 @@ run_tests:
       add     x18, sp, x9, lsl #3           // x18 = target address to be updated on stack
       tbz     w7, #4, a2f
       // pointer
-      add     x12, sp, x14, lsl #3          // x12 = pointer value
-      str     x12, [x18]                    // set RAM pointer
-      str     x12, [x18, x15, lsl #3]       // set RAM pointer copy
-      b       aaa
+      add     x14, sp, x14, lsl #3          // x14 = pointer value
     a2f:
       str     x14, [x18]                    // set RAM literal value
       str     x14, [x18, x15, lsl #3]       // set RAM literal value copy
-    aaa:
       mov     x0, x13
       bl      uart_puts
       bl      uart_newline
@@ -157,13 +153,34 @@ run_tests:
     subs      x1, x1, #0x10
     b.ne      1b
 
+// Set up registers
 
-#
-#   setup_registers:
-#     sub     sp, sp, #0x100
-#     mov     x0, sp
-#     mov     x1, #0x100
-#     bl      rand_block
+  add       x0, x9, (sysvars_end - sysvars) // x0 = start of pre-test register block
+  mov       x1, #0x100                      // 256 bytes
+    bl      rand_block
+  str       x28, [x0, #-32]                 // set x28
+    ldr     x17, [x11, #24]               // x17 = registers setup block
+  mov x9, #0                           // register index
+        ldr     x7, [x17], #8               // x7 = register setup mask: 2 bits per register
+reg_setup_loop:
+   tbz    x7, #0, q1
+// register defined
+        ldr     x14, [x17], #8               // x14 = register value
+   tbz    x7, #1, q2
+// x14 is pointer - convert to absolute value
+      add     x14, sp, x14, lsl #3          // x14 = pointer value
+
+q2:
+// x14 is absolute value
+   sub x0, x0, #256
+   str      x14, [x0, x9, lsl #3]
+q1:
+   add x9, x9, #1
+   lsr x7, x7, #2
+   cmp x9, #32
+   b.ne reg_setup_loop
+
+
 #     pop_registers
 #     adr     x28, sysvars
 #     push_registers

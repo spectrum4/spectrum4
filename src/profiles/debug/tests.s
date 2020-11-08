@@ -76,9 +76,8 @@ test_po_change_test_case_1_setup_sysvars:
 .align 3
 # Registers setup
 test_po_change_test_case_1_setup_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000010000
-  .quad 0b0000000000000000000000000000000000000000000000000000000000010000
-  .quad test_po_change_test_case_1_setup_ram_new_input_routine
+  .quad 0b0000000000000000000000000000000000000000000000000000001100000000
+  .quad 1
 
 # Test case effects
 
@@ -99,9 +98,8 @@ test_po_change_test_case_1_effects_sysvars:
 .align 3
 # Register effects
 test_po_change_test_case_1_effects_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000100000
-  .quad 0b0000000000000000000000000000000000000000000000000000000000100000
-  .quad test_po_change_test_case_1_setup_ram_channel_block
+  .quad 0b0000000000000000000000000000000000000000000000000000110000000000
+  .quad 2
 
 # Test case execution
 

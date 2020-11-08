@@ -9,15 +9,17 @@ import (
 )
 
 type Generator struct {
-	inputDir   string
-	outputFile string
-	writer     io.Writer
+	inputDir        string
+	outputFile      string
+	writer          io.Writer
+	sortedTestFiles []string
 }
 
 func New(inputDir string, outputFile string) *Generator {
 	return &Generator{
-		inputDir:   inputDir,
-		outputFile: outputFile,
+		inputDir:        inputDir,
+		outputFile:      outputFile,
+		sortedTestFiles: []string{},
 	}
 }
 
@@ -28,7 +30,8 @@ func (generator *Generator) LoadFiles() error {
 				return err
 			}
 			if strings.HasSuffix(path, ".yml") {
-				fmt.Printf("Loading %v...\n", path)
+				fmt.Printf("Adding test(s) from %v...\n", path)
+				generator.sortedTestFiles = append(generator.sortedTestFiles, path)
 			}
 			return nil
 		})
@@ -46,7 +49,9 @@ func (generator *Generator) GenerateFile() error {
 	fmt.Printf("Generating %v...\n", generator.outputFile)
 	generator.writer = file
 	generator.Header()
-	generator.Test()
+	for _, testFile := range generator.sortedTestFiles {
+		generator.Test(testFile)
+	}
 	err = file.Close()
 	if err != nil {
 		return err
@@ -73,7 +78,7 @@ func (generator *Generator) Header() {
 	fmt.Fprintln(w, `  .quad test_po_change_test_case_1`)
 }
 
-func (generator *Generator) Test() {
+func (generator *Generator) Test(testFile string) {
 	w := generator.writer
 	fmt.Fprintln(w, ``)
 	fmt.Fprintln(w, ``)

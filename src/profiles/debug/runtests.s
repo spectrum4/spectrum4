@@ -93,9 +93,6 @@ run_tests:
     3:
       str     x14, [x18]                      // set RAM literal value
       str     x14, [x18, x15, lsl #3]         // set RAM literal value copy
-      mov     x0, x13
-      bl      uart_puts
-      bl      uart_newline
       add     x9, x9, #1                      // increase RAM setup index counter
       cmp     x15, x9
       b.ne    2b
@@ -244,8 +241,8 @@ run_tests:
   //
   // Report lines as follows:
   //
-  // FAIL: po_change test case 1: Register x3 changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
-  // FAIL: po_change test case 1: Register x4 changed from 0x8ceb064787d0b39b to 0x0000000000001a68, but should not have changed.
+  // FAIL: po_change test case 1: Register x3 changed from 0x8ceb064787d0b39b to 0x0000000000001a68, but should not have changed.
+  // FAIL: po_change test case 1: Register x4 changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
   // FAIL: po_change test case 1: Register x5 unchanged from 0xfe87f64783bc7a76 but should have changed to 0x00000f00f00f00f0.
 
     ldr     x17, [x11, #48]                 // x17 = registers effects block
@@ -266,13 +263,13 @@ run_tests:
       mov     x14, x12                        // x14 = expected value (= pre-test value)
     17:
       cmp     x13, x14                        // Post-test register value (x13) == expected register value (x14)?
-      b.eq    xxx                             // If actual == expected, register test passed; continue loop.
+      b.eq    20f                             // If actual == expected, register test passed; continue loop.
     // Register test FAIL
       adr     x0, msg_fail
       bl      uart_puts                       // Log "FAIL: "
       ldr     x0, [x11]                       // x0 = address of test name
       bl      uart_puts                       // Log "<test case name>"
-      adr     x0, msg_reg1
+      adr     x0, msg_reg_fail_0
       bl      uart_puts                       // Log ": Register x"
       sub     sp, sp, #32
       mov     x0, sp
@@ -280,52 +277,59 @@ run_tests:
       bl      base10
       bl      uart_puts                       // Log "<register index>"
       add     sp, sp, #32
-
-#   cbnz    x9, 1f
-# // Value should have been modified
-#   adr     x0, msg_reg2
-#   bl      uart_puts                       // Log " value "
-#   ldr     x0, [sp]
-#   bl      uart_x0                         // Log "<original register value>"
-#   adr     x0, msg_reg3
-#   bl      uart_puts                       // Log " should have been modified\r\n"
-#   b       2f
-# 1:
-# // Value unexpectedly modified
-#   adr     x0, msg_reg4
-#   bl      uart_puts                       // Log " value unexpectedly modified from "
-#   ldr     x0, [sp]
-#   bl      uart_x0                         // Log "<original register value>"
-#   adr     x0, msg_reg5
-#   bl      uart_puts                       // Log " to "
-#   ldr     x0, [sp, #8]
-#   bl      uart_x0                         // Log "<updated register value>"
-
-      bl      uart_newline                    // Log "\r\n"
-    xxx:
+      cmp     x12, x13
+      b.eq    19f                             // x12 == x13 => value unchanged but should have
+    // register value changed
+      adr     x0, msg_reg_fail_1
+      bl      uart_puts                       // Log " changed from "
+      mov     x0, x12
+      bl      uart_x0                         // Log "<pre-test register value>"
+      adr     x0, msg_reg_fail_3
+      bl      uart_puts                       // Log " to "
+      mov     x0, x13
+      bl      uart_x0                         // Log "<post-test register value>"
+      cmp     x12, x14
+      b.eq    18f                             // x12 == x14 => value shouldn't have changed but did
+    // register value meant to change, but to a different value
+      adr     x0, msg_reg_fail_4
+      bl      uart_puts                       // Log ", but should have changed to "
+      mov     x0, x14
+      bl      uart_x0                         // Log "<expected register value>"
+      adr     x0, msg_reg_fail_6
+      bl      uart_puts                       // Log ".\r\n"
+      b       20f
+    18:
+    // register value not meant to change, but did
+      adr     x0, msg_reg_fail_5
+      bl      uart_puts                       // Log ", but should not have changed.\r\n"
+      b       20f
+    19:
+    // register value unchanged, but was meant to
+      adr     x0, msg_reg_fail_2
+      bl      uart_puts                       // Log " unchanged from "
+      mov     x0, x12
+      bl      uart_x0                         // Log "<pre-test register value>"
+      adr     x0, msg_reg_fail_4
+      bl      uart_puts                       // Log ", but should have changed to "
+      mov     x0, x14
+      bl      uart_x0                         // Log "<expected register value>"
+      adr     x0, msg_reg_fail_6
+      bl      uart_puts                       // Log ".\r\n"
+    20:
       add     x9, x9, #1
       lsr     x7, x7, #2
       cmp     x9, #29
       b.ne    15b
 
-  // TODO: Compare system variables
+  // TODO: Test system variable values
 
-  // TODO: Compare RAM
+  // TODO: Test RAM values
 
     add     sp, sp, x15, lsl #4             // Free RAM setup entries
-
     sub     x10, x10, #1                    // Decrement remaining test count
     cbnz    x10, 1b                         // Loop if more tests to run
 
   add     sp, sp, (sysvars_end - sysvars)*2 + 256*2
-
-#  sub     sp, sp, #1760
-#  mov     x0, sp
-#  mov     x1, #55
-#  mov     x2, 0
-#  bl      display_memory
-#  add     sp, sp, #1760
-#  bl      display_sysvars
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
 end_run_tests:
   ret
@@ -335,8 +339,11 @@ msg_running_test_part_1: .asciz "Running test "
 msg_running_test_part_2: .asciz "...\r\n"
 
 msg_fail: .asciz "FAIL: "
-msg_reg1: .asciz ": Register x"
-msg_reg2: .asciz " value "
-msg_reg3: .asciz " should have been modified\r\n"
-msg_reg4: .asciz " value unexpectedly modified from "
-msg_reg5: .asciz " to "
+msg_reg_fail_0: .asciz ": Register x"
+msg_reg_fail_1: .asciz " changed from "
+msg_reg_fail_2: .asciz " unchanged from "
+msg_reg_fail_3: .asciz " to "
+msg_reg_fail_4: .asciz ", but should have changed to "
+msg_reg_fail_5: .ascii ", but should not have changed"
+                                          // Intentionally .ascii not .asciz, in order to join with msg_reg_fail_6.
+msg_reg_fail_6: .asciz ".\r\n"

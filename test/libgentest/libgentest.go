@@ -289,11 +289,46 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# System variables setup")
 	fmt.Fprintf(w, "%v_setup_sysvars:\n", symbolName)
+	sysVarMaskByteCount := (len(sysVars) + 63) / 64
+	for i := 0; i < sysVarMaskByteCount; i++ {
+		var sysVarDefinedMask uint64 = 0
+		comments := []string{}
+		for j := 0; j < 64; j++ {
+			if j+i*64 == len(sysVars) {
+				break
+			}
+			sysVar := sysVars[j+i*64]
+			if _, exists := unitTest.Setup.SysVars[sysVar]; exists {
+				sysVarDefinedMask |= 1 << (j + i*64)
+				comments = append(comments, fmt.Sprintf("                                          // Index %v => %v", j+i*64, sysVar))
+			}
+		}
+		fmt.Fprintf(w, "  .quad 0b%064b\n", sysVarDefinedMask)
+		for i := range comments {
+			fmt.Fprintln(w, comments[i])
+		}
+	}
+	for i := 0; i < sysVarMaskByteCount; i++ {
+		var sysVarPointerMask uint64 = 0
+		comments := []string{}
+		for j := 0; j < 64; j++ {
+			if j+i*64 == len(sysVars) {
+				break
+			}
+			sysVar := sysVars[j+i*64]
+			if s, exists := unitTest.Setup.SysVars[sysVar]; exists {
+				if s.Pointer != nil {
+					sysVarPointerMask |= 1 << (j + i*64)
+					comments = append(comments, fmt.Sprintf("                                          // Index %v: 1 => %v value is pointer", j+i*64, sysVar))
+				}
+			}
+		}
+		fmt.Fprintf(w, "  .quad 0b%064b\n", sysVarPointerMask)
+		for i := range comments {
+			fmt.Fprintln(w, comments[i])
+		}
+	}
 	// TODO
-	fmt.Fprintln(w, "  .quad 0b0000000000000000000000100000000000000000000000000000000000000000")
-	fmt.Fprintln(w, "                                          // Index 41 => CURCHL")
-	fmt.Fprintln(w, "  .quad 0b0000000000000000000000100000000000000000000000000000000000000000")
-	fmt.Fprintln(w, "                                          // Index 41: 1 => CURCHL value is pointer")
 	fmt.Fprintln(w, "  .quad 0                                 // [CURCHL] = channel_block")
 	fmt.Fprintln(w, "")
 

@@ -180,5 +180,7 @@ fetch_firmware 'start.elf'
 # contains symbol names, etc.
 "${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-debug.elf
 
+go run test/spectrum4-generate-tests/main.go test src/profiles/debug/tests.s
+
 echo
 echo "Build successful - see dist directory for results"

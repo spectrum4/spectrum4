@@ -76,7 +76,7 @@ test_po_change_test_case_1_setup_sysvars:
 # Registers setup
 test_po_change_test_case_1_setup_registers:
   .quad 0b0000000000000000000000000000000000000000000000000000001100000000
-  .quad 1
+  .quad 1                                 // new_input_routine
 
 # Test case effects
 

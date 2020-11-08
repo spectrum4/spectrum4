@@ -44,6 +44,22 @@ type (
 	}
 )
 
+func (value StoredValue) Write(w io.Writer, ramEntries NamedValue) error {
+	switch {
+	case value.Quad != nil:
+		fmt.Fprintf(w, "  .quad 0x%016x                // quad: 0x%016x\n", *value.Quad, *value.Quad)
+	case value.Pointer != nil:
+		index := ramEntries.IndexOf(*value.Pointer)
+		if index < 0 {
+			return fmt.Errorf("Pointer to undefined ram entry %v", *value.Pointer)
+		}
+		fmt.Fprintf(w, "  .quad %-16v                  // %v\n", index, *value.Pointer)
+	default:
+		return fmt.Errorf("No Quad or Pointer specified in %v", value)
+	}
+	return nil
+}
+
 func (nv NamedValue) SortedNames() []string {
 	s := make([]string, len(nv), len(nv))
 	i := 0
@@ -222,16 +238,12 @@ func (unitTest *UnitTest) Test() ([]byte, error) {
 		switch {
 		case e.Quad != nil:
 			fmt.Fprintln(w, "  .quad 8                                 // 8 => quad")
-			fmt.Fprintf(w, "  .quad 0x%016x                // quad: 0x%016x\n", *e.Quad, *e.Quad)
 		case e.Pointer != nil:
 			fmt.Fprintln(w, "  .quad 16                                // 16 => pointer")
-			index := ramEntries.IndexOf(*e.Pointer)
-			if index < 0 {
-				return nil, fmt.Errorf("Pointer to undefined ram entry %v", *e.Pointer)
-			}
-			fmt.Fprintf(w, "  .quad %-16v                  // %v\n", index, *e.Pointer)
-		default:
-			return nil, fmt.Errorf("No Quad or Pointer specified in Unit Test %v", unitTest.Name)
+		}
+		err := e.Write(w, ramEntries)
+		if err != nil {
+			return nil, err
 		}
 		fmt.Fprintf(w, "  .asciz %q %v // name: %q\n", ramEntry, strings.Repeat(" ", 29-len(ramEntry)), ramEntry)
 	}
@@ -271,7 +283,16 @@ func (unitTest *UnitTest) Test() ([]byte, error) {
 	}
 
 	fmt.Fprintf(w, "  .quad 0b%064b\n", updatedRegisters)
-	fmt.Fprintln(w, "  .quad 1")
+
+	sortedRegisters := registerEntries.SortedNames()
+	for _, register := range sortedRegisters {
+		value := registerEntries[register]
+		err := value.Write(w, ramEntries)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "# Test case effects")
 	fmt.Fprintln(w, "")

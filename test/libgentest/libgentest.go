@@ -31,6 +31,8 @@ type (
 		Name    string        `json:"name"`
 		Setup   SystemContext `json:"setup"`
 		Effects SystemContext `json:"effects"`
+		// internal fields
+		Routine string `json:"-"` // routine that the unit test tests
 	}
 	SystemContext struct {
 		RAM       NamedValue `json:"ram"`
@@ -44,18 +46,57 @@ type (
 	}
 )
 
-func (value StoredValue) Write(w io.Writer, ramEntries NamedValue) error {
+func (value StoredValue) Write(w io.Writer, ramSetupEntries NamedValue, includeType bool) error {
 	switch {
 	case value.Quad != nil:
+		if includeType {
+			fmt.Fprintln(w, "  .quad 8                                 // 8 => quad")
+		}
 		fmt.Fprintf(w, "  .quad 0x%016x                // quad: 0x%016x\n", *value.Quad, *value.Quad)
 	case value.Pointer != nil:
-		index := ramEntries.IndexOf(*value.Pointer)
+		if includeType {
+			fmt.Fprintln(w, "  .quad 16                                // 16 => pointer")
+		}
+		index := ramSetupEntries.IndexOf(*value.Pointer)
 		if index < 0 {
 			return fmt.Errorf("Pointer to undefined ram entry %v", *value.Pointer)
 		}
 		fmt.Fprintf(w, "  .quad %-16v                  // %v\n", index, *value.Pointer)
 	default:
 		return fmt.Errorf("No Quad or Pointer specified in %v", value)
+	}
+	return nil
+}
+
+func (registerEntries NamedValue) WriteRegisters(w io.Writer, ramSetupEntries NamedValue) error {
+	var updatedRegisters uint64
+	for k, v := range registerEntries {
+		e := fmt.Errorf("Unknown register %v (name must be 'x<0-31>')", k)
+		if k[0] != 'x' {
+			return e
+		}
+		registerIndex, err := strconv.Atoi(k[1:])
+		if err != nil {
+			return e
+		}
+		if registerIndex < 0 || registerIndex > 30 {
+			return e
+		}
+		updatedRegisters |= 1 << (registerIndex * 2)
+		if v.Pointer != nil {
+			updatedRegisters |= 1 << (registerIndex*2 + 1)
+		}
+	}
+
+	fmt.Fprintf(w, "  .quad 0b%064b\n", updatedRegisters)
+
+	sortedRegisters := registerEntries.SortedNames()
+	for _, register := range sortedRegisters {
+		value := registerEntries[register]
+		err := value.Write(w, ramSetupEntries, false)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -132,6 +173,9 @@ func (generator *Generator) LoadFiles() error {
 				log.Printf("Value: %v / Type: %v / Offset: %v / Struct: %v / Field: %v", ute.Value, ute.Type, ute.Offset, ute.Struct, ute.Field)
 			}
 			return fmt.Errorf("Unit test file %q has invalid properties: %s", absYAMLPath, err)
+		}
+		for i := range uts.Tests {
+			uts.Tests[i].Routine = filepath.Base(yamlPath[:len(yamlPath)-4])
 		}
 		generator.unitTests = append(generator.unitTests, (uts.Tests)...)
 	}
@@ -223,8 +267,8 @@ func (unitTest *UnitTest) Test() ([]byte, error) {
 
 	fmt.Fprintf(w, "  .quad %-4v                              // Number of RAM entries = %v\n", ramEntryCount, ramEntryCount)
 
-	ramEntries := unitTest.Setup.RAM
-	sortedRAMEntries := ramEntries.SortedNames()
+	ramSetupEntries := unitTest.Setup.RAM
+	sortedRAMEntries := ramSetupEntries.SortedNames()
 
 	for _, ramEntry := range sortedRAMEntries {
 		fmt.Fprintf(w, "  .quad %v_setup_ram_%v\n", symbolName, ramEntry)
@@ -234,14 +278,8 @@ func (unitTest *UnitTest) Test() ([]byte, error) {
 		fmt.Fprintln(w, "")
 		fmt.Fprintln(w, ".align 3")
 		fmt.Fprintf(w, "%v_setup_ram_%v:\n", symbolName, ramEntry)
-		e := ramEntries[ramEntry]
-		switch {
-		case e.Quad != nil:
-			fmt.Fprintln(w, "  .quad 8                                 // 8 => quad")
-		case e.Pointer != nil:
-			fmt.Fprintln(w, "  .quad 16                                // 16 => pointer")
-		}
-		err := e.Write(w, ramEntries)
+		e := ramSetupEntries[ramEntry]
+		err := e.Write(w, ramSetupEntries, true)
 		if err != nil {
 			return nil, err
 		}
@@ -251,54 +289,29 @@ func (unitTest *UnitTest) Test() ([]byte, error) {
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# System variables setup")
 	fmt.Fprintf(w, "%v_setup_sysvars:\n", symbolName)
+	// TODO
 	fmt.Fprintln(w, "  .quad 0b0000000000000000000000100000000000000000000000000000000000000000")
 	fmt.Fprintln(w, "                                          // Index 41 => CURCHL")
 	fmt.Fprintln(w, "  .quad 0b0000000000000000000000100000000000000000000000000000000000000000")
 	fmt.Fprintln(w, "                                          // Index 41: 1 => CURCHL value is pointer")
-	fmt.Fprintln(w, "  .quad 2                                 // [CURCHL] = channel_block")
+	fmt.Fprintln(w, "  .quad 0                                 // [CURCHL] = channel_block")
 	fmt.Fprintln(w, "")
+
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# Registers setup")
 	fmt.Fprintf(w, "%v_setup_registers:\n", symbolName)
-
-	registerEntries := unitTest.Setup.Registers
-
-	var updatedRegisters uint64
-	for k, v := range registerEntries {
-		e := fmt.Errorf("Unknown register %v (name must be 'x<0-31>')", k)
-		if k[0] != 'x' {
-			return nil, e
-		}
-		registerIndex, err := strconv.Atoi(k[1:])
-		if err != nil {
-			return nil, e
-		}
-		if registerIndex < 0 || registerIndex > 30 {
-			return nil, e
-		}
-		updatedRegisters |= 1 << (registerIndex * 2)
-		if v.Pointer != nil {
-			updatedRegisters |= 1 << (registerIndex*2 + 1)
-		}
+	err := unitTest.Setup.Registers.WriteRegisters(w, ramSetupEntries)
+	if err != nil {
+		return nil, err
 	}
-
-	fmt.Fprintf(w, "  .quad 0b%064b\n", updatedRegisters)
-
-	sortedRegisters := registerEntries.SortedNames()
-	for _, register := range sortedRegisters {
-		value := registerEntries[register]
-		err := value.Write(w, ramEntries)
-		if err != nil {
-			return nil, err
-		}
-	}
-
 	fmt.Fprintln(w, "")
+
 	fmt.Fprintln(w, "# Test case effects")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# RAM effects")
-	fmt.Fprintln(w, symbolName+"_effects_ram:")
+	fmt.Fprintf(w, "%v_effects_ram:\n", symbolName)
+	// TODO
 	fmt.Fprintln(w, "  .quad 1                                 // Number of RAM entries = 1")
 	fmt.Fprintln(w, "  .quad 0                                 // channel_block updated")
 	fmt.Fprintln(w, "  .quad 16                                // 16 => new value is pointer")
@@ -306,24 +319,28 @@ func (unitTest *UnitTest) Test() ([]byte, error) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# System variable effects")
-	fmt.Fprintln(w, symbolName+"_effects_sysvars:")
+	fmt.Fprintf(w, "%v_effects_sysvars:\n", symbolName)
+	// TODO
 	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000000000000000")
 	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000000000000000")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# Register effects")
-	fmt.Fprintln(w, symbolName+"_effects_registers:")
-	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000110000000000")
-	fmt.Fprintln(w, "  .quad 2")
+	fmt.Fprintf(w, "%v_effects_registers:\n", symbolName)
+	// TODO
+	err = unitTest.Effects.Registers.WriteRegisters(w, ramSetupEntries)
+	if err != nil {
+		return nil, err
+	}
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "# Test case execution")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 2")
-	fmt.Fprintln(w, symbolName+"_exec:")
+	fmt.Fprintf(w, "%v_exec:\n", symbolName)
 	fmt.Fprintln(w, "  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.")
 	fmt.Fprintln(w, "  mov     x29, sp                         // Update frame pointer to new stack location.")
 	fmt.Fprintln(w, "  ldp     x0, x1, [x0]                    // Restore x0, x1 values")
-	fmt.Fprintln(w, "  bl      po_change")
+	fmt.Fprintf(w, "  bl      %v\n", unitTest.Routine)
 	fmt.Fprintln(w, "  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.")
 	fmt.Fprintln(w, "  ret")
 	fmt.Fprintln(w, "")

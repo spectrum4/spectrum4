@@ -57,3 +57,32 @@ uart_puts:
   b       1b
 5:
   ret
+
+
+# ------------------------------------------------------------------------------
+# Write the value of x0 as a hex string (0x0123456789abcdef) to Mini UART.
+# ------------------------------------------------------------------------------
+#
+# On entry:
+#   x0 = value to write as a hex string to Mini UART.
+.align 2
+uart_x0:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x19, x20, [sp, #-16]!           // Backup x19, x20
+  mov     x19, x0                         // Backup x0 in x19
+  sub     sp, sp, #0x20                   // Allocate space on stack for hex string
+  mov     w2, 0x7830
+  mov     x1, sp
+  mov     x1, sp
+  strh    w2, [x1], #2                    // "0x"
+  mov     x2, 64
+  bl      hex_x0
+  strb    wzr, [x1], #1
+  mov     x0, sp
+  bl      uart_puts
+  add     sp, sp, #0x20
+  mov     x0, x19                         // Restore x0
+  ldp     x19, x20, [sp], #16             // Restore x19, x20
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret

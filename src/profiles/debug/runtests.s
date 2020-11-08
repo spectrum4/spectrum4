@@ -24,8 +24,8 @@ run_tests:
 # x14  sysvar value / ram setup value
 # x15  number of RAM setup entries
 # x16  sysvar size in bytes (for literals)
-# x17  sysvars setup block / ram setup block / registers setup block
-# x18  address on stack to set value
+# x17  sysvars/ram/registers setup/effects block
+# x18  address on stack to set/test value
 
 # Stack organisation
 # ==================
@@ -62,10 +62,9 @@ run_tests:
   mov     x29, sp                         // Update frame pointer to new stack location.
   sub     sp, sp, (sysvars_end - sysvars)*2 + 256*2
                                           // Allocate space on stack for pre-test/post-test registers and system variables
-  adr     x5, sysvarsizes
-  adr     x6, sysvaraddresses
-
   1:                                      // Loop executing tests
+    adr     x5, sysvarsizes
+    adr     x6, sysvaraddresses
     ldr     x11, [x4], #8                   // x11 = address of test definition
 
   // Log test running
@@ -73,7 +72,7 @@ run_tests:
     adr     x0, msg_running_test_part_1
     bl      uart_puts                       // Log "Running test "
     ldr     x0, [x11]                       // x0 = address of test name
-    bl      uart_puts                       // Log "<test name>"
+    bl      uart_puts                       // Log "<test case name>"
     adr     x0, msg_running_test_part_2
     bl      uart_puts                       // Log "...\r\n"
 
@@ -166,7 +165,7 @@ run_tests:
 
     add     x0, x9, (sysvars_end - sysvars) // x0 = start of pre-test register block
     mov     x1, #0x100                      // Register storage on stack takes up 256 bytes.
-    bl      rand_block                      // Write random bytes to stack so registers are random when popped.
+    bl      rand_block                      // Log random bytes to stack so registers are random when popped.
     sub     x0, x0, #0x100                  // Restore x0 to start of pre-test register block
     str     x28, [x0, 28*8]                 // x28 is exceptional: has constant value; replace random value.
     ldr     x17, [x11, #24]                 // x17 = registers setup block
@@ -184,31 +183,17 @@ run_tests:
     14:
       add     x9, x9, #1
       lsr     x7, x7, #2
-      cmp     x9, #32
+      cmp     x9, #29
       b.ne    12b
 
     ldr     x1, [x11, #56]                  // x1 = exec routine
 
-  // Backup current registers.
+  // Backup loop registers.
 
-    sub     sp, sp, #0x100
-    stp     x0, x1, [sp, #8 * 0]
-    stp     x2, x3, [sp, #8 * 2]
-    stp     x4, x5, [sp, #8 * 4]
-    stp     x6, x7, [sp, #8 * 6]
-    stp     x8, x9, [sp, #8 * 8]
-    stp     x10, x11, [sp, #8 * 10]
-    stp     x12, x13, [sp, #8 * 12]
-    stp     x14, x15, [sp, #8 * 14]
-    stp     x16, x17, [sp, #8 * 16]
-    stp     x18, x19, [sp, #8 * 18]
-    stp     x20, x21, [sp, #8 * 20]
-    stp     x22, x23, [sp, #8 * 22]
-    stp     x24, x25, [sp, #8 * 24]
-    stp     x26, x27, [sp, #8 * 26]
-    str     x28, [sp, #8 * 28]
+    stp     x4, x10, [sp, #-16]!
+    stp     x11, x15, [sp, #-16]!
 
-  // Replace them with required values, except for x0 and x1 (which is done by shim)
+  // Replace registers with required values, except for x0 and x1 (which is done by shim)
 
     ldp     x2, x3, [x0, #8 * 2]
     ldp     x4, x5, [x0, #8 * 4]
@@ -229,7 +214,7 @@ run_tests:
 
     blr     x1
 
-  // Store post-test registers
+  // Store post-test registers.
 
     stp     x0, x1, [x29, (8 * 0) - 256]
     stp     x2, x3, [x29, (8 * 2) - 256]
@@ -247,122 +232,85 @@ run_tests:
     stp     x26, x27, [x29, (8 * 26) - 256]
     str     x28, [x29, (8 * 28) - 256]
 
-  // restore previous values
+  // Restore loop registers.
 
-    ldp     x0, x1, [sp, #8 * 0]
-    ldp     x2, x3, [sp, #8 * 2]
-    ldp     x4, x5, [sp, #8 * 4]
-    ldp     x6, x7, [sp, #8 * 6]
-    ldp     x8, x9, [sp, #8 * 8]
-    ldp     x10, x11, [sp, #8 * 10]
-    ldp     x12, x13, [sp, #8 * 12]
-    ldp     x14, x15, [sp, #8 * 14]
-    ldp     x16, x17, [sp, #8 * 16]
-    ldp     x18, x19, [sp, #8 * 18]
-    ldp     x20, x21, [sp, #8 * 20]
-    ldp     x22, x23, [sp, #8 * 22]
-    ldp     x24, x25, [sp, #8 * 24]
-    ldp     x26, x27, [sp, #8 * 26]
-    ldr     x28, [sp, #8 * 28]
-    add     sp, sp, #0x100
+    ldp     x11, x15, [sp], #16
+    ldp     x4, x10, [sp], #16
 
-  // TODO: Calculate required values
+  // Test register values.
+  //
+  // Report a failure message to UART if values are equal but should not be, or
+  // are not equal but should be. Otherwise do nothing.
+  //
+  // Report lines as follows:
+  //
+  // FAIL: po_change test case 1: Register x3 changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
+  // FAIL: po_change test case 1: Register x4 changed from 0x8ceb064787d0b39b to 0x0000000000001a68, but should not have changed.
+  // FAIL: po_change test case 1: Register x5 unchanged from 0xfe87f64783bc7a76 but should have changed to 0x00000f00f00f00f0.
 
-  // TODO: Compare results
+    ldr     x17, [x11, #48]                 // x17 = registers effects block
+    ldr     x7, [x17], #8                   // x7 = register effects mask: 2 bits per register
+    mov     x9, #0                          // register index
+    sub     x18, x29, #512                  // x18 = base address of pre-test registers
+    15:
+      add     x8, x18, x9, lsl #3             // x8 = address of pre-test register value on stack
+      ldr     x12, [x8]                       // x12 = pre-test register value
+      ldr     x13, [x8, #256]                 // x13 = post-test register value
+      tbz     x7, #0, 16f                     // If register shouldn't change, jump forward to 16:.
+    // Register should be modified
+      ldr     x14, [x17], #8                  // x14 = register expected value as pointer or literal value
+      tbz     x7, #1, 17f                     // Jump ahead to 17: if literal value.
+      add     x14, sp, x14, lsl #3            // Convert x14 from point value to absolute value.
+      b       17f
+    16:
+      mov     x14, x12                        // x14 = expected value (= pre-test value)
+    17:
+      cmp     x13, x14                        // Post-test register value (x13) == expected register value (x14)?
+      b.eq    xxx                             // If actual == expected, register test passed; continue loop.
+    // Register test FAIL
+      adr     x0, msg_fail
+      bl      uart_puts                       // Log "FAIL: "
+      ldr     x0, [x11]                       // x0 = address of test name
+      bl      uart_puts                       // Log "<test case name>"
+      adr     x0, msg_reg1
+      bl      uart_puts                       // Log ": Register x"
+      sub     sp, sp, #32
+      mov     x0, sp
+      mov     x2, x9
+      bl      base10
+      bl      uart_puts                       // Log "<register index>"
+      add     sp, sp, #32
 
-#     pop_registers
-#     adr     x28, sysvars
-#     push_registers
-#     push_sysvars
-#     bl      po_change
-#     push_registers
-#     push_sysvars
-#     adr     x8, msg_po_change_case_1
-#     adr     x0, test_po_change_test_case_1_effects_registers
-# #   x0 = bit field for each register: 1 => register preserved / 0 => register should be updated
-# #        bit number matches register index
-# #   x8 = address of test case name
-#     add     x2, sp, (16 + sysvars_end - sysvars + 256 + sysvars_end - sysvars)
-#                                             // x2 = addres on stack of x0 before calling method
-#     add     x3, sp, (16 + sysvars_end - sysvars)
-#                                             // x3 = addres on stack of x0 after calling method
-#     mov     x1, #0                          // Index of the register to compare
-#   1:
-#   // test for equality
-#     ldr     x4, [x2, x1, lsl #3]
-#     ldr     x5, [x3, x1, lsl #3]
-#     stp     x0, x1, [sp, #-16]!
-#     stp     x2, x3, [sp, #-16]!
-# # Report a failure message to UART if values are equal but should not be, or
-# # are not equal but should be. Otherwise do nothing.
-# #
-# # Report lines as follows:
-# #
-# # FAIL: po_change test case 1: register x3 value 0x0000000000001a60 should have been modified
-# # FAIL: po_change test case 1: register x4 value unexpectedly modified from 0x8ceb064787d0b39b to 0x0000000000001a68
-# #
-# # On entry:
-# #   x0 = bit 0 set if values should be equal
-# #   x1 = index of x register to report on (e.g. 13 for 'x13')
-# #   x4 = register value before routine called
-# #   x5 = register value after routine called
-# #   x8 = address of test case name
-#   cmp     x4, x5
-#   csetm   x9, ne
-#   add     x6, x0, x9
-#   tst     x6, #1
-#   b.ne    3f
-#   // Test FAIL
-#   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-#   mov     x29, sp                         // Update frame pointer to new stack location.
-#   stp     x0, x1, [sp, #-16]!
-#   stp     x4, x5, [sp, #-16]!
-#   adr     x0, msg_fail
-#   bl      uart_puts                       // Write "FAIL: "
-#   mov     x0, x8
-#   bl      uart_puts                       // Write "<test case name>"
-#   adr     x0, msg_reg1
-#   bl      uart_puts                       // Write ": register x"
-#   sub     sp, sp, #32
-#   mov     x0, sp
-#   ldr     x2, [sp, #56]
-#   bl      base10
-#   bl      uart_puts                       // Write "<register index>"
-#   add     sp, sp, #32
 #   cbnz    x9, 1f
 # // Value should have been modified
 #   adr     x0, msg_reg2
-#   bl      uart_puts                       // Write " value "
+#   bl      uart_puts                       // Log " value "
 #   ldr     x0, [sp]
-#   bl      uart_x0                         // Write "<original register value>"
+#   bl      uart_x0                         // Log "<original register value>"
 #   adr     x0, msg_reg3
-#   bl      uart_puts                       // Write " should have been modified\r\n"
+#   bl      uart_puts                       // Log " should have been modified\r\n"
 #   b       2f
 # 1:
 # // Value unexpectedly modified
 #   adr     x0, msg_reg4
-#   bl      uart_puts                       // Write " value unexpectedly modified from "
+#   bl      uart_puts                       // Log " value unexpectedly modified from "
 #   ldr     x0, [sp]
-#   bl      uart_x0                         // Write "<original register value>"
+#   bl      uart_x0                         // Log "<original register value>"
 #   adr     x0, msg_reg5
-#   bl      uart_puts                       // Write " to "
+#   bl      uart_puts                       // Log " to "
 #   ldr     x0, [sp, #8]
-#   bl      uart_x0                         // Write "<updated register value>"
-#   bl      uart_newline                    // Write "\r\n"
-# 2:
-#   add     sp, sp, #32
-#   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-# 3:
-#     ldp     x2, x3, [sp], #16
-#     ldp     x0, x1, [sp], #16
-#     lsr     x0, x0, #1
-#     add     x1, x1, #1
-#     cmp     x1, #30
-#     b.ne    1b
-#     adr     x0, test_po_change_test_case_1_modified_sysvars
-#     bl      test_sysvar_effects
-#     add     sp, sp, 2*(sysvars_end-sysvars+256)
-#                                           // Free captured register/sysvar data
+#   bl      uart_x0                         // Log "<updated register value>"
+
+      bl      uart_newline                    // Log "\r\n"
+    xxx:
+      add     x9, x9, #1
+      lsr     x7, x7, #2
+      cmp     x9, #29
+      b.ne    15b
+
+  // TODO: Compare system variables
+
+  // TODO: Compare RAM
 
     add     sp, sp, x15, lsl #4             // Free RAM setup entries
 
@@ -371,13 +319,13 @@ run_tests:
 
   add     sp, sp, (sysvars_end - sysvars)*2 + 256*2
 
-  sub     sp, sp, #1760
-  mov     x0, sp
-  mov     x1, #55
-  mov     x2, 0
-  bl      display_memory
-  add     sp, sp, #1760
-  bl      display_sysvars
+#  sub     sp, sp, #1760
+#  mov     x0, sp
+#  mov     x1, #55
+#  mov     x2, 0
+#  bl      display_memory
+#  add     sp, sp, #1760
+#  bl      display_sysvars
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
 end_run_tests:
   ret
@@ -387,31 +335,8 @@ msg_running_test_part_1: .asciz "Running test "
 msg_running_test_part_2: .asciz "...\r\n"
 
 msg_fail: .asciz "FAIL: "
-msg_reg1: .asciz ": register x"
+msg_reg1: .asciz ": Register x"
 msg_reg2: .asciz " value "
 msg_reg3: .asciz " should have been modified\r\n"
 msg_reg4: .asciz " value unexpectedly modified from "
 msg_reg5: .asciz " to "
-
-
-.align 2
-uart_x0:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  stp     x19, x20, [sp, #-16]!           // Backup x19, x20
-  mov     x19, x0                         // Backup x0 in x19
-  sub     sp, sp, #0x20                   // Allocate space on stack for hex string
-  mov     w2, 0x7830
-  mov     x1, sp
-  mov     x1, sp
-  strh    w2, [x1], #2                    // "0x"
-  mov     x2, 64
-  bl      hex_x0
-  strb    wzr, [x1], #1
-  mov     x0, sp
-  bl      uart_puts
-  add     sp, sp, #0x20
-  mov     x0, x19                         // Restore x0
-  ldp     x19, x20, [sp], #16             // Restore x19, x20
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  ret

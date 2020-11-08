@@ -6,6 +6,7 @@
 .align 2
 
 
+run_tests:
 
 # Stack organisation
 # ==================
@@ -42,8 +43,6 @@
 # x17  sysvars setup block / ram setup block / registers setup block
 # x18  address on stack to set value
 
-
-run_tests:
   ldr     w0, arm_size
   and     sp, x0, #~0x0f                  // Set stack pointer at top of ARM memory
   adr     x4, all_tests                   // x4 = address of test list
@@ -156,28 +155,27 @@ run_tests:
   // Set up registers
 
     add     x0, x9, (sysvars_end - sysvars) // x0 = start of pre-test register block
-    mov     x1, #0x100                      // 256 bytes
-    bl      rand_block
-    str     x28, [x0, #-32]                 // set x28
+    mov     x1, #0x100                      // Register storage on stack takes up 256 bytes.
+    bl      rand_block                      // Write random bytes to stack so registers are random when popped.
+    str     x28, [x0, #-32]                 // x28 is exceptional: has constant value; replace random value.
     ldr     x17, [x11, #24]                 // x17 = registers setup block
     mov     x9, #0                          // register index
     ldr     x7, [x17], #8                   // x7 = register setup mask: 2 bits per register
-  12:
-    tbz     x7, #0, 14f
-  // register defined
-    ldr     x14, [x17], #8                  // x14 = register value
-    tbz     x7, #1, 13f
-  // x14 is pointer - convert to absolute value
-    add     x14, sp, x14, lsl #3            // x14 = pointer value
-  13:
-  // x14 is absolute value
-    sub     x0, x0, #256
-    str     x14, [x0, x9, lsl #3]
-  14:
-    add     x9, x9, #1
-    lsr     x7, x7, #2
-    cmp     x9, #32
-    b.ne    12b
+    12:
+      tbz     x7, #0, 14f                     // Continue loop if register not defined.
+    // register defined
+      ldr     x14, [x17], #8                  // x14 = register value
+      tbz     x7, #1, 13f
+      add     x14, sp, x14, lsl #3            // Convert x14 from point value to absolute value.
+    13:
+    // x14 is absolute value
+      sub     x0, x0, #256
+      str     x14, [x0, x9, lsl #3]
+    14:
+      add     x9, x9, #1
+      lsr     x7, x7, #2
+      cmp     x9, #32
+      b.ne    12b
 
 
 #     pop_registers

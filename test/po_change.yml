@@ -1,4 +1,5 @@
-tests
+---
+tests:
   - name: po_change test case 1
     setup:
       ram:
@@ -9,13 +10,16 @@ tests
         channel_block:
           pointer: old_input_routine
       sysvars:
-        CURCHL: channel_block
+        CURCHL:
+          pointer: channel_block
       registers:
-        x4: new_input_routine
+        x4:
+          pointer: new_input_routine
     effects:
       ram:
         channel_block:
           pointer: new_input_routine
       sysvars:
       registers:
-        x5: channel_block
+        x5:
+          pointer: channel_block

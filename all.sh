@@ -121,6 +121,9 @@ echo "${SYSVARS}" | while read sysvar size; do
 done
 } > src/profiles/debug/sysvars.s
 
+# Generate unit tests as part of debug profile
+go run test/spectrum4-generate-tests/main.go test src/profiles/debug/tests.s
+
 find src -name '*.s' | while read sourcefile; do
   cat "${sourcefile}" > x
   cat x | sed 's/  *$//' > "${sourcefile}"
@@ -179,8 +182,6 @@ fetch_firmware 'start.elf'
 # Log disassembly of kernel elf file. This is like above, but additionally
 # contains symbol names, etc.
 "${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-debug.elf
-
-go run test/spectrum4-generate-tests/main.go test src/profiles/debug/tests.s
 
 echo
 echo "Build successful - see dist directory for results"

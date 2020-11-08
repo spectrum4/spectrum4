@@ -6,8 +6,10 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -19,18 +21,55 @@ type (
 		outputFile      string
 		writer          io.Writer
 		sortedTestFiles []string
-		unitTests       []*UnitTest
+		unitTests       []UnitTest
+	}
+	UnitTests struct {
+		Tests []UnitTest `json:"tests"`
 	}
 	UnitTest struct {
+		Name    string        `json:"name"`
+		Setup   SystemContext `json:"setup"`
+		Effects SystemContext `json:"effects"`
+	}
+	SystemContext struct {
+		RAM       NamedValue `json:"ram"`
+		SysVars   NamedValue `json:"sysvars"`
+		Registers NamedValue `json:"registers"`
+	}
+	NamedValue  map[string]StoredValue
+	StoredValue struct {
+		Quad    *uint64 `json:"quad,omitempty"`
+		Pointer *string `json:"pointer,omitempty"`
 	}
 )
+
+func (nv NamedValue) SortedNames() []string {
+	s := make([]string, len(nv), len(nv))
+	i := 0
+	for k := range nv {
+		s[i] = k
+		i++
+	}
+	sort.Strings(s)
+	return s
+}
+
+func (nv NamedValue) IndexOf(entry string) int {
+	sorted := nv.SortedNames()
+	for i := range sorted {
+		if entry == sorted[i] {
+			return i
+		}
+	}
+	return -1
+}
 
 func New(inputDir string, outputFile string) *Generator {
 	return &Generator{
 		inputDir:        inputDir,
 		outputFile:      outputFile,
 		sortedTestFiles: []string{},
-		unitTests:       []*UnitTest{},
+		unitTests:       []UnitTest{},
 	}
 }
 
@@ -67,14 +106,17 @@ func (generator *Generator) LoadFiles() error {
 		if err != nil {
 			return fmt.Errorf("Could not interpret unit test file %q as YAML: %s", absYAMLPath, err)
 		}
-		ut := new(UnitTest)
+		uts := new(UnitTests)
 		dec := json.NewDecoder(bytes.NewBuffer(rawJSON))
 		dec.DisallowUnknownFields()
-		err = dec.Decode(ut)
+		err = dec.Decode(uts)
 		if err != nil {
+			if ute, isUnmarshallTypeError := err.(*json.UnmarshalTypeError); isUnmarshallTypeError {
+				log.Printf("Value: %v / Type: %v / Offset: %v / Struct: %v / Field: %v", ute.Value, ute.Type, ute.Offset, ute.Struct, ute.Field)
+			}
 			return fmt.Errorf("Unit test file %q has invalid properties: %s", absYAMLPath, err)
 		}
-		generator.unitTests = append(generator.unitTests, ut)
+		generator.unitTests = append(generator.unitTests, (uts.Tests)...)
 	}
 	return nil
 }
@@ -87,8 +129,15 @@ func (generator *Generator) GenerateFile() error {
 	fmt.Printf("Generating %v...\n", generator.outputFile)
 	generator.writer = file
 	generator.Header()
-	for _, testFile := range generator.sortedTestFiles {
-		generator.Test(testFile)
+	for _, unitTest := range generator.unitTests {
+		testCode, err := unitTest.Test()
+		if err != nil {
+			return err
+		}
+		_, err = generator.writer.Write(testCode)
+		if err != nil {
+			return err
+		}
 	}
 	err = file.Close()
 	if err != nil {
@@ -113,109 +162,128 @@ func (generator *Generator) Header() {
 	fmt.Fprintln(w, `.align 3`)
 	fmt.Fprintln(w, `all_tests:`)
 	fmt.Fprintln(w, `  .quad 1                                 // Number of tests.`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1`)
+	for _, unitTest := range generator.unitTests {
+		fmt.Fprintln(w, `  .quad `+unitTest.SymbolName()+``)
+	}
 }
 
-func (generator *Generator) Test(testFile string) {
-	w := generator.writer
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `##########################################################################`)
-	fmt.Fprintln(w, `############# Test po_change test case 1 #################################`)
-	fmt.Fprintln(w, `##########################################################################`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 3`)
-	fmt.Fprintln(w, `# Test case definition`)
-	fmt.Fprintln(w, `test_po_change_test_case_1:`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_name`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_setup_ram`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_setup_sysvars`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_setup_registers`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_effects_ram`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_effects_sysvars`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_effects_registers`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_exec`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `# Test case name`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_name:`)
-	fmt.Fprintln(w, `  .asciz "po_change test case 1"`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `# Test case setup`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 3`)
-	fmt.Fprintln(w, `# RAM setup`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_setup_ram:`)
-	fmt.Fprintln(w, `  .quad 3                                 // Number of RAM entries = 3`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_setup_ram_old_input_routine`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_setup_ram_new_input_routine`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_setup_ram_channel_block`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 3`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_setup_ram_old_input_routine:`)
-	fmt.Fprintln(w, `  .quad 8                                 // 8 => quad`)
-	fmt.Fprintln(w, `  .quad 0x0123456789abcdef                // quad: 0x0123456789abcdef`)
-	fmt.Fprintln(w, `  .asciz "old_input_routine"              // name: "old_input_routine"`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 3`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_setup_ram_new_input_routine:`)
-	fmt.Fprintln(w, `  .quad 8                                 // 8 => quad`)
-	fmt.Fprintln(w, `  .quad 0xfedcba9876543210                // quad: 0xfedcba9876543210`)
-	fmt.Fprintln(w, `  .asciz "new_input_routine"              // name: "new_input_routine"`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 3`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_setup_ram_channel_block:`)
-	fmt.Fprintln(w, `  .quad 16                                // 16 => pointer`)
-	fmt.Fprintln(w, `  .quad 0                                 // old_input_routine`)
-	fmt.Fprintln(w, `  .asciz "channel_block"                  // name: "channel_block"`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 3`)
-	fmt.Fprintln(w, `# System variables setup`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_setup_sysvars:`)
-	fmt.Fprintln(w, `  .quad 0b0000000000000000000000100000000000000000000000000000000000000000`)
-	fmt.Fprintln(w, `                                          // Index 41 => CURCHL`)
-	fmt.Fprintln(w, `  .quad 0b0000000000000000000000100000000000000000000000000000000000000000`)
-	fmt.Fprintln(w, `                                          // Index 41: 1 => CURCHL value is pointer`)
-	fmt.Fprintln(w, `  .quad 2`)
-	fmt.Fprintln(w, `                                          // [CURCHL] = channel_block`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 3`)
-	fmt.Fprintln(w, `# Registers setup`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_setup_registers:`)
-	fmt.Fprintln(w, `  .quad 0b0000000000000000000000000000000000000000000000000000001100000000`)
-	fmt.Fprintln(w, `  .quad 1`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `# Test case effects`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 3`)
-	fmt.Fprintln(w, `# RAM effects`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_effects_ram:`)
-	fmt.Fprintln(w, `  .quad 1                                 // Number of RAM entries = 1`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_setup_ram_channel_block`)
-	fmt.Fprintln(w, `  .quad 16                                // 16 => pointer`)
-	fmt.Fprintln(w, `  .quad test_po_change_test_case_1_setup_ram_new_input_routine`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 3`)
-	fmt.Fprintln(w, `# System variable effects`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_effects_sysvars:`)
-	fmt.Fprintln(w, `  .quad 0b0000000000000000000000000000000000000000000000000000000000000000`)
-	fmt.Fprintln(w, `  .quad 0b0000000000000000000000000000000000000000000000000000000000000000`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 3`)
-	fmt.Fprintln(w, `# Register effects`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_effects_registers:`)
-	fmt.Fprintln(w, `  .quad 0b0000000000000000000000000000000000000000000000000000110000000000`)
-	fmt.Fprintln(w, `  .quad 2`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `# Test case execution`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `.align 2`)
-	fmt.Fprintln(w, `test_po_change_test_case_1_exec:`)
-	fmt.Fprintln(w, `  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.`)
-	fmt.Fprintln(w, `  mov     x29, sp                         // Update frame pointer to new stack location.`)
-	fmt.Fprintln(w, `  ldp     x0, x1, [x0]                    // Restore x0, x1 values`)
-	fmt.Fprintln(w, `  bl      po_change`)
-	fmt.Fprintln(w, `  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.`)
-	fmt.Fprintln(w, `  ret`)
-	fmt.Fprintln(w, ``)
-	fmt.Fprintln(w, `##########################################################################`)
+func (unitTest *UnitTest) SymbolName() string {
+	return "test_" + strings.Replace(unitTest.Name, " ", "_", -1)
+}
+
+func (unitTest *UnitTest) Test() ([]byte, error) {
+	symbolName := unitTest.SymbolName()
+	w := new(bytes.Buffer)
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "##########################################################################")
+	fmt.Fprintf(w, "############# Test %v %v\n", unitTest.Name, strings.Repeat("#", 54-len(unitTest.Name)))
+	fmt.Fprintln(w, "##########################################################################")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, ".align 3")
+	fmt.Fprintln(w, "# Test case definition")
+	fmt.Fprintf(w, "%v:\n", symbolName)
+	fmt.Fprintf(w, "  .quad %v_name\n", symbolName)
+	fmt.Fprintf(w, "  .quad %v_setup_ram\n", symbolName)
+	fmt.Fprintf(w, "  .quad %v_setup_sysvars\n", symbolName)
+	fmt.Fprintf(w, "  .quad %v_setup_registers\n", symbolName)
+	fmt.Fprintf(w, "  .quad %v_effects_ram\n", symbolName)
+	fmt.Fprintf(w, "  .quad %v_effects_sysvars\n", symbolName)
+	fmt.Fprintf(w, "  .quad %v_effects_registers\n", symbolName)
+	fmt.Fprintf(w, "  .quad %v_exec\n", symbolName)
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "# Test case name")
+	fmt.Fprintf(w, "%v_name:\n", symbolName)
+	fmt.Fprintf(w, "  .asciz %q\n", unitTest.Name)
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "# Test case setup")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, ".align 3")
+	fmt.Fprintln(w, "# RAM setup")
+	fmt.Fprintf(w, symbolName+"_setup_ram:\n")
+
+	ramEntryCount := len(unitTest.Setup.RAM)
+
+	fmt.Fprintf(w, "  .quad %-4v                              // Number of RAM entries = %v\n", ramEntryCount, ramEntryCount)
+
+	ramEntries := unitTest.Setup.RAM
+	sortedRAMEntries := ramEntries.SortedNames()
+
+	for _, ramEntry := range sortedRAMEntries {
+		fmt.Fprintf(w, "  .quad %v_setup_ram_%v\n", symbolName, ramEntry)
+	}
+
+	for _, ramEntry := range sortedRAMEntries {
+		fmt.Fprintln(w, "")
+		fmt.Fprintln(w, ".align 3")
+		fmt.Fprintf(w, "%v_setup_ram_%v:\n", symbolName, ramEntry)
+		e := ramEntries[ramEntry]
+		switch {
+		case e.Quad != nil:
+			fmt.Fprintln(w, "  .quad 8                                 // 8 => quad")
+			fmt.Fprintf(w, "  .quad 0x%016x                // quad: 0x%016x\n", *e.Quad, *e.Quad)
+		case e.Pointer != nil:
+			fmt.Fprintln(w, "  .quad 16                                // 16 => pointer")
+			index := ramEntries.IndexOf(*e.Pointer)
+			if index < 0 {
+				return nil, fmt.Errorf("Pointer to undefined ram entry %v", *e.Pointer)
+			}
+			fmt.Fprintf(w, "  .quad %-16v                  // %v\n", index, *e.Pointer)
+		default:
+			return nil, fmt.Errorf("No Quad or Pointer specified in Unit Test %v", unitTest.Name)
+		}
+		fmt.Fprintf(w, "  .asciz %q %v // name: %q\n", ramEntry, strings.Repeat(" ", 29-len(ramEntry)), ramEntry)
+	}
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, ".align 3")
+	fmt.Fprintln(w, "# System variables setup")
+	fmt.Fprintln(w, symbolName+"_setup_sysvars:")
+	fmt.Fprintln(w, "  .quad 0b0000000000000000000000100000000000000000000000000000000000000000")
+	fmt.Fprintln(w, "                                          // Index 41 => CURCHL")
+	fmt.Fprintln(w, "  .quad 0b0000000000000000000000100000000000000000000000000000000000000000")
+	fmt.Fprintln(w, "                                          // Index 41: 1 => CURCHL value is pointer")
+	fmt.Fprintln(w, "  .quad 2")
+	fmt.Fprintln(w, "                                          // [CURCHL] = channel_block")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, ".align 3")
+	fmt.Fprintln(w, "# Registers setup")
+	fmt.Fprintln(w, symbolName+"_setup_registers:")
+	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000001100000000")
+	fmt.Fprintln(w, "  .quad 1")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "# Test case effects")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, ".align 3")
+	fmt.Fprintln(w, "# RAM effects")
+	fmt.Fprintln(w, symbolName+"_effects_ram:")
+	fmt.Fprintln(w, "  .quad 1                                 // Number of RAM entries = 1")
+	fmt.Fprintln(w, "  .quad "+symbolName+"_setup_ram_channel_block")
+	fmt.Fprintln(w, "  .quad 16                                // 16 => pointer")
+	fmt.Fprintln(w, "  .quad "+symbolName+"_setup_ram_new_input_routine")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, ".align 3")
+	fmt.Fprintln(w, "# System variable effects")
+	fmt.Fprintln(w, symbolName+"_effects_sysvars:")
+	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000000000000000")
+	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000000000000000")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, ".align 3")
+	fmt.Fprintln(w, "# Register effects")
+	fmt.Fprintln(w, symbolName+"_effects_registers:")
+	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000110000000000")
+	fmt.Fprintln(w, "  .quad 2")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "# Test case execution")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, ".align 2")
+	fmt.Fprintln(w, symbolName+"_exec:")
+	fmt.Fprintln(w, "  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.")
+	fmt.Fprintln(w, "  mov     x29, sp                         // Update frame pointer to new stack location.")
+	fmt.Fprintln(w, "  ldp     x0, x1, [x0]                    // Restore x0, x1 values")
+	fmt.Fprintln(w, "  bl      po_change")
+	fmt.Fprintln(w, "  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.")
+	fmt.Fprintln(w, "  ret")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "##########################################################################")
+	return w.Bytes(), nil
 }

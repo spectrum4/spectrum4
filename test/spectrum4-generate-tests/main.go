@@ -19,7 +19,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	err := generator.LoadFiles()
+	err = generator.LoadFiles()
 	if err != nil {
 		log.Fatal(err)
 	}

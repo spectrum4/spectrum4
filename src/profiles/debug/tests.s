@@ -41,15 +41,15 @@ test_po_change_test_case_1_name:
 # RAM setup
 test_po_change_test_case_1_setup_ram:
   .quad 3                                 // Number of RAM entries = 3
-  .quad test_po_change_test_case_1_setup_ram_old_input_routine
-  .quad test_po_change_test_case_1_setup_ram_new_input_routine
   .quad test_po_change_test_case_1_setup_ram_channel_block
+  .quad test_po_change_test_case_1_setup_ram_new_input_routine
+  .quad test_po_change_test_case_1_setup_ram_old_input_routine
 
 .align 3
-test_po_change_test_case_1_setup_ram_old_input_routine:
-  .quad 8                                 // 8 => quad
-  .quad 0x0123456789abcdef                // quad: 0x0123456789abcdef
-  .asciz "old_input_routine"              // name: "old_input_routine"
+test_po_change_test_case_1_setup_ram_channel_block:
+  .quad 16                                // 16 => pointer
+  .quad 2                                 // old_input_routine
+  .asciz "channel_block"                  // name: "channel_block"
 
 .align 3
 test_po_change_test_case_1_setup_ram_new_input_routine:
@@ -58,10 +58,10 @@ test_po_change_test_case_1_setup_ram_new_input_routine:
   .asciz "new_input_routine"              // name: "new_input_routine"
 
 .align 3
-test_po_change_test_case_1_setup_ram_channel_block:
-  .quad 16                                // 16 => pointer
-  .quad 0                                 // old_input_routine
-  .asciz "channel_block"                  // name: "channel_block"
+test_po_change_test_case_1_setup_ram_old_input_routine:
+  .quad 8                                 // 8 => quad
+  .quad 0x0123456789abcdef                // quad: 0x0123456789abcdef
+  .asciz "old_input_routine"              // name: "old_input_routine"
 
 .align 3
 # System variables setup
@@ -85,9 +85,9 @@ test_po_change_test_case_1_setup_registers:
 # RAM effects
 test_po_change_test_case_1_effects_ram:
   .quad 1                                 // Number of RAM entries = 1
-  .quad test_po_change_test_case_1_setup_ram_channel_block
-  .quad 16                                // 16 => pointer
-  .quad test_po_change_test_case_1_setup_ram_new_input_routine
+  .quad 0                                 // channel_block updated
+  .quad 16                                // 16 => new value is pointer
+  .quad 1                                 // value = new_input_routine
 
 .align 3
 # System variable effects

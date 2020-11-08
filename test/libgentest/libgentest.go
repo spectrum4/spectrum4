@@ -1,29 +1,40 @@
 package libgentest
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/ghodss/yaml"
 )
 
-type Generator struct {
-	inputDir        string
-	outputFile      string
-	writer          io.Writer
-	sortedTestFiles []string
-}
+type (
+	Generator struct {
+		inputDir        string
+		outputFile      string
+		writer          io.Writer
+		sortedTestFiles []string
+		unitTests       []*UnitTest
+	}
+	UnitTest struct {
+	}
+)
 
 func New(inputDir string, outputFile string) *Generator {
 	return &Generator{
 		inputDir:        inputDir,
 		outputFile:      outputFile,
 		sortedTestFiles: []string{},
+		unitTests:       []*UnitTest{},
 	}
 }
 
-func (generator *Generator) LoadFiles() error {
+func (generator *Generator) FindFiles() error {
 	err := filepath.Walk(generator.inputDir,
 		func(path string, info os.FileInfo, err error) error {
 			if err != nil {
@@ -37,6 +48,33 @@ func (generator *Generator) LoadFiles() error {
 		})
 	if err != nil {
 		return err
+	}
+	return nil
+}
+
+func (generator *Generator) LoadFiles() error {
+	for _, yamlPath := range generator.sortedTestFiles {
+		absYAMLPath, err := filepath.Abs(yamlPath)
+		if err != nil {
+			return fmt.Errorf("Could not determine absolute file location of unit test file %q: %s", yamlPath, err)
+		}
+		data, err := ioutil.ReadFile(absYAMLPath)
+		if err != nil {
+			return fmt.Errorf("Could not read unit test file %q: %s", absYAMLPath, err)
+		}
+		// JSON is valid YAML, so we can safely convert, even if it is already JSON
+		rawJSON, err := yaml.YAMLToJSON(data)
+		if err != nil {
+			return fmt.Errorf("Could not interpret unit test file %q as YAML: %s", absYAMLPath, err)
+		}
+		ut := new(UnitTest)
+		dec := json.NewDecoder(bytes.NewBuffer(rawJSON))
+		dec.DisallowUnknownFields()
+		err = dec.Decode(ut)
+		if err != nil {
+			return fmt.Errorf("Unit test file %q has invalid properties: %s", absYAMLPath, err)
+		}
+		generator.unitTests = append(generator.unitTests, ut)
 	}
 	return nil
 }

@@ -11,7 +11,7 @@
 
 .align 3
 all_tests:
-  .quad 1                                 // Number of tests.
+  .quad 0x0000000000000001                // Number of tests.
   .quad test_po_change_test_case_1
 
 
@@ -69,7 +69,7 @@ test_po_change_test_case_1_setup_sysvars:
   .quad 0b0000000000000000000000000000000000000000000000000000000000000000
   .quad 0b0000000000000000000000000000000000000000000011000000000000000000
                                           // Bits 18-19 = 0b11 => CURCHL (sysvar index 41) is pointer
-  .quad 0                                 // [CURCHL] = channel_block
+  .quad 0x0000000000000000                // [CURCHL] = channel_block
 
 .align 3
 # Registers setup

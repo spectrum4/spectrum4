@@ -115,9 +115,9 @@ echo "${SYSVARS}" | while read sysvar size; do
 done
 echo '
 .align 3
-sysvaraddresses:'
+sysvaraddressoffsets:'
 echo "${SYSVARS}" | while read sysvar size; do
-  echo "  .quad ${sysvar}"
+  echo "  .quad ${sysvar}-sysvars"
 done
 } > src/profiles/debug/sysvars.s
 

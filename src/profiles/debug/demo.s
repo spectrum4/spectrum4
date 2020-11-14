@@ -15,13 +15,14 @@ display_sysvars:
   adr     x0, msg_title_sysvars
   bl      uart_puts
   adr     x19, sysvarnames                // x0 = address of first sys var name
-  adr     x20, sysvaraddresses            // x20 = address of first sys var pointer
+  adr     x20, sysvaraddressoffsets       // x20 = address of first sys var offset entry
   adr     x22, sysvarsizes                // x22 = address of first sys var size
   mov     w23, SYSVAR_COUNT               // x23 = number of system variables to log
   1:
     mov     x0, '['
     bl      uart_send                       // Print "["
-    ldr     x0, [x20]                       // x0 = address of sys var
+    ldr     x0, [x20]                       // x0 = address offset of sys var
+    add     x0, x0, x28
     bl      uart_x0                         // Print "<sys var address>"
     mov     x0, ']'
     bl      uart_send                       // Print "]"
@@ -31,7 +32,7 @@ display_sysvars:
     bl      uart_puts                       // Print system variable name
     ldrb    w21, [x22], #1                  // w21 = size of sysvar data in bytes
     mov     x19, x0                         // x19 = address of next sysvar name
-    ldr     x24, [x20], #8                  // x24 = address of sys var
+    ldr     x24, [x20], #8                  // x24 = address offset of sys var
     cmp     w21, #1
     b.eq    3f
     cmp     w21, #2
@@ -45,6 +46,7 @@ display_sysvars:
     bl      uart_send
     mov     x0, ' '
     bl      uart_send
+    add     x24, x24, x28
     2:
       ldrb    w0, [x24], #1
       mov     x1, sp
@@ -59,19 +61,19 @@ display_sysvars:
     b       8f
   3:
     // 1 byte
-    ldrb    w4, [x24]
+    ldrb    w4, [x28, x24]
     b       7f
   4:
     // 2 bytes
-    ldrh    w4, [x24]
+    ldrh    w4, [x28, x24]
     b       7f
   5:
     // 4 bytes
-    ldr     w4, [x24]
+    ldr     w4, [x28, x24]
     b       7f
   6:
     // 8 bytes
-    ldr     x4, [x24]
+    ldr     x4, [x28, x24]
   7:
     adr     x0, msg_colon0x
     bl      uart_puts                       // Print ": 0x"

@@ -13,7 +13,7 @@ run_tests:
 # x0-3 scratch registers
 # x4   address inside all_tests
 # x5   sysvarsizes
-# x6   sysvaraddresses
+# x6   sysvaraddressoffsets
 # x7   sysvar setup mask / ram setup entry type
 # x8   sysvar pointer mask
 # x9   sysvar index / ram entry index
@@ -64,7 +64,7 @@ run_tests:
                                           // Allocate space on stack for pre-test/post-test registers and system variables
   1:                                      // Loop executing tests
     adr     x5, sysvarsizes
-    adr     x6, sysvaraddresses
+    adr     x6, sysvaraddressoffsets
     ldr     x11, [x4], #8                   // x11 = address of test definition
 
   // Log test running
@@ -115,11 +115,11 @@ run_tests:
       tbz     x7, #0, 10f                     // if sysvar not defined, skip setting it and leave random value in place
     // sysvar defined, replace random value
       ldr     x14, [x13], #8                  // x14 = value (pointer or literal value)
-      ldr     x18, [x6, x9, lsl #3]           // x18 = sysvar address
+      ldr     x18, [x6, x9, lsl #3]           // x18 = sysvar address offset
       tbz     x8, #0, 6f
     // pointer
       add     x12, sp, x14, lsl #3            // x12 = pointer value
-      str     x12, [x18]
+      str     x12, [x28, x18]
       b       10f
     6:
       ldrb    w16, [x5, x9]                   // x16 = sysvar size (in bytes)
@@ -127,19 +127,19 @@ run_tests:
       tbnz    w16, #2, 8f
       tbnz    w16, #3, 9f
     // 1 byte
-      strb    w14, [x18]
+      strb    w14, [x28, x18]
       b       10f
     7:
     // 2 bytes
-      strh    w14, [x18]
+      strh    w14, [x28, x18]
       b       10f
     8:
     // 4 bytes
-      str     w14, [x18]
+      str     w14, [x28, x18]
       b       10f
     9:
     // 8 bytes
-      str     x14, [x18]
+      str     x14, [x28, x18]
     10:
       add     x9, x9, #1                      // Increment sysvar index
       lsr     x7, x7, #1                      // Shift sysvar mask bits right
@@ -233,6 +233,18 @@ run_tests:
 
     ldp     x11, x15, [sp], #16
     ldp     x4, x10, [sp], #16
+
+  // Store post-test system variables.
+
+    mov     x0, x28
+    mov     x1, (sysvars_end - sysvars)
+    add     x9, sp, x15, lsl #4
+    add     x9, x9, (sysvars_end-sysvars)
+    11:
+      ldp     x2, x3, [x0], #0x10
+      stp     x2, x3, [x9], #0x10
+      subs    x1, x1, #0x10
+      b.ne    11b
 
   // Test register values.
   //

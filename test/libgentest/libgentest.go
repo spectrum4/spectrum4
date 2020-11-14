@@ -318,7 +318,7 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 			fmt.Fprintln(w, comments[i])
 		}
 	}
-	if len(unitTest.Setup.SysVars) < found {
+	if len(unitTest.Setup.SysVars) > found {
 		return nil, fmt.Errorf("%v unknown sysvar(s) in test %v", len(unitTest.Setup.SysVars)-found, unitTest.Name)
 	}
 	for _, e := range entries {

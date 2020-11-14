@@ -233,6 +233,7 @@ run_tests:
 
     ldp     x11, x15, [sp], #16
     ldp     x4, x10, [sp], #16
+    adr     x5, sysvars_meta
 
   // Store post-test system variables.
 
@@ -246,16 +247,7 @@ run_tests:
       subs    x1, x1, #0x10
       b.ne    15b
 
-  // Test register values.
-  //
-  // Report a failure message to UART if values are equal but should not be, or
-  // are not equal but should be. Otherwise do nothing.
-  //
-  // Report lines as follows:
-  //
-  // FAIL: po_change test case 1: Register x3 changed from 0x8ceb064787d0b39b to 0x0000000000001a68, but should not have changed.
-  // FAIL: po_change test case 1: Register x4 changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
-  // FAIL: po_change test case 1: Register x5 unchanged from 0xfe87f64783bc7a76 but should have changed to 0x00000f00f00f00f0.
+  // Test register values
 
     ldr     x17, [x11, #48]                 // x17 = registers effects block
     ldr     x7, [x17], #8                   // x7 = register effects mask: 2 bits per register
@@ -286,31 +278,26 @@ run_tests:
 
   // TODO: Test system variable values
 
-//    ldr     x17, [x11, #40]                 // x17 = sysvars effects block
-//    mov     x9, #0                          // register index
-//    add     x18, sp, x15, lsl #4            // x18 = base address of pre-test system variables
-//    add     x13, x17, SYSVAR_MASK_BYTES*2   // x13 = address of first sysvar definition
-//    X1:
-//      tst     x9, #0x3f                       // lower 6 bits of x9 are 0 when we need to read next quad mask
-//      b.ne    X2
-//      ldr     x7, [x17], #8                   // x7 = sysvar setup mask
-//      ldr     x8, [x17, SYSVAR_MASK_BYTES - 8]
-//    X2:
-///////      ldr     x8, [x6, x9, lsl #3]            // x8 = sysvar address offset
-//      ldr     x12, [x18, x8]                  // x12 = pre-test register value
-//      add     x8, x8, (sysvars_end-sysvars)
-//      ldr     x13, [x18, x8]                  // x13 = post-test register value
-//      tbz     x7, #0, X3                      // If system variable shouldn't change, jump forward to X3.
-//    // Sysvar should be modified
+//     ldr     x17, [x11, #40]                 // x17 = sysvars effects block
+//     mov     x9, #0                          // register index
+//     add     x18, sp, x15, lsl #4            // x18 = base address of pre-test system variables
+//     add     x19, x17, SYSVAR_MASK_BYTES*2   // x19 = address of first sysvar definition
+//     X1:
+//       tst     x9, #0x3f                       // lower 6 bits of x9 are 0 when we need to read next quad mask
+//       b.ne    X2
+//       ldr     x7, [x17], #8                   // x7 = sysvar setup mask
+//       ldr     x8, [x17, SYSVAR_MASK_BYTES - 8]
+//     X2:
+//       ldr     x6, [x5, x9, lsl #3]            // x6 = sysvar meta entry
+//       ldr     x8, [x6]                        // x8 = address offset from x18 of pre-test sysvar
+//       ldr     x12, [x18, x8]                  // x12 = pre-test register value
+//       add     x8, x8, (sysvars_end-sysvars)   // x8 = address offset from x18 of post-test sysvar
+//       ldr     x13, [x18, x8]                  // x13 = post-test register value
+//       tbz     x7, #0, X3                      // If system variable shouldn't change, jump forward to X3.
+//     // Sysvar should be modified
+//       ldr     x0, [x19], #8                   // x0 = register expected value as pointer or literal value
 //
-////    ldp     x11, x15, [sp], #16
-////    ldp     x4, x10, [sp], #16
-//
-//
-//
-//
-//      ldr     x14, [x17], #8                  // x14 = register expected value as pointer or literal value
-
+//     X3:
 
   // TODO: Test RAM values
 
@@ -348,6 +335,16 @@ log_register:
   ret
 
 
+# Log test failure message
+#
+# Report a failure message to UART if values are equal but should not be, or
+# are not equal but should be. Otherwise do nothing.
+#
+# Report lines as follows:
+#
+# FAIL: po_change test case 1: Register x3 changed from 0x8ceb064787d0b39b to 0x0000000000001a68, but should not have changed.
+# FAIL: po_change test case 1: Register x4 changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
+# FAIL: po_change test case 1: Register x5 unchanged from 0xfe87f64783bc7a76 but should have changed to 0x00000f00f00f00f0.
 test_fail:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.

@@ -103,20 +103,18 @@ run_tests:
     bl      rand_block                      // Set sysvars to random values
     ldr     x17, [x11, #16]                 // x17 = sysvars setup block
     mov     x9, #0                          // x9 = sysvar index
-    add     x13, x17, SYSVAR_MASK_BYTES*2   // x13 = address of first sysvar definition
+    add     x13, x17, SYSVAR_MASK_BYTES     // x13 = address of first sysvar definition
     4:
-      tst     x9, #0x3f                       // lower 6 bits of x9 are 0 when we need to read next quad mask
+      tst     x9, #0x1f                       // lower 5 bits of x9 are 0 when we need to read next quad mask
       b.ne    5f
       ldr     x7, [x17], #8                   // x7 = sysvar setup mask
-      ldr     x8, [x17, SYSVAR_MASK_BYTES - 8]
-                                              // x8 = sysvar setup mask
     5:
       tbz     x7, #0, 10f                     // if sysvar not defined, skip setting it and leave random value in place
     // sysvar defined, replace random value
       ldr     x14, [x13], #8                  // x14 = value (pointer or literal value)
       ldr     x6, [x5, x9, lsl #3]            // x6 = sysvar meta entry
       ldr     x18, [x6]                       // x18 = sysvar address offset
-      tbz     x8, #0, 6f
+      tbz     x7, #1, 6f
     // pointer
       add     x12, sp, x14, lsl #3            // x12 = pointer value
       str     x12, [x28, x18]
@@ -142,8 +140,7 @@ run_tests:
       str     x14, [x28, x18]
     10:
       add     x9, x9, #1                      // Increment sysvar index
-      lsr     x7, x7, #1                      // Shift sysvar mask bits right
-      lsr     x8, x8, #1                      // Shift sysvar pointer bits right
+      lsr     x7, x7, #2                      // Shift sysvar mask 2 bits right
       cmp     x9, SYSVAR_COUNT
       b.ne    4b
 
@@ -281,12 +278,11 @@ run_tests:
 //     ldr     x17, [x11, #40]                 // x17 = sysvars effects block
 //     mov     x9, #0                          // register index
 //     add     x18, sp, x15, lsl #4            // x18 = base address of pre-test system variables
-//     add     x19, x17, SYSVAR_MASK_BYTES*2   // x19 = address of first sysvar definition
+//     add     x19, x17, SYSVAR_MASK_BYTES     // x19 = address of first sysvar definition
 //     X1:
-//       tst     x9, #0x3f                       // lower 6 bits of x9 are 0 when we need to read next quad mask
+//       tst     x9, #0x1f                       // lower 5 bits of x9 are 0 when we need to read next quad mask
 //       b.ne    X2
 //       ldr     x7, [x17], #8                   // x7 = sysvar setup mask
-//       ldr     x8, [x17, SYSVAR_MASK_BYTES - 8]
 //     X2:
 //       ldr     x6, [x5, x9, lsl #3]            // x6 = sysvar meta entry
 //       ldr     x8, [x6]                        // x8 = address offset from x18 of pre-test sysvar

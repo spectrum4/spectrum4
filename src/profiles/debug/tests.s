@@ -66,10 +66,9 @@ test_po_change_test_case_1_setup_ram_old_input_routine:
 .align 3
 # System variables setup
 test_po_change_test_case_1_setup_sysvars:
-  .quad 0b0000000000000000000000100000000000000000000000000000000000000000
-                                          // Index 41 => CURCHL
-  .quad 0b0000000000000000000000100000000000000000000000000000000000000000
-                                          // Index 41: 1 => CURCHL value is pointer
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+  .quad 0b0000000000000000000000000000000000000000000011000000000000000000
+                                          // Bits 18-19 = 0b11 => CURCHL (sysvar index 41) is pointer
   .quad 0                                 // [CURCHL] = channel_block
 
 .align 3

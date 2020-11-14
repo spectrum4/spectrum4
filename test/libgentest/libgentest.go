@@ -289,41 +289,26 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# System variables setup")
 	fmt.Fprintf(w, "%v_setup_sysvars:\n", symbolName)
-	sysVarMaskByteCount := (len(sysVars) + 63) / 64
+	sysVarMaskByteCount := (len(sysVars) + 31) / 32
 	for i := 0; i < sysVarMaskByteCount; i++ {
-		var sysVarDefinedMask uint64 = 0
+		var sysVarMask uint64 = 0
 		comments := []string{}
-		for j := 0; j < 64; j++ {
-			if j+i*64 == len(sysVars) {
+		for j := 0; j < 32; j++ {
+			if j+i*32 == len(sysVars) {
 				break
 			}
-			sysVar := sysVars[j+i*64]
-			if _, exists := unitTest.Setup.SysVars[sysVar]; exists {
-				sysVarDefinedMask |= 1 << (j + i*64)
-				comments = append(comments, fmt.Sprintf("                                          // Index %v => %v", j+i*64, sysVar))
-			}
-		}
-		fmt.Fprintf(w, "  .quad 0b%064b\n", sysVarDefinedMask)
-		for i := range comments {
-			fmt.Fprintln(w, comments[i])
-		}
-	}
-	for i := 0; i < sysVarMaskByteCount; i++ {
-		var sysVarPointerMask uint64 = 0
-		comments := []string{}
-		for j := 0; j < 64; j++ {
-			if j+i*64 == len(sysVars) {
-				break
-			}
-			sysVar := sysVars[j+i*64]
-			if s, exists := unitTest.Setup.SysVars[sysVar]; exists {
-				if s.Pointer != nil {
-					sysVarPointerMask |= 1 << (j + i*64)
-					comments = append(comments, fmt.Sprintf("                                          // Index %v: 1 => %v value is pointer", j+i*64, sysVar))
+			sysVar := sysVars[j+i*32]
+			if sv, exists := unitTest.Setup.SysVars[sysVar]; exists {
+				sysVarMask |= 1 << (2 * j)
+				if sv.Pointer != nil {
+					sysVarMask |= 1 << (2*j + 1)
+					comments = append(comments, fmt.Sprintf("                                          // Bits %v-%v = 0b11 => %v (sysvar index %v) is pointer", 2*j, 2*j+1, sysVar, j+i*32))
+				} else {
+					comments = append(comments, fmt.Sprintf("                                          // Bits %v-%v = 0b01 => %v (sysvar index %v) is absolute value", 2*j, 2*j+1, sysVar, j+i*32))
 				}
 			}
 		}
-		fmt.Fprintf(w, "  .quad 0b%064b\n", sysVarPointerMask)
+		fmt.Fprintf(w, "  .quad 0b%064b\n", sysVarMask)
 		for i := range comments {
 			fmt.Fprintln(w, comments[i])
 		}

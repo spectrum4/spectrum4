@@ -86,7 +86,7 @@ mkdir build
 # Generate src/profiles/debug/sysvars.s
 SYSVARS="$(cat src/bss.s | sed -n '/sysvars:/,/sysvars_end:/p' | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space \([^ ]*\) .*$/\1 \2/p')"
 SYSVAR_COUNT=$(echo "${SYSVARS}" | wc -l)
-SYSVAR_MASK_BYTES=$(((SYSVAR_COUNT+63)/64*8))
+SYSVAR_MASK_BYTES=$(((SYSVAR_COUNT+31)/32*8))
 {
 echo '# This file is part of the Spectrum +4 Project.
 # Licencing information can be found in the LICENCE file

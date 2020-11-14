@@ -240,11 +240,11 @@ run_tests:
     mov     x1, (sysvars_end - sysvars)
     add     x9, sp, x15, lsl #4
     add     x9, x9, (sysvars_end-sysvars)
-    11:
+    15:
       ldp     x2, x3, [x0], #0x10
       stp     x2, x3, [x9], #0x10
       subs    x1, x1, #0x10
-      b.ne    11b
+      b.ne    15b
 
   // Test register values.
   //
@@ -261,21 +261,25 @@ run_tests:
     ldr     x7, [x17], #8                   // x7 = register effects mask: 2 bits per register
     mov     x9, #0                          // register index
     sub     x18, x29, #512                  // x18 = base address of pre-test registers
-    15:
+    16:
       add     x8, x18, x9, lsl #3             // x8 = address of pre-test register value on stack
       ldr     x12, [x8]                       // x12 = pre-test register value
       ldr     x13, [x8, #256]                 // x13 = post-test register value
-      tbz     x7, #0, 16f                     // If register shouldn't change, jump forward to 16:.
+      tbz     x7, #0, 17f                     // If register shouldn't change, jump forward to 17:.
     // Register should be modified
       ldr     x14, [x17], #8                  // x14 = register expected value as pointer or literal value
-      tbz     x7, #1, 17f                     // Jump ahead to 17: if literal value.
+
+
+
+
+      tbz     x7, #1, 18f                     // Jump ahead to 18: if literal value.
       add     x14, sp, x14, lsl #3            // Convert x14 from point value to absolute value.
-      b       17f
-    16:
-      mov     x14, x12                        // x14 = expected value (= pre-test value)
+      b       18f
     17:
+      mov     x14, x12                        // x14 = expected value (= pre-test value)
+    18:
       cmp     x13, x14                        // Post-test register value (x13) == expected register value (x14)?
-      b.eq    20f                             // If actual == expected, register test passed; continue loop.
+      b.eq    21f                             // If actual == expected, register test passed; continue loop.
     // Register test FAIL
       adr     x0, msg_fail
       bl      uart_puts                       // Log "FAIL: "
@@ -290,7 +294,7 @@ run_tests:
       bl      uart_puts                       // Log "<register index>"
       add     sp, sp, #32
       cmp     x12, x13
-      b.eq    19f                             // x12 == x13 => value unchanged but should have
+      b.eq    20f                             // x12 == x13 => value unchanged but should have
     // register value changed
       adr     x0, msg_reg_fail_1
       bl      uart_puts                       // Log " changed from "
@@ -301,7 +305,7 @@ run_tests:
       mov     x0, x13
       bl      uart_x0                         // Log "<post-test register value>"
       cmp     x12, x14
-      b.eq    18f                             // x12 == x14 => value shouldn't have changed but did
+      b.eq    19f                             // x12 == x14 => value shouldn't have changed but did
     // register value meant to change, but to a different value
       adr     x0, msg_reg_fail_4
       bl      uart_puts                       // Log ", but should have changed to "
@@ -309,13 +313,13 @@ run_tests:
       bl      uart_x0                         // Log "<expected register value>"
       adr     x0, msg_reg_fail_6
       bl      uart_puts                       // Log ".\r\n"
-      b       20f
-    18:
+      b       21f
+    19:
     // register value not meant to change, but did
       adr     x0, msg_reg_fail_5
       bl      uart_puts                       // Log ", but should not have changed.\r\n"
-      b       20f
-    19:
+      b       21f
+    20:
     // register value unchanged, but was meant to
       adr     x0, msg_reg_fail_2
       bl      uart_puts                       // Log " unchanged from "
@@ -327,11 +331,11 @@ run_tests:
       bl      uart_x0                         // Log "<expected register value>"
       adr     x0, msg_reg_fail_6
       bl      uart_puts                       // Log ".\r\n"
-    20:
+    21:
       add     x9, x9, #1
       lsr     x7, x7, #2
       cmp     x9, #29
-      b.ne    15b
+      b.ne    16b
 
   // TODO: Test system variable values
 

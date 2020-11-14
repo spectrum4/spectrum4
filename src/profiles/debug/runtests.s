@@ -23,7 +23,7 @@ run_tests:
 # x13  address of individual sysvar definition / address of RAM setup entry
 # x14  sysvar value / ram setup value
 # x15  number of RAM setup entries
-# x16  sysvar size in bytes (for literals)
+# x16  function pointer for logging name of value being tested
 # x17  sysvars/ram/registers setup/effects block
 # x18  address on stack to set/test value
 
@@ -122,10 +122,10 @@ run_tests:
       str     x12, [x28, x18]
       b       10f
     6:
-      ldrb    w16, [x5, x9]                   // x16 = sysvar size (in bytes)
-      tbnz    w16, #1, 7f
-      tbnz    w16, #2, 8f
-      tbnz    w16, #3, 9f
+      ldrb    w0, [x5, x9]                    // w0 = sysvar size (in bytes)
+      tbnz    w0, #1, 7f
+      tbnz    w0, #2, 8f
+      tbnz    w0, #3, 9f
     // 1 byte
       strb    w14, [x28, x18]
       b       10f
@@ -268,10 +268,6 @@ run_tests:
       tbz     x7, #0, 17f                     // If register shouldn't change, jump forward to 17:.
     // Register should be modified
       ldr     x14, [x17], #8                  // x14 = register expected value as pointer or literal value
-
-
-
-
       tbz     x7, #1, 18f                     // Jump ahead to 18: if literal value.
       add     x14, sp, x14, lsl #3            // Convert x14 from point value to absolute value.
       b       18f
@@ -279,59 +275,10 @@ run_tests:
       mov     x14, x12                        // x14 = expected value (= pre-test value)
     18:
       cmp     x13, x14                        // Post-test register value (x13) == expected register value (x14)?
-      b.eq    21f                             // If actual == expected, register test passed; continue loop.
-    // Register test FAIL
-      adr     x0, msg_fail
-      bl      uart_puts                       // Log "FAIL: "
-      ldr     x0, [x11]                       // x0 = address of test name
-      bl      uart_puts                       // Log "<test case name>"
-      adr     x0, msg_reg_fail_0
-      bl      uart_puts                       // Log ": Register x"
-      sub     sp, sp, #32
-      mov     x0, sp
-      mov     x2, x9
-      bl      base10
-      bl      uart_puts                       // Log "<register index>"
-      add     sp, sp, #32
-      cmp     x12, x13
-      b.eq    20f                             // x12 == x13 => value unchanged but should have
-    // register value changed
-      adr     x0, msg_reg_fail_1
-      bl      uart_puts                       // Log " changed from "
-      mov     x0, x12
-      bl      uart_x0                         // Log "<pre-test register value>"
-      adr     x0, msg_reg_fail_3
-      bl      uart_puts                       // Log " to "
-      mov     x0, x13
-      bl      uart_x0                         // Log "<post-test register value>"
-      cmp     x12, x14
-      b.eq    19f                             // x12 == x14 => value shouldn't have changed but did
-    // register value meant to change, but to a different value
-      adr     x0, msg_reg_fail_4
-      bl      uart_puts                       // Log ", but should have changed to "
-      mov     x0, x14
-      bl      uart_x0                         // Log "<expected register value>"
-      adr     x0, msg_reg_fail_6
-      bl      uart_puts                       // Log ".\r\n"
-      b       21f
+      b.eq    19f                             // If actual == expected, register test passed; continue loop.
+      mov     x16, log_register               // x16 = function to log ": Register x<index>"
+      bl      test_fail                       // Otherwise, report failure.
     19:
-    // register value not meant to change, but did
-      adr     x0, msg_reg_fail_5
-      bl      uart_puts                       // Log ", but should not have changed.\r\n"
-      b       21f
-    20:
-    // register value unchanged, but was meant to
-      adr     x0, msg_reg_fail_2
-      bl      uart_puts                       // Log " unchanged from "
-      mov     x0, x12
-      bl      uart_x0                         // Log "<pre-test register value>"
-      adr     x0, msg_reg_fail_4
-      bl      uart_puts                       // Log ", but should have changed to "
-      mov     x0, x14
-      bl      uart_x0                         // Log "<expected register value>"
-      adr     x0, msg_reg_fail_6
-      bl      uart_puts                       // Log ".\r\n"
-    21:
       add     x9, x9, #1
       lsr     x7, x7, #2
       cmp     x9, #29
@@ -348,6 +295,79 @@ run_tests:
   add     sp, sp, (sysvars_end - sysvars)*2 + 256*2
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
 end_run_tests:
+  ret
+
+
+log_sysvar:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+log_register:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x0, msg_reg_fail_0
+  bl      uart_puts                       // Log ": Register x"
+  sub     sp, sp, 32
+  mov     x0, sp
+  mov     x2, x9
+  bl      base10
+  bl      uart_puts                       // Log "<register index>"
+  add     sp, sp, #32
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+test_fail:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x0, msg_fail
+  bl      uart_puts                       // Log "FAIL: "
+  ldr     x0, [x11]                       // x0 = address of test name
+  bl      uart_puts                       // Log "<test case name>"
+  blr     x16
+  cmp     x12, x13
+  b.eq    2f                              // x12 == x13 => value unchanged but should have
+// value changed
+  adr     x0, msg_reg_fail_1
+  bl      uart_puts                       // Log " changed from "
+  mov     x0, x12
+  bl      uart_x0                         // Log "<pre-test register value>"
+  adr     x0, msg_reg_fail_3
+  bl      uart_puts                       // Log " to "
+  mov     x0, x13
+  bl      uart_x0                         // Log "<post-test register value>"
+  cmp     x12, x14
+  b.eq    1f                              // x12 == x14 => value shouldn't have changed but did
+// value meant to change, but to a different value
+  adr     x0, msg_reg_fail_4
+  bl      uart_puts                       // Log ", but should have changed to "
+  mov     x0, x14
+  bl      uart_x0                         // Log "<expected register value>"
+  adr     x0, msg_reg_fail_6
+  bl      uart_puts                       // Log ".\r\n"
+  b       3f
+1:
+// value not meant to change, but did
+  adr     x0, msg_reg_fail_5
+  bl      uart_puts                       // Log ", but should not have changed.\r\n"
+  b       3f
+2:
+// value unchanged, but was meant to
+  adr     x0, msg_reg_fail_2
+  bl      uart_puts                       // Log " unchanged from "
+  mov     x0, x12
+  bl      uart_x0                         // Log "<pre-test register value>"
+  adr     x0, msg_reg_fail_4
+  bl      uart_puts                       // Log ", but should have changed to "
+  mov     x0, x14
+  bl      uart_x0                         // Log "<expected register value>"
+  adr     x0, msg_reg_fail_6
+  bl      uart_puts                       // Log ".\r\n"
+3:
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
 

@@ -26,6 +26,7 @@ run_tests:
 # x16  function pointer for logging name of value being tested
 # x17  sysvars/ram/registers setup/effects block
 # x18  address on stack to set/test value
+# x19  start of sysvar expected values after mask entries
 
 # Stack organisation
 # ==================
@@ -273,27 +274,61 @@ run_tests:
       cmp     x9, #29
       b.ne    16b
 
-  // TODO: Test system variable values
+  // Test system variable values
 
-//     ldr     x17, [x11, #40]                 // x17 = sysvars effects block
-//     mov     x9, #0                          // register index
-//     add     x18, sp, x15, lsl #4            // x18 = base address of pre-test system variables
-//     add     x19, x17, SYSVAR_MASK_BYTES     // x19 = address of first sysvar definition
-//     X1:
-//       tst     x9, #0x1f                       // lower 5 bits of x9 are 0 when we need to read next quad mask
-//       b.ne    X2
-//       ldr     x7, [x17], #8                   // x7 = sysvar setup mask
-//     X2:
-//       ldr     x6, [x5, x9, lsl #3]            // x6 = sysvar meta entry
-//       ldr     x8, [x6]                        // x8 = address offset from x18 of pre-test sysvar
-//       ldr     x12, [x18, x8]                  // x12 = pre-test register value
-//       add     x8, x8, (sysvars_end-sysvars)   // x8 = address offset from x18 of post-test sysvar
-//       ldr     x13, [x18, x8]                  // x13 = post-test register value
-//       tbz     x7, #0, X3                      // If system variable shouldn't change, jump forward to X3.
-//     // Sysvar should be modified
-//       ldr     x0, [x19], #8                   // x0 = register expected value as pointer or literal value
-//
-//     X3:
+    ldr     x17, [x11, #40]                 // x17 = sysvars effects block
+    add     x19, x17, SYSVAR_MASK_BYTES     // x19 = address of first sysvar definition
+    mov     x9, #0                          // sysvar index
+    add     x18, sp, x15, lsl #4            // x18 = base address of pre-test system variables
+    20:
+      tst     x9, #0x1f                       // lower 5 bits of x9 are 0 when we need to read next quad mask
+      b.ne    21f
+      ldr     x7, [x17], #8                   // x7 = sysvar setup mask
+    21:
+      ldr     x6, [x5, x9, lsl #3]            // x6 = sysvar meta entry
+      ldr     x8, [x6]                        // x8 = address offset from x18 of pre-test sysvar
+      add     x1, x8, (sysvars_end-sysvars)   // x1 = address offset from x18 of post-test sysvar
+      ldrb    w0, [x6, #8]                    // w0 = sysvar size (in bytes)
+      tbnz    w0, #1, 22f
+      tbnz    w0, #2, 23f
+      tbnz    w0, #3, 24f
+    // 1 byte
+      ldrb    w12, [x18, x8]                  // x12 = pre-test register value
+      ldrb    w13, [x18, x1]                  // x13 = post-test register value
+      b       25f
+    22:
+    // 2 bytes
+      ldrh    w12, [x18, x8]                  // x12 = pre-test register value
+      ldrh    w13, [x18, x1]                  // x13 = post-test register value
+      b       25f
+    23:
+    // 4 bytes
+      ldr     w12, [x18, x8]                  // x12 = pre-test register value
+      ldr     w13, [x18, x1]                  // x13 = post-test register value
+      b       25f
+    24:
+    // 8 bytes
+      ldr     x12, [x18, x8]                  // x12 = pre-test register value
+      ldr     x13, [x18, x1]                  // x13 = post-test register value
+    25:
+      tbz     x7, #0, 26f                     // If system variable shouldn't change, jump forward to 26.
+    // Sysvar should be modified
+      ldr     x14, [x19], #8                  // x14 = register expected value as pointer or literal value
+      tbz     x7, #1, 27f                     // Jump ahead to 27: if literal value.
+      add     x14, sp, x14, lsl #3            // Convert x14 from point value to absolute value.
+      b       27f
+    26:
+      mov     x14, x12                        // x14 = expected value (= pre-test value)
+    27:
+      cmp     x13, x14                        // Post-test register value (x13) == expected register value (x14)?
+      b.eq    28f                             // If actual == expected, register test passed; continue loop.
+      mov     x16, log_sysvar                 // x16 = function to log ": System Variable <sysvar>"
+      bl      test_fail                       // Otherwise, report failure.
+    28:
+      add     x9, x9, #1
+      lsr     x7, x7, #2
+      cmp     x9, SYSVAR_COUNT
+      b.ne    20b
 
   // TODO: Test RAM values
 
@@ -312,6 +347,8 @@ log_sysvar:
   mov     x29, sp                         // Update frame pointer to new stack location.
   adr     x0, msg_fail_7
   bl      uart_puts                       // Log ": System Variable "
+  add     x0, x6, #9                      // x0 = address of system variable name
+  bl      uart_puts                       // Log "<sysvar>"
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 

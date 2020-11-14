@@ -10,301 +10,470 @@
 
 .data
 
-.align 0
-sysvarnames:
-sysvar_COL_name:
-  .asciz "COL"
-sysvar_WIDTH_name:
-  .asciz "WIDTH"
-sysvar_TVPARS_name:
-  .asciz "TVPARS"
-sysvar_RASP_name:
-  .asciz "RASP"
-sysvar_PIP_name:
-  .asciz "PIP"
-sysvar_FLAGS_name:
-  .asciz "FLAGS"
-sysvar_FLAGS2_name:
-  .asciz "FLAGS2"
-sysvar_TV_FLAG_name:
-  .asciz "TV_FLAG"
-sysvar_BORDCR_name:
-  .asciz "BORDCR"
-sysvar_ERR_NR_name:
-  .asciz "ERR_NR"
-sysvar_DF_SZ_name:
-  .asciz "DF_SZ"
-sysvar_SCR_CT_name:
-  .asciz "SCR_CT"
-sysvar_P_POSN_name:
-  .asciz "P_POSN"
-sysvar_ECHO_E_COL_name:
-  .asciz "ECHO_E_COL"
-sysvar_ECHO_E_ROW_name:
-  .asciz "ECHO_E_ROW"
-sysvar_S_POSN_COL_name:
-  .asciz "S_POSN_COL"
-sysvar_S_POSN_ROW_name:
-  .asciz "S_POSN_ROW"
-sysvar_S_POSNL_COL_name:
-  .asciz "S_POSNL_COL"
-sysvar_S_POSNL_ROW_name:
-  .asciz "S_POSNL_ROW"
-sysvar_P_FLAG_name:
-  .asciz "P_FLAG"
-sysvar_BREG_name:
-  .asciz "BREG"
-sysvar_REPDEL_name:
-  .asciz "REPDEL"
-sysvar_REPPER_name:
-  .asciz "REPPER"
-sysvar_ATTR_P_name:
-  .asciz "ATTR_P"
-sysvar_MASK_P_name:
-  .asciz "MASK_P"
-sysvar_ATTR_T_name:
-  .asciz "ATTR_T"
-sysvar_MASK_T_name:
-  .asciz "MASK_T"
-sysvar_BAUD_name:
-  .asciz "BAUD"
-sysvar_SERFL_name:
-  .asciz "SERFL"
-sysvar_RNFIRST_name:
-  .asciz "RNFIRST"
-sysvar_RNSTEP_name:
-  .asciz "RNSTEP"
-sysvar_STRMS_name:
-  .asciz "STRMS"
-sysvar_COORDS_name:
-  .asciz "COORDS"
-sysvar_COORDS_Y_name:
-  .asciz "COORDS_Y"
-sysvar_TVDATA_name:
-  .asciz "TVDATA"
-sysvar_SFNEXT_name:
-  .asciz "SFNEXT"
-sysvar_SFSPACE_name:
-  .asciz "SFSPACE"
-sysvar_CHARS_name:
-  .asciz "CHARS"
-sysvar_LIST_SP_name:
-  .asciz "LIST_SP"
-sysvar_VARS_name:
-  .asciz "VARS"
-sysvar_CHANS_name:
-  .asciz "CHANS"
-sysvar_CURCHL_name:
-  .asciz "CURCHL"
-sysvar_PROG_name:
-  .asciz "PROG"
-sysvar_DATADD_name:
-  .asciz "DATADD"
-sysvar_E_LINE_name:
-  .asciz "E_LINE"
-sysvar_CH_ADD_name:
-  .asciz "CH_ADD"
-sysvar_X_PTR_name:
-  .asciz "X_PTR"
-sysvar_WORKSP_name:
-  .asciz "WORKSP"
-sysvar_STKBOT_name:
-  .asciz "STKBOT"
-sysvar_STKEND_name:
-  .asciz "STKEND"
-sysvar_RAMTOP_name:
-  .asciz "RAMTOP"
-sysvar_P_RAMT_name:
-  .asciz "P_RAMT"
-sysvar_UDG_name:
-  .asciz "UDG"
-sysvar_ERR_SP_name:
-  .asciz "ERR_SP"
-sysvar_DF_CC_name:
-  .asciz "DF_CC"
-sysvar_DF_CCL_name:
-  .asciz "DF_CCL"
-sysvar_PR_CC_name:
-  .asciz "PR_CC"
-sysvar_MEMBOT_name:
-  .asciz "MEMBOT"
-
-.align 0
-sysvarsizes:
-sysvar_COL_size:
-  .byte 1
-sysvar_WIDTH_size:
-  .byte 1
-sysvar_TVPARS_size:
-  .byte 1
-sysvar_RASP_size:
-  .byte 1
-sysvar_PIP_size:
-  .byte 1
-sysvar_FLAGS_size:
-  .byte 1
-sysvar_FLAGS2_size:
-  .byte 1
-sysvar_TV_FLAG_size:
-  .byte 1
-sysvar_BORDCR_size:
-  .byte 1
-sysvar_ERR_NR_size:
-  .byte 1
-sysvar_DF_SZ_size:
-  .byte 1
-sysvar_SCR_CT_size:
-  .byte 1
-sysvar_P_POSN_size:
-  .byte 1
-sysvar_ECHO_E_COL_size:
-  .byte 1
-sysvar_ECHO_E_ROW_size:
-  .byte 1
-sysvar_S_POSN_COL_size:
-  .byte 1
-sysvar_S_POSN_ROW_size:
-  .byte 1
-sysvar_S_POSNL_COL_size:
-  .byte 1
-sysvar_S_POSNL_ROW_size:
-  .byte 1
-sysvar_P_FLAG_size:
-  .byte 1
-sysvar_BREG_size:
-  .byte 1
-sysvar_REPDEL_size:
-  .byte 1
-sysvar_REPPER_size:
-  .byte 1
-sysvar_ATTR_P_size:
-  .byte 1
-sysvar_MASK_P_size:
-  .byte 1
-sysvar_ATTR_T_size:
-  .byte 1
-sysvar_MASK_T_size:
-  .byte 1
-sysvar_BAUD_size:
-  .byte 2
-sysvar_SERFL_size:
-  .byte 2
-sysvar_RNFIRST_size:
-  .byte 2
-sysvar_RNSTEP_size:
-  .byte 2
-sysvar_STRMS_size:
-  .byte 2*19
-sysvar_COORDS_size:
-  .byte 2
-sysvar_COORDS_Y_size:
-  .byte 2
-sysvar_TVDATA_size:
-  .byte 2
-sysvar_SFNEXT_size:
-  .byte 8
-sysvar_SFSPACE_size:
-  .byte 8
-sysvar_CHARS_size:
-  .byte 8
-sysvar_LIST_SP_size:
-  .byte 8
-sysvar_VARS_size:
-  .byte 8
-sysvar_CHANS_size:
-  .byte 8
-sysvar_CURCHL_size:
-  .byte 8
-sysvar_PROG_size:
-  .byte 8
-sysvar_DATADD_size:
-  .byte 8
-sysvar_E_LINE_size:
-  .byte 8
-sysvar_CH_ADD_size:
-  .byte 8
-sysvar_X_PTR_size:
-  .byte 8
-sysvar_WORKSP_size:
-  .byte 8
-sysvar_STKBOT_size:
-  .byte 8
-sysvar_STKEND_size:
-  .byte 8
-sysvar_RAMTOP_size:
-  .byte 8
-sysvar_P_RAMT_size:
-  .byte 8
-sysvar_UDG_size:
-  .byte 8
-sysvar_ERR_SP_size:
-  .byte 8
-sysvar_DF_CC_size:
-  .byte 8
-sysvar_DF_CCL_size:
-  .byte 8
-sysvar_PR_CC_size:
-  .byte 8
-sysvar_MEMBOT_size:
-  .byte 32
 
 .align 3
-sysvaraddressoffsets:
-  .quad COL-sysvars
-  .quad WIDTH-sysvars
-  .quad TVPARS-sysvars
-  .quad RASP-sysvars
-  .quad PIP-sysvars
-  .quad FLAGS-sysvars
-  .quad FLAGS2-sysvars
-  .quad TV_FLAG-sysvars
-  .quad BORDCR-sysvars
-  .quad ERR_NR-sysvars
-  .quad DF_SZ-sysvars
-  .quad SCR_CT-sysvars
-  .quad P_POSN-sysvars
-  .quad ECHO_E_COL-sysvars
-  .quad ECHO_E_ROW-sysvars
-  .quad S_POSN_COL-sysvars
-  .quad S_POSN_ROW-sysvars
-  .quad S_POSNL_COL-sysvars
-  .quad S_POSNL_ROW-sysvars
-  .quad P_FLAG-sysvars
-  .quad BREG-sysvars
-  .quad REPDEL-sysvars
-  .quad REPPER-sysvars
-  .quad ATTR_P-sysvars
-  .quad MASK_P-sysvars
-  .quad ATTR_T-sysvars
-  .quad MASK_T-sysvars
-  .quad BAUD-sysvars
-  .quad SERFL-sysvars
-  .quad RNFIRST-sysvars
-  .quad RNSTEP-sysvars
-  .quad STRMS-sysvars
-  .quad COORDS-sysvars
-  .quad COORDS_Y-sysvars
-  .quad TVDATA-sysvars
-  .quad SFNEXT-sysvars
-  .quad SFSPACE-sysvars
-  .quad CHARS-sysvars
-  .quad LIST_SP-sysvars
-  .quad VARS-sysvars
-  .quad CHANS-sysvars
-  .quad CURCHL-sysvars
-  .quad PROG-sysvars
-  .quad DATADD-sysvars
-  .quad E_LINE-sysvars
-  .quad CH_ADD-sysvars
-  .quad X_PTR-sysvars
-  .quad WORKSP-sysvars
-  .quad STKBOT-sysvars
-  .quad STKEND-sysvars
-  .quad RAMTOP-sysvars
-  .quad P_RAMT-sysvars
-  .quad UDG-sysvars
-  .quad ERR_SP-sysvars
-  .quad DF_CC-sysvars
-  .quad DF_CCL-sysvars
-  .quad PR_CC-sysvars
-  .quad MEMBOT-sysvars
+sysvars_meta:
+  .quad sysvar_COL
+  .quad sysvar_WIDTH
+  .quad sysvar_TVPARS
+  .quad sysvar_RASP
+  .quad sysvar_PIP
+  .quad sysvar_FLAGS
+  .quad sysvar_FLAGS2
+  .quad sysvar_TV_FLAG
+  .quad sysvar_BORDCR
+  .quad sysvar_ERR_NR
+  .quad sysvar_DF_SZ
+  .quad sysvar_SCR_CT
+  .quad sysvar_P_POSN
+  .quad sysvar_ECHO_E_COL
+  .quad sysvar_ECHO_E_ROW
+  .quad sysvar_S_POSN_COL
+  .quad sysvar_S_POSN_ROW
+  .quad sysvar_S_POSNL_COL
+  .quad sysvar_S_POSNL_ROW
+  .quad sysvar_P_FLAG
+  .quad sysvar_BREG
+  .quad sysvar_REPDEL
+  .quad sysvar_REPPER
+  .quad sysvar_ATTR_P
+  .quad sysvar_MASK_P
+  .quad sysvar_ATTR_T
+  .quad sysvar_MASK_T
+  .quad sysvar_BAUD
+  .quad sysvar_SERFL
+  .quad sysvar_RNFIRST
+  .quad sysvar_RNSTEP
+  .quad sysvar_STRMS
+  .quad sysvar_COORDS
+  .quad sysvar_COORDS_Y
+  .quad sysvar_TVDATA
+  .quad sysvar_SFNEXT
+  .quad sysvar_SFSPACE
+  .quad sysvar_CHARS
+  .quad sysvar_LIST_SP
+  .quad sysvar_VARS
+  .quad sysvar_CHANS
+  .quad sysvar_CURCHL
+  .quad sysvar_PROG
+  .quad sysvar_DATADD
+  .quad sysvar_E_LINE
+  .quad sysvar_CH_ADD
+  .quad sysvar_X_PTR
+  .quad sysvar_WORKSP
+  .quad sysvar_STKBOT
+  .quad sysvar_STKEND
+  .quad sysvar_RAMTOP
+  .quad sysvar_P_RAMT
+  .quad sysvar_UDG
+  .quad sysvar_ERR_SP
+  .quad sysvar_DF_CC
+  .quad sysvar_DF_CCL
+  .quad sysvar_PR_CC
+  .quad sysvar_MEMBOT
+
+
+.align 3
+sysvar_COL:
+  .quad COL-sysvars                       // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "COL"                            // name
+
+
+.align 3
+sysvar_WIDTH:
+  .quad WIDTH-sysvars                     // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "WIDTH"                          // name
+
+
+.align 3
+sysvar_TVPARS:
+  .quad TVPARS-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "TVPARS"                         // name
+
+
+.align 3
+sysvar_RASP:
+  .quad RASP-sysvars                      // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "RASP"                           // name
+
+
+.align 3
+sysvar_PIP:
+  .quad PIP-sysvars                       // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "PIP"                            // name
+
+
+.align 3
+sysvar_FLAGS:
+  .quad FLAGS-sysvars                     // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "FLAGS"                          // name
+
+
+.align 3
+sysvar_FLAGS2:
+  .quad FLAGS2-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "FLAGS2"                         // name
+
+
+.align 3
+sysvar_TV_FLAG:
+  .quad TV_FLAG-sysvars                   // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "TV_FLAG"                        // name
+
+
+.align 3
+sysvar_BORDCR:
+  .quad BORDCR-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "BORDCR"                         // name
+
+
+.align 3
+sysvar_ERR_NR:
+  .quad ERR_NR-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "ERR_NR"                         // name
+
+
+.align 3
+sysvar_DF_SZ:
+  .quad DF_SZ-sysvars                     // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "DF_SZ"                          // name
+
+
+.align 3
+sysvar_SCR_CT:
+  .quad SCR_CT-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "SCR_CT"                         // name
+
+
+.align 3
+sysvar_P_POSN:
+  .quad P_POSN-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "P_POSN"                         // name
+
+
+.align 3
+sysvar_ECHO_E_COL:
+  .quad ECHO_E_COL-sysvars                // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "ECHO_E_COL"                     // name
+
+
+.align 3
+sysvar_ECHO_E_ROW:
+  .quad ECHO_E_ROW-sysvars                // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "ECHO_E_ROW"                     // name
+
+
+.align 3
+sysvar_S_POSN_COL:
+  .quad S_POSN_COL-sysvars                // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "S_POSN_COL"                     // name
+
+
+.align 3
+sysvar_S_POSN_ROW:
+  .quad S_POSN_ROW-sysvars                // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "S_POSN_ROW"                     // name
+
+
+.align 3
+sysvar_S_POSNL_COL:
+  .quad S_POSNL_COL-sysvars               // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "S_POSNL_COL"                    // name
+
+
+.align 3
+sysvar_S_POSNL_ROW:
+  .quad S_POSNL_ROW-sysvars               // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "S_POSNL_ROW"                    // name
+
+
+.align 3
+sysvar_P_FLAG:
+  .quad P_FLAG-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "P_FLAG"                         // name
+
+
+.align 3
+sysvar_BREG:
+  .quad BREG-sysvars                      // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "BREG"                           // name
+
+
+.align 3
+sysvar_REPDEL:
+  .quad REPDEL-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "REPDEL"                         // name
+
+
+.align 3
+sysvar_REPPER:
+  .quad REPPER-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "REPPER"                         // name
+
+
+.align 3
+sysvar_ATTR_P:
+  .quad ATTR_P-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "ATTR_P"                         // name
+
+
+.align 3
+sysvar_MASK_P:
+  .quad MASK_P-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "MASK_P"                         // name
+
+
+.align 3
+sysvar_ATTR_T:
+  .quad ATTR_T-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "ATTR_T"                         // name
+
+
+.align 3
+sysvar_MASK_T:
+  .quad MASK_T-sysvars                    // sysvar address offset
+  .byte 1                                 // size in bytes
+  .asciz "MASK_T"                         // name
+
+
+.align 3
+sysvar_BAUD:
+  .quad BAUD-sysvars                      // sysvar address offset
+  .byte 2                                 // size in bytes
+  .asciz "BAUD"                           // name
+
+
+.align 3
+sysvar_SERFL:
+  .quad SERFL-sysvars                     // sysvar address offset
+  .byte 2                                 // size in bytes
+  .asciz "SERFL"                          // name
+
+
+.align 3
+sysvar_RNFIRST:
+  .quad RNFIRST-sysvars                   // sysvar address offset
+  .byte 2                                 // size in bytes
+  .asciz "RNFIRST"                        // name
+
+
+.align 3
+sysvar_RNSTEP:
+  .quad RNSTEP-sysvars                    // sysvar address offset
+  .byte 2                                 // size in bytes
+  .asciz "RNSTEP"                         // name
+
+
+.align 3
+sysvar_STRMS:
+  .quad STRMS-sysvars                     // sysvar address offset
+  .byte 2*19                              // size in bytes
+  .asciz "STRMS"                          // name
+
+
+.align 3
+sysvar_COORDS:
+  .quad COORDS-sysvars                    // sysvar address offset
+  .byte 2                                 // size in bytes
+  .asciz "COORDS"                         // name
+
+
+.align 3
+sysvar_COORDS_Y:
+  .quad COORDS_Y-sysvars                  // sysvar address offset
+  .byte 2                                 // size in bytes
+  .asciz "COORDS_Y"                       // name
+
+
+.align 3
+sysvar_TVDATA:
+  .quad TVDATA-sysvars                    // sysvar address offset
+  .byte 2                                 // size in bytes
+  .asciz "TVDATA"                         // name
+
+
+.align 3
+sysvar_SFNEXT:
+  .quad SFNEXT-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "SFNEXT"                         // name
+
+
+.align 3
+sysvar_SFSPACE:
+  .quad SFSPACE-sysvars                   // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "SFSPACE"                        // name
+
+
+.align 3
+sysvar_CHARS:
+  .quad CHARS-sysvars                     // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "CHARS"                          // name
+
+
+.align 3
+sysvar_LIST_SP:
+  .quad LIST_SP-sysvars                   // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "LIST_SP"                        // name
+
+
+.align 3
+sysvar_VARS:
+  .quad VARS-sysvars                      // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "VARS"                           // name
+
+
+.align 3
+sysvar_CHANS:
+  .quad CHANS-sysvars                     // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "CHANS"                          // name
+
+
+.align 3
+sysvar_CURCHL:
+  .quad CURCHL-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "CURCHL"                         // name
+
+
+.align 3
+sysvar_PROG:
+  .quad PROG-sysvars                      // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "PROG"                           // name
+
+
+.align 3
+sysvar_DATADD:
+  .quad DATADD-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "DATADD"                         // name
+
+
+.align 3
+sysvar_E_LINE:
+  .quad E_LINE-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "E_LINE"                         // name
+
+
+.align 3
+sysvar_CH_ADD:
+  .quad CH_ADD-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "CH_ADD"                         // name
+
+
+.align 3
+sysvar_X_PTR:
+  .quad X_PTR-sysvars                     // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "X_PTR"                          // name
+
+
+.align 3
+sysvar_WORKSP:
+  .quad WORKSP-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "WORKSP"                         // name
+
+
+.align 3
+sysvar_STKBOT:
+  .quad STKBOT-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "STKBOT"                         // name
+
+
+.align 3
+sysvar_STKEND:
+  .quad STKEND-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "STKEND"                         // name
+
+
+.align 3
+sysvar_RAMTOP:
+  .quad RAMTOP-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "RAMTOP"                         // name
+
+
+.align 3
+sysvar_P_RAMT:
+  .quad P_RAMT-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "P_RAMT"                         // name
+
+
+.align 3
+sysvar_UDG:
+  .quad UDG-sysvars                       // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "UDG"                            // name
+
+
+.align 3
+sysvar_ERR_SP:
+  .quad ERR_SP-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "ERR_SP"                         // name
+
+
+.align 3
+sysvar_DF_CC:
+  .quad DF_CC-sysvars                     // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "DF_CC"                          // name
+
+
+.align 3
+sysvar_DF_CCL:
+  .quad DF_CCL-sysvars                    // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "DF_CCL"                         // name
+
+
+.align 3
+sysvar_PR_CC:
+  .quad PR_CC-sysvars                     // sysvar address offset
+  .byte 8                                 // size in bytes
+  .asciz "PR_CC"                          // name
+
+
+.align 3
+sysvar_MEMBOT:
+  .quad MEMBOT-sysvars                    // sysvar address offset
+  .byte 32                                // size in bytes
+  .asciz "MEMBOT"                         // name

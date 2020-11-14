@@ -12,8 +12,8 @@ run_tests:
 # ==============
 # x0-3 scratch registers
 # x4   address inside all_tests
-# x5   sysvarsizes
-# x6   sysvaraddressoffsets
+# x5   sysvars_meta
+# x6   sysvar meta entry
 # x7   sysvar setup mask / ram setup entry type
 # x8   sysvar pointer mask
 # x9   sysvar index / ram entry index
@@ -63,8 +63,7 @@ run_tests:
   sub     sp, sp, (sysvars_end - sysvars)*2 + 256*2
                                           // Allocate space on stack for pre-test/post-test registers and system variables
   1:                                      // Loop executing tests
-    adr     x5, sysvarsizes
-    adr     x6, sysvaraddressoffsets
+    adr     x5, sysvars_meta
     ldr     x11, [x4], #8                   // x11 = address of test definition
 
   // Log test running
@@ -115,14 +114,15 @@ run_tests:
       tbz     x7, #0, 10f                     // if sysvar not defined, skip setting it and leave random value in place
     // sysvar defined, replace random value
       ldr     x14, [x13], #8                  // x14 = value (pointer or literal value)
-      ldr     x18, [x6, x9, lsl #3]           // x18 = sysvar address offset
+      ldr     x6, [x5, x9, lsl #3]            // x6 = sysvar meta entry
+      ldr     x18, [x6]                       // x18 = sysvar address offset
       tbz     x8, #0, 6f
     // pointer
       add     x12, sp, x14, lsl #3            // x12 = pointer value
       str     x12, [x28, x18]
       b       10f
     6:
-      ldrb    w0, [x5, x9]                    // w0 = sysvar size (in bytes)
+      ldrb    w0, [x6, #8]                    // w0 = sysvar size (in bytes)
       tbnz    w0, #1, 7f
       tbnz    w0, #2, 8f
       tbnz    w0, #3, 9f
@@ -296,7 +296,7 @@ run_tests:
 //      ldr     x7, [x17], #8                   // x7 = sysvar setup mask
 //      ldr     x8, [x17, SYSVAR_MASK_BYTES - 8]
 //    X2:
-//      ldr     x8, [x6, x9, lsl #3]            // x8 = sysvar address offset
+///////      ldr     x8, [x6, x9, lsl #3]            // x8 = sysvar address offset
 //      ldr     x12, [x18, x8]                  // x12 = pre-test register value
 //      add     x8, x8, (sysvars_end-sysvars)
 //      ldr     x13, [x18, x8]                  // x13 = post-test register value

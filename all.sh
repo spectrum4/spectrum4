@@ -100,24 +100,24 @@ echo '# This file is part of the Spectrum +4 Project.
 
 .data
 
-.align 0
-sysvarnames:'
-echo "${SYSVARS}" | while read sysvar size; do
-  echo "sysvar_${sysvar}_name:"
-  echo "  .asciz \"${sysvar}\""
-done
-echo '
-.align 0
-sysvarsizes:'
-echo "${SYSVARS}" | while read sysvar size; do
-  echo "sysvar_${sysvar}_size:"
-  echo "  .byte ${size}"
-done
-echo '
+
 .align 3
-sysvaraddressoffsets:'
+sysvars_meta:'
 echo "${SYSVARS}" | while read sysvar size; do
-  echo "  .quad ${sysvar}-sysvars"
+  echo "  .quad sysvar_${sysvar}"
+done
+
+echo "${SYSVARS}" | while read sysvar size; do
+  echo ""
+  echo ""
+  echo ".align 3"
+  echo "sysvar_${sysvar}:"
+  x="  .quad ${sysvar}-sysvars                            "
+  y="  .byte ${size}                                      "
+  z="  .asciz \"${sysvar}\"                               "
+  echo "${x:0:42}// sysvar address offset"
+  echo "${y:0:42}// size in bytes"
+  echo "${z:0:42}// name"
 done
 } > src/profiles/debug/sysvars.s
 

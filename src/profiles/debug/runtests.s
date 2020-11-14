@@ -286,6 +286,32 @@ run_tests:
 
   // TODO: Test system variable values
 
+//    ldr     x17, [x11, #40]                 // x17 = sysvars effects block
+//    mov     x9, #0                          // register index
+//    add     x18, sp, x15, lsl #4            // x18 = base address of pre-test system variables
+//    add     x13, x17, SYSVAR_MASK_BYTES*2   // x13 = address of first sysvar definition
+//    X1:
+//      tst     x9, #0x3f                       // lower 6 bits of x9 are 0 when we need to read next quad mask
+//      b.ne    X2
+//      ldr     x7, [x17], #8                   // x7 = sysvar setup mask
+//      ldr     x8, [x17, SYSVAR_MASK_BYTES - 8]
+//    X2:
+//      ldr     x8, [x6, x9, lsl #3]            // x8 = sysvar address offset
+//      ldr     x12, [x18, x8]                  // x12 = pre-test register value
+//      add     x8, x8, (sysvars_end-sysvars)
+//      ldr     x13, [x18, x8]                  // x13 = post-test register value
+//      tbz     x7, #0, X3                      // If system variable shouldn't change, jump forward to X3.
+//    // Sysvar should be modified
+//
+////    ldp     x11, x15, [sp], #16
+////    ldp     x4, x10, [sp], #16
+//
+//
+//
+//
+//      ldr     x14, [x17], #8                  // x14 = register expected value as pointer or literal value
+
+
   // TODO: Test RAM values
 
     add     sp, sp, x15, lsl #4             // Free RAM setup entries

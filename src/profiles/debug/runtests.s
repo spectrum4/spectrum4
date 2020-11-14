@@ -301,6 +301,8 @@ end_run_tests:
 log_sysvar:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x0, msg_fail_7
+  bl      uart_puts                       // Log ": System Variable "
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -308,7 +310,7 @@ log_sysvar:
 log_register:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  adr     x0, msg_reg_fail_0
+  adr     x0, msg_fail_0
   bl      uart_puts                       // Log ": Register x"
   sub     sp, sp, 32
   mov     x0, sp
@@ -331,40 +333,40 @@ test_fail:
   cmp     x12, x13
   b.eq    2f                              // x12 == x13 => value unchanged but should have
 // value changed
-  adr     x0, msg_reg_fail_1
+  adr     x0, msg_fail_1
   bl      uart_puts                       // Log " changed from "
   mov     x0, x12
   bl      uart_x0                         // Log "<pre-test register value>"
-  adr     x0, msg_reg_fail_3
+  adr     x0, msg_fail_3
   bl      uart_puts                       // Log " to "
   mov     x0, x13
   bl      uart_x0                         // Log "<post-test register value>"
   cmp     x12, x14
   b.eq    1f                              // x12 == x14 => value shouldn't have changed but did
 // value meant to change, but to a different value
-  adr     x0, msg_reg_fail_4
+  adr     x0, msg_fail_4
   bl      uart_puts                       // Log ", but should have changed to "
   mov     x0, x14
   bl      uart_x0                         // Log "<expected register value>"
-  adr     x0, msg_reg_fail_6
+  adr     x0, msg_fail_6
   bl      uart_puts                       // Log ".\r\n"
   b       3f
 1:
 // value not meant to change, but did
-  adr     x0, msg_reg_fail_5
+  adr     x0, msg_fail_5
   bl      uart_puts                       // Log ", but should not have changed.\r\n"
   b       3f
 2:
 // value unchanged, but was meant to
-  adr     x0, msg_reg_fail_2
+  adr     x0, msg_fail_2
   bl      uart_puts                       // Log " unchanged from "
   mov     x0, x12
   bl      uart_x0                         // Log "<pre-test register value>"
-  adr     x0, msg_reg_fail_4
+  adr     x0, msg_fail_4
   bl      uart_puts                       // Log ", but should have changed to "
   mov     x0, x14
   bl      uart_x0                         // Log "<expected register value>"
-  adr     x0, msg_reg_fail_6
+  adr     x0, msg_fail_6
   bl      uart_puts                       // Log ".\r\n"
 3:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
@@ -375,11 +377,12 @@ msg_running_test_part_1: .asciz "Running test "
 msg_running_test_part_2: .asciz "...\r\n"
 
 msg_fail: .asciz "FAIL: "
-msg_reg_fail_0: .asciz ": Register x"
-msg_reg_fail_1: .asciz " changed from "
-msg_reg_fail_2: .asciz " unchanged from "
-msg_reg_fail_3: .asciz " to "
-msg_reg_fail_4: .asciz ", but should have changed to "
-msg_reg_fail_5: .ascii ", but should not have changed"
-                                          // Intentionally .ascii not .asciz, in order to join with msg_reg_fail_6.
-msg_reg_fail_6: .asciz ".\r\n"
+msg_fail_0: .asciz ": Register x"
+msg_fail_1: .asciz " changed from "
+msg_fail_2: .asciz " unchanged from "
+msg_fail_3: .asciz " to "
+msg_fail_4: .asciz ", but should have changed to "
+msg_fail_5: .ascii ", but should not have changed"
+                                          // Intentionally .ascii not .asciz, in order to join with msg_fail_6.
+msg_fail_6: .asciz ".\r\n"
+msg_fail_7: .asciz ": System Variable "

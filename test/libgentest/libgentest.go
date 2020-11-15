@@ -40,8 +40,8 @@ type (
 	}
 	NamedValue  map[string]StoredValue
 	StoredValue struct {
-		Quad    *uint64 `json:"quad,omitempty"`
-		Pointer *string `json:"pointer,omitempty"`
+		Quad    *interface{} `json:"quad,omitempty"`
+		Pointer *string      `json:"pointer,omitempty"`
 	}
 )
 
@@ -51,7 +51,7 @@ func (value StoredValue) Write(w io.Writer, ramSetupEntries NamedValue, includeT
 		if includeType {
 			fmt.Fprintln(w, "  .quad 8                                 // 8 => quad")
 		}
-		fmt.Fprintf(w, "  .quad 0x%016x                // quad: 0x%016x\n", *value.Quad, *value.Quad)
+		fmt.Fprintf(w, "  .quad %v\n", *value.Quad)
 	case value.Pointer != nil:
 		if includeType {
 			fmt.Fprintln(w, "  .quad 16                                // 16 => pointer")
@@ -133,6 +133,7 @@ func (generator *Generator) LoadFiles() error {
 		uts := new(UnitTests)
 		dec := json.NewDecoder(bytes.NewBuffer(rawJSON))
 		dec.DisallowUnknownFields()
+		dec.UseNumber()
 		err = dec.Decode(uts)
 		if err != nil {
 			if ute, isUnmarshallTypeError := err.(*json.UnmarshalTypeError); isUnmarshallTypeError {
@@ -328,7 +329,7 @@ func (nv NamedValue) Write(w io.Writer, title string, section string, indexDescr
 					entries = append(entries, fmt.Sprintf("  .quad 0x%016x                // %v = %v", ramSetupEntries.IndexOf(*sv.Pointer), key, *sv.Pointer))
 				} else {
 					comments = append(comments, fmt.Sprintf("                                          // Bits %v-%v = 0b01 => %v (%v index %v) is absolute value", 2*j, 2*j+1, entry, indexDescription, j+i*32))
-					entries = append(entries, fmt.Sprintf("  .quad 0x%016x                // %v = 0x%016x", *sv.Quad, key, *sv.Quad))
+					entries = append(entries, fmt.Sprintf("  .quad %-33v // %v", *sv.Quad, key))
 				}
 			}
 		}

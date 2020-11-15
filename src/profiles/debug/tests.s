@@ -51,16 +51,16 @@ test_po_attr_test_case_1_setup_sysvars:
                                           // Bits 50-51 = 0b01 => ATTR_T (sysvar index 25) is absolute value
                                           // Bits 52-53 = 0b01 => MASK_T (sysvar index 26) is absolute value
   .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 0x0000000000000097                // [P_FLAG] = 0x0000000000000097
-  .quad 0x0000000000000095                // [ATTR_T] = 0x0000000000000095
-  .quad 0x0000000000000056                // [MASK_T] = 0x0000000000000056
+  .quad 151                               // [P_FLAG]
+  .quad 149                               // [ATTR_T]
+  .quad 86                                // [MASK_T]
 
 .align 3
 # Registers setup
 test_po_attr_test_case_1_setup_registers:
   .quad 0b0000000000000000000000000000000000000000000000000000000000000001
                                           // Bits 0-1 = 0b01 => x0 (register index 0) is absolute value
-  .quad 0x0000000000050000                // x0 = 0x0000000000050000
+  .quad display_file + 0x17780            // x0
 
 # Test case effects
 
@@ -91,19 +91,19 @@ test_po_attr_test_case_1_effects_registers:
                                           // Bits 34-35 = 0b01 => x17 (register index 17) is absolute value
                                           // Bits 36-37 = 0b01 => x18 (register index 18) is absolute value
                                           // Bits 48-49 = 0b01 => x24 (register index 24) is absolute value
-  .quad 0x0000000000000097                // x0 = 0x0000000000000097
-  .quad 0x0000000000005695                // x1 = 0x0000000000005695
-  .quad 0x0000000000038880                // x9 = 0x0000000000038880
-  .quad 0x0000000000000004                // x10 = 0x0000000000000004
-  .quad 0x0000000000017780                // x11 = 0x0000000000017780
-  .quad 0x000000000000006c                // x12 = 0x000000000000006c
-  .quad 0x012f684c00000000                // x13 = 0x012f684c00000000
-  .quad 0x00000000000001bd                // x14 = 0x00000000000001bd
-  .quad 0xcccd000000000000                // x15 = 0xcccd000000000000
-  .quad 0x0000000000000a90                // x16 = 0x0000000000000a90
-  .quad 0x0000000000000047                // x17 = 0x0000000000000047
-  .quad 0x0000000000000005                // x18 = 0x0000000000000005
-  .quad 0x000000000006b280                // x24 = 0x000000000006b280
+  .quad 151                               // x0
+  .quad 22165                             // x1
+  .quad display_file                      // x9
+  .quad 4                                 // x10
+  .quad 96128                             // x11
+  .quad 108                               // x12
+  .quad 85401593570131968                 // x13
+  .quad 445                               // x14
+  .quad 14757451553962983424              // x15
+  .quad 2704                              // x16
+  .quad 71                                // x17
+  .quad 5                                 // x18
+  .quad attributes_file                   // x24
 
 # Test case execution
 
@@ -158,13 +158,13 @@ test_po_change_test_case_1_setup_ram_channel_block:
 .align 3
 test_po_change_test_case_1_setup_ram_new_input_routine:
   .quad 8                                 // 8 => quad
-  .quad 0xfedcba9876543210                // quad: 0xfedcba9876543210
+  .quad 18364758544493064720
   .asciz "new_input_routine"              // name: "new_input_routine"
 
 .align 3
 test_po_change_test_case_1_setup_ram_old_input_routine:
   .quad 8                                 // 8 => quad
-  .quad 0x0123456789abcdef                // quad: 0x0123456789abcdef
+  .quad 81985529216486895
   .asciz "old_input_routine"              // name: "old_input_routine"
 
 .align 3

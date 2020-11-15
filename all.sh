@@ -168,9 +168,6 @@ fetch_firmware 'start.elf'
 "${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -o build/kernel8-debug.elf  build/debug.o
 "${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -M -o build/kernel8-release.elf  build/release.o
 
-# Log some useful information about the generated elf file.
-"${TOOLCHAIN_PREFIX}readelf" -a build/kernel8-debug.elf
-
 # Extract the final kernel raw binary into file dist/kernel8.img
 "${TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/kernel8-debug.elf -O binary dist/kernel8-debug.img
 "${TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/kernel8-release.elf -O binary dist/kernel8-release.img
@@ -182,6 +179,10 @@ fetch_firmware 'start.elf'
 # Log disassembly of kernel elf file. This is like above, but additionally
 # contains symbol names, etc.
 "${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-debug.elf
+
+# Log some useful information about the generated elf file. Options are:
+#   -W: Allow width > 80, i.e. display full symbol names
+"${TOOLCHAIN_PREFIX}readelf" -W -a build/kernel8-debug.elf
 
 echo
 echo "Build successful - see dist directory for results"

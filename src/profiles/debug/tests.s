@@ -82,10 +82,9 @@ test_po_change_test_case_1_setup_registers:
 .align 3
 # RAM effects
 test_po_change_test_case_1_effects_ram:
-  .quad 1                                 // Number of RAM entries = 1
-  .quad 0                                 // channel_block updated
-  .quad 16                                // 16 => new value is pointer
-  .quad 1                                 // value = new_input_routine
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000011
+                                          // Bits 0-1 = 0b11 => channel_block (RAM entry index 0) is pointer
+  .quad 1                                 // [channel_block] = new_input_routine
 
 .align 3
 # System variable effects

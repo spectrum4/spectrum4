@@ -376,7 +376,7 @@ log_register:
 # Report lines as follows:
 #
 # FAIL: po_change test case 1: Register x3 changed from 0x8ceb064787d0b39b to 0x0000000000001a68, but should not have changed.
-# FAIL: po_change test case 1: Register x4 changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
+# FAIL: po_change test case 1: System Variable CURCHL changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
 # FAIL: po_change test case 1: Register x5 unchanged from 0xfe87f64783bc7a76 but should have changed to 0x00000f00f00f00f0.
 test_fail:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.

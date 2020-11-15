@@ -341,10 +341,9 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, "# RAM effects")
 	fmt.Fprintf(w, "%v_effects_ram:\n", symbolName)
 	// TODO
-	fmt.Fprintln(w, "  .quad 1                                 // Number of RAM entries = 1")
-	fmt.Fprintln(w, "  .quad 0                                 // channel_block updated")
-	fmt.Fprintln(w, "  .quad 16                                // 16 => new value is pointer")
-	fmt.Fprintln(w, "  .quad 1                                 // value = new_input_routine")
+	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000000000000011")
+	fmt.Fprintln(w, "                                          // Bits 0-1 = 0b11 => channel_block (RAM entry index 0) is pointer")
+	fmt.Fprintln(w, "  .quad 1                                 // [channel_block] = new_input_routine")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintln(w, "# System variable effects")

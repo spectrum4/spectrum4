@@ -1,5 +1,7 @@
 FROM ubuntu:20.04 AS spectrum4_too_much
 
+ENV DEBIAN_FRONTEND=noninteractive
+
 # curl has been built as a standalone executable in build.sh
 RUN mkdir -p /usr/local/bin
 ENV PATH $PATH:/usr/local/bin
@@ -25,10 +27,16 @@ RUN for tool in /bin/sh aarch64-none-elf-as aarch64-none-elf-ld aarch64-none-elf
 # add certificates needed by curl to /dist
 RUN mkdir -p /dist/etc/ssl/certs && cp -vp /etc/ssl/certs/ca-certificates.crt /dist/etc/ssl/certs/ca-certificates.crt
 
+# install go 1.15.5
+RUN mkdir -p /dist/usr/lib && curl -L 'https://golang.org/dl/go1.15.5.linux-amd64.tar.gz' > /dist/usr/lib/go1.15.5.linux-amd64.tar.gz
+RUN cd /dist/usr/lib && tar xvfz go1.15.5.linux-amd64.tar.gz && rm go1.15.5.linux-amd64.tar.gz
+RUN mkdir -p /dist/tmp
+
 # to aid future troubleshooting, show uncompressed size of /dist
 RUN du -sh /dist
 
 # now build a fresh image, with just the files in /dist
 FROM scratch
 COPY --from=spectrum4_too_much /dist/ /
-ENV PATH /bin:/usr/bin:/usr/local/bin
+ENV PATH /usr/lib/go/bin:/bin:/usr/bin:/usr/local/bin
+ENV GOROOT /usr/lib/go

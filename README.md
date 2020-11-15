@@ -142,6 +142,7 @@ You will also require:
   * `dirname`
   * `env`
   * `find`
+  * `go`
   * `mkdir`
   * `rm`
   * `sed`

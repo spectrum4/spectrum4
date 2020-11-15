@@ -60,7 +60,7 @@ function check_dependencies {
 # Technically, checks for 'bash' and 'env' aren't really needed, since if this
 # is running, they are installed - however, in case this list is copied around,
 # good to include them as required tools...
-check_dependencies bash cat cp curl dirname env find mkdir rm sed wc which
+check_dependencies bash cat cp curl dirname env find go mkdir rm sed wc which
 
 # Set default toolchain prefix to `aarch64-none-elf-` if no TOOLCHAIN_PREFIX
 # already set. Note, if no prefix is required, TOOLCHAIN_PREFIX should be

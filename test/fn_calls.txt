@@ -211,18 +211,20 @@ run_tests:
     uart_puts
     uart_puts
     uart_puts
+skip1:
     rand_block
-    run_tests+0xec
-    run_tests+0xec
-    run_tests+0xec
-    run_tests+0xec
+    skip1+0x70
+    skip1+0x70
+    skip1+0x70
+    skip1+0x70
     rand_block
-    run_tests+0x240
-    run_tests+0x2c4
-    run_tests+0x2c4
-    run_tests+0x2c4
-    run_tests+0x2dc
-    run_tests+0x340
+    skip1+0x1c4
+    skip1+0x248
+    skip1+0x248
+    skip1+0x248
+    skip1+0x260
+    skip1+0x2c8
+skip2:
 log_ram_entry:
     uart_puts
     uart_puts
@@ -249,6 +251,7 @@ log_register:
     uart_x0
     uart_puts
 all_tests:
+    po_attr
     po_change
 display_sysvars:
     uart_puts

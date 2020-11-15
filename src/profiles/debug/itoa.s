@@ -15,10 +15,10 @@
 #   x2 = value to convert to decimal
 # On exit:
 #   x0 = address of start of string within buffer
+#   x1 = first byte of generated string
 #   x2 = 0
 #   x3 = 0xcccccccccccccccd
 #   x4 = 0
-#   x5 = first byte of generated string
 base10:
   add     x0, x0, #0x14                   // x0 = address of last allocated byte
   strb    wzr, [x0]                       // Store 0 in last allocated byte
@@ -27,10 +27,10 @@ base10:
   1:
     umulh   x4, x3, x2
     lsr     x4, x4, #3                      // x4 = x2 / 10
-    add     x5, x4, x4, lsl #2              // x5 = 5 * x4
-    sub     x2, x2, x5, lsl #1              // x2 = x2 % 10 = value of last digit
-    add     x5, x2, #0x30                   // x5 = ASCII value of digit = x2 + 48
-    strb    w5, [x0, #-1]!                  // store ASCII value on stack at correct offset
+    add     x1, x4, x4, lsl #2              // x1 = 5 * x4
+    sub     x2, x2, x1, lsl #1              // x2 = x2 % 10 = value of last digit
+    add     x1, x2, #0x30                   // x1 = ASCII value of digit = x2 + 48
+    strb    w1, [x0, #-1]!                  // store ASCII value on stack at correct offset
     mov     x2, x4                          // x2 = previous x2 / 10
     cbnz    x2, 1b                          // if x2 != 0 continue looping
 3:

@@ -11,8 +11,86 @@
 
 .align 3
 all_tests:
-  .quad 0x0000000000000001                // Number of tests.
+  .quad 0x0000000000000002                // Number of tests.
+  .quad test_po_attr_test_case_1
   .quad test_po_change_test_case_1
+
+
+##########################################################################
+############# Test po_attr test case 1 ###################################
+##########################################################################
+
+.align 3
+# Test case definition
+test_po_attr_test_case_1:
+  .quad test_po_attr_test_case_1_name
+  .quad test_po_attr_test_case_1_setup_ram
+  .quad test_po_attr_test_case_1_setup_sysvars
+  .quad test_po_attr_test_case_1_setup_registers
+  .quad test_po_attr_test_case_1_effects_ram
+  .quad test_po_attr_test_case_1_effects_sysvars
+  .quad test_po_attr_test_case_1_effects_registers
+  .quad test_po_attr_test_case_1_exec
+
+# Test case name
+test_po_attr_test_case_1_name:
+  .asciz "po_attr test case 1"
+
+# Test case setup
+
+.align 3
+# RAM setup
+test_po_attr_test_case_1_setup_ram:
+  .quad 0                                 // Number of RAM entries = 0
+
+.align 3
+# System variables setup
+test_po_attr_test_case_1_setup_sysvars:
+  .quad 0b0000000000010100000000000100000000000000000000000000000000000000
+                                          // Bits 38-39 = 0b01 => P_FLAG (sysvar index 19) is absolute value
+                                          // Bits 50-51 = 0b01 => ATTR_T (sysvar index 25) is absolute value
+                                          // Bits 52-53 = 0b01 => MASK_T (sysvar index 26) is absolute value
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+  .quad 0x0000000000000097                // [P_FLAG] = 0x0000000000000097
+  .quad 0x0000000000000095                // [ATTR_T] = 0x0000000000000095
+  .quad 0x0000000000000056                // [MASK_T] = 0x0000000000000056
+
+.align 3
+# Registers setup
+test_po_attr_test_case_1_setup_registers:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000001
+                                          // Bits 0-1 = 0b01 => x0 (register index 0) is absolute value
+  .quad 0x0000000000050000                // x0 = 0x0000000000050000
+
+# Test case effects
+
+.align 3
+# RAM effects
+test_po_attr_test_case_1_effects_ram:
+
+.align 3
+# System variable effects
+test_po_attr_test_case_1_effects_sysvars:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+
+.align 3
+# Registers effects
+test_po_attr_test_case_1_effects_registers:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+
+# Test case execution
+
+.align 2
+test_po_attr_test_case_1_exec:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  ldp     x0, x1, [x0]                    // Restore x0, x1 values
+  bl      po_attr
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+##########################################################################
 
 
 ##########################################################################

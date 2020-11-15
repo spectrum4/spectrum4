@@ -1,0 +1,19 @@
+---
+tests:
+  - name: po_attr test case 1
+    setup:
+      ram:
+      sysvars:
+        ATTR_T:
+          quad: 0b10010101
+        MASK_T:
+          quad: 0b01010110
+        P_FLAG:
+          quad: 0b10010111
+      registers:
+        x0:
+          quad: 0x50000
+    effects:
+      ram:
+      sysvars:
+      registers:

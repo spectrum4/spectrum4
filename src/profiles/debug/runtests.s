@@ -11,7 +11,6 @@ run_tests:
 # Register usage
 # ==============
 # x0-3 scratch registers
-# x4   address inside all_tests
 # x5   sysvars_meta
 # x6   sysvar meta entry
 # x7   sysvar setup mask / ram setup entry type
@@ -27,6 +26,7 @@ run_tests:
 # x17  sysvars/ram/registers setup/effects block
 # x18  address on stack to set/test value
 # x19  start of sysvar expected values after mask entries
+# x20  address inside all_tests
 
 # Stack organisation
 # ==================
@@ -56,8 +56,8 @@ run_tests:
 
   ldr     w0, arm_size
   and     sp, x0, #~0x0f                  // Set stack pointer at top of ARM memory
-  adr     x4, all_tests                   // x4 = address of test list
-  ldr     x10, [x4], #8                   // x10 = number of tests
+  adr     x20, all_tests                  // x20 = address of test list
+  ldr     x10, [x20], #8                  // x10 = number of tests
   cbz     x10, 34f                        // Return if no tests to run
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -65,7 +65,7 @@ run_tests:
                                           // Allocate space on stack for pre-test/post-test registers and system variables
   1:                                      // Loop executing tests
     adr     x5, sysvars_meta
-    ldr     x11, [x4], #8                   // x11 = address of test definition
+    ldr     x11, [x20], #8                  // x11 = address of test definition
 
   // Log test running
 
@@ -80,6 +80,7 @@ run_tests:
 
     ldr     x17, [x11, #8]                  // x17 = RAM setup block
     ldr     x15, [x17], #8                  // x15 = number of RAM setup entries
+    cbz     x15, skip1
     sub     sp, sp, x15, lsl #4             // Allocate 16 bytes per RAM setup entry on stack
     mov     x9, #0                          // x9 = RAM setup index
     2:
@@ -99,6 +100,7 @@ run_tests:
 
   // System variable setup
 
+  skip1:
     mov     x0, x28
     mov     x1, (sysvars_end - sysvars)
     bl      rand_block                      // Set sysvars to random values
@@ -185,7 +187,7 @@ run_tests:
 
   // Backup loop registers.
 
-    stp     x4, x10, [sp, #-16]!
+    stp     x20, x10, [sp, #-16]!
     stp     x11, x15, [sp, #-16]!
 
   // Replace registers with required values, except for x0 and x1 (which is done by shim)
@@ -230,7 +232,7 @@ run_tests:
   // Restore loop registers.
 
     ldp     x11, x15, [sp], #16
-    ldp     x4, x10, [sp], #16
+    ldp     x20, x10, [sp], #16
     adr     x5, sysvars_meta
 
   // Store post-test system variables.
@@ -332,6 +334,8 @@ run_tests:
 
   // Test RAM values
 
+    cbz     x15, skip2
+
     ldr     x17, [x11, #32]                 // x17 = RAM effects block
     add     x18, sp, x15, lsl #3            // x18 = address of RAM post-test entries
     add     x0, x15, #31                    // x0 = RAM entries + 31
@@ -365,6 +369,7 @@ run_tests:
       b.ne    29b
 
     add     sp, sp, x15, lsl #4             // Free RAM setup entries
+  skip2:
     sub     x10, x10, #1                    // Decrement remaining test count
     cbnz    x10, 1b                         // Loop if more tests to run
 

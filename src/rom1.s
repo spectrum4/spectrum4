@@ -1077,6 +1077,20 @@ pr_all:                          // L0B7F
 #
 # On entry:
 #   x0 = address in display file
+# On exit:
+#   x0 = [P_FLAG]
+#   x1 = [ATTR_T] | ([MASK_T] << 8)
+#   x9 = display_file
+#   x10 = x attribute coordinate (0-107)
+#   x11 = display file offset
+#   x12 = 108
+#   x13 = multiplication constant for dividing by 216
+#   x14 = display file offset / 216
+#   x15 = multiplication constant for dividing by 5
+#   x16 = attribute_file address offset
+#   x17 = attribute value applied
+#   x18 = 5 * screen third (0x0 / 0x5 / 0xa)
+#   x24 = attributes_file
 #
 # TODO: We shouldn't need to convert a display file address to an attributes file
 #       address; instead we should just pass the attributes file address into the

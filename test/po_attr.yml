@@ -18,28 +18,28 @@ tests:
       sysvars:
       registers:
         x0:
-          quad: 0x0000000000000097
+          quad: 0x0000000000000097 # P_FLAG
         x1:
-          quad: 0x0000000000005695
+          quad: 0x0000000000005695 # ATTR_T + 256*MASK_T
         x9:
-          quad: 0x0000000000038880
+          quad: 0x0000000000038880 # display_file
         x10:
-          quad: 0x0000000000000004
+          quad: 0x0000000000000004 # x attribute coordinate (0-107)
         x11:
-          quad: 0x0000000000017780
+          quad: 0x0000000000017780 # display_file offset
         x12:
-          quad: 0x000000000000006c
+          quad: 0x000000000000006c # 108
         x13:
-          quad: 0x012f684c00000000
+          quad: 0x012f684c00000000 # multiplication constant for dividing by 216
         x14:
-          quad: 0x00000000000001bd
+          quad: 0x00000000000001bd # display file offset / 216
         x15:
-          quad: 0xcccd000000000000
+          quad: 0xcccd000000000000 # multiplication constant for dividing by 5
         x16:
-          quad: 0x0000000000000a90
+          quad: 0x0000000000000a90 # attribute address offset from attributes_file
         x17:
-          quad: 0x0000000000000047
+          quad: 0x0000000000000047 # attribute value to apply
         x18:
-          quad: 0x0000000000000005
+          quad: 0x0000000000000005 # 5 * screen third (0x0 = top, 0x5 = middle, 0xA = bottom)
         x24:
-          quad: 0x000000000006b280
+          quad: 0x000000000006b280 # attributes_file

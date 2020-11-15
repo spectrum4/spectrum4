@@ -33,9 +33,9 @@ run_tests:
 #
 # RAM entries
 #   sp:
-#     pre-test entries                      // (8 * RAM entries) bytes
-#   sp+8*x15:
 #     post-test entries                     // (8 * RAM entries) bytes
+#   sp+8*x15:
+#     pre-test entries                      // (8 * RAM entries) bytes
 #
 # System variables
 #   x29-512-2*(sysvars_end-sysvars) == sp+16*x15:
@@ -330,7 +330,7 @@ run_tests:
       cmp     x9, SYSVAR_COUNT
       b.ne    20b
 
-  // TODO: Test RAM values
+  // Test RAM values
 
     ldr     x17, [x11, #32]                 // x17 = RAM effects block
     add     x18, sp, x15, lsl #3            // x18 = address of RAM post-test entries
@@ -343,12 +343,12 @@ run_tests:
       b.ne    30f
       ldr     x7, [x17], #8                   // x7 = RAM effects mask
     30:
-      ldr     x12, [sp, x9, lsl #3]           // x12 = pre-test RAM value
-      ldr     x13, [x18, x9, lsl #3]          // x13 = post-test RAM value
+      ldr     x12, [x18, x9, lsl #3]          // x12 = pre-test RAM value
+      ldr     x13, [sp, x9, lsl #3]           // x13 = post-test RAM value
       tbz     x7, #0, 31f                     // If RAM entry shouldn't change, jump forward to 31:.
     // RAM entry should be modified
       ldr     x14, [x19], #8                  // x14 = RAM entry expected value as pointer or literal value
-      tbz     x7, #1, 31f                     // Jump ahead to 31: if literal value.
+      tbz     x7, #1, 32f                     // Jump ahead to 31: if literal value.
       add     x14, sp, x14, lsl #3            // Convert x14 from point value to absolute value.
       b       32f
     31:

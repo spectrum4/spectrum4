@@ -75,7 +75,8 @@ test_po_change_test_case_1_setup_sysvars:
 # Registers setup
 test_po_change_test_case_1_setup_registers:
   .quad 0b0000000000000000000000000000000000000000000000000000001100000000
-  .quad 1                                 // new_input_routine
+                                          // Bits 8-9 = 0b11 => x4 (register index 4) is pointer
+  .quad 0x0000000000000001                // x4 = new_input_routine
 
 # Test case effects
 
@@ -84,7 +85,7 @@ test_po_change_test_case_1_setup_registers:
 test_po_change_test_case_1_effects_ram:
   .quad 0b0000000000000000000000000000000000000000000000000000000000000011
                                           // Bits 0-1 = 0b11 => channel_block (RAM entry index 0) is pointer
-  .quad 1                                 // [channel_block] = new_input_routine
+  .quad 0x0000000000000001                // [channel_block] = new_input_routine
 
 .align 3
 # System variable effects
@@ -93,10 +94,11 @@ test_po_change_test_case_1_effects_sysvars:
   .quad 0b0000000000000000000000000000000000000000000000000000000000000000
 
 .align 3
-# Register effects
+# Registers effects
 test_po_change_test_case_1_effects_registers:
   .quad 0b0000000000000000000000000000000000000000000000000000110000000000
-  .quad 0                                 // channel_block
+                                          // Bits 10-11 = 0b11 => x5 (register index 5) is pointer
+  .quad 0x0000000000000000                // x5 = channel_block
 
 # Test case execution
 

@@ -10,7 +10,6 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
-	"strconv"
 	"strings"
 
 	"github.com/ghodss/yaml"
@@ -64,39 +63,6 @@ func (value StoredValue) Write(w io.Writer, ramSetupEntries NamedValue, includeT
 		fmt.Fprintf(w, "  .quad %-16v                  // %v\n", index, *value.Pointer)
 	default:
 		return fmt.Errorf("No Quad or Pointer specified in %v", value)
-	}
-	return nil
-}
-
-func (registerEntries NamedValue) WriteRegisters(w io.Writer, ramSetupEntries NamedValue) error {
-	var updatedRegisters uint64
-	for k, v := range registerEntries {
-		e := fmt.Errorf("Unknown register %v (name must be 'x<0-31>')", k)
-		if k[0] != 'x' {
-			return e
-		}
-		registerIndex, err := strconv.Atoi(k[1:])
-		if err != nil {
-			return e
-		}
-		if registerIndex < 0 || registerIndex > 30 {
-			return e
-		}
-		updatedRegisters |= 1 << (registerIndex * 2)
-		if v.Pointer != nil {
-			updatedRegisters |= 1 << (registerIndex*2 + 1)
-		}
-	}
-
-	fmt.Fprintf(w, "  .quad 0b%064b\n", updatedRegisters)
-
-	sortedRegisters := registerEntries.SortedNames()
-	for _, register := range sortedRegisters {
-		value := registerEntries[register]
-		err := value.Write(w, ramSetupEntries, false)
-		if err != nil {
-			return err
-		}
 	}
 	return nil
 }
@@ -285,77 +251,35 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 		}
 		fmt.Fprintf(w, "  .asciz %q %v // name: %q\n", ramEntry, strings.Repeat(" ", 29-len(ramEntry)), ramEntry)
 	}
-	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, ".align 3")
-	fmt.Fprintln(w, "# System variables setup")
-	fmt.Fprintf(w, "%v_setup_sysvars:\n", symbolName)
-	sysVarMaskByteCount := (len(sysVars) + 31) / 32
-	found := 0
-	entries := []string{}
-	for i := 0; i < sysVarMaskByteCount; i++ {
-		var sysVarMask uint64 = 0
-		comments := []string{}
-		for j := 0; j < 32; j++ {
-			if j+i*32 == len(sysVars) {
-				break
-			}
-			sysVar := sysVars[j+i*32]
-			if sv, exists := unitTest.Setup.SysVars[sysVar]; exists {
-				found++
-				sysVarMask |= 1 << (2 * j)
-				if sv.Pointer != nil {
-					sysVarMask |= 1 << (2*j + 1)
-					comments = append(comments, fmt.Sprintf("                                          // Bits %v-%v = 0b11 => %v (sysvar index %v) is pointer", 2*j, 2*j+1, sysVar, j+i*32))
-					entries = append(entries, fmt.Sprintf("  .quad 0x%016x                // [%v] = %v", ramSetupEntries.IndexOf(*sv.Pointer), sysVar, *sv.Pointer))
-				} else {
-					comments = append(comments, fmt.Sprintf("                                          // Bits %v-%v = 0b01 => %v (sysvar index %v) is absolute value", 2*j, 2*j+1, sysVar, j+i*32))
-					entries = append(entries, fmt.Sprintf("  .quad 0x%016x                // [%v] = 0x%016x", *sv.Quad, sysVar, *sv.Quad))
-				}
-			}
-		}
-		fmt.Fprintf(w, "  .quad 0b%064b\n", sysVarMask)
-		for i := range comments {
-			fmt.Fprintln(w, comments[i])
-		}
-	}
-	if len(unitTest.Setup.SysVars) > found {
-		return nil, fmt.Errorf("%v unknown sysvar(s) in test %v", len(unitTest.Setup.SysVars)-found, unitTest.Name)
-	}
-	for _, e := range entries {
-		fmt.Fprintln(w, e)
-	}
 
-	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, ".align 3")
-	fmt.Fprintln(w, "# Registers setup")
-	fmt.Fprintf(w, "%v_setup_registers:\n", symbolName)
-	err := unitTest.Setup.Registers.WriteRegisters(w, ramSetupEntries)
+	err := unitTest.Setup.SysVars.Write(w, "System variables setup", symbolName+"_setup_sysvars", "sysvar", sysVars, ramSetupEntries)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Fprintln(w, "")
 
+	registers := make([]string, 30, 30)
+	for i := range registers {
+		registers[i] = fmt.Sprintf("x%v", i)
+	}
+	err = unitTest.Setup.Registers.Write(w, "Registers setup", symbolName+"_setup_registers", "register", registers, ramSetupEntries)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "# Test case effects")
-	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, ".align 3")
-	fmt.Fprintln(w, "# RAM effects")
-	fmt.Fprintf(w, "%v_effects_ram:\n", symbolName)
-	// TODO
-	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000000000000011")
-	fmt.Fprintln(w, "                                          // Bits 0-1 = 0b11 => channel_block (RAM entry index 0) is pointer")
-	fmt.Fprintln(w, "  .quad 1                                 // [channel_block] = new_input_routine")
-	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, ".align 3")
-	fmt.Fprintln(w, "# System variable effects")
-	fmt.Fprintf(w, "%v_effects_sysvars:\n", symbolName)
-	// TODO
-	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000000000000000")
-	fmt.Fprintln(w, "  .quad 0b0000000000000000000000000000000000000000000000000000000000000000")
-	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, ".align 3")
-	fmt.Fprintln(w, "# Register effects")
-	fmt.Fprintf(w, "%v_effects_registers:\n", symbolName)
-	err = unitTest.Effects.Registers.WriteRegisters(w, ramSetupEntries)
+
+	err = unitTest.Effects.RAM.Write(w, "RAM effects", symbolName+"_effects_ram", "RAM entry", sortedRAMEntries, ramSetupEntries)
+	if err != nil {
+		return nil, err
+	}
+
+	err = unitTest.Effects.SysVars.Write(w, "System variable effects", symbolName+"_effects_sysvars", "sysvar", sysVars, ramSetupEntries)
+	if err != nil {
+		return nil, err
+	}
+
+	err = unitTest.Effects.Registers.Write(w, "Registers effects", symbolName+"_effects_registers", "register", registers, ramSetupEntries)
 	if err != nil {
 		return nil, err
 	}
@@ -373,4 +297,51 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "##########################################################################")
 	return w.Bytes(), nil
+}
+
+func (nv NamedValue) Write(w io.Writer, title string, section string, indexDescription string, entryNames []string, ramSetupEntries NamedValue) error {
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, ".align 3")
+	fmt.Fprintf(w, "# %v\n", title)
+	fmt.Fprintf(w, "%v:\n", section)
+	maskQuadCount := (len(entryNames) + 31) / 32
+	found := 0
+	entries := []string{}
+	for i := 0; i < maskQuadCount; i++ {
+		var mask uint64 = 0
+		comments := []string{}
+		for j := 0; j < 32; j++ {
+			if j+i*32 == len(entryNames) {
+				break
+			}
+			entry := entryNames[j+i*32]
+			key := "[" + entry + "]"
+			if indexDescription == "register" {
+				key = entry
+			}
+			if sv, exists := nv[entry]; exists {
+				found++
+				mask |= 1 << (2 * j)
+				if sv.Pointer != nil {
+					mask |= 1 << (2*j + 1)
+					comments = append(comments, fmt.Sprintf("                                          // Bits %v-%v = 0b11 => %v (%v index %v) is pointer", 2*j, 2*j+1, entry, indexDescription, j+i*32))
+					entries = append(entries, fmt.Sprintf("  .quad 0x%016x                // %v = %v", ramSetupEntries.IndexOf(*sv.Pointer), key, *sv.Pointer))
+				} else {
+					comments = append(comments, fmt.Sprintf("                                          // Bits %v-%v = 0b01 => %v (%v index %v) is absolute value", 2*j, 2*j+1, entry, indexDescription, j+i*32))
+					entries = append(entries, fmt.Sprintf("  .quad 0x%016x                // %v = 0x%016x", *sv.Quad, key, *sv.Quad))
+				}
+			}
+		}
+		fmt.Fprintf(w, "  .quad 0b%064b\n", mask)
+		for i := range comments {
+			fmt.Fprintln(w, comments[i])
+		}
+	}
+	if len(nv) > found {
+		return fmt.Errorf("%v unknown entries for section %v", len(nv)-found, section)
+	}
+	for _, e := range entries {
+		fmt.Fprintln(w, e)
+	}
+	return nil
 }

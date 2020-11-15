@@ -169,7 +169,7 @@ fetch_firmware 'start.elf'
 "${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -M -o build/kernel8-release.elf  build/release.o
 
 # Log some useful information about the generated elf file.
-"${TOOLCHAIN_PREFIX}readelf" -a build/kernel8-release.elf
+"${TOOLCHAIN_PREFIX}readelf" -a build/kernel8-debug.elf
 
 # Extract the final kernel raw binary into file dist/kernel8.img
 "${TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/kernel8-debug.elf -O binary dist/kernel8-debug.img

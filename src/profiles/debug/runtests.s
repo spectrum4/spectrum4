@@ -58,7 +58,7 @@ run_tests:
   and     sp, x0, #~0x0f                  // Set stack pointer at top of ARM memory
   adr     x4, all_tests                   // x4 = address of test list
   ldr     x10, [x4], #8                   // x10 = number of tests
-  cbz     x10, end_run_tests              // Return if no tests to run
+  cbz     x10, 34f                        // Return if no tests to run
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   sub     sp, sp, (sysvars_end - sysvars)*2 + 256*2
@@ -78,7 +78,7 @@ run_tests:
 
   // RAM setup
 
-    ldr     x17, [x11, #8]                  // x17 = ram setup block
+    ldr     x17, [x11, #8]                  // x17 = RAM setup block
     ldr     x15, [x17], #8                  // x15 = number of RAM setup entries
     sub     sp, sp, x15, lsl #4             // Allocate 16 bytes per RAM setup entry on stack
     mov     x9, #0                          // x9 = RAM setup index
@@ -333,14 +333,36 @@ run_tests:
   // TODO: Test RAM values
 
     ldr     x17, [x11, #32]                 // x17 = RAM effects block
+    add     x18, sp, x15, lsl #3            // x18 = address of RAM post-test entries
     add     x0, x15, #31                    // x0 = RAM entries + 31
-    add     x19, x17, x0, lsr #5            // x19 = address of first sysvar definition (x17 + (x15+31)/32)
+    lsr     x0, x0, #5
+    add     x19, x17, x0, lsl #3            // x19 = address of first RAM effects entry (x17 + (x15+31)/32)
     mov     x9, #0                          // RAM entry index
     29:
       tst     x9, #0x1f                       // lower 5 bits of x9 are 0 when we need to read next quad mask
       b.ne    30f
-      ldr     x7, [x17], #8                   // x7 = sysvar setup mask
+      ldr     x7, [x17], #8                   // x7 = RAM effects mask
     30:
+      ldr     x12, [sp, x9, lsl #3]           // x12 = pre-test RAM value
+      ldr     x13, [x18, x9, lsl #3]          // x13 = post-test RAM value
+      tbz     x7, #0, 31f                     // If RAM entry shouldn't change, jump forward to 31:.
+    // RAM entry should be modified
+      ldr     x14, [x19], #8                  // x14 = RAM entry expected value as pointer or literal value
+      tbz     x7, #1, 31f                     // Jump ahead to 31: if literal value.
+      add     x14, sp, x14, lsl #3            // Convert x14 from point value to absolute value.
+      b       32f
+    31:
+      mov     x14, x12                        // x14 = expected value (= pre-test value)
+    32:
+      cmp     x13, x14                        // Post-test RAM value (x13) == expected RAM value (x14)?
+      b.eq    33f                             // If actual == expected, RAM test passed; continue loop.
+      mov     x16, log_ram_entry              // x16 = function to log ": RAM entry <ram_entry>"
+      bl      test_fail                       // Otherwise, report failure.
+    33:
+      add     x9, x9, #1
+      lsr     x7, x7, #2
+      cmp     x9, x15
+      b.ne    29b
 
     add     sp, sp, x15, lsl #4             // Free RAM setup entries
     sub     x10, x10, #1                    // Decrement remaining test count
@@ -348,7 +370,21 @@ run_tests:
 
   add     sp, sp, (sysvars_end - sysvars)*2 + 256*2
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-end_run_tests:
+34:
+  ret
+
+
+log_ram_entry:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x0, msg_fail_8
+  bl      uart_puts                       // Log ": RAM entry "
+  ldr     x0, [x11, #8]                   // x0 = RAM setup block
+  add     x0, x0, #8                      // Step over RAM entry count
+  ldr     x0, [x0, x9, lsl #3]            // x0 = address of RAM entry definition block
+  add     x0, x0, #16                     // x0 = address of RAM entry name
+  bl      uart_puts                       // Log "<ram_entry>"
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
 
@@ -452,3 +488,4 @@ msg_fail_5: .ascii ", but should not have changed"
                                           // Intentionally .ascii not .asciz, in order to join with msg_fail_6.
 msg_fail_6: .asciz ".\r\n"
 msg_fail_7: .asciz ": System Variable "
+msg_fail_8: .asciz ": RAM entry "

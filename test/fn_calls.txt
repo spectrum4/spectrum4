@@ -1,0 +1,310 @@
+_start:
+      uart_init
+      init_framebuffer
+      rand_init
+      run_tests
+      restart
+sleep:
+      sleep
+init_framebuffer:
+      mbox_call
+mbox_call:
+poke_address:
+     S_FRAME_SIZE+0x150
+     poke_address
+     poke_address
+wait_cycles:
+restart:
+     new
+pin:
+pout:
+new:
+     paint_border
+     cls
+     demo
+     sleep
+print_message:
+     print_message+0x1e
+     print_w0
+initial_channel_info:
+initial_channel_info_END:
+initial_stream_data_END:
+error_1:
+print_w0:
+tkn_table:
+print_out:
+     po_fetch
+     print_out+0x4c
+     po_able
+     print_out+0x4c
+     po_quest
+ctlchrtab:
+po_back:
+     cl_set
+po_right:
+     po_able
+po_enter:
+     po_scr
+     cl_set
+     po_enter+0x40
+     add_char
+po_comma:
+     po_fill
+po_quest:
+     po_able
+po_tv_2:
+     po_change
+po_2_oper:
+     po_tv_1
+po_1_oper:
+     po_tv_1
+po_tv_1:
+     po_change
+po_change:
+po_cont:
+     po_change
+po_at_set:
+     co_temp_5
+     to_end
+to_co_temp_5:
+     co_temp_5
+     to_end
+to_end:
+po_fill:
+     print_w0
+po_able:
+     po_any
+     po_store
+po_store:
+     po_store+0x40
+     po_store+0x40
+po_fetch:
+     po_fetch+0x38
+     po_fetch+0x38
+po_any:
+     po_mosaic_half
+     po_mosaic_half
+     pr_all
+     po_any+0x3c
+     po_char
+     po_any+0x3c
+     po_t_udg
+po_mosaic_half:
+po_t_udg:
+     co_temp_5
+po_t_udg_1:
+     po_char_2
+po_t:
+     po_tokens
+     po_fetch
+po_char:
+     po_char_2
+po_char_2:
+     pr_all
+pr_all:
+     add_char
+     po_scr
+     poke_address
+     poke_address
+     pr_all+0xc8
+     po_attr
+po_attr:
+po_msg:
+     po_table
+po_tokens:
+     po_table
+po_table:
+     po_search
+     po_table_1
+po_table_1:
+     po_save
+     po_save
+     po_table_1+0x1c
+     po_save
+po_save:
+     print_w0
+po_search:
+po_scr:
+     cl_set
+     po_scr_3
+     chan_open
+     po_scr_3
+po_scr_2:
+     chan_open
+     po_msg
+po_scr_3:
+report_5:
+temps:
+     temps+0x24
+cls:
+    cl_all
+    cls_lower
+cls_lower:
+    temps
+    cl_line
+    poke_address
+    cls_lower+0x44
+    cl_chan
+cl_chan:
+    chan_open
+    cl_set
+cl_all:
+    cl_chan
+    chan_open
+    temps
+    cl_line
+    cl_set
+cl_set:
+    cl_addr
+    cl_set+0x54
+    po_store
+cl_line:
+    cl_addr
+    poke_address
+    cl_line+0xa4
+    poke_address
+cl_addr:
+add_char:
+key_input:
+chan_open:
+    chan_open+0x2c
+    chan_flag
+chan_flag:
+    indexer
+chn_cd_lu:
+chan_k:
+    temps
+chan_s:
+    temps
+chan_p:
+indexer:
+    indexer+0x24
+report_j:
+co_temp_5:
+    po_t_udg_1
+    co_temp_5+0x5c
+    po_table_1
+    co_temp_5+0x58
+    po_tokens
+    po_fetch
+uart_init:
+uart_send:
+reboot:
+    paint_string
+    wait_cycles
+    mbox_call
+    sleep
+paint_border:
+    paint_rectangle
+    paint_rectangle
+    paint_rectangle
+    paint_rectangle
+paint_rectangle:
+fill_rectangle:
+fill_line:
+paint_window:
+    paint_rectangle
+rand_init:
+rand_x0:
+rand_block:
+run_tests:
+    uart_puts
+    uart_puts
+    uart_puts
+    rand_block
+    run_tests+0xec
+    run_tests+0xec
+    run_tests+0xec
+    run_tests+0xec
+    rand_block
+    run_tests+0x240
+    run_tests+0x2c4
+    run_tests+0x2c4
+    run_tests+0x2c4
+    run_tests+0x2dc
+    run_tests+0x340
+log_ram_entry:
+    uart_puts
+    uart_puts
+log_sysvar:
+    uart_puts
+    uart_puts
+log_register:
+    uart_puts
+    base10
+    uart_puts
+    uart_puts
+    uart_puts
+    uart_puts
+    uart_x0
+    uart_puts
+    uart_x0
+    uart_puts
+    uart_x0
+    uart_puts
+    uart_puts
+    uart_puts
+    uart_x0
+    uart_puts
+    uart_x0
+    uart_puts
+all_tests:
+    po_change
+display_sysvars:
+    uart_puts
+    uart_send
+    uart_x0
+    uart_send
+    uart_send
+    uart_puts
+    uart_send
+    uart_send
+    hex_x0
+    uart_puts
+    display_sysvars+0x100
+    display_sysvars+0xdc
+    display_sysvars+0xdc
+    display_sysvars+0xdc
+    uart_puts
+    hex_x0
+    uart_puts
+    uart_newline
+    uart_newline
+display_zx_screen:
+    poke_address
+display_memory:
+    paint_string
+    hex_x0
+    hex_x0
+    paint_string
+hex_x0:
+demo:
+    paint_copyright
+    wait_cycles
+    display_zx_screen
+    wait_cycles
+    cls
+    display_memory
+    display_memory
+    display_memory
+    display_memory
+    display_memory
+    display_memory
+    display_sysvars
+uart_newline:
+    uart_send
+    uart_send
+uart_puts:
+    uart_puts+0x8
+uart_x0:
+    hex_x0
+    uart_puts
+paint_string:
+    uart_puts
+    uart_newline
+paint_char:
+paint_line:
+    paint_string+0x38
+paint_copyright:
+    paint_string
+base10:

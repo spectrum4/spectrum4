@@ -332,6 +332,16 @@ run_tests:
 
   // TODO: Test RAM values
 
+    ldr     x17, [x11, #32]                 // x17 = RAM effects block
+    add     x0, x15, #31                    // x0 = RAM entries + 31
+    add     x19, x17, x0, lsr #5            // x19 = address of first sysvar definition (x17 + (x15+31)/32)
+    mov     x9, #0                          // RAM entry index
+    29:
+      tst     x9, #0x1f                       // lower 5 bits of x9 are 0 when we need to read next quad mask
+      b.ne    30f
+      ldr     x7, [x17], #8                   // x7 = sysvar setup mask
+    30:
+
     add     sp, sp, x15, lsl #4             // Free RAM setup entries
     sub     x10, x10, #1                    // Decrement remaining test count
     cbnz    x10, 1b                         // Loop if more tests to run

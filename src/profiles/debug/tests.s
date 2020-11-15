@@ -77,7 +77,33 @@ test_po_attr_test_case_1_effects_sysvars:
 .align 3
 # Registers effects
 test_po_attr_test_case_1_effects_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+  .quad 0b0000000000000001000000000001010101010101010101000000000000000101
+                                          // Bits 0-1 = 0b01 => x0 (register index 0) is absolute value
+                                          // Bits 2-3 = 0b01 => x1 (register index 1) is absolute value
+                                          // Bits 18-19 = 0b01 => x9 (register index 9) is absolute value
+                                          // Bits 20-21 = 0b01 => x10 (register index 10) is absolute value
+                                          // Bits 22-23 = 0b01 => x11 (register index 11) is absolute value
+                                          // Bits 24-25 = 0b01 => x12 (register index 12) is absolute value
+                                          // Bits 26-27 = 0b01 => x13 (register index 13) is absolute value
+                                          // Bits 28-29 = 0b01 => x14 (register index 14) is absolute value
+                                          // Bits 30-31 = 0b01 => x15 (register index 15) is absolute value
+                                          // Bits 32-33 = 0b01 => x16 (register index 16) is absolute value
+                                          // Bits 34-35 = 0b01 => x17 (register index 17) is absolute value
+                                          // Bits 36-37 = 0b01 => x18 (register index 18) is absolute value
+                                          // Bits 48-49 = 0b01 => x24 (register index 24) is absolute value
+  .quad 0x0000000000000097                // x0 = 0x0000000000000097
+  .quad 0x0000000000005695                // x1 = 0x0000000000005695
+  .quad 0x0000000000038880                // x9 = 0x0000000000038880
+  .quad 0x0000000000000004                // x10 = 0x0000000000000004
+  .quad 0x0000000000017780                // x11 = 0x0000000000017780
+  .quad 0x000000000000006c                // x12 = 0x000000000000006c
+  .quad 0x012f684c00000000                // x13 = 0x012f684c00000000
+  .quad 0x00000000000001bd                // x14 = 0x00000000000001bd
+  .quad 0xcccd000000000000                // x15 = 0xcccd000000000000
+  .quad 0x0000000000000a90                // x16 = 0x0000000000000a90
+  .quad 0x0000000000000047                // x17 = 0x0000000000000047
+  .quad 0x0000000000000005                // x18 = 0x0000000000000005
+  .quad 0x000000000006b280                // x24 = 0x000000000006b280
 
 # Test case execution
 

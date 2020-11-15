@@ -5,41 +5,42 @@ tests:
       ram:
       sysvars:
         ATTR_T:
-          quad: 0b10010101
+          quad: 0b10010101 # byte
         MASK_T:
-          quad: 0b01010110
+          quad: 0b01010110 # byte
         P_FLAG:
-          quad: 0b10010111
+          quad: 0b10010111 # byte
       registers:
         x0:
-          quad: 0x50000
+          quad: 0x50000 # display_file + XXXXX
     effects:
       ram:
+        # [attributes_file+xxxxx] = yyyyyy
       sysvars:
       registers:
         x0:
-          quad: 0x0000000000000097 # P_FLAG
+          quad: 0x0000000000000097 # . P_FLAG
         x1:
-          quad: 0x0000000000005695 # ATTR_T + 256*MASK_T
+          quad: 0x0000000000005695 # . ATTR_T + 256*MASK_T
         x9:
           quad: 0x0000000000038880 # display_file
         x10:
-          quad: 0x0000000000000004 # x attribute coordinate (0-107)
+          quad: 0x0000000000000004 # . x attribute coordinate (0-107)
         x11:
-          quad: 0x0000000000017780 # display_file offset
+          quad: 0x0000000000017780 # . display_file offset
         x12:
-          quad: 0x000000000000006c # 108
+          quad: 0x000000000000006c # . 108
         x13:
-          quad: 0x012f684c00000000 # multiplication constant for dividing by 216
+          quad: 0x012f684c00000000 # . multiplication constant for dividing by 216
         x14:
-          quad: 0x00000000000001bd # display file offset / 216
+          quad: 0x00000000000001bd # . display file offset / 216
         x15:
-          quad: 0xcccd000000000000 # multiplication constant for dividing by 5
+          quad: 0xcccd000000000000 # . multiplication constant for dividing by 5
         x16:
-          quad: 0x0000000000000a90 # attribute address offset from attributes_file
+          quad: 0x0000000000000a90 # . attribute address offset from attributes_file
         x17:
-          quad: 0x0000000000000047 # attribute value to apply
+          quad: 0x0000000000000047 # . attribute value to apply
         x18:
-          quad: 0x0000000000000005 # 5 * screen third (0x0 = top, 0x5 = middle, 0xA = bottom)
+          quad: 0x0000000000000005 # . 5 * screen third (0x0 = top, 0x5 = middle, 0xA = bottom)
         x24:
           quad: 0x000000000006b280 # attributes_file

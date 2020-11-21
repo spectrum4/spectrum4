@@ -60,7 +60,7 @@ func (value StoredValue) Write(w io.Writer, ramSetupEntries NamedValue, includeT
 		if index < 0 {
 			return fmt.Errorf("Pointer to undefined ram entry %v", *value.Pointer)
 		}
-		fmt.Fprintf(w, "  .quad %-16v                  // %v\n", index, *value.Pointer)
+		fmt.Fprintf(w, "  .quad %-33v // %v\n", index, *value.Pointer)
 	default:
 		return fmt.Errorf("No Quad or Pointer specified in %v", value)
 	}

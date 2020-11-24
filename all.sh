@@ -185,7 +185,7 @@ fetch_firmware 'start.elf'
 "${TOOLCHAIN_PREFIX}readelf" -W -a build/kernel8-debug.elf
 
 # Keep a record of which functions call other functions to ease writing tests
-"${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-debug.elf | sed -n '1,${;s/.*[[:space:]]bl*[[:space:]].*/&/p;s/.*<.*>:$/&/p;}' | sed '/msg_/d' | sed '/<test_/d' | sed 's/[^ ].*</</' | sed 's/<//g' | sed 's/>//g' | sed 's/^  */    /' > test/fn_calls.txt
+"${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-debug.elf | sed -n '1,${;s/.*[[:space:]]bl*[[:space:]].*/&/p;s/.*<.*>:$/&/p;}' | sed '/msg_/d' | sed '/<test_/d' | sed 's/[^ ].*</</' | sed 's/<//g' | sed 's/>//g' | sed 's/^  */    /' | sed '/+/d' > test/fn_calls.txt
 
 echo
 echo "Build successful - see dist directory for results"

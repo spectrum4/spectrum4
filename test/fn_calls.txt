@@ -10,7 +10,6 @@ init_framebuffer:
     mbox_call
 mbox_call:
 poke_address:
-    S_FRAME_SIZE+0x150
     poke_address
     poke_address
 wait_cycles:
@@ -24,7 +23,6 @@ new:
     demo
     sleep
 print_message:
-    print_message+0x1e
     print_w0
 initial_channel_info:
 initial_channel_info_END:
@@ -34,9 +32,7 @@ print_w0:
 tkn_table:
 print_out:
     po_fetch
-    print_out+0x4c
     po_able
-    print_out+0x4c
     po_quest
 ctlchrtab:
 po_back:
@@ -46,7 +42,6 @@ po_right:
 po_enter:
     po_scr
     cl_set
-    po_enter+0x40
     add_char
 po_comma:
     po_fill
@@ -76,18 +71,12 @@ po_able:
     po_any
     po_store
 po_store:
-    po_store+0x40
-    po_store+0x40
 po_fetch:
-    po_fetch+0x38
-    po_fetch+0x38
 po_any:
     po_mosaic_half
     po_mosaic_half
     pr_all
-    po_any+0x3c
     po_char
-    po_any+0x3c
     po_t_udg
 po_mosaic_half:
 po_t_udg:
@@ -106,7 +95,6 @@ pr_all:
     po_scr
     poke_address
     poke_address
-    pr_all+0xc8
     po_attr
 po_attr:
 po_msg:
@@ -119,7 +107,6 @@ po_table:
 po_table_1:
     po_save
     po_save
-    po_table_1+0x1c
     po_save
 po_save:
     print_w0
@@ -135,7 +122,6 @@ po_scr_2:
 po_scr_3:
 report_5:
 temps:
-    temps+0x24
 cls:
     cl_all
     cls_lower
@@ -143,7 +129,6 @@ cls_lower:
     temps
     cl_line
     poke_address
-    cls_lower+0x44
     cl_chan
 cl_chan:
     chan_open
@@ -156,18 +141,15 @@ cl_all:
     cl_set
 cl_set:
     cl_addr
-    cl_set+0x54
     po_store
 cl_line:
     cl_addr
     poke_address
-    cl_line+0xa4
     poke_address
 cl_addr:
 add_char:
 key_input:
 chan_open:
-    chan_open+0x2c
     chan_flag
 chan_flag:
     indexer
@@ -178,13 +160,10 @@ chan_s:
     temps
 chan_p:
 indexer:
-    indexer+0x24
 report_j:
 co_temp_5:
     po_t_udg_1
-    co_temp_5+0x5c
     po_table_1
-    co_temp_5+0x58
     po_tokens
     po_fetch
 uart_init:
@@ -211,20 +190,8 @@ run_tests:
     uart_puts
     uart_puts
     uart_puts
-skip1:
     rand_block
-    skip1+0x70
-    skip1+0x70
-    skip1+0x70
-    skip1+0x70
     rand_block
-    skip1+0x1c4
-    skip1+0x248
-    skip1+0x248
-    skip1+0x248
-    skip1+0x260
-    skip1+0x2c8
-skip2:
 log_ram_entry:
     uart_puts
     uart_puts
@@ -264,10 +231,6 @@ display_sysvars:
     uart_send
     hex_x0
     uart_puts
-    display_sysvars+0x100
-    display_sysvars+0xdc
-    display_sysvars+0xdc
-    display_sysvars+0xdc
     uart_puts
     hex_x0
     uart_puts
@@ -298,16 +261,12 @@ uart_newline:
     uart_send
     uart_send
 uart_puts:
-    uart_puts+0x8
 uart_x0:
     hex_x0
     uart_puts
 paint_string:
     uart_puts
     uart_newline
-paint_char:
-paint_line:
-    paint_string+0x38
 paint_copyright:
     paint_string
 base10:

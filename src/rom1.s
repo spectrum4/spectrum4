@@ -1276,7 +1276,7 @@ po_save:                         // L0C3B
 #   x4 = start address to search
 # On exit:
 #   x4 = address of result
-#   x5 corrupted
+#   x5 = first char of result if w3 < 0x20; otherwise 0
 #   w6 = 0
 po_search:                       // L0C41
   add     w6, w3, #1                      // Adjust for initial step-over token.
@@ -1681,14 +1681,12 @@ cl_line:                         // L0E44
 # On entry:
 #   x0 = 60 - screen line
 # On exit:
-#   x0 unchanged
-#   x1 = start line number to clear
+#   x1 = screen line
 #   x2 = address of top left pixel of line to clear inside display file
-#   x3 = start char line / 20
-#   x4 = start char line % 20
+#   x3 = screen line / 20
+#   x4 = screen line % 20
 #   x5 = 216
 #   x6 = 69120 (0x10e00)
-#   <no other changes>
 cl_addr:                         // L0E9B
   mov     x1, #60
   sub     x1, x1, x0

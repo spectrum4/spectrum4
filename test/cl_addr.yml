@@ -1,0 +1,28 @@
+---
+tests:
+  - name: test case 1
+    setup:
+      registers:
+        x0:
+          # 60 - screen line
+          quad: 35
+    effects:
+      registers:
+        x1:
+          # screen line
+          quad: 25
+        x2:
+          # address of top left pixel of line to clear inside display file
+          quad: display_file + 1*20*16*216 + 5*216
+        x3:
+          # screen line / 20
+          quad: 1
+        x4:
+          # screen line % 20
+          quad: 5
+        x5:
+          # 216
+          quad: 216
+        x6:
+          # 69120
+          quad: 69120

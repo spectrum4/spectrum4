@@ -133,13 +133,10 @@ cl_all:
     cl_line
     cl_set
 cl_set:
-    cl_addr
     po_store
 cl_line:
-    cl_addr
     poke_address
     poke_address
-cl_addr:
 add_char:
 key_input:
 chan_open:

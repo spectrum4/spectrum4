@@ -60,7 +60,7 @@ test_po_attr_test_case_1_setup_sysvars:
 test_po_attr_test_case_1_setup_registers:
   .quad 0b0000000000000000000000000000000000000000000000000000000000000001
                                           // Bits 0-1 = 0b01 => x0 (register index 0) is absolute value
-  .quad display_file + 0x17780            // x0
+  .quad display_file + 1*216*20*16 + 5*216 + 4*2 + 6*20*216 // x0
 
 # Test case effects
 
@@ -95,14 +95,14 @@ test_po_attr_test_case_1_effects_registers:
   .quad 22165                             // x1
   .quad display_file                      // x9
   .quad 4                                 // x10
-  .quad 96128                             // x11
+  .quad 1*216*20*16 + 6*20*216 + 5*216 + 4*2 // x11
   .quad 108                               // x12
   .quad 85401593570131968                 // x13
-  .quad 445                               // x14
+  .quad 1*20*16 + 6*20 + 5                // x14
   .quad 14757451553962983424              // x15
-  .quad 2704                              // x16
-  .quad 71                                // x17
-  .quad 5                                 // x18
+  .quad 1*108*20 + 5*108 + 4              // x16
+  .quad 22231                             // x17
+  .quad 1*5                               // x18
   .quad attributes_file                   // x24
 
 # Test case execution

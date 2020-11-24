@@ -1,31 +1,31 @@
 _start:
-      uart_init
-      init_framebuffer
-      rand_init
-      run_tests
-      restart
+    uart_init
+    init_framebuffer
+    rand_init
+    run_tests
+    restart
 sleep:
-      sleep
+    sleep
 init_framebuffer:
-      mbox_call
+    mbox_call
 mbox_call:
 poke_address:
-     S_FRAME_SIZE+0x150
-     poke_address
-     poke_address
+    S_FRAME_SIZE+0x150
+    poke_address
+    poke_address
 wait_cycles:
 restart:
-     new
+    new
 pin:
 pout:
 new:
-     paint_border
-     cls
-     demo
-     sleep
+    paint_border
+    cls
+    demo
+    sleep
 print_message:
-     print_message+0x1e
-     print_w0
+    print_message+0x1e
+    print_w0
 initial_channel_info:
 initial_channel_info_END:
 initial_stream_data_END:
@@ -33,109 +33,109 @@ error_1:
 print_w0:
 tkn_table:
 print_out:
-     po_fetch
-     print_out+0x4c
-     po_able
-     print_out+0x4c
-     po_quest
+    po_fetch
+    print_out+0x4c
+    po_able
+    print_out+0x4c
+    po_quest
 ctlchrtab:
 po_back:
-     cl_set
+    cl_set
 po_right:
-     po_able
+    po_able
 po_enter:
-     po_scr
-     cl_set
-     po_enter+0x40
-     add_char
+    po_scr
+    cl_set
+    po_enter+0x40
+    add_char
 po_comma:
-     po_fill
+    po_fill
 po_quest:
-     po_able
+    po_able
 po_tv_2:
-     po_change
+    po_change
 po_2_oper:
-     po_tv_1
+    po_tv_1
 po_1_oper:
-     po_tv_1
+    po_tv_1
 po_tv_1:
-     po_change
+    po_change
 po_change:
 po_cont:
-     po_change
+    po_change
 po_at_set:
-     co_temp_5
-     to_end
+    co_temp_5
+    to_end
 to_co_temp_5:
-     co_temp_5
-     to_end
+    co_temp_5
+    to_end
 to_end:
 po_fill:
-     print_w0
+    print_w0
 po_able:
-     po_any
-     po_store
+    po_any
+    po_store
 po_store:
-     po_store+0x40
-     po_store+0x40
+    po_store+0x40
+    po_store+0x40
 po_fetch:
-     po_fetch+0x38
-     po_fetch+0x38
+    po_fetch+0x38
+    po_fetch+0x38
 po_any:
-     po_mosaic_half
-     po_mosaic_half
-     pr_all
-     po_any+0x3c
-     po_char
-     po_any+0x3c
-     po_t_udg
+    po_mosaic_half
+    po_mosaic_half
+    pr_all
+    po_any+0x3c
+    po_char
+    po_any+0x3c
+    po_t_udg
 po_mosaic_half:
 po_t_udg:
-     co_temp_5
+    co_temp_5
 po_t_udg_1:
-     po_char_2
+    po_char_2
 po_t:
-     po_tokens
-     po_fetch
+    po_tokens
+    po_fetch
 po_char:
-     po_char_2
+    po_char_2
 po_char_2:
-     pr_all
+    pr_all
 pr_all:
-     add_char
-     po_scr
-     poke_address
-     poke_address
-     pr_all+0xc8
-     po_attr
+    add_char
+    po_scr
+    poke_address
+    poke_address
+    pr_all+0xc8
+    po_attr
 po_attr:
 po_msg:
-     po_table
+    po_table
 po_tokens:
-     po_table
+    po_table
 po_table:
-     po_search
-     po_table_1
+    po_search
+    po_table_1
 po_table_1:
-     po_save
-     po_save
-     po_table_1+0x1c
-     po_save
+    po_save
+    po_save
+    po_table_1+0x1c
+    po_save
 po_save:
-     print_w0
+    print_w0
 po_search:
 po_scr:
-     cl_set
-     po_scr_3
-     chan_open
-     po_scr_3
+    cl_set
+    po_scr_3
+    chan_open
+    po_scr_3
 po_scr_2:
-     chan_open
-     po_msg
+    chan_open
+    po_msg
 po_scr_3:
 report_5:
 temps:
-     temps+0x24
+    temps+0x24
 cls:
     cl_all
     cls_lower

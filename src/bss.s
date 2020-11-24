@@ -66,11 +66,9 @@ sysvars:
                                           // Time (in 50ths of a second) that a key must be held down before it repeats. This starts off at 35.
   REPPER:         .space 1                // Delay (in 50ths of a second) between successive repeats of a key held down - initially 5.
   ATTR_P:         .space 1                // Permanent current colours, etc, as set up by colour statements.
-  MASK_P:         .space 1                // Used for transparent colours, etc. Any bit that is 1 shows that the corresponding attribute.
+  MASK_P:         .space 1                // Used for transparent colours, etc. Any bit that is 1 takes value from current attribute value, 0 from ATTR_P/T.
   ATTR_T:         .space 1                // Temporary current colours (as set up by colour items).
   MASK_T:         .space 1                // Like MASK_P, but temporary.
-
-
   BAUD:           .space 2                // Baud rate timing constant for RS232 socket. Default value of 11. [Name clash with ZX Interface 1 system variable at 0x5CC3]
   SERFL:          .space 2                // Byte 0: Second character received flag:
                                           //           Bit 0   : 1=Character in buffer.
@@ -79,7 +77,6 @@ sysvars:
   RNFIRST:        .space 2                // Starting line number when renumbering. Default value of 10.
   RNSTEP:         .space 2                // Step size when renumbering. Default value of 10.
   STRMS:          .space 2*19             // Address offsets of 19 channels attached to streams.
-
 
 .align 2
   COORDS:         .space 2                // X-coordinate of last point plotted.

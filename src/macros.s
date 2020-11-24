@@ -24,6 +24,37 @@
 .endif
 .endm
 
+.macro logreg index
+.if       DEBUG_PROFILE
+  stp     x29, x30, [sp, #-16]!
+  stp     x0, x1, [sp, #-16]!
+  stp     x2, x3, [sp, #-16]!
+  stp     x4, x5, [sp, #-16]!
+  mov     x0, 'x'
+  bl      uart_send
+  mov     x2, #\index
+  sub     sp, sp, 32
+  mov     x0, sp
+  bl      base10
+  bl      uart_puts
+  add     sp, sp, #32
+  mov     x0, ':'
+  bl      uart_send
+  mov     x0, ' '
+  bl      uart_send
+  ldp     x4, x5, [sp]
+  ldp     x2, x3, [sp, #16]
+  ldp     x0, x1, [sp, #32]
+  mov     x0, x\index
+  bl      uart_x0
+  bl      uart_newline
+  ldp     x4, x5, [sp], #16
+  ldp     x2, x3, [sp], #16
+  ldp     x0, x1, [sp], #16
+  ldp     x29, x30, [sp], #16
+.endif
+.endm
+
 # .macro handle_invalid_entry type
 #   kernel_entry
 #   mov       x0, #\type

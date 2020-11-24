@@ -11,9 +11,11 @@
 
 .align 3
 all_tests:
-  .quad 0x0000000000000002                // Number of tests.
+  .quad 0x0000000000000004                // Number of tests.
   .quad test_po_attr_test_case_1
   .quad test_po_change_test_case_1
+  .quad test_po_search_with_custom_table
+  .quad test_po_search_with_keywords
 
 
 ##########################################################################
@@ -214,5 +216,187 @@ test_po_change_test_case_1_exec:
   bl      po_change
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
+##########################################################################
+
+
+##########################################################################
+############# Test po_search with custom table ###########################
+##########################################################################
+
+.align 3
+# Test case definition
+test_po_search_with_custom_table:
+  .quad test_po_search_with_custom_table_name
+  .quad test_po_search_with_custom_table_setup_ram
+  .quad test_po_search_with_custom_table_setup_sysvars
+  .quad test_po_search_with_custom_table_setup_registers
+  .quad test_po_search_with_custom_table_effects_ram
+  .quad test_po_search_with_custom_table_effects_sysvars
+  .quad test_po_search_with_custom_table_effects_registers
+  .quad test_po_search_with_custom_table_exec
+
+# Test case name
+test_po_search_with_custom_table_name:
+  .asciz "po_search with custom table"
+
+# Test case setup
+
+.align 3
+# RAM setup
+test_po_search_with_custom_table_setup_ram:
+  .quad 0                                 // Number of RAM entries = 0
+
+.align 3
+# System variables setup
+test_po_search_with_custom_table_setup_sysvars:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+
+.align 3
+# Registers setup
+test_po_search_with_custom_table_setup_registers:
+  .quad 0b0000000000000000000000000000000000000000000000000000000101000000
+                                          // Bits 6-7 = 0b01 => x3 (register index 3) is absolute value
+                                          // Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
+  .quad 3                                 // x3
+  .quad test_po_search_with_custom_table_table // x4
+
+# Test case effects
+
+.align 3
+# RAM effects
+test_po_search_with_custom_table_effects_ram:
+
+.align 3
+# System variable effects
+test_po_search_with_custom_table_effects_sysvars:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+
+.align 3
+# Registers effects
+test_po_search_with_custom_table_effects_registers:
+  .quad 0b0000000000000000000000000000000000000000000000000001010100000000
+                                          // Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
+                                          // Bits 10-11 = 0b01 => x5 (register index 5) is absolute value
+                                          // Bits 12-13 = 0b01 => x6 (register index 6) is absolute value
+  .quad test_po_search_with_custom_table_telephone // x4
+  .quad 't'                               // x5
+  .quad 0                                 // x6
+
+# Test case execution
+
+.align 2
+test_po_search_with_custom_table_exec:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  ldp     x0, x1, [x0]                    // Restore x0, x1 values
+  bl      po_search
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+# Test case custom ASM
+
+.align 3
+test_po_search_with_custom_table_table:
+  .asciz "hello"
+  .asciz "dog"
+  .asciz "cat"
+  .asciz "banana"
+test_po_search_with_custom_table_telephone:
+  .asciz "telephone"
+  .asciz "supper"
+
+##########################################################################
+
+
+##########################################################################
+############# Test po_search with keywords ###############################
+##########################################################################
+
+.align 3
+# Test case definition
+test_po_search_with_keywords:
+  .quad test_po_search_with_keywords_name
+  .quad test_po_search_with_keywords_setup_ram
+  .quad test_po_search_with_keywords_setup_sysvars
+  .quad test_po_search_with_keywords_setup_registers
+  .quad test_po_search_with_keywords_effects_ram
+  .quad test_po_search_with_keywords_effects_sysvars
+  .quad test_po_search_with_keywords_effects_registers
+  .quad test_po_search_with_keywords_exec
+
+# Test case name
+test_po_search_with_keywords_name:
+  .asciz "po_search with keywords"
+
+# Test case setup
+
+.align 3
+# RAM setup
+test_po_search_with_keywords_setup_ram:
+  .quad 0                                 // Number of RAM entries = 0
+
+.align 3
+# System variables setup
+test_po_search_with_keywords_setup_sysvars:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+
+.align 3
+# Registers setup
+test_po_search_with_keywords_setup_registers:
+  .quad 0b0000000000000000000000000000000000000000000000000000000101000000
+                                          // Bits 6-7 = 0b01 => x3 (register index 3) is absolute value
+                                          // Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
+  .quad 34                                // x3
+  .quad tkn_table                         // x4
+
+# Test case effects
+
+.align 3
+# RAM effects
+test_po_search_with_keywords_effects_ram:
+
+.align 3
+# System variable effects
+test_po_search_with_keywords_effects_sysvars:
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
+
+.align 3
+# Registers effects
+test_po_search_with_keywords_effects_registers:
+  .quad 0b0000000000000000000000000000000000000000000000000001010100000000
+                                          // Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
+                                          // Bits 10-11 = 0b01 => x5 (register index 5) is absolute value
+                                          // Bits 12-13 = 0b01 => x6 (register index 6) is absolute value
+  .quad less_equal                        // x4
+  .quad 0                                 // x5
+  .quad 0                                 // x6
+
+# Test case execution
+
+.align 2
+test_po_search_with_keywords_exec:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  ldp     x0, x1, [x0]                    // Restore x0, x1 values
+  bl      po_search
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+# Test case custom ASM
+
+.align 3
+test_po_search_with_keywords_table:
+  .asciz "hello"
+  .asciz "dog"
+  .asciz "cat"
+  .asciz "banana"
+test_po_search_with_keywords_telephone:
+  .asciz "telephone"
+  .asciz "supper"
 
 ##########################################################################

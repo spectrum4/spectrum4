@@ -30,6 +30,7 @@ initial_stream_data_END:
 error_1:
 print_w0:
 tkn_table:
+less_equal:
 print_out:
     po_fetch
     po_able
@@ -96,7 +97,6 @@ po_msg:
 po_tokens:
     po_table
 po_table:
-    po_search
     po_table_1
 po_table_1:
     po_save
@@ -104,7 +104,6 @@ po_table_1:
     po_save
 po_save:
     print_w0
-po_search:
 po_scr:
     cl_set
     po_scr_3

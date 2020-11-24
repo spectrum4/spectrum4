@@ -1,6 +1,6 @@
 ---
 tests:
-  - name: po_change test case 1
+  - name: test case 1
     setup:
       ram:
         old_input_routine:

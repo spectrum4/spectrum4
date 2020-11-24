@@ -1,6 +1,6 @@
 ---
 tests:
-  - name: po_attr test case 1
+  - name: test case 1
     setup:
       ram:
       sysvars:

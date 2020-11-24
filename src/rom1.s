@@ -160,6 +160,7 @@ tkn_table:                       // L0095
 
   .asciz    "OR"                          // 197 = 0xc5  (32 = 0x20)
   .asciz    "AND"                         // 198 = 0xc6  (33 = 0x21)
+less_equal:
   .asciz    "<="                          // 199 = 0xc7  (34 = 0x22)
                                           //   No leading space (since first char < 'A')
                                           //   No trailing space (since last char < 'A' and not '$')
@@ -1280,7 +1281,7 @@ po_save:                         // L0C3B
 po_search:                       // L0C41
   add     w6, w3, #1                      // Adjust for initial step-over token.
 1:
-  ldrb    w5, [x4], #1                    // w5 = [w3++]
+  ldrb    w5, [x4], #1                    // w5 = [w4++]
   cbnz    w5, 1b                          // Jump back to 1: if not zero
   subs    w6, w6, #1                      // Reduce index counter
   b.ne    1b                              // Jump back to 1: if index not zero.

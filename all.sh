@@ -185,7 +185,14 @@ fetch_firmware 'start.elf'
 "${TOOLCHAIN_PREFIX}readelf" -W -a build/kernel8-debug.elf
 
 # Keep a record of which functions call other functions to ease writing tests
-"${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-debug.elf | sed -n '1,${;s/.*[[:space:]]bl*[[:space:]].*/&/p;s/.*<.*>:$/&/p;}' | sed '/msg_/d' | sed '/<test_/d' | sed 's/[^ ].*</</' | sed 's/<//g' | sed 's/>//g' | sed 's/^  */    /' | sed '/+/d' > test/fn_calls.txt
+
+FN_CALLS=$("${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-debug.elf | sed -n '1,${;s/.*[[:space:]]bl*[[:space:]].*/&/p;s/.*<.*>:$/&/p;}' | sed '/msg_/d' | sed '/<test_/d' | sed 's/[^ ].*</</' | sed 's/<//g' | sed 's/>//g' | sed 's/^  */    /' | sed '/+/d')
+
+while read ymlfile; do
+  FN_CALLS="$(echo "${FN_CALLS}" | sed "/^    ${ymlfile}\$/d" | sed "/^${ymlfile}:\$/d")"
+done < <(find test -maxdepth 1 -name '*.yml' | sed -n 's/^test\/\(.*\)\.yml$/\1/p')
+
+echo "${FN_CALLS}" > test/fn_calls.txt
 
 echo
 echo "Build successful - see dist directory for results"

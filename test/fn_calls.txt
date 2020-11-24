@@ -48,16 +48,12 @@ po_comma:
 po_quest:
     po_able
 po_tv_2:
-    po_change
 po_2_oper:
     po_tv_1
 po_1_oper:
     po_tv_1
 po_tv_1:
-    po_change
-po_change:
 po_cont:
-    po_change
 po_at_set:
     co_temp_5
     to_end
@@ -95,8 +91,6 @@ pr_all:
     po_scr
     poke_address
     poke_address
-    po_attr
-po_attr:
 po_msg:
     po_table
 po_tokens:
@@ -218,8 +212,6 @@ log_register:
     uart_x0
     uart_puts
 all_tests:
-    po_attr
-    po_change
 display_sysvars:
     uart_puts
     uart_send

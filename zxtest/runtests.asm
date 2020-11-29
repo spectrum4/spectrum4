@@ -1,6 +1,6 @@
-; This file is part of the Spectrum +4 Project.
-; Licencing information can be found in the LICENCE file
-; (C) 2019 Spectrum +4 Authors. All rights reserved.
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2019 Spectrum +4 Authors. All rights reserved.
 
 .text
 
@@ -46,14 +46,14 @@ _start:
   pop     af
   ld      b, 0
   ld      c, b
-l1:
+1:
   ld      e, c
   call    e_div_10
   ld      a, h
   add     a, 0x41
   rst     0x10
   inc     c
-  djnz    l1
+  djnz    1b
   call    print_newline
   ld      de, end_marker_start
   ld      bc, end_marker_end-end_marker_start
@@ -62,21 +62,21 @@ l1:
   ret
 
 
-; Final text to be written when unit tests have completed. When running in an
-; emulator, signals that emulator can be terminated.
+# Final text to be written when unit tests have completed. When running in an
+# emulator, signals that emulator can be terminated.
 end_marker_start:
-  db 'spectrum4_tests_end_marker'
+  .ascii "spectrum4_tests_end_marker"
 end_marker_end:
 
 
-; Divides 8 bit uint by 10.
-;
-; On entry:
-;   E  = value to divide by 10
-; On exit:
-;   H  = E/10
-;   L  = E*205 && 0xff
-;   DE = E*41
+# Divides 8 bit uint by 10.
+#
+# On entry:
+#   E  = value to divide by 10
+# On exit:
+#   H  = E/10
+#   L  = E*205 && 0xff
+#   DE = E*41
 e_div_10:
   ld      d, 0                            ; DE=E
   ld      h, d                            ; H=0

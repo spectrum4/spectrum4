@@ -133,6 +133,30 @@ tools:
   * `aarch64-none-elf-objcopy`
   * `aarch64-none-elf-objdump`
 
+If your toolchain has a different prefix to "aarch64-none-elf-" then export
+environment variable `AARCH64_TOOLCHAIN_PREFIX` containing the prefix you wish
+to use instead.  If you wish to use no prefix at all (`as`, `ld`, `readelf`,
+`objcopy`, `objdump`) because you are e.g. building on a Raspberry Pi directly,
+explicitly set `AARCH64_TOOLCHAIN_PREFIX` to the empty string:
+
+```
+$ export AARCH64_TOOLCHAIN_PREFIX=''
+```
+
+You will also need a z80 toolchain in your PATH, and `fuse`, if you wish to run
+the z80 unit tests against an emulated Spectrum 128K:
+
+  * `fuse`
+  * `z80-unknown-elf-as`
+  * `z80-unknown-elf-ld`
+  * `z80-unknown-elf-readelf`
+  * `z80-unknown-elf-objcopy`
+  * `z80-unknown-elf-objdump`
+
+Just as above for the aarch64 toolchain, you can also use a different prefix
+than `z80-unknown-elf-` for the z80 toolchain by exporting the
+`Z80_TOOLCHAIN_PREFIX` environment variable.
+
 You will also require:
 
   * `bash`
@@ -150,16 +174,6 @@ You will also require:
   * `which` (which likely in turn requires `/bin/sh`)
 
 To build, run `./all.sh` from the root folder to build everything.
-
-If your toolchain has a different prefix to "aarch64-none-elf-" then export
-environment variable `TOOLCHAIN_PREFIX` containing the prefix you wish to use
-instead.  If you wish to use no prefix at all (`as`, `ld`, `readelf`,
-`objcopy`, `objdump`) because you are e.g. building on a Raspberry Pi directly,
-explicitly set `TOOLCHAIN_PREFIX` to the empty string:
-
-```
-$ export TOOLCHAIN_PREFIX=''
-```
 
 ### Building under Docker (linux/amd64)
 

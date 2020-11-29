@@ -1,25 +1,26 @@
 ---
 tests:
   - name: test case 1
-    setup:
-      ram:
-        old_input_routine:
-          quad: 0x0123456789abcdef
-        new_input_routine:
-          quad: 0xfedcba9876543210
-        channel_block:
-          pointer: old_input_routine
-      sysvars:
-        CURCHL:
-          pointer: channel_block
-      registers:
-        x4:
-          pointer: new_input_routine
-    effects:
-      ram:
-        channel_block:
-          pointer: new_input_routine
-      sysvars:
-      registers:
-        x5:
-          pointer: channel_block
+    spectrum4:
+      setup:
+        stack:
+          old_input_routine:
+            value: 0x0123456789abcdef
+          new_input_routine:
+            value: 0xfedcba9876543210
+          channel_block:
+            pointer: old_input_routine
+        sysvars:
+          CURCHL:
+            pointer: channel_block
+        registers:
+          x4:
+            pointer: new_input_routine
+      effects:
+        stack:
+          channel_block:
+            pointer: new_input_routine
+        sysvars:
+        registers:
+          x5:
+            pointer: channel_block

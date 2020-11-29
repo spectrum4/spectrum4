@@ -4,8 +4,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/spectrum4/spectrum4/test/libgentest"
-	"github.com/spectrum4/spectrum4/test/libsysvars"
+	"github.com/spectrum4/spectrum4/test/gentest"
+	"github.com/spectrum4/spectrum4/test/sysvars"
 )
 
 func main() {
@@ -15,8 +15,8 @@ func main() {
 		log.Printf("Invalid arguments specified: %q", os.Args[1:])
 		log.Fatal(Usage())
 	}
-	generator := libgentest.New(os.Args[1], os.Args[3])
-	sysVars, err := libsysvars.Fetch(os.Args[2])
+	generator := gentest.New(os.Args[1], os.Args[3])
+	sysVars, err := sysvars.Fetch(os.Args[2])
 	if err != nil {
 		log.Fatal(err)
 	}

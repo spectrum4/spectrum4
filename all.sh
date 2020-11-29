@@ -7,40 +7,58 @@ set -eu
 
 # This bash script builds spectrum4 kernel and places all files for SD card
 # under 'dist' directory. To specify a custom toolchain for assembling/linking
-# etc, export environment variable TOOLCHAIN_PREFIX.
+# etc, export environment variable AARCH64_TOOLCHAIN_PREFIX.
 
 # verify_and_show_tool checks that a given toolchain command is present on the
 # filesystem and reports its location.
 #
 # Inputs:
-#   $1: Human readable description of the tool, right-padded with spaces to 12 chars
-#   $2: Executable name (excluding toolchain prefix, if TOOLCHAIN_PREFIX set)
+#   $1: z80 or aarch64
+#   $2: Human readable description of the tool, right-padded with spaces to 12 chars
+#   $3: Executable name (excluding toolchain prefix, if AARCH64_TOOLCHAIN_PREFIX set)
 function verify_and_show_tool {
-  if ! which "${TOOLCHAIN_PREFIX}${2}" >/dev/null; then
-    echo "ERROR: Cannot find '${TOOLCHAIN_PREFIX}${2}' in PATH. Have you set TOOLCHAIN_PREFIX appropriately? Alternatively, to build under docker, run docker.sh script instead. Exiting." >&2
+  case "${1}" in
+    z80)
+      ENV_VAR='Z80_TOOLCHAIN_PREFIX'
+      PREFIX="${Z80_TOOLCHAIN_PREFIX}"
+      ;;
+    aarch64)
+      ENV_VAR='AARCH64_TOOLCHAIN_PREFIX'
+      PREFIX="${AARCH64_TOOLCHAIN_PREFIX}"
+      ;;
+    *)
+    echo "ERROR: Invalid architecture specified: '${1}'. Must be 'z80' or 'aarch64'. Exiting." >&2
+    exit 66
+    ;;
+  esac
+  if ! which "${PREFIX}${3}" >/dev/null; then
+    echo "ERROR: Cannot find '${PREFIX}${3}' in PATH. Have you set ${ENV_VAR} appropriately? Alternatively, to build under docker, run docker.sh script instead. Exiting." >&2
     exit 64
   fi
-  echo "  ${1}  $(which ${TOOLCHAIN_PREFIX}${2})" >&2
+  echo "  ${2}  $(which ${PREFIX}${3})" >&2
 }
 
 # show_active_toolchain verifies that all required toolchain binaries are
 # present and logs the file location of each of them.
+#
+# Inputs:
+#   $1: z80 or aarch64
 function show_active_toolchain {
-  verify_and_show_tool "Assembler:  " as
-  verify_and_show_tool "Linker:     " ld
-  verify_and_show_tool "Read ELF:   " readelf
-  verify_and_show_tool "Object copy:" objcopy
-  verify_and_show_tool "Object dump:" objdump
+  verify_and_show_tool "${1}" "${1} Assembler:  " as
+  verify_and_show_tool "${1}" "${1} Linker:     " ld
+  verify_and_show_tool "${1}" "${1} Read ELF:   " readelf
+  verify_and_show_tool "${1}" "${1} Object copy:" objcopy
+  verify_and_show_tool "${1}" "${1} Object dump:" objdump
 }
 
 # fetch_firmware downloads standard Raspberry Pi firmware files from the
 # Rasperry Pi Foundation github repository into the dist directory.
 function fetch_firmware {
-  if [ -f "dist/${1}" ]; then
-    echo "Keeping cached version of 'dist/${1}'. To fetch a newer version, delete it and rerun all.sh."
+  if [ -f "dist/aarch64/${1}" ]; then
+    echo "Keeping cached version of 'dist/aarch64/${1}'. To fetch a newer version, delete it and rerun all.sh."
   else
-    echo "Fetching dist/${1} from github.com/raspberrypi/firmware..."
-    curl -# -L "https://github.com/raspberrypi/firmware/blob/master/boot/${1}?raw=true" > "dist/${1}"
+    echo "Fetching dist/aarch64/${1} from github.com/raspberrypi/firmware..."
+    curl -# -L "https://github.com/raspberrypi/firmware/blob/master/boot/${1}?raw=true" > "dist/aarch64/${1}"
   fi
 }
 
@@ -62,18 +80,37 @@ function check_dependencies {
 # good to include them as required tools...
 check_dependencies bash cat cp curl dirname env find go mkdir rm sed wc which
 
-# Set default toolchain prefix to `aarch64-none-elf-` if no TOOLCHAIN_PREFIX
-# already set. Note, if no prefix is required, TOOLCHAIN_PREFIX should be
-# explicitly set to the empty string before calling this script (e.g. using
-# `export TOOLCHAIN_PREFIX=''`).
-if [ "${TOOLCHAIN_PREFIX+_}" != '_' ]; then
-  TOOLCHAIN_PREFIX=aarch64-none-elf-
-  echo "No TOOLCHAIN_PREFIX specified, therefore using default toolchain prefix '${TOOLCHAIN_PREFIX}':" >&2
-  show_active_toolchain
+echo
+
+# Set default aarch64 toolchain prefix to `aarch64-none-elf-` if no
+# AARCH64_TOOLCHAIN_PREFIX already set. Note, if no prefix is required,
+# AARCH64_TOOLCHAIN_PREFIX should be explicitly set to the empty string before
+# calling this script (e.g. using `export AARCH64_TOOLCHAIN_PREFIX=''`).
+if [ "${AARCH64_TOOLCHAIN_PREFIX+_}" != '_' ]; then
+  AARCH64_TOOLCHAIN_PREFIX=aarch64-none-elf-
+  echo "No AARCH64_TOOLCHAIN_PREFIX specified, therefore using default toolchain prefix '${AARCH64_TOOLCHAIN_PREFIX}':" >&2
+  show_active_toolchain aarch64
 else
-  echo "TOOLCHAIN_PREFIX specified: '${TOOLCHAIN_PREFIX}':" >&2
-  show_active_toolchain
+  echo "AARCH64_TOOLCHAIN_PREFIX specified: '${AARCH64_TOOLCHAIN_PREFIX}':" >&2
+  show_active_toolchain aarch64
 fi
+
+echo
+
+# Set default z80 toolchain prefix to `z80-unknown-elf-` if no
+# Z80_TOOLCHAIN_PREFIX already set. Note, if no prefix is required,
+# Z80_TOOLCHAIN_PREFIX should be explicitly set to the empty string before
+# calling this script (e.g. using `export Z80_TOOLCHAIN_PREFIX=''`).
+if [ "${Z80_TOOLCHAIN_PREFIX+_}" != '_' ]; then
+  Z80_TOOLCHAIN_PREFIX=z80-unknown-elf-
+  echo "No Z80_TOOLCHAIN_PREFIX specified, therefore using default toolchain prefix '${Z80_TOOLCHAIN_PREFIX}':" >&2
+  show_active_toolchain z80
+else
+  echo "Z80_TOOLCHAIN_PREFIX specified: '${Z80_TOOLCHAIN_PREFIX}':" >&2
+  show_active_toolchain z80
+fi
+
+echo
 
 # Change into directory containing this script (in case the script is executed
 # from a different directory).
@@ -81,7 +118,8 @@ cd "$(dirname "${0}")"
 
 # Remove any previous build artifacts, and ensure build directory exists.
 rm -rf build
-mkdir build
+mkdir -p build/z80
+mkdir -p build/aarch64
 
 # Generate src/profiles/debug/sysvars.s
 SYSVARS="$(cat src/bss.s | sed -n '/sysvars:/,/sysvars_end:/p' | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space \([^ ]*\) .*$/\1 \2/p')"
@@ -124,36 +162,15 @@ done
 # Generate unit tests as part of debug profile
 go run test/spectrum4-generate-tests/main.go test src/bss.s src/profiles/debug/tests.s
 
-find src -name '*.s' | while read sourcefile; do
+find . \( -name '*.s' -o -name '*.asm' \) | while read sourcefile; do
   cat "${sourcefile}" > x
   cat x | sed 's/  *$//' > "${sourcefile}"
   rm x
 done
 
-# Assemble `src/all.s` to `build/all.o`
-"${TOOLCHAIN_PREFIX}as" -I src -I src/profiles/debug -o "build/debug.o" "src/all.s"
-"${TOOLCHAIN_PREFIX}as" -I src -I src/profiles/release -o "build/release.o" "src/all.s"
-
-# Ensure dist directory exists, leaving in place if already there from previous
-# run.
-mkdir -p dist
-
-# Copy static files from this repo into dist directory that are needed on SD
-# card.
-cp src/config.txt dist
-cp LICENCE dist/LICENCE.spectrum4
-
-# Download required firmware files into dist directory from Raspberry Pi
-# Foundation firmware github repository. Skip files that have already been
-# downloaded from previous run. Download the latest version from the master
-# branch.
-#
-# It is safe to remove the `dist` directory if you wish to force downloading
-# the firmware files again.
-fetch_firmware 'LICENCE.broadcom'
-fetch_firmware 'bootcode.bin'
-fetch_firmware 'fixup.dat'
-fetch_firmware 'start.elf'
+# Assemble `src/all.s` to `build/aarch64/all.o`
+"${AARCH64_TOOLCHAIN_PREFIX}as" -I src -I src/profiles/debug -o "build/aarch64/debug.o" "src/all.s"
+"${AARCH64_TOOLCHAIN_PREFIX}as" -I src -I src/profiles/release -o "build/aarch64/release.o" "src/all.s"
 
 # Link binaries that were previously assembled. Options passed to the linker
 # are:
@@ -165,28 +182,54 @@ fetch_firmware 'start.elf'
 #   -M: display kernel map
 #   -Ttext: address of text section
 #   -o: elf file to generate
-"${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -o build/kernel8-debug.elf  build/debug.o
-"${TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -M -o build/kernel8-release.elf  build/release.o
+"${AARCH64_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -o build/aarch64/kernel8-debug.elf  build/aarch64/debug.o
+"${AARCH64_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -M -o build/aarch64/kernel8-release.elf  build/aarch64/release.o
 
-# Extract the final kernel raw binary into file dist/kernel8.img
-"${TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/kernel8-debug.elf -O binary dist/kernel8-debug.img
-"${TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/kernel8-release.elf -O binary dist/kernel8-release.img
+# Assemble and link Spectrum 128K unit tests for running under FUSE.
+"${Z80_TOOLCHAIN_PREFIX}as" -I zxtest -o "build/z80/runtests.o" "zxtest/runtests.asm"
+"${Z80_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x8000 -o build/z80/runtests.elf  build/z80/runtests.o
 
-# Log disassembly of generated raw binary dist/kernel8.img to aid sanity
+# Ensure dist directory exists, leaving in place if already there from previous
+# run.
+mkdir -p dist/aarch64
+mkdir -p dist/z80
+
+# Copy static files from this repo into dist directory that are needed on SD
+# card.
+cp src/config.txt dist/aarch64
+cp LICENCE dist/aarch64/LICENCE.spectrum4
+
+# Download required firmware files into dist/aarch64 directory from Raspberry
+# Pi Foundation firmware github repository. Skip files that have already been
+# downloaded from previous run. Download the latest version from the master
+# branch.
+#
+# It is safe to remove the `dist/aarch64` directory if you wish to force downloading
+# the firmware files again.
+fetch_firmware 'LICENCE.broadcom'
+fetch_firmware 'bootcode.bin'
+fetch_firmware 'fixup.dat'
+fetch_firmware 'start.elf'
+
+# Extract the final kernel raw binary into file dist/aarch64/kernel8.img
+"${AARCH64_TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/aarch64/kernel8-debug.elf -O binary dist/aarch64/kernel8-debug.img
+"${AARCH64_TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/aarch64/kernel8-release.elf -O binary dist/aarch64/kernel8-release.img
+
+# Log disassembly of generated raw binary dist/aarch64/kernel8.img to aid sanity
 # checking.
-# "${TOOLCHAIN_PREFIX}objdump" -b binary -z --adjust-vma=0x0 -maarch64 -D dist/kernel8.img
+# "${AARCH64_TOOLCHAIN_PREFIX}objdump" -b binary -z --adjust-vma=0x0 -maarch64 -D dist/aarch64/kernel8.img
 
 # Log disassembly of kernel elf file. This is like above, but additionally
 # contains symbol names, etc.
-"${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-debug.elf
+"${AARCH64_TOOLCHAIN_PREFIX}objdump" -d build/aarch64/kernel8-debug.elf
 
 # Log some useful information about the generated elf file. Options are:
 #   -W: Allow width > 80, i.e. display full symbol names
-"${TOOLCHAIN_PREFIX}readelf" -W -a build/kernel8-debug.elf
+"${AARCH64_TOOLCHAIN_PREFIX}readelf" -W -a build/aarch64/kernel8-debug.elf
 
 # Keep a record of which functions call other functions to ease writing tests
 
-FN_CALLS=$("${TOOLCHAIN_PREFIX}objdump" -d build/kernel8-debug.elf | sed -n '1,${;s/.*[[:space:]]bl*[[:space:]].*/&/p;s/.*<.*>:$/&/p;}' | sed '/msg_/d' | sed '/<test_/d' | sed 's/[^ ].*</</' | sed 's/<//g' | sed 's/>//g' | sed 's/^  */    /' | sed '/+/d')
+FN_CALLS=$("${AARCH64_TOOLCHAIN_PREFIX}objdump" -d build/aarch64/kernel8-debug.elf | sed -n '1,${;s/.*[[:space:]]bl*[[:space:]].*/&/p;s/.*<.*>:$/&/p;}' | sed '/msg_/d' | sed '/<test_/d' | sed 's/[^ ].*</</' | sed 's/<//g' | sed 's/>//g' | sed 's/^  */    /' | sed '/+/d')
 
 while read ymlfile; do
   FN_CALLS="$(echo "${FN_CALLS}" | sed "/^    ${ymlfile}\$/d" | sed "/^${ymlfile}:\$/d")"
@@ -194,5 +237,55 @@ done < <(find test -maxdepth 1 -name '*.yml' | sed -n 's/^test\/\(.*\)\.yml$/\1/
 
 echo "${FN_CALLS}" > test/fn_calls.txt
 
+
+# Extract Spectrum 128K unit tests from ELF binary
+"${Z80_TOOLCHAIN_PREFIX}objcopy" --set-start=0x8000 build/z80/runtests.elf -O binary build/z80/runtests.img
+
+# Log disassembly of kernel elf file.
+"${Z80_TOOLCHAIN_PREFIX}objdump" -d build/z80/runtests.elf
+
+# Log some useful information about the generated elf file. Options are:
+#   -W: Allow width > 80, i.e. display full symbol names
+"${Z80_TOOLCHAIN_PREFIX}readelf" -W -a build/z80/runtests.elf
+
+
+# Create tzx file for running Spectrum 128K ROM tests under FUSE.
+#
+# See:
+#   * http://k1.spdns.de/Develop/Projects/zasm/Info/TZX%20format.html
+#   * https://faqwiki.zxnet.co.uk/wiki/Spectrum_tape_interface
+#   * https://github.com/shred/tzxtools/blob/b4ad524c82f60100b7e06d74194eeb068adb859e/tzxlib/convert.py
+go run test/tzx-code-loader/main.go build/z80/runtests.img dist/z80/runtests.tzx 32768 runtests.b tests 1000
+
 echo
 echo "Build successful - see dist directory for results"
+
+
+# Run tests
+
+echo > printout.txt
+rm -f runtests.tzx
+
+fuse --machine 128 --no-sound --zxprinter --printer --tape dist/z80/runtests.tzx --auto-load --no-autosave-settings >/dev/null 2>&1 &
+
+fuse_pid=$!
+disown
+max_attempts=3
+attempts=0
+
+until [ "$(cat printout.txt | sed -n '/spectrum4_tests_end_marker/p' | wc -l)" -gt 0 ] || [ "${attempts}" -eq "${max_attempts}" ]; do
+  attempts=$((attempts+1))
+  sleep 1
+done
+
+kill -9 "${fuse_pid}" >/dev/null 2>&1
+cat printout.txt
+rm printout.txt
+
+if [ "${attempts}" -eq "${max_attempts}" ]; then
+  echo 'Timed out!' >&2
+  exit 64
+fi
+
+echo
+echo "Test run completed."

@@ -1,66 +1,101 @@
 ---
 tests:
   - name: test case 1
-    setup:
-      ram:
-      sysvars:
-        ATTR_T:
-          # See http://www.breakintoprogram.co.uk/computers/zx-spectrum/screen-memory-layout
-          # temp colours: FLASH 1; BRIGHT 0; PAPER 2; INK 5
-          quad: 0b10010101
-        MASK_T:
-          # Current screen attributes are 0b01010101 => FLASH 0; BRIGHT 1; PAPER 2; INK 5
-          # Read attribute bits 1,2,4,6 from screen (0b01010101), and 0,3,5,7 from ATTR_T (0b10010101)
-          # => 0b11010101 => INK 5; PAPER 2; BRIGHT 1; FLASH 1
-          quad: 0b01010110
-        P_FLAG:
-          # OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7 => FLASH 1: BRIGHT 1: PAPER 2: INK 7
-          quad: 0b10010111
-      registers:
-        x0:
-          # section 1, line 5, column 4, pixel row 6
-          quad: display_file + 1*216*20*16 + 5*216 + 4*2 + 6*20*216
-    effects:
-      ram:
-      sysvars:
-      registers:
-        x0:
-          # [P_FLAG]
-          quad: 0x97
-        x1:
-          # [ATTR_T] | ([MASK_T] << 8)
-          quad: 0x5695
-        x9:
-          # display_file
-          quad: display_file
-        x10:
-          # x attribute coordinate
-          quad: 4
-        x11:
-          # display_file offset
-          quad: 1*216*20*16 + 6*20*216 + 5*216 + 4*2
-        x12:
-          # 108
-          quad: 108
-        x13:
-          # multiplication constant
-          quad: 0x012f684c00000000
-        x14:
-          # display_file offset / 216 (pixel line number in layout order)
-          quad: 1*20*16 + 6*20 + 5
-        x15:
-          # multiplication contstant
-          quad: 0xcccd000000000000
-        x16:
-          # attribute_file offset
-          quad: 1*108*20 + 5*108 + 4
-        x17:
-          # [0-7] new attribute value
-          # [8-15] [MASK_T]
-          quad: 0x56d7
-        x18:
-          # 5 * screen third (0/5/10)
-          quad: 1*5
-        x24:
-          # attributes_file
-          quad: attributes_file
+    spectrum128k:
+      setup:
+        stack:
+        sysvars:
+          ATTR_T:
+            # See http://www.breakintoprogstack.co.uk/computers/zx-spectrum/screen-memory-layout
+            # temp colours: FLASH 1; BRIGHT 0; PAPER 2; INK 5
+            value: 0b10010101
+          MASK_T:
+            # Current screen attributes are 0b01010101 => FLASH 0; BRIGHT 1; PAPER 2; INK 5
+            # Read attribute bits 1,2,4,6 from screen (0b01010101), and 0,3,5,7 from ATTR_T (0b10010101)
+            # => 0b11010101 => INK 5; PAPER 2; BRIGHT 1; FLASH 1
+            value: 0b01010110
+          P_FLAG:
+            # OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7 => FLASH 1: BRIGHT 1: PAPER 2: INK 7
+            value: 0b10010111
+        registers:
+          HL:
+            # section 1, line 5, column 4, pixel row 6
+            # x = (column 4)*8 pixels = 32 pixels = 0x00100000
+            # y = (section 1)*8*8 + (line 5)*8 + (pixel row 6) pixels = 110 pixels = 0x01101110
+            # display address = 0b010<y7><y6><y2><y1><y0><y5><y4><y3><x7><x6><x5><x4><x3>
+            #                 = 0b0100111010100100 = 0x4ea4
+            value: 0x4000 + 1*0x0800 + 5*0x20 + 4*1 + 6*0x100
+      effects:
+        registers:
+          A:
+            value: 0xd7
+          HL:
+            value: 0x59a4
+#       ram:
+#         - address: 0x59a4
+#           value: 0xd7
+#         - address: 0x5800 + 1*32*8 + 5*32 + 4*1
+#           data: |-
+#             db $d7
+
+    spectrum4:
+      setup:
+        sysvars:
+          ATTR_T:
+            # See http://www.breakintoprogstack.co.uk/computers/zx-spectrum/screen-memory-layout
+            # temp colours: FLASH 1; BRIGHT 0; PAPER 2; INK 5
+            value: 0b10010101
+          MASK_T:
+            # Current screen attributes are 0b01010101 => FLASH 0; BRIGHT 1; PAPER 2; INK 5
+            # Read attribute bits 1,2,4,6 from screen (0b01010101), and 0,3,5,7 from ATTR_T (0b10010101)
+            # => 0b11010101 => INK 5; PAPER 2; BRIGHT 1; FLASH 1
+            value: 0b01010110
+          P_FLAG:
+            # OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7 => FLASH 1: BRIGHT 1: PAPER 2: INK 7
+            value: 0b10010111
+        registers:
+          x0:
+            # section 1, line 5, column 4, pixel row 6
+            value: display_file + 1*216*20*16 + 5*216 + 4*2 + 6*20*216
+      effects:
+        registers:
+          x0:
+            # [P_FLAG]
+            value: 0x97
+          x1:
+            # [ATTR_T] | ([MASK_T] << 8)
+            value: 0x5695
+          x9:
+            # display_file
+            value: display_file
+          x10:
+            # x attribute coordinate
+            value: 4
+          x11:
+            # display_file offset
+            value: 1*216*20*16 + 6*20*216 + 5*216 + 4*2
+          x12:
+            # 108
+            value: 108
+          x13:
+            # multiplication constant
+            value: 0x012f684c00000000
+          x14:
+            # display_file offset / 216 (pixel line number in layout order)
+            value: 1*20*16 + 6*20 + 5
+          x15:
+            # multiplication contstant
+            value: 0xcccd000000000000
+          x16:
+            # attribute_file offset
+            value: 1*108*20 + 5*108 + 4
+          x17:
+            # [0-7] new attribute value
+            # [8-15] [MASK_T]
+            value: 0x56d7
+          x18:
+            # 5 * screen third (0/5/10)
+            value: 1*5
+          x24:
+            # attributes_file
+            value: attributes_file

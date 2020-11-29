@@ -27,10 +27,10 @@ all_tests:
 # Test case definition
 test_cl_addr_test_case_1:
   .quad test_cl_addr_test_case_1_name
-  .quad test_cl_addr_test_case_1_setup_ram
+  .quad test_cl_addr_test_case_1_setup_stack
   .quad test_cl_addr_test_case_1_setup_sysvars
   .quad test_cl_addr_test_case_1_setup_registers
-  .quad test_cl_addr_test_case_1_effects_ram
+  .quad test_cl_addr_test_case_1_effects_stack
   .quad test_cl_addr_test_case_1_effects_sysvars
   .quad test_cl_addr_test_case_1_effects_registers
   .quad test_cl_addr_test_case_1_exec
@@ -42,9 +42,9 @@ test_cl_addr_test_case_1_name:
 # Test case setup
 
 .align 3
-# RAM setup
-test_cl_addr_test_case_1_setup_ram:
-  .quad 0                                 // Number of RAM entries = 0
+# Stack setup
+test_cl_addr_test_case_1_setup_stack:
+  .quad 0                                 // Number of stack entries = 0
 
 .align 3
 # System variables setup
@@ -57,13 +57,13 @@ test_cl_addr_test_case_1_setup_sysvars:
 test_cl_addr_test_case_1_setup_registers:
   .quad 0b0000000000000000000000000000000000000000000000000000000000000001
                                           // Bits 0-1 = 0b01 => x0 (register index 0) is absolute value
-  .quad 35                                // x0
+  .quad 60 - 1*20 - 5                     // x0
 
 # Test case effects
 
 .align 3
-# RAM effects
-test_cl_addr_test_case_1_effects_ram:
+# Stack effects
+test_cl_addr_test_case_1_effects_stack:
 
 .align 3
 # System variable effects
@@ -81,7 +81,7 @@ test_cl_addr_test_case_1_effects_registers:
                                           // Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
                                           // Bits 10-11 = 0b01 => x5 (register index 5) is absolute value
                                           // Bits 12-13 = 0b01 => x6 (register index 6) is absolute value
-  .quad 25                                // x1
+  .quad 1*20 + 5                          // x1
   .quad display_file + 1*20*16*216 + 5*216 // x2
   .quad 1                                 // x3
   .quad 5                                 // x4
@@ -110,10 +110,10 @@ test_cl_addr_test_case_1_exec:
 # Test case definition
 test_po_attr_test_case_1:
   .quad test_po_attr_test_case_1_name
-  .quad test_po_attr_test_case_1_setup_ram
+  .quad test_po_attr_test_case_1_setup_stack
   .quad test_po_attr_test_case_1_setup_sysvars
   .quad test_po_attr_test_case_1_setup_registers
-  .quad test_po_attr_test_case_1_effects_ram
+  .quad test_po_attr_test_case_1_effects_stack
   .quad test_po_attr_test_case_1_effects_sysvars
   .quad test_po_attr_test_case_1_effects_registers
   .quad test_po_attr_test_case_1_exec
@@ -125,9 +125,9 @@ test_po_attr_test_case_1_name:
 # Test case setup
 
 .align 3
-# RAM setup
-test_po_attr_test_case_1_setup_ram:
-  .quad 0                                 // Number of RAM entries = 0
+# Stack setup
+test_po_attr_test_case_1_setup_stack:
+  .quad 0                                 // Number of stack entries = 0
 
 .align 3
 # System variables setup
@@ -151,8 +151,8 @@ test_po_attr_test_case_1_setup_registers:
 # Test case effects
 
 .align 3
-# RAM effects
-test_po_attr_test_case_1_effects_ram:
+# Stack effects
+test_po_attr_test_case_1_effects_stack:
 
 .align 3
 # System variable effects
@@ -213,10 +213,10 @@ test_po_attr_test_case_1_exec:
 # Test case definition
 test_po_change_test_case_1:
   .quad test_po_change_test_case_1_name
-  .quad test_po_change_test_case_1_setup_ram
+  .quad test_po_change_test_case_1_setup_stack
   .quad test_po_change_test_case_1_setup_sysvars
   .quad test_po_change_test_case_1_setup_registers
-  .quad test_po_change_test_case_1_effects_ram
+  .quad test_po_change_test_case_1_effects_stack
   .quad test_po_change_test_case_1_effects_sysvars
   .quad test_po_change_test_case_1_effects_registers
   .quad test_po_change_test_case_1_exec
@@ -228,28 +228,28 @@ test_po_change_test_case_1_name:
 # Test case setup
 
 .align 3
-# RAM setup
-test_po_change_test_case_1_setup_ram:
-  .quad 3                                 // Number of RAM entries = 3
-  .quad test_po_change_test_case_1_setup_ram_channel_block
-  .quad test_po_change_test_case_1_setup_ram_new_input_routine
-  .quad test_po_change_test_case_1_setup_ram_old_input_routine
+# Stack setup
+test_po_change_test_case_1_setup_stack:
+  .quad 3                                 // Number of stack entries = 3
+  .quad test_po_change_test_case_1_setup_stack_channel_block
+  .quad test_po_change_test_case_1_setup_stack_new_input_routine
+  .quad test_po_change_test_case_1_setup_stack_old_input_routine
 
 .align 3
-test_po_change_test_case_1_setup_ram_channel_block:
+test_po_change_test_case_1_setup_stack_channel_block:
   .quad 16                                // 16 => pointer
   .quad 2                                 // old_input_routine
   .asciz "channel_block"                  // name: "channel_block"
 
 .align 3
-test_po_change_test_case_1_setup_ram_new_input_routine:
-  .quad 8                                 // 8 => quad
+test_po_change_test_case_1_setup_stack_new_input_routine:
+  .quad 8                                 // 8 => value
   .quad 18364758544493064720
   .asciz "new_input_routine"              // name: "new_input_routine"
 
 .align 3
-test_po_change_test_case_1_setup_ram_old_input_routine:
-  .quad 8                                 // 8 => quad
+test_po_change_test_case_1_setup_stack_old_input_routine:
+  .quad 8                                 // 8 => value
   .quad 81985529216486895
   .asciz "old_input_routine"              // name: "old_input_routine"
 
@@ -271,10 +271,10 @@ test_po_change_test_case_1_setup_registers:
 # Test case effects
 
 .align 3
-# RAM effects
-test_po_change_test_case_1_effects_ram:
+# Stack effects
+test_po_change_test_case_1_effects_stack:
   .quad 0b0000000000000000000000000000000000000000000000000000000000000011
-                                          // Bits 0-1 = 0b11 => channel_block (RAM entry index 0) is pointer
+                                          // Bits 0-1 = 0b11 => channel_block (stack entry index 0) is pointer
   .quad 0x0000000000000001                // [channel_block] = new_input_routine
 
 .align 3
@@ -312,10 +312,10 @@ test_po_change_test_case_1_exec:
 # Test case definition
 test_po_search_with_custom_table:
   .quad test_po_search_with_custom_table_name
-  .quad test_po_search_with_custom_table_setup_ram
+  .quad test_po_search_with_custom_table_setup_stack
   .quad test_po_search_with_custom_table_setup_sysvars
   .quad test_po_search_with_custom_table_setup_registers
-  .quad test_po_search_with_custom_table_effects_ram
+  .quad test_po_search_with_custom_table_effects_stack
   .quad test_po_search_with_custom_table_effects_sysvars
   .quad test_po_search_with_custom_table_effects_registers
   .quad test_po_search_with_custom_table_exec
@@ -327,9 +327,9 @@ test_po_search_with_custom_table_name:
 # Test case setup
 
 .align 3
-# RAM setup
-test_po_search_with_custom_table_setup_ram:
-  .quad 0                                 // Number of RAM entries = 0
+# Stack setup
+test_po_search_with_custom_table_setup_stack:
+  .quad 0                                 // Number of stack entries = 0
 
 .align 3
 # System variables setup
@@ -349,8 +349,8 @@ test_po_search_with_custom_table_setup_registers:
 # Test case effects
 
 .align 3
-# RAM effects
-test_po_search_with_custom_table_effects_ram:
+# Stack effects
+test_po_search_with_custom_table_effects_stack:
 
 .align 3
 # System variable effects
@@ -403,10 +403,10 @@ test_po_search_with_custom_table_telephone:
 # Test case definition
 test_po_search_with_keywords:
   .quad test_po_search_with_keywords_name
-  .quad test_po_search_with_keywords_setup_ram
+  .quad test_po_search_with_keywords_setup_stack
   .quad test_po_search_with_keywords_setup_sysvars
   .quad test_po_search_with_keywords_setup_registers
-  .quad test_po_search_with_keywords_effects_ram
+  .quad test_po_search_with_keywords_effects_stack
   .quad test_po_search_with_keywords_effects_sysvars
   .quad test_po_search_with_keywords_effects_registers
   .quad test_po_search_with_keywords_exec
@@ -418,9 +418,9 @@ test_po_search_with_keywords_name:
 # Test case setup
 
 .align 3
-# RAM setup
-test_po_search_with_keywords_setup_ram:
-  .quad 0                                 // Number of RAM entries = 0
+# Stack setup
+test_po_search_with_keywords_setup_stack:
+  .quad 0                                 // Number of stack entries = 0
 
 .align 3
 # System variables setup
@@ -440,8 +440,8 @@ test_po_search_with_keywords_setup_registers:
 # Test case effects
 
 .align 3
-# RAM effects
-test_po_search_with_keywords_effects_ram:
+# Stack effects
+test_po_search_with_keywords_effects_stack:
 
 .align 3
 # System variable effects

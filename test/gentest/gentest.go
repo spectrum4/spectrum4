@@ -1,4 +1,4 @@
-package libgentest
+package gentest
 
 import (
 	"bytes"
@@ -32,7 +32,18 @@ type (
 		Tests []UnitTest `json:"tests"`
 	}
 	UnitTest struct {
-		Name    string        `json:"name"`
+		Name         string        `json:"name"`
+		Spectrum128K *Spectrum128K `json:"spectrum128k"`
+		Spectrum4    *Spectrum4    `json:"spectrum4"`
+	}
+	Spectrum4 struct {
+		Setup   SystemContext `json:"setup"`
+		Effects SystemContext `json:"effects"`
+		ASM     *string       `json:"asm"`
+		// internal fields
+		Routine string `json:"-"` // routine that the unit test tests
+	}
+	Spectrum128K struct {
 		Setup   SystemContext `json:"setup"`
 		Effects SystemContext `json:"effects"`
 		ASM     *string       `json:"asm"`
@@ -40,41 +51,41 @@ type (
 		Routine string `json:"-"` // routine that the unit test tests
 	}
 	SystemContext struct {
-		RAM       NamedValue `json:"ram"`
+		Stack     NamedValue `json:"stack"`
 		SysVars   NamedValue `json:"sysvars"`
 		Registers NamedValue `json:"registers"`
 	}
 	NamedValue  map[string]StoredValue
 	StoredValue struct {
 		ASM     *string      `json:"asm,omitempty"`
-		Quad    *interface{} `json:"quad,omitempty"`
+		Value   *interface{} `json:"value,omitempty"`
 		Pointer *string      `json:"pointer,omitempty"`
 	}
 )
 
-func (value StoredValue) Write(w io.Writer, symbolName string, ramSetupEntries NamedValue, includeType bool) error {
+func (value StoredValue) Write(w io.Writer, symbolName string, stackSetupEntries NamedValue, includeType bool) error {
 	switch {
 	case value.ASM != nil:
 		if includeType {
-			fmt.Fprintln(w, "  .quad 8                                 // 8 => quad")
+			fmt.Fprintln(w, "  .quad 8                                 // 8 => value")
 		}
 		fmt.Fprintf(w, "  .quad %v_%v\n", symbolName, *value.ASM)
 	case value.Pointer != nil:
 		if includeType {
 			fmt.Fprintln(w, "  .quad 16                                // 16 => pointer")
 		}
-		index := ramSetupEntries.IndexOf(*value.Pointer)
+		index := stackSetupEntries.IndexOf(*value.Pointer)
 		if index < 0 {
-			return fmt.Errorf("Pointer to undefined ram entry %v", *value.Pointer)
+			return fmt.Errorf("Pointer to undefined stack entry %v", *value.Pointer)
 		}
 		fmt.Fprintf(w, "  .quad %-33v // %v\n", index, *value.Pointer)
-	case value.Quad != nil:
+	case value.Value != nil:
 		if includeType {
-			fmt.Fprintln(w, "  .quad 8                                 // 8 => quad")
+			fmt.Fprintln(w, "  .quad 8                                 // 8 => value")
 		}
-		fmt.Fprintf(w, "  .quad %v\n", *value.Quad)
+		fmt.Fprintf(w, "  .quad %v\n", *value.Value)
 	default:
-		return fmt.Errorf("No Quad nor Pointer nor ASM specified in %v", value)
+		return fmt.Errorf("No Value nor Pointer nor ASM specified in %v", value)
 	}
 	return nil
 }
@@ -154,7 +165,7 @@ func (generator *Generator) LoadFiles() error {
 			return fmt.Errorf("Unit test file %q has invalid properties: %s", absYAMLPath, err)
 		}
 		for i := range uts.Tests {
-			uts.Tests[i].Routine = filepath.Base(yamlPath[:len(yamlPath)-4])
+			uts.Tests[i].Spectrum4.Routine = filepath.Base(yamlPath[:len(yamlPath)-4])
 		}
 		generator.unitTests = append(generator.unitTests, (uts.Tests)...)
 	}
@@ -208,7 +219,7 @@ func (generator *Generator) Header() {
 }
 
 func (unitTest *UnitTest) TestName() string {
-	return unitTest.Routine + " " + unitTest.Name
+	return unitTest.Spectrum4.Routine + " " + unitTest.Name
 }
 
 func (unitTest *UnitTest) SymbolName() string {
@@ -228,10 +239,10 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, "# Test case definition")
 	fmt.Fprintf(w, "%v:\n", symbolName)
 	fmt.Fprintf(w, "  .quad %v_name\n", symbolName)
-	fmt.Fprintf(w, "  .quad %v_setup_ram\n", symbolName)
+	fmt.Fprintf(w, "  .quad %v_setup_stack\n", symbolName)
 	fmt.Fprintf(w, "  .quad %v_setup_sysvars\n", symbolName)
 	fmt.Fprintf(w, "  .quad %v_setup_registers\n", symbolName)
-	fmt.Fprintf(w, "  .quad %v_effects_ram\n", symbolName)
+	fmt.Fprintf(w, "  .quad %v_effects_stack\n", symbolName)
 	fmt.Fprintf(w, "  .quad %v_effects_sysvars\n", symbolName)
 	fmt.Fprintf(w, "  .quad %v_effects_registers\n", symbolName)
 	fmt.Fprintf(w, "  .quad %v_exec\n", symbolName)
@@ -243,33 +254,33 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, "# Test case setup")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 3")
-	fmt.Fprintln(w, "# RAM setup")
-	fmt.Fprintf(w, "%v_setup_ram:\n", symbolName)
+	fmt.Fprintln(w, "# Stack setup")
+	fmt.Fprintf(w, "%v_setup_stack:\n", symbolName)
 
-	ramEntryCount := len(unitTest.Setup.RAM)
+	stackEntryCount := len(unitTest.Spectrum4.Setup.Stack)
 
-	fmt.Fprintf(w, "  .quad %-4v                              // Number of RAM entries = %v\n", ramEntryCount, ramEntryCount)
+	fmt.Fprintf(w, "  .quad %-4v                              // Number of stack entries = %v\n", stackEntryCount, stackEntryCount)
 
-	ramSetupEntries := unitTest.Setup.RAM
-	sortedRAMEntries := ramSetupEntries.SortedNames()
+	stackSetupEntries := unitTest.Spectrum4.Setup.Stack
+	sortedStackEntries := stackSetupEntries.SortedNames()
 
-	for _, ramEntry := range sortedRAMEntries {
-		fmt.Fprintf(w, "  .quad %v_setup_ram_%v\n", symbolName, ramEntry)
+	for _, stackEntry := range sortedStackEntries {
+		fmt.Fprintf(w, "  .quad %v_setup_stack_%v\n", symbolName, stackEntry)
 	}
 
-	for _, ramEntry := range sortedRAMEntries {
+	for _, stackEntry := range sortedStackEntries {
 		fmt.Fprintln(w, "")
 		fmt.Fprintln(w, ".align 3")
-		fmt.Fprintf(w, "%v_setup_ram_%v:\n", symbolName, ramEntry)
-		e := ramSetupEntries[ramEntry]
-		err := e.Write(w, symbolName, ramSetupEntries, true)
+		fmt.Fprintf(w, "%v_setup_stack_%v:\n", symbolName, stackEntry)
+		e := stackSetupEntries[stackEntry]
+		err := e.Write(w, symbolName, stackSetupEntries, true)
 		if err != nil {
 			return nil, err
 		}
-		fmt.Fprintf(w, "  .asciz %q %v // name: %q\n", ramEntry, strings.Repeat(" ", 29-len(ramEntry)), ramEntry)
+		fmt.Fprintf(w, "  .asciz %q %v // name: %q\n", stackEntry, strings.Repeat(" ", 29-len(stackEntry)), stackEntry)
 	}
 
-	err := unitTest.Setup.SysVars.Write(w, "System variables setup", symbolName, "setup_sysvars", "sysvar", sysVars, ramSetupEntries)
+	err := unitTest.Spectrum4.Setup.SysVars.Write(w, "System variables setup", symbolName, "setup_sysvars", "sysvar", sysVars, stackSetupEntries)
 	if err != nil {
 		return nil, err
 	}
@@ -278,7 +289,7 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	for i := range registers {
 		registers[i] = fmt.Sprintf("x%v", i)
 	}
-	err = unitTest.Setup.Registers.Write(w, "Registers setup", symbolName, "setup_registers", "register", registers, ramSetupEntries)
+	err = unitTest.Spectrum4.Setup.Registers.Write(w, "Registers setup", symbolName, "setup_registers", "register", registers, stackSetupEntries)
 	if err != nil {
 		return nil, err
 	}
@@ -286,17 +297,17 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "# Test case effects")
 
-	err = unitTest.Effects.RAM.Write(w, "RAM effects", symbolName, "effects_ram", "RAM entry", sortedRAMEntries, ramSetupEntries)
+	err = unitTest.Spectrum4.Effects.Stack.Write(w, "Stack effects", symbolName, "effects_stack", "stack entry", sortedStackEntries, stackSetupEntries)
 	if err != nil {
 		return nil, err
 	}
 
-	err = unitTest.Effects.SysVars.Write(w, "System variable effects", symbolName, "effects_sysvars", "sysvar", sysVars, ramSetupEntries)
+	err = unitTest.Spectrum4.Effects.SysVars.Write(w, "System variable effects", symbolName, "effects_sysvars", "sysvar", sysVars, stackSetupEntries)
 	if err != nil {
 		return nil, err
 	}
 
-	err = unitTest.Effects.Registers.Write(w, "Registers effects", symbolName, "effects_registers", "register", registers, ramSetupEntries)
+	err = unitTest.Spectrum4.Effects.Registers.Write(w, "Registers effects", symbolName, "effects_registers", "register", registers, stackSetupEntries)
 	if err != nil {
 		return nil, err
 	}
@@ -308,29 +319,29 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, "  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.")
 	fmt.Fprintln(w, "  mov     x29, sp                         // Update frame pointer to new stack location.")
 	fmt.Fprintln(w, "  ldp     x0, x1, [x0]                    // Restore x0, x1 values")
-	fmt.Fprintf(w, "  bl      %v\n", unitTest.Routine)
+	fmt.Fprintf(w, "  bl      %v\n", unitTest.Spectrum4.Routine)
 	fmt.Fprintln(w, "  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.")
 	fmt.Fprintln(w, "  ret")
-	if unitTest.ASM != nil {
+	if unitTest.Spectrum4.ASM != nil {
 		fmt.Fprintln(w, "")
 		fmt.Fprintln(w, "# Test case custom ASM")
 		fmt.Fprintln(w, "")
-		fmt.Fprintln(w, re.ReplaceAllString(*unitTest.ASM, "${1}"+symbolName+"_${2}:"))
+		fmt.Fprintln(w, re.ReplaceAllString(*unitTest.Spectrum4.ASM, "${1}"+symbolName+"_${2}:"))
 	}
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "##########################################################################")
 	return w.Bytes(), nil
 }
 
-func (nv NamedValue) Write(w io.Writer, title string, symbolName string, subsection string, indexDescription string, entryNames []string, ramSetupEntries NamedValue) error {
+func (nv NamedValue) Write(w io.Writer, title string, symbolName string, subsection string, indexDescription string, entryNames []string, stackSetupEntries NamedValue) error {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 3")
 	fmt.Fprintf(w, "# %v\n", title)
 	fmt.Fprintf(w, "%v_%v:\n", symbolName, subsection)
-	maskQuadCount := (len(entryNames) + 31) / 32
+	maskValueCount := (len(entryNames) + 31) / 32
 	found := 0
 	entries := []string{}
-	for i := 0; i < maskQuadCount; i++ {
+	for i := 0; i < maskValueCount; i++ {
 		var mask uint64 = 0
 		comments := []string{}
 		for j := 0; j < 32; j++ {
@@ -352,12 +363,12 @@ func (nv NamedValue) Write(w io.Writer, title string, symbolName string, subsect
 				case sv.Pointer != nil:
 					mask |= 1 << (2*j + 1)
 					comments = append(comments, fmt.Sprintf("                                          // Bits %v-%v = 0b11 => %v (%v index %v) is pointer", 2*j, 2*j+1, entry, indexDescription, j+i*32))
-					entries = append(entries, fmt.Sprintf("  .quad 0x%016x                // %v = %v", ramSetupEntries.IndexOf(*sv.Pointer), key, *sv.Pointer))
-				case sv.Quad != nil:
+					entries = append(entries, fmt.Sprintf("  .quad 0x%016x                // %v = %v", stackSetupEntries.IndexOf(*sv.Pointer), key, *sv.Pointer))
+				case sv.Value != nil:
 					comments = append(comments, fmt.Sprintf("                                          // Bits %v-%v = 0b01 => %v (%v index %v) is absolute value", 2*j, 2*j+1, entry, indexDescription, j+i*32))
-					entries = append(entries, fmt.Sprintf("  .quad %-33v // %v", *sv.Quad, key))
+					entries = append(entries, fmt.Sprintf("  .quad %-33v // %v", *sv.Value, key))
 				default:
-					return fmt.Errorf("No Quad nor Pointer nor ASM specified in %v", sv)
+					return fmt.Errorf("No Value nor Pointer nor ASM specified in %v", sv)
 				}
 			}
 		}

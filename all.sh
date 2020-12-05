@@ -81,7 +81,7 @@ function check_dependencies {
 # Technically, checks for 'bash' and 'env' aren't really needed, since if this
 # is running, they are installed - however, in case this list is copied around,
 # good to include them as required tools...
-check_dependencies bash cat cp curl dirname env find go mkdir rm sed wc which
+check_dependencies bash cat cp curl dirname env find fuse go head hexdump mkdir mv rm sed sleep wc which
 
 echo
 
@@ -295,9 +295,10 @@ go run test/tzx-code-loader/main.go build/z80/runtests.img dist/z80/runtests.tzx
 
 # Do everything again, but this time with real random data (see comments above).
 {
-  cat zxtest/randomdata.asm | sed '1,/^random_data:$/p'
+  cat zxtest/randomdata.asm | sed -n '1,/^random_data:$/p'
   head -c 64 /dev/urandom | hexdump -v -e '"  .byte " 16/1 "0x%02x, " "\n"' | sed 's/,$//'
-} > zxtest/randomdata.asm
+} > tmp.randomdata.asm
+mv tmp.randomdata.asm zxtest/randomdata.asm
 "${Z80_TOOLCHAIN_PREFIX}as" -I zxtest -o "build/z80/tmp.runtests.o" "zxtest/runtests.asm"
 "${Z80_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x8000 -o build/z80/tmp.runtests.elf  build/z80/tmp.runtests.o
 "${Z80_TOOLCHAIN_PREFIX}objcopy" --set-start=0x8000 build/z80/tmp.runtests.elf -O binary build/z80/tmp.runtests.img

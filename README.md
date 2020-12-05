@@ -167,9 +167,13 @@ You will also require:
   * `env`
   * `find`
   * `go`
+  * `head`
+  * `hexdump`
   * `mkdir`
+  * `mv`
   * `rm`
   * `sed`
+  * `sleep`
   * `wc`
   * `which` (which likely in turn requires `/bin/sh`)
 

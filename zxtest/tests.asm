@@ -9,7 +9,7 @@
 
 all_tests:
   .byte 1                                 ; Number of tests.
-  dw test_cl_addr_test_case_1
+  .hword test_cl_addr_test_case_1
 
 
 ##########################################################################
@@ -18,14 +18,14 @@ all_tests:
 
 # Test case definition
 test_cl_addr_test_case_1:
-  dw test_cl_addr_test_case_1_name
-  dw test_cl_addr_test_case_1_setup_stack
-  dw test_cl_addr_test_case_1_setup_sysvars
-  dw test_cl_addr_test_case_1_setup_registers
-  dw test_cl_addr_test_case_1_effects_stack
-  dw test_cl_addr_test_case_1_effects_sysvars
-  dw test_cl_addr_test_case_1_effects_registers
-  dw test_cl_addr_test_case_1_exec
+  .hword test_cl_addr_test_case_1_name
+  .hword test_cl_addr_test_case_1_setup_stack
+  .hword test_cl_addr_test_case_1_setup_sysvars
+  .hword test_cl_addr_test_case_1_setup_registers
+  .hword test_cl_addr_test_case_1_effects_stack
+  .hword test_cl_addr_test_case_1_effects_sysvars
+  .hword test_cl_addr_test_case_1_effects_registers
+  .hword test_cl_addr_test_case_1_exec
 
 # Test case name
 test_cl_addr_test_case_1_name:
@@ -39,7 +39,7 @@ test_cl_addr_test_case_1_setup_stack:
 
 # System variables setup
 test_cl_addr_test_case_1_setup_sysvars:
-  dw 0b00000000
+  .hword 0b00000000
 
 # Registers setup
 test_cl_addr_test_case_1_setup_registers:

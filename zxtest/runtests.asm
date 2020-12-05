@@ -5,9 +5,11 @@
 .text
 
 _start:
+  # System setup
   call    0x0daf                          ; cls
   ld      a, 3
   call    0x1601                          ; open channel 0
+  # Test 1 setup
   ld      (iy+0x55), 0x95                 ; [ATTR_T] = 0b10010101
   ld      (iy+0x56), 0x56                 ; [MASK_T] = 0b01010110
   ld      (iy+0x57), 0x97                 ; [P_FLAG] = 0b10010111
@@ -15,6 +17,16 @@ _start:
   ld      (hl), 0x55
   ld      hl, 0x4ea4                      ; 16384 + 1*32*8*8 + 5*32 + 4*1 + 6*8*32
   call    0x0bdb                          ; call PO-ATTR
+  ex      af, af'
+  exx
+  push    ix
+  push    iy
+  push    af
+  push    bc
+  push    de
+  push    hl
+  ex      af, af'
+  exx
   push    af
   push    bc
   push    de

@@ -1,3 +1,4 @@
+printout.txt
 /build/*
 /docker/build/*
-printout.txt
+/zxtest/randomdata.asm

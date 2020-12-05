@@ -60,18 +60,6 @@ test_cl_addr_test_case_1_effects_sysvars:
 # Registers effects
 test_cl_addr_test_case_1_effects_registers:
   .byte 0b00000000
-                                          ; Bits 2-3 = 0b01 => x1 (register index 1) is absolute value
-                                          ; Bits 4-5 = 0b01 => x2 (register index 2) is absolute value
-                                          ; Bits 6-7 = 0b01 => x3 (register index 3) is absolute value
-                                          ; Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
-                                          ; Bits 10-11 = 0b01 => x5 (register index 5) is absolute value
-                                          ; Bits 12-13 = 0b01 => x6 (register index 6) is absolute value
-  .byte 25                                ; x1
-  .byte 16384 + 1*20*16*216 + 5*216       ; x2
-  .byte 1                                 ; x3
-  .byte 5                                 ; x4
-  .byte 216                               ; x5
-  .byte 69120                             ; x6
 
 # Test case execution
 

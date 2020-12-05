@@ -1,4 +1,5 @@
 printout.txt
 /build/*
+/dist/z80/tmp.runtests.tzx
 /docker/build/*
 /zxtest/randomdata.asm

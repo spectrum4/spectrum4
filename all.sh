@@ -52,14 +52,17 @@ function show_active_toolchain {
 }
 
 # fetch_firmware downloads standard Raspberry Pi firmware files from the
-# Rasperry Pi Foundation github repository into the dist directory.
+# Rasperry Pi Foundation github repository into subdirectories under
+# dist/aarch64.
 function fetch_firmware {
-  if [ -f "dist/aarch64/${1}" ]; then
-    echo "Keeping cached version of 'dist/aarch64/${1}'. To fetch a newer version, delete it and rerun all.sh."
-  else
-    echo "Fetching dist/aarch64/${1} from github.com/raspberrypi/firmware..."
-    curl -# -L "https://github.com/raspberrypi/firmware/blob/master/boot/${1}?raw=true" > "dist/aarch64/${1}"
-  fi
+  find dist/aarch64 -maxdepth 1 -mindepth 1 -type d | while read subdir; do
+    if [ -f "${subdir}/${1}" ]; then
+      echo "Keeping cached version of '${subdir}/${1}'. To fetch a newer version, delete it and rerun all.sh."
+    else
+      echo "Fetching ${subdir}/${1} from github.com/raspberrypi/firmware..."
+      curl -# -L "https://github.com/raspberrypi/firmware/blob/master/boot/${1}?raw=true" > "${subdir}/${1}"
+    fi
+  done
 }
 
 function check_dependencies {
@@ -168,6 +171,10 @@ find . \( -name '*.s' -o -name '*.asm' \) | while read sourcefile; do
   rm x
 done
 
+# Ensure dist/aarch64 directory exists, leaving in place if already there from previous
+# run.
+mkdir -p dist/aarch64
+
 # Assemble `src/all.s` to `build/aarch64/all.o`
 "${AARCH64_TOOLCHAIN_PREFIX}as" -I src -I src/profiles/debug -o "build/aarch64/debug.o" "src/all.s"
 "${AARCH64_TOOLCHAIN_PREFIX}as" -I src -I src/profiles/release -o "build/aarch64/release.o" "src/all.s"
@@ -185,19 +192,17 @@ done
 "${AARCH64_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -o build/aarch64/kernel8-debug.elf  build/aarch64/debug.o
 "${AARCH64_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -M -o build/aarch64/kernel8-release.elf  build/aarch64/release.o
 
-# Ensure dist/aarch64 directory exists, leaving in place if already there from previous
-# run.
-mkdir -p dist/aarch64
+# Copy static files from this repo into subdirectories under aarch64/dist that
+# are needed on SD card.
+find dist/aarch64 -mindepth 1 -maxdepth 1 -type | while read subdir; do
+  cp src/config.txt "${subdir}"
+  cp LICENCE "${subdir}/LICENCE.spectrum4"
+done
 
-# Copy static files from this repo into dist directory that are needed on SD
-# card.
-cp src/config.txt dist/aarch64
-cp LICENCE dist/aarch64/LICENCE.spectrum4
-
-# Download required firmware files into dist/aarch64 directory from Raspberry
-# Pi Foundation firmware github repository. Skip files that have already been
-# downloaded from previous run. Download the latest version from the master
-# branch.
+# Download required firmware files into dist/aarch64 subdirectories from
+# Raspberry Pi Foundation firmware github repository. Skip files that have
+# already been downloaded from previous run. Download the latest version from
+# the master branch.
 #
 # It is safe to remove the `dist/aarch64` directory if you wish to force downloading
 # the firmware files again.
@@ -206,13 +211,14 @@ fetch_firmware 'bootcode.bin'
 fetch_firmware 'fixup.dat'
 fetch_firmware 'start.elf'
 
-# Extract the final kernel raw binary into file dist/aarch64/kernel8.img
-"${AARCH64_TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/aarch64/kernel8-debug.elf -O binary dist/aarch64/kernel8-debug.img
-"${AARCH64_TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/aarch64/kernel8-release.elf -O binary dist/aarch64/kernel8-release.img
+# Extract the final kernel binaries into dist/aarch64 subdirectories as
+# kernel8.img.
+"${AARCH64_TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/aarch64/kernel8-debug.elf -O binary dist/aarch64/debug/kernel8.img
+"${AARCH64_TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 build/aarch64/kernel8-release.elf -O binary dist/aarch64/release/kernel8.img
 
-# Log disassembly of generated raw binary dist/aarch64/kernel8.img to aid sanity
-# checking.
-# "${AARCH64_TOOLCHAIN_PREFIX}objdump" -b binary -z --adjust-vma=0x0 -maarch64 -D dist/aarch64/kernel8.img
+# Log disassembly of generated raw binary dist/aarch64/debug/kernel8.img to aid
+# sanity checking.
+# "${AARCH64_TOOLCHAIN_PREFIX}objdump" -b binary -z --adjust-vma=0x0 -maarch64 -D dist/aarch64/debug/kernel8.img
 
 # Log disassembly of kernel elf file. This is like above, but additionally
 # contains symbol names, etc.
@@ -233,16 +239,21 @@ done < <(find test -maxdepth 1 -name '*.yml' | sed -n 's/^test\/\(.*\)\.yml$/\1/
 echo "${FN_CALLS}" > test/fn_calls.txt
 
 
-# TODO: The z80 build process should be run twice - the first time with the
-# following static "random" data, and then again with random data generated
-# dynamically from /dev/urandom. The first time should be used for generating
-# the checked in binaries (runtests.elf / runtests.img / runtests.tzx) but the
-# second version with real random data should be when running the FUSE tests
-# below. The idea here is to work around the limitation that the Spectrum 128K
-# has no means to generate cryptographically secure random data, and therefore
-# instead to inject the random data at build time. We don't want to check in
+# Ensure dist/z80 directory exists, leaving in place if already there from previous
+# run.
+mkdir -p dist/z80
+
+# The z80 build process is run twice - the first time with the following static
+# "random" data, and then again with random data generated dynamically from
+# /dev/urandom. This first build is used for generating the checked in binaries
+# (runtests.elf / runtests.img / runtests.tzx). The second version is used for
+# running the FUSE tests below.
+#
+# The idea here is to work around the limitation that the Spectrum 128K has no
+# means to generate cryptographically secure random data, and therefore instead
+# to inject the random data at build time. However We don't want to check in
 # the binary versions with random data since they would change with every
-# build, and thus introduce a lot of noise into the git repository.
+# build, and thus we check in the version with static data.
 
 {
   echo '# This file is part of the Spectrum +4 Project.'
@@ -264,10 +275,6 @@ echo "${FN_CALLS}" > test/fn_calls.txt
 "${Z80_TOOLCHAIN_PREFIX}as" -I zxtest -o "build/z80/runtests.o" "zxtest/runtests.asm"
 "${Z80_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x8000 -o build/z80/runtests.elf  build/z80/runtests.o
 
-# Ensure dist/z80 directory exists, leaving in place if already there from previous
-# run.
-mkdir -p dist/z80
-
 # Extract Spectrum 128K unit tests from ELF binary
 "${Z80_TOOLCHAIN_PREFIX}objcopy" --set-start=0x8000 build/z80/runtests.elf -O binary build/z80/runtests.img
 
@@ -278,7 +285,6 @@ mkdir -p dist/z80
 #   -W: Allow width > 80, i.e. display full symbol names
 "${Z80_TOOLCHAIN_PREFIX}readelf" -W -a build/z80/runtests.elf
 
-
 # Create tzx file for running Spectrum 128K ROM tests under FUSE.
 #
 # See:
@@ -287,6 +293,16 @@ mkdir -p dist/z80
 #   * https://github.com/shred/tzxtools/blob/b4ad524c82f60100b7e06d74194eeb068adb859e/tzxlib/convert.py
 go run test/tzx-code-loader/main.go build/z80/runtests.img dist/z80/runtests.tzx 32768 runtests.b tests 1000
 
+# Do everything again, but this time with real random data (see comments above).
+{
+  cat zxtest/randomdata.asm | sed '1,/^random_data:$/p'
+  head -c 64 /dev/urandom | hexdump -v -e '"  .byte " 16/1 "0x%02x, " "\n"' | sed 's/,$//'
+} > zxtest/randomdata.asm
+"${Z80_TOOLCHAIN_PREFIX}as" -I zxtest -o "build/z80/tmp.runtests.o" "zxtest/runtests.asm"
+"${Z80_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x8000 -o build/z80/tmp.runtests.elf  build/z80/tmp.runtests.o
+"${Z80_TOOLCHAIN_PREFIX}objcopy" --set-start=0x8000 build/z80/tmp.runtests.elf -O binary build/z80/tmp.runtests.img
+go run test/tzx-code-loader/main.go build/z80/tmp.runtests.img dist/z80/tmp.runtests.tzx 32768 runtests.b tmp.tests 1000
+
 echo
 echo "Build successful - see dist directory for results"
 
@@ -294,9 +310,8 @@ echo "Build successful - see dist directory for results"
 # Run tests
 
 echo > printout.txt
-rm -f runtests.tzx
 
-fuse --machine 128 --no-sound --zxprinter --printer --tape dist/z80/runtests.tzx --auto-load --no-autosave-settings >/dev/null 2>&1 &
+fuse --machine 128 --no-sound --zxprinter --printer --tape dist/z80/tmp.runtests.tzx --auto-load --no-autosave-settings >/dev/null 2>&1 &
 
 fuse_pid=$!
 disown

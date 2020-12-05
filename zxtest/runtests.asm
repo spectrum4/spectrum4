@@ -4,6 +4,8 @@
 
 .text
 
+.globl _start
+
 _start:
   # System setup
   call    0x0daf                          ; cls

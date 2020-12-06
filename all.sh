@@ -166,8 +166,8 @@ done
 go run test/spectrum4-generate-tests/main.go test src/bss.s src/profiles/debug/tests.s
 
 find . \( -name '*.s' -o -name '*.asm' \) | while read sourcefile; do
-  cat "${sourcefile}" > x
-  cat x | sed 's/  *$//' > "${sourcefile}"
+  cat "${sourcefile}" | sed 's/  *$//' > x
+  diff -q "${sourcefile}" x >/dev/null || (echo "WARNING: Stripping trailing whitespace from lines in ${sourcefile}..."; cat x > "${sourcefile}")
   rm x
 done
 
@@ -194,7 +194,7 @@ mkdir -p dist/aarch64
 
 # Copy static files from this repo into subdirectories under aarch64/dist that
 # are needed on SD card.
-find dist/aarch64 -mindepth 1 -maxdepth 1 -type | while read subdir; do
+find dist/aarch64 -mindepth 1 -maxdepth 1 -type d | while read subdir; do
   cp src/config.txt "${subdir}"
   cp LICENCE "${subdir}/LICENCE.spectrum4"
 done

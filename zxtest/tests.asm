@@ -19,11 +19,11 @@ all_tests:
 # Test case definition
 test_cl_addr_test_case_1:
   .hword test_cl_addr_test_case_1_name
-  .hword test_cl_addr_test_case_1_setup_stack
-  .hword test_cl_addr_test_case_1_setup_sysvars
+# .hword test_cl_addr_test_case_1_setup_stack
+# .hword test_cl_addr_test_case_1_setup_sysvars
   .hword test_cl_addr_test_case_1_setup_registers
-  .hword test_cl_addr_test_case_1_effects_stack
-  .hword test_cl_addr_test_case_1_effects_sysvars
+# .hword test_cl_addr_test_case_1_effects_stack
+# .hword test_cl_addr_test_case_1_effects_sysvars
   .hword test_cl_addr_test_case_1_effects_registers
   .hword test_cl_addr_test_case_1_exec
 
@@ -59,7 +59,9 @@ test_cl_addr_test_case_1_effects_sysvars:
 
 # Registers effects
 test_cl_addr_test_case_1_effects_registers:
-  .byte 0b00000000
+  .byte 0b00000000                       ; bc  af  iy  ix
+  .byte 0b00000000                       ; bc' af' hl  de
+  .byte 0b00000000                       ; ..  ..  hl' de'
 
 # Test case execution
 

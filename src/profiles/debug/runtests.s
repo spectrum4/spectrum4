@@ -162,8 +162,8 @@ run_tests:
 
     add     x0, x9, (sysvars_end - sysvars) // x0 = start of pre-test register block
     mov     x1, #0x100                      // Register storage on stack takes up 256 bytes.
-    bl      rand_block                      // Log random bytes to stack so registers are random when popped.
-    sub     x0, x0, #0x100                  // Restore x0 to start of pre-test register block
+    bl      rand_block                      // Write random bytes to stack so registers are random when popped.
+    sub     x0, x0, #0x100                  // rand_block just added 0x100 to x0, so subtract it again.
     str     x28, [x0, 28*8]                 // x28 is exceptional: has constant value; replace random value.
     ldr     x17, [x11, #24]                 // x17 = registers setup block
     mov     x9, #0                          // register index

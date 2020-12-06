@@ -42,50 +42,83 @@ channel_assign:                           ; this label is translated to an
   jp      z, 3f                           ; no tests defined, so return
   inc     hl
 
-1:                                        ; Loop through all tests
-  ld      de, msg_running_test_part_1
-  call    print_msg_de                    ; Log "Running test "
-  ld      e, (hl)
-  inc     hl
-  ld      d, (hl)                         ; DE = address of test definition
-  inc     hl
-  ld      a, (de)
-  ld      c, a
-  inc     de
-  ld      a, (de)
-  ld      d, a
-  ld      e, c                            ; DE = address of test name
-  call    print_msg_de                    ; Log "<test case name>"
-  ld      de, msg_running_test_part_2
-  call    print_msg_de                    ; Log "...\r"
+  1:                                        ; Loop through all tests
+    ld      de, msg_running_test_part_1
+    call    print_msg_de                    ; Log "Running test "
+    ld      e, (hl)
+    inc     hl
+    ld      d, (hl)                         ; DE = address of test definition
+    ex      de, hl                          ; HL = address of test definition
+    ld      e, (hl)
+    inc     hl
+    ld      d, (hl)                         ; DE = address of test name
+    inc     hl                              ; HL = address of register setup section
+    call    print_msg_de                    ; Log "<test case name>"
+    ld      de, msg_running_test_part_2
+    call    print_msg_de                    ; Log "...\r"
 
-  # Set up registers
+    # Set up registers
 
-  push    bc                              ; Stash number of remaining tests (B)
-  push    hl                              ; Stash current address inside all_tests
-  ld      hl, -0x14
-  add     hl, sp
-  ld      sp, hl
-  ld      de, random_data
-  ld      bc, 0x14
-  ex      de, hl
-  ldir                                    ; Copy 0x14 = 20 random bytes to stack
-  pop     ix
-  pop     iy
-  pop     af
-  pop     bc
-  pop     de
-  pop     hl
-  ex      af, af'
-  exx
-  pop     af
-  pop     bc
-  pop     de
-  pop     hl
+    push    bc
+    push    hl
 
-  pop     hl
-  pop     bc
-  djnz    1b
+    exx                                     ; Preserve B, HL by switching to spare registers
+    ld      hl, -0x14
+    add     hl, sp
+    ld      sp, hl
+    ld      de, random_data
+    ld      bc, 0x14
+    ex      de, hl
+    ldir                                    ; Copy 0x14 = 20 random bytes to stack
+    ld      (stack), sp                     ; z80 has no `ld iy, sp` instruction so we have
+    ld      iy, (stack)                     ; to write SP to a fixed memory address and read
+                                            ; it back again.
+    ld      (iy+2),0x3a                     ; Replace random value for IY with 0x5c3a since
+    ld      (iy+3),0x5c                     ; ROM routines expect IY = 0x5c3a (ERRNO sysvar)
+    exx                                     ; Restore data from spare register set:
+                                            ;   B = remaining test count (unneeded)
+                                            ;   HL = address of register setup section
+    ld      d, h
+    ld      e, l
+    inc     de
+    inc     de
+    inc     de                              ; DE = address of first register
+    ld      b, 0                            ; B = offset into stack
+                                            ;   0x00: IX,  0x02: IY,  0x04: AF,  0x06: BC
+                                            ;   0x08: DE,  0x0a: HL,  0x0c: AF', 0x0e: BC'
+                                            ;   0x10: DE', 0x12: HL'
+x1:
+    ld      a, b
+    and     0x07                            ; lower 3 bits of B are 0 when we need to read
+                                            ; next mask byte
+    jr      nz, x2
+    ld      c, (hl)                         ; read next mask byte into C
+    inc     hl                              ; prepare HL for next mask read
+x2:
+    bit     0, c                            ; is register byte defined?
+    jr      z, x3                           ; if not defined, skip forward to x3
+    # register defined, replace random value
+    ld      a, (de)                         ; read value into A
+    inc     de
+x3:
+
+
+    pop     ix
+    pop     iy
+    pop     af
+    pop     bc
+    pop     de
+    pop     hl
+    ex      af, af'
+    exx
+    pop     af
+    pop     bc
+    pop     de
+    pop     hl
+
+    pop     hl
+    pop     bc
+    djnz    1b
 
   # Test 1 setup
   ld      (iy+0x55), 0x95                 ; [ATTR_T] = 0b10010101
@@ -97,18 +130,19 @@ channel_assign:                           ; this label is translated to an
   call    0x0bdb                          ; call PO-ATTR
   ex      af, af'
   exx
-  push    ix
-  push    iy
-  push    af
-  push    bc
-  push    de
   push    hl
+  push    de
+  push    bc
+  push    af
   ex      af, af'
   exx
-  push    af
-  push    bc
-  push    de
   push    hl
+  push    de
+  push    bc
+  push    af
+  push    iy
+  push    ix
+
   call    print_hl_as_hex
   call    print_newline
   pop     hl
@@ -130,14 +164,14 @@ channel_assign:                           ; this label is translated to an
   pop     ix
   ld      b, 0
   ld      c, b
-2:
-  ld      e, c
-  call    e_div_10
-  ld      a, h
-  add     a, 0x41
-  rst     0x10
-  inc     c
-  djnz    2b
+  2:
+    ld      e, c
+    call    e_div_10
+    ld      a, h
+    add     a, 0x41
+    rst     0x10
+    inc     c
+    djnz    2b
 
 
   call    print_newline
@@ -159,13 +193,13 @@ channel_assign:                           ; this label is translated to an
 
 
 print_msg_de:
-1:
-  ld      a,(de)
-  cp      0
-  ret     z
-  rst     0x10
-  inc     de
-  jr      1b
+  1:
+    ld      a,(de)
+    cp      0
+    ret     z
+    rst     0x10
+    inc     de
+    jr      1b
 
 
 # Final text to be written when unit tests have completed. When running in an
@@ -250,3 +284,11 @@ msg_fail_8: .asciz ": RAM entry "
 
 .include "tests.asm"
 .include "randomdata.asm"
+
+# See https://sourceware.org/bugzilla/show_bug.cgi?id=27047 - ideally this would
+# would be in a bss section but binutils 2.35.1 doesn't support bss sections for
+# target z80-unknown-elf.
+#
+# .bss
+
+stack: .space 2

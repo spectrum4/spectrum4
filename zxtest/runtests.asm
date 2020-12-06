@@ -24,6 +24,15 @@ _start:
   # System setup
 
   call    0x0daf                          ; cls
+channel_assign:                           ; this label is translated to an
+                                          ; address in all.sh, the value is
+                                          ; incremented and passed to the go
+                                          ; program that creates the BASIC
+                                          ; loader program, in order to
+                                          ; generate a POKE statement to
+                                          ; allow an interactive user to
+                                          ; modify the output channel to e.g.
+                                          ; channel 2 (upper screen).
   ld      a, 3
   call    0x1601                          ; open channel 3 (printer)
   ld      hl, all_tests
@@ -61,15 +70,15 @@ _start:
   ld      bc, 0x14
   ex      de, hl
   ldir                                    ; Copy 0x14 = 20 random bytes to stack
-  pop     de ;  pop     ix
-  pop     de ;  pop     iy
-  pop     de ;  pop     af
+  pop     ix
+  pop     iy
+  pop     af
   pop     bc
   pop     de
   pop     hl
   ex      af, af'
   exx
-  pop     de ;  pop     af
+  pop     af
   pop     bc
   pop     de
   pop     hl
@@ -110,13 +119,13 @@ _start:
   pop     hl
   pop     de
   pop     bc
-  pop     bc ; pop     af
+  pop     af
   ex      af, af'
   exx
   pop     hl
   pop     de
   pop     bc
-  pop     bc ; pop     af
+  pop     af
   pop     iy
   pop     ix
   ld      b, 0

@@ -285,13 +285,16 @@ mkdir -p dist/z80
 #   -W: Allow width > 80, i.e. display full symbol names
 "${Z80_TOOLCHAIN_PREFIX}readelf" -W -a build/z80/runtests.elf
 
+# Determine which address holds the Spectrum output channel number for the test output.
+channel_address=$((0x$("${Z80_TOOLCHAIN_PREFIX}readelf" -W -a build/z80/runtests.elf | sed -n '/ channel_assign$/s/.*: \([0-9a-f]*\).*/\1/p') + 1))
+
 # Create tzx file for running Spectrum 128K ROM tests under FUSE.
 #
 # See:
 #   * http://k1.spdns.de/Develop/Projects/zasm/Info/TZX%20format.html
 #   * https://faqwiki.zxnet.co.uk/wiki/Spectrum_tape_interface
 #   * https://github.com/shred/tzxtools/blob/b4ad524c82f60100b7e06d74194eeb068adb859e/tzxlib/convert.py
-go run test/tzx-code-loader/main.go build/z80/runtests.img dist/z80/runtests.tzx 32768 runtests.b tests 1000
+go run test/tzx-code-loader/main.go build/z80/runtests.img dist/z80/runtests.tzx 32768 "${channel_address}" runtests.b tests 1000
 
 # Do everything again, but this time with real random data (see comments above).
 {
@@ -302,7 +305,7 @@ mv tmp.randomdata.asm zxtest/randomdata.asm
 "${Z80_TOOLCHAIN_PREFIX}as" -I zxtest -o "build/z80/tmp.runtests.o" "zxtest/runtests.asm"
 "${Z80_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x8000 -o build/z80/tmp.runtests.elf  build/z80/tmp.runtests.o
 "${Z80_TOOLCHAIN_PREFIX}objcopy" --set-start=0x8000 build/z80/tmp.runtests.elf -O binary build/z80/tmp.runtests.img
-go run test/tzx-code-loader/main.go build/z80/tmp.runtests.img dist/z80/tmp.runtests.tzx 32768 runtests.b tmp.tests 1000
+go run test/tzx-code-loader/main.go build/z80/tmp.runtests.img dist/z80/tmp.runtests.tzx 32768 "${channel_address}" runtests.b tmp.tests 1000
 
 echo
 echo "Build successful - see dist directory for results"

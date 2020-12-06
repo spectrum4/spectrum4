@@ -52,7 +52,7 @@ channel_assign:                           ; this label is translated to an
     ld      e, (hl)
     inc     hl
     ld      d, (hl)                         ; DE = address of test name
-    inc     hl                              ; HL = address of register setup section
+    inc     hl                              ; HL = address of register setup pointer in all_tests
     call    print_msg_de                    ; Log "<test case name>"
     ld      de, msg_running_test_part_2
     call    print_msg_de                    ; Log "...\r"
@@ -77,12 +77,15 @@ channel_assign:                           ; this label is translated to an
     ld      (iy+3),0x5c                     ; ROM routines expect IY = 0x5c3a (ERRNO sysvar)
     exx                                     ; Restore data from spare register set:
                                             ;   B = remaining test count (unneeded)
-                                            ;   HL = address of register setup section
-    ld      d, h
-    ld      e, l
+                                            ;   HL = address of register setup section pointer
+    ld      e, (hl)
+    inc     hl
+    ld      d, (hl)                         ; DE = address of register setup masks
+    ld      h, d
+    ld      l, e                            ; HL = start address of register setup masks
     inc     de
     inc     de
-    inc     de                              ; DE = address of first register
+    inc     de                              ; DE = start address of register setup values
     ld      b, 0x14
                                             ;   0x00: IX (lsb)  0x01: IX (msb)
                                             ;   0x02: IY (lsb)  0x03: IY (msb)

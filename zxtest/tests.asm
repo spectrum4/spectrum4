@@ -43,9 +43,12 @@ test_cl_addr_test_case_1_setup_sysvars:
 
 # Registers setup
 test_cl_addr_test_case_1_setup_registers:
-  .byte 0b00000000
-                                          ; Bits 0-1 = 0b01 => x0 (register index 0) is absolute value
-  .byte 35                                ; x0
+  .byte 0b11000000                        ; Set BC
+  .byte 0b00100000                        ; Set A'
+  .byte 0b00000011                        ; Set DE'
+  .hword 0x1234                           ; BC = 0x1234
+  .byte  0xbc                             ; A' = 0xbc
+  .hword 0x2345                           ; DE'= 0x2345
 
 # Test case effects
 

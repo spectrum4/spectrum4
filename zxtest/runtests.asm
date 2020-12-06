@@ -8,12 +8,15 @@
 
 _start:
 
-  # Preserve state for safely returning from machine code back to BASIC.
-  # Disable interrupts in case keyboard scanning routine depends on IY
-  # being preserved (since it isn't). Stash HL' and IY which need
-  # restoring before returning, due to assumptions in Spectrum ROM.
-
+  # Disable interrupts in case either the ROM interrupt routine depends on certain
+  # registers having particular values, or corrupts registers that our routine
+  # relies on, and to remove the unnecessary overhead of scanning keyboard during
+  # testing.
   di
+
+  # Preserve the initial values for registers HL' and IY and restore them on
+  # return, since the calling ROM routine requires their values to be unaltered.
+  # This eases troubleshooting if calling this routine interactively from BASIC.
   push iy
   exx
   push hl
@@ -24,10 +27,10 @@ _start:
   ld      a, 3
   call    0x1601                          ; open channel 3 (printer)
   ld      hl, all_tests
-  xor     a
+  xor     a                               ; A=0
   ld      b, (hl)
-  cp      b
-  ret     z
+  cp      b                               ; [all_tests] == 0?
+  jp      z, 3f                           ; no tests defined, so return
   inc     hl
 
 1:                                        ; Loop through all tests
@@ -118,27 +121,30 @@ _start:
   pop     ix
   ld      b, 0
   ld      c, b
-1:
+2:
   ld      e, c
   call    e_div_10
   ld      a, h
   add     a, 0x41
   rst     0x10
   inc     c
-  djnz    1b
+  djnz    2b
+
+
   call    print_newline
   ld      de, end_marker
   call    print_msg_de                    ; print 'spectrum4_tests_end_marker'
   call    print_newline
 
-  # Restore state for safely returning back to BASIC. IY and HL' both need to
-  # be restored, and BC holds return value, so set to 0 to indicate success.
-  # Finally interrupts can be reenabled.
-
-  pop hl
-  pop iy
+3:
+  ld      bc, 0                           ; BASIC return value; 0 => success
+4:
+  # Prepare state for safely returning to BASIC. IY and HL' both need to be
+  # restored and interrupts enabled. BC should already be set to an appropriate
+  # return value by now, and all other register values are insignificant.
+  pop     hl
+  pop     iy
   exx
-  ld bc, 0
   ei
   ret
 

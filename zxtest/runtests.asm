@@ -48,7 +48,7 @@ _start:
   ld      e, c                            ; DE = address of test name
   call    print_msg_de                    ; Log "<test case name>"
   ld      de, msg_running_test_part_2
-  call    print_msg_de                    ; Log "...\r\n"
+  call    print_msg_de                    ; Log "...\r"
 
   # Set up registers
 
@@ -224,7 +224,7 @@ print_newline:
 
 
 msg_running_test_part_1: .asciz "Running test "
-msg_running_test_part_2: .asciz "...\r\n"
+msg_running_test_part_2: .asciz "...\r"
 
 msg_fail: .asciz "FAIL: "
 msg_fail_0: .asciz ": Register x"
@@ -234,7 +234,7 @@ msg_fail_3: .asciz " to "
 msg_fail_4: .asciz ", but should have changed to "
 msg_fail_5: .ascii ", but should not have changed"
                                           ; Intentionally .ascii not .asciz, in order to join with msg_fail_6.
-msg_fail_6: .asciz ".\r\n"
+msg_fail_6: .asciz ".\r"
 msg_fail_7: .asciz ": System Variable "
 msg_fail_8: .asciz ": RAM entry "
 

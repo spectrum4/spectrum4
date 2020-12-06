@@ -55,12 +55,42 @@ func BASICLoader(loadAddress uint16, channelAddress uint16, name string) *zxtape
 			{
 				Number: 10,
 				Tokens: []zxbasic.Token{
+					zxbasic.REM,
+					zxbasic.String("The next POKE controls where test output is written to. Set to 2 for upper screen or 3 for printer. Type RUN to rerun tests."),
+				},
+			},
+			{
+				Number: 20,
+				Tokens: []zxbasic.Token{
+					zxbasic.POKE,
+					zxbasic.Number(channelAddress),
+					zxbasic.String(","),
+					zxbasic.Number(2),
+				},
+			},
+			{
+				Number: 30,
+				Tokens: []zxbasic.Token{
+					zxbasic.RANDOMIZE,
+					zxbasic.USR,
+					zxbasic.Number(loadAddress),
+				},
+			},
+			{
+				Number: 40,
+				Tokens: []zxbasic.Token{
+					zxbasic.STOP,
+				},
+			},
+			{
+				Number: 50,
+				Tokens: []zxbasic.Token{
 					zxbasic.CLEAR,
 					zxbasic.Number(loadAddress - 1),
 				},
 			},
 			{
-				Number: 20,
+				Number: 60,
 				Tokens: []zxbasic.Token{
 					zxbasic.POKE,
 					zxbasic.Number(23610),
@@ -69,7 +99,7 @@ func BASICLoader(loadAddress uint16, channelAddress uint16, name string) *zxtape
 				},
 			},
 			{
-				Number: 30,
+				Number: 70,
 				Tokens: []zxbasic.Token{
 					zxbasic.LOAD,
 					zxbasic.String(`""`),
@@ -77,30 +107,13 @@ func BASICLoader(loadAddress uint16, channelAddress uint16, name string) *zxtape
 				},
 			},
 			{
-				Number: 40,
+				Number: 80,
 				Tokens: []zxbasic.Token{
-					zxbasic.REM,
-					zxbasic.String("The next POKE controls where test output is written to. Set to 2 for upper screen or 3 for printer (default). Type GO TO 50 to rerun tests."),
-				},
-			},
-			{
-				Number: 50,
-				Tokens: []zxbasic.Token{
-					zxbasic.POKE,
-					zxbasic.Number(channelAddress),
-					zxbasic.String(","),
-					zxbasic.Number(3),
-				},
-			},
-			{
-				Number: 60,
-				Tokens: []zxbasic.Token{
-					zxbasic.RANDOMIZE,
-					zxbasic.USR,
-					zxbasic.Number(loadAddress),
+					zxbasic.GO_TO,
+					zxbasic.Number(30),
 				},
 			},
 		},
 	}
-	return zxtape.Program(p, name, 10)
+	return zxtape.Program(p, name, 50)
 }

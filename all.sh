@@ -81,7 +81,7 @@ function check_dependencies {
 # Technically, checks for 'bash' and 'env' aren't really needed, since if this
 # is running, they are installed - however, in case this list is copied around,
 # good to include them as required tools...
-check_dependencies bash cat cp curl dirname env find fuse go head hexdump mkdir mv rm sed sleep wc which
+check_dependencies bash cat cmp cp curl dirname env find fuse go head hexdump mkdir mv rm sed sleep wc which
 
 echo
 
@@ -167,7 +167,10 @@ go run test/spectrum4-generate-tests/main.go test src/bss.s src/profiles/debug/t
 
 find . \( -name '*.s' -o -name '*.asm' \) | while read sourcefile; do
   cat "${sourcefile}" | sed 's/  *$//' > x
-  diff -q "${sourcefile}" x >/dev/null || (echo "WARNING: Stripping trailing whitespace from lines in ${sourcefile}..."; cat x > "${sourcefile}")
+  if ! cmp "${sourcefile}" x >/dev/null; then
+    echo "WARNING: Stripping trailing whitespace from lines in ${sourcefile}..."
+    cat x > "${sourcefile}"
+  fi
   rm x
 done
 

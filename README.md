@@ -161,6 +161,7 @@ You will also require:
 
   * `bash`
   * `cat`
+  * `cmp`
   * `cp`
   * `curl`
   * `dirname`

@@ -165,7 +165,7 @@ end_marker:
   .asciz "spectrum4_tests_end_marker"
 
 
-# Divides 8 bit uint by 10.
+# Divides E by 10 and returns in H.
 #
 # On entry:
 #   E  = value to divide by 10

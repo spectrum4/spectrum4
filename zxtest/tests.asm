@@ -62,9 +62,9 @@ test_cl_addr_test_case_1_effects_sysvars:
 
 # Registers effects
 test_cl_addr_test_case_1_effects_registers:
-  .byte 0b00000000                       ; bc  af  iy  ix
-  .byte 0b00000000                       ; bc' af' hl  de
-  .byte 0b00000000                       ; ..  ..  hl' de'
+  .byte 0b00000000                        ; bc  af  iy  ix
+  .byte 0b00000000                        ; bc' af' hl  de
+  .byte 0b00000000                        ; ..  ..  hl' de'
 
 # Test case execution
 

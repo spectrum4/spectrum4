@@ -83,14 +83,23 @@ channel_assign:                           ; this label is translated to an
     inc     de
     inc     de
     inc     de                              ; DE = address of first register
-    ld      b, 0                            ; B = offset into stack
-                                            ;   0x00: IX,  0x02: IY,  0x04: AF,  0x06: BC
-                                            ;   0x08: DE,  0x0a: HL,  0x0c: AF', 0x0e: BC'
-                                            ;   0x10: DE', 0x12: HL'
+    ld      b, 0x14
+                                            ;   0x00: IX (lsb)  0x01: IX (msb)
+                                            ;   0x02: IY (lsb)  0x03: IY (msb)
+                                            ;   0x04: F         0x05: A
+                                            ;   0x06: C         0x07: B
+                                            ;   0x08: E         0x09: D
+                                            ;   0x0a: L         0x0b: H
+                                            ;   0x0c: F'        0x0d: A'
+                                            ;   0x0e: C'        0x0f: B'
+                                            ;   0x10: E'        0x11: D'
+                                            ;   0x12: L'        0x13: H'
 x1:
-    ld      a, b
-    and     0x07                            ; lower 3 bits of B are 0 when we need to read
-                                            ; next mask byte
+    ld      a, 0x14
+    sub     b
+    and     0x07                            ; Mask contains 1 bit per increment of B, so
+                                            ; one mask byte needs to be read for every 8
+                                            ; increments of B, i.e. when (B & 0x07) == 0.
     jr      nz, x2
     ld      c, (hl)                         ; read next mask byte into C
     inc     hl                              ; prepare HL for next mask read
@@ -100,7 +109,12 @@ x2:
     # register defined, replace random value
     ld      a, (de)                         ; read value into A
     inc     de
+    ld      (iy), a                         ; update entry in stack
 x3:
+    srl     c                               ; shift mask 1 bit to the right
+    inc     iy
+    djnz    x1
+
 
 
     pop     ix
@@ -285,10 +299,9 @@ msg_fail_8: .asciz ": RAM entry "
 .include "tests.asm"
 .include "randomdata.asm"
 
-# See https://sourceware.org/bugzilla/show_bug.cgi?id=27047 - ideally this would
-# would be in a bss section but binutils 2.35.1 doesn't support bss sections for
-# target z80-unknown-elf.
-#
-# .bss
+# See https://sourceware.org/bugzilla/show_bug.cgi?id=27047 - the `.bss`
+# pseudo operation is not supported in binutils 2.35.1 under target
+# z80-unknown-elf, so we need to use `.section .bss` instead.
+.section .bss
 
 stack: .space 2

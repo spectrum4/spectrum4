@@ -48,6 +48,8 @@ channel_assign:                           ; this label is translated to an
     ld      e, (hl)
     inc     hl
     ld      d, (hl)                         ; DE = address of test definition
+    inc     hl
+    push    hl
     ex      de, hl                          ; HL = address of test definition
     ld      e, (hl)
     inc     hl
@@ -63,7 +65,7 @@ channel_assign:                           ; this label is translated to an
     push    hl
 
     exx                                     ; Preserve B, HL by switching to spare registers
-    ld      hl, -0x14
+    ld      hl, -0x28
     add     hl, sp
     ld      sp, hl
     ld      de, random_data
@@ -89,36 +91,59 @@ channel_assign:                           ; this label is translated to an
     ld      b, 0x14
                                             ;   0x00: IX (lsb)  0x01: IX (msb)
                                             ;   0x02: IY (lsb)  0x03: IY (msb)
-                                            ;   0x04: F         0x05: A
-                                            ;   0x06: C         0x07: B
-                                            ;   0x08: E         0x09: D
-                                            ;   0x0a: L         0x0b: H
-                                            ;   0x0c: F'        0x0d: A'
-                                            ;   0x0e: C'        0x0f: B'
-                                            ;   0x10: E'        0x11: D'
-                                            ;   0x12: L'        0x13: H'
-x1:
-    ld      a, 0x14
-    sub     b
-    and     0x07                            ; Mask contains 1 bit per increment of B, so
-                                            ; one mask byte needs to be read for every 8
-                                            ; increments of B, i.e. when (B & 0x07) == 0.
-    jr      nz, x2
-    ld      c, (hl)                         ; read next mask byte into C
-    inc     hl                              ; prepare HL for next mask read
-x2:
-    bit     0, c                            ; is register byte defined?
-    jr      z, x3                           ; if not defined, skip forward to x3
-    # register defined, replace random value
-    ld      a, (de)                         ; read value into A
+                                            ;   0x04: F'        0x05: A'
+                                            ;   0x06: C'        0x07: B'
+                                            ;   0x08: E'        0x09: D'
+                                            ;   0x0a: L'        0x0b: H'
+                                            ;   0x0c: F         0x0d: A
+                                            ;   0x0e: C         0x0f: B
+                                            ;   0x10: E         0x11: D
+                                            ;   0x12: L         0x13: H
+    2:
+      ld      a, 0x14
+      sub     b
+      and     0x07                            ; Mask contains 1 bit per increment of B, so
+                                              ; one mask byte needs to be read for every 8
+                                              ; increments of B, i.e. when (B & 0x07) == 0.
+      jr      nz, 3f
+      ld      c, (hl)                         ; read next mask byte into C
+      inc     hl                              ; prepare HL for next mask read
+    3:
+      bit     0, c                            ; is register byte defined?
+      jr      z, 4f                           ; if not defined, skip forward to x3
+      # register defined, replace random value
+      ld      a, (de)                         ; read value into A
+      inc     de
+      ld      (iy), a                         ; update entry in stack
+    4:
+      srl     c                               ; shift mask 1 bit to the right
+      inc     iy
+      djnz    2b
+
+    # At this point all register values are prepared on the stack and IY is the
+    # address above the registers, i.e. where HL was stacked with the address of
+    # register setup pointer
+
+    ld      (stack), iy                     ; z80 has no `ld de, iy` instruction so we have
+    ld      de, (stack)                     ; to write IY to a fixed memory address and read
+    ld      hl, -0x14
+    add     hl, de
+    ld      bc, 0x14
+    ldir                                    ; Copy section again
+
+    ld      e, (iy+0x14)
+    ld      d, (iy+0x15)                    ; DE = address of register setup pointer
     inc     de
-    ld      (iy), a                         ; update entry in stack
-x3:
-    srl     c                               ; shift mask 1 bit to the right
-    inc     iy
-    djnz    x1
+    inc     de                              ; DE = address of register effects pointer
+    inc     de
+    inc     de                              ; DE = address of exec pointer in all_tests
+    ld      a, (de)
+    ld      l, a
+    inc     de
+    ld      a, (de)                         ; HL = address of exec routine
+    ld      h, a
 
-
+    exx
 
     pop     ix
     pop     iy
@@ -126,72 +151,50 @@ x3:
     pop     bc
     pop     de
     pop     hl
+
     ex      af, af'
     exx
+
     pop     af
     pop     bc
     pop     de
-    pop     hl
+    jp      (hl)
 
-    pop     hl
+  test_exec_return:
+
+    ex      af, af'
+    exx
+
+    push    hl
+    push    de
+    push    bc
+    push    af
+
+    ex      af, af'
+    exx
+
+    push    hl
+    push    de
+    push    bc
+    push    af
+    push    iy
+    push    ix
+
+# TODO compare before and after
+
+    ld      (stack), sp
+    ld      hl, (stack)
+    ld      de, 0x14 + 0x14 + 0x02
+    add     hl, de
+    ld      sp, hl
     pop     bc
-    djnz    1b
+    pop     hl
 
-  # Test 1 setup
-  ld      (iy+0x55), 0x95                 ; [ATTR_T] = 0b10010101
-  ld      (iy+0x56), 0x56                 ; [MASK_T] = 0b01010110
-  ld      (iy+0x57), 0x97                 ; [P_FLAG] = 0b10010111
-  ld      hl, 0x59a4
-  ld      (hl), 0x55
-  ld      hl, 0x4ea4                      ; 16384 + 1*32*8*8 + 5*32 + 4*1 + 6*8*32
-  call    0x0bdb                          ; call PO-ATTR
-  ex      af, af'
-  exx
-  push    hl
-  push    de
-  push    bc
-  push    af
-  ex      af, af'
-  exx
-  push    hl
-  push    de
-  push    bc
-  push    af
-  push    iy
-  push    ix
+    dec     b
+    ld      a, b
+    cp      0
+    jp      nz, 1b
 
-  call    print_hl_as_hex
-  call    print_newline
-  pop     hl
-  push    hl
-  ld      c, (hl)
-  call    print_c_as_hex
-  call    print_newline
-  pop     hl
-  pop     de
-  pop     bc
-  pop     af
-  ex      af, af'
-  exx
-  pop     hl
-  pop     de
-  pop     bc
-  pop     af
-  pop     iy
-  pop     ix
-  ld      b, 0
-  ld      c, b
-  2:
-    ld      e, c
-    call    e_div_10
-    ld      a, h
-    add     a, 0x41
-    rst     0x10
-    inc     c
-    djnz    2b
-
-
-  call    print_newline
   ld      de, end_marker
   call    print_msg_de                    ; print 'spectrum4_tests_end_marker'
   call    print_newline

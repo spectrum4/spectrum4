@@ -17,9 +17,9 @@ _start:
   # Preserve the initial values for registers HL' and IY and restore them on
   # return, since the calling ROM routine requires their values to be unaltered.
   # This eases troubleshooting if calling this routine interactively from BASIC.
-  push iy
+  push    iy
   exx
-  push hl
+  push    hl
 
   # System setup
 
@@ -75,11 +75,11 @@ channel_assign:                           ; This label is translated to an
     ld      bc, 0x14
     ex      de, hl
     ldir                                    ; Copy 0x14 = 20 random bytes to stack
-    ld      (stack), sp                     ; z80 has no `ld iy, sp` instruction so we have
-    ld      iy, (stack)                     ; to write SP to a fixed memory address and read
+    ld      (stack), sp                     ; z80 has no `ld ix, sp` instruction so we have
+    ld      ix, (stack)                     ; to write SP to a fixed memory address and read
                                             ; it back again.
-    ld      (iy+2),0x3a                     ; Replace random value for IY with 0x5c3a since
-    ld      (iy+3),0x5c                     ; ROM routines expect IY = 0x5c3a (ERRNO sysvar)
+    ld      (ix+2),0x3a                     ; Replace random value for IY with 0x5c3a since
+    ld      (ix+3),0x5c                     ; ROM routines expect IY = 0x5c3a (ERRNO sysvar)
     exx                                     ; Restore data from spare register set:
                                             ;   B = remaining test count (unneeded)
                                             ;   HL = address of register setup section pointer
@@ -117,25 +117,25 @@ channel_assign:                           ; This label is translated to an
       # register defined, replace random value
       ld      a, (de)                         ; read value into A
       inc     de
-      ld      (iy), a                         ; update entry in stack
+      ld      (ix), a                         ; update entry in stack
     4:
       srl     c                               ; shift mask 1 bit to the right
-      inc     iy
+      inc     ix
       djnz    2b
 
-    # At this point all register values are prepared on the stack and IY is the
+    # At this point all register values are prepared on the stack and IX is the
     # address above the registers, i.e. where HL was stacked with the address of
     # register setup pointer
 
-    ld      (stack), iy                     ; z80 has no `ld de, iy` instruction so we have
-    ld      de, (stack)                     ; to write IY to a fixed memory address and read
+    ld      (stack), ix                     ; z80 has no `ld de, ix` instruction so we have
+    ld      de, (stack)                     ; to write IX to a fixed memory address and read
     ld      hl, -0x14
     add     hl, de
     ld      bc, 0x14
     ldir                                    ; Copy section again
 
-    ld      e, (iy+0x14)
-    ld      d, (iy+0x15)                    ; DE = address of register setup pointer
+    ld      e, (ix+0x14)
+    ld      d, (ix+0x15)                    ; DE = address of register setup pointer
     inc     de
     inc     de                              ; DE = address of register effects pointer
     inc     de
@@ -184,6 +184,8 @@ channel_assign:                           ; This label is translated to an
     push    ix
 
 # TODO compare before and after
+
+
 
     ld      (stack), sp
     ld      hl, (stack)

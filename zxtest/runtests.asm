@@ -220,9 +220,14 @@ channel_assign:                           ; This label is translated to an
       push    bc
       ld      c, a                            ; C = expected value
       ld      a, (ix)                         ; A = actual value
-      sub     c
+      cp      c
       jr      z, 9f                           ; if actual == expected, test passed; continue loop
+      push    de
+      push    hl
+      ld      hl, log_register
       call    test_fail
+      pop     hl
+      pop     de
     9:
       pop     bc
       srl     c                               ; shift mask 1 bit to the right
@@ -240,8 +245,6 @@ channel_assign:                           ; This label is translated to an
     pop     hl
 
     dec     b
-    ld      a, b
-    cp      0
     jp      nz, 1b
 
   ld      de, end_marker
@@ -260,11 +263,93 @@ channel_assign:                           ; This label is translated to an
   ei
   ret
 
-# TODO log test failure message - currently just log a '.' to show that some test condition failed
+# B = 0x14-(register index) (0x01-0x14)
+log_register:
+  ld      de, msg_fail_0
+  call    print_msg_de
+  ld      e, b
+  ld      a, 0
+  ld      bc, 0
+  ld      hl, register_names
+1:
+  cpir
+  dec     e
+  jr      nz, 1b
+  ex      de, hl
+  call    print_msg_de
+  jp      test_fail_continue
 
+# On entry:
+#   (IX+0x14): pre-test value
+#   A = (IX): post-test value
+#   C: expected value
+#   B: register/sysvar/RAM index (1-20)
+#   HL: function pointer for logging entity that failed test
 test_fail:
-  ld      a, '.'
-  rst     0x10
+  push    hl
+  ld      de, msg_fail
+  call    print_msg_de                    ; Log "FAIL: "
+  ld      (stack), sp
+  ld      hl, (stack)
+  ld      d, 0
+  ld      e, 0x32
+  add     hl, de
+  ld      e, (hl)
+  inc     hl
+  ld      d, (hl)
+  dec     de
+  dec     de
+  ex      de, hl
+  ld      e, (hl)
+  inc     hl
+  ld      d, (hl)
+  call    print_msg_de                    ; Log "<test case name>"
+  pop     hl
+  push    bc
+  jp      (hl)                            ; Log ": <entity>"
+test_fail_continue:
+  pop     hl
+  ld      a, (ix+0x14)
+  cp      (ix)
+  jr      z, 2f                           ; pre-test val == post-test val => value unchanged but should have
+# value changed
+  ld      de, msg_fail_1
+  call    print_msg_de                    ; Log " changed from "
+  ld      c, (ix+0x14)
+  call    print_c_as_hex                  ; Log "<pre-test register value>"
+  ld      de, msg_fail_3
+  call    print_msg_de                    ; Log " to "
+  ld      c, (ix)
+  call    print_c_as_hex                  ; Log "<post-test register value>"
+  ld      a, (ix+0x14)
+  cp      l
+  jr      z, 1f                           ; pre-test val == expected val => value shouldn't have changed but did
+# value meant to change, but to a different value
+  ld      de, msg_fail_4
+  call    print_msg_de                    ; Log ", but should have changed to "
+  ld      c, l
+  call    print_c_as_hex                  ; "<expected register value>"
+  ld      de, msg_fail_6
+  call    print_msg_de                    ; Log ".\r"
+  jr      3f
+1:
+# value not meant to change, but did
+  ld      de, msg_fail_5
+  call    print_msg_de                    ; Log ", but should not have changed.\r"
+  jr      3f
+2:
+# value unchanged, but was meant to
+  ld      de, msg_fail_2
+  call    print_msg_de                    ; Log " unchanged from "
+  ld      c, (ix)
+  call    print_c_as_hex                  ; Log "<pre-test register value>"
+  ld      de, msg_fail_4
+  call    print_msg_de                    ; Log ", but should have changed to "
+  ld      c, l
+  call    print_c_as_hex                  ; Log "<expected register value>"
+  ld      de, msg_fail_6
+  call    print_msg_de                    ; Log ".\r"
+3:
   ret
 
 
@@ -346,16 +431,39 @@ msg_running_test_part_1: .asciz "Running test "
 msg_running_test_part_2: .asciz "...\r"
 
 msg_fail: .asciz "FAIL: "
-msg_fail_0: .asciz ": Register x"
-msg_fail_1: .asciz " changed from "
-msg_fail_2: .asciz " unchanged from "
-msg_fail_3: .asciz " to "
-msg_fail_4: .asciz ", but should have changed to "
+msg_fail_0: .asciz ": Register "
+msg_fail_1: .asciz " changed from 0x"
+msg_fail_2: .asciz " unchanged from 0x"
+msg_fail_3: .asciz " to 0x"
+msg_fail_4: .asciz ", but should have changed to 0x"
 msg_fail_5: .ascii ", but should not have changed"
                                           ; Intentionally .ascii not .asciz, in order to join with msg_fail_6.
 msg_fail_6: .asciz ".\r"
 msg_fail_7: .asciz ": System Variable "
 msg_fail_8: .asciz ": RAM entry "
+
+register_names:
+.byte 0
+.asciz "H"
+.asciz "L"
+.asciz "D"
+.asciz "E"
+.asciz "B"
+.asciz "C"
+.asciz "A"
+.asciz "F"
+.asciz "H'"
+.asciz "L'"
+.asciz "D'"
+.asciz "E'"
+.asciz "B'"
+.asciz "C'"
+.asciz "A'"
+.asciz "F'"
+.asciz "IY (msb)"
+.asciz "IY (lsb)"
+.asciz "IX (msb)"
+.asciz "IX (lsb)"
 
 
 .include "tests.asm"

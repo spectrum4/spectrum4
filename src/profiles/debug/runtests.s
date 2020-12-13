@@ -436,7 +436,7 @@ test_fail:
   bl      uart_puts                       // Log "FAIL: "
   ldr     x0, [x11]                       // x0 = address of test name
   bl      uart_puts                       // Log "<test case name>"
-  blr     x16
+  blr     x16                             // Log ": <entity>"
   cmp     x12, x13
   b.eq    2f                              // x12 == x13 => value unchanged but should have
 // value changed

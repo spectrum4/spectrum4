@@ -23,8 +23,8 @@ _start:
 
   # System setup
 
-  call    0x0daf                          ; cls
-channel_assign:                           ; this label is translated to an
+  call    0x0daf                          ; Clear screen (CLS).
+channel_assign:                           ; This label is translated to an
                                           ; address in all.sh, the value is
                                           ; incremented and passed to the go
                                           ; program that creates the BASIC
@@ -33,7 +33,10 @@ channel_assign:                           ; this label is translated to an
                                           ; allow an interactive user to
                                           ; modify the output channel to e.g.
                                           ; channel 2 (upper screen).
-  ld      a, 3
+  ld      a, 0                            ; The value loaded into A here is
+                                          ; irrelevant since it is overwritten
+                                          ; by the BASIC loader program (see
+                                          ; previous comment).
   call    0x1601                          ; open channel 3 (printer)
   ld      hl, all_tests
   xor     a                               ; A=0
@@ -196,7 +199,7 @@ channel_assign:                           ; this label is translated to an
     jp      nz, 1b
 
   ld      de, end_marker
-  call    print_msg_de                    ; print 'spectrum4_tests_end_marker'
+  call    print_msg_de                    ; print 'All tests completed.'
   call    print_newline
 
 3:
@@ -225,7 +228,7 @@ print_msg_de:
 # Final text to be written when unit tests have completed. When running in an
 # emulator, signals that emulator can be terminated.
 end_marker:
-  .asciz "spectrum4_tests_end_marker"
+  .asciz "All tests completed."
 
 
 # Divides E by 10 and returns in H.

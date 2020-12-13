@@ -14,8 +14,8 @@ import (
 func main() {
 	log.SetFlags(0)
 	log.SetPrefix("tzx-code-loader: ")
-	if len(os.Args) != 8 {
-		log.Fatalf("Usage: %v INPUT_CODE_FILE OUTPUT_TZX_FILE LOAD_ADDRESS CHANNEL_ADDRESS BASIC_NAME CODE_NAME GAPS_IN_MILLISECONDS", os.Args[0])
+	if len(os.Args) != 9 {
+		log.Fatalf("Usage: %v INPUT_CODE_FILE OUTPUT_TZX_FILE LOAD_ADDRESS CHANNEL_ADDRESS DEFAULT_CHANNEL BASIC_NAME CODE_NAME GAPS_IN_MILLISECONDS", os.Args[0])
 	}
 	inputFile := os.Args[1]
 	outputFile := os.Args[2]
@@ -27,16 +27,21 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error converting channel address %q to number: %v", os.Args[4], err)
 	}
-	basicName := os.Args[5]
-	codeName := os.Args[6]
-	gapsInMilliseconds, err := strconv.Atoi(os.Args[7])
+	defaultCh, err := strconv.Atoi(os.Args[5])
 	if err != nil {
-		log.Fatalf("Error converting gaps in milliseconds %q to number: %v", os.Args[7], err)
+		log.Fatalf("Error converting default channel %q to number: %v", os.Args[5], err)
+	}
+	basicName := os.Args[6]
+	codeName := os.Args[7]
+	gapsInMilliseconds, err := strconv.Atoi(os.Args[8])
+	if err != nil {
+		log.Fatalf("Error converting gaps in milliseconds %q to number: %v", os.Args[8], err)
 	}
 	gapsMillis := uint16(gapsInMilliseconds)
 	loadAddress := uint16(address)
 	channelAddress := uint16(chAddress)
-	loader := BASICLoader(loadAddress, channelAddress, basicName)
+	defaultChannel := uint16(defaultCh)
+	loader := BASICLoader(loadAddress, channelAddress, defaultChannel, basicName)
 	inputData, err := ioutil.ReadFile(inputFile)
 	if err != nil {
 		log.Fatalf("Error opening code file for reading: %v", err)
@@ -49,48 +54,18 @@ func main() {
 	}
 }
 
-func BASICLoader(loadAddress uint16, channelAddress uint16, name string) *zxtape.File {
+func BASICLoader(loadAddress uint16, channelAddress uint16, defaultChannel uint16, name string) *zxtape.File {
 	p := &zxbasic.Program{
 		Lines: []zxbasic.Line{
 			{
 				Number: 10,
-				Tokens: []zxbasic.Token{
-					zxbasic.REM,
-					zxbasic.String("The next POKE controls where test output is written to. Set to 2 for upper screen or 3 for printer. Type RUN to rerun tests."),
-				},
-			},
-			{
-				Number: 20,
-				Tokens: []zxbasic.Token{
-					zxbasic.POKE,
-					zxbasic.Number(channelAddress),
-					zxbasic.String(","),
-					zxbasic.Number(2),
-				},
-			},
-			{
-				Number: 30,
-				Tokens: []zxbasic.Token{
-					zxbasic.RANDOMIZE,
-					zxbasic.USR,
-					zxbasic.Number(loadAddress),
-				},
-			},
-			{
-				Number: 40,
-				Tokens: []zxbasic.Token{
-					zxbasic.STOP,
-				},
-			},
-			{
-				Number: 50,
 				Tokens: []zxbasic.Token{
 					zxbasic.CLEAR,
 					zxbasic.Number(loadAddress - 1),
 				},
 			},
 			{
-				Number: 60,
+				Number: 20,
 				Tokens: []zxbasic.Token{
 					zxbasic.POKE,
 					zxbasic.Number(23610),
@@ -99,7 +74,7 @@ func BASICLoader(loadAddress uint16, channelAddress uint16, name string) *zxtape
 				},
 			},
 			{
-				Number: 70,
+				Number: 30,
 				Tokens: []zxbasic.Token{
 					zxbasic.LOAD,
 					zxbasic.String(`""`),
@@ -107,13 +82,30 @@ func BASICLoader(loadAddress uint16, channelAddress uint16, name string) *zxtape
 				},
 			},
 			{
-				Number: 80,
+				Number: 40,
 				Tokens: []zxbasic.Token{
-					zxbasic.GO_TO,
-					zxbasic.Number(30),
+					zxbasic.REM,
+					zxbasic.String("The next POKE controls where test output is written to. Set to 2 for upper screen or 3 for printer. Type GOTO 50 to rerun tests."),
+				},
+			},
+			{
+				Number: 50,
+				Tokens: []zxbasic.Token{
+					zxbasic.POKE,
+					zxbasic.Number(channelAddress),
+					zxbasic.String(","),
+					zxbasic.Number(defaultChannel),
+				},
+			},
+			{
+				Number: 60,
+				Tokens: []zxbasic.Token{
+					zxbasic.RANDOMIZE,
+					zxbasic.USR,
+					zxbasic.Number(loadAddress),
 				},
 			},
 		},
 	}
-	return zxtape.Program(p, name, 50)
+	return zxtape.Program(p, name, 10)
 }

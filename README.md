@@ -120,9 +120,19 @@ programs, machine code routines, and RAM disk storage.
 
 ## Building
 
-You can either build natively on your host, or build under docker (see below).
+You can either build under docker (simplest) or natively on your host, if you
+are prepared to install all of the required toolchains.
+
+### Building under Docker (linux/amd64) (recommended)
+
+* Make sure `docker` is installed, and is in your `PATH`
+* Run `./docker.sh` from the root folder of the repository to build and test
 
 ### Building natively on your host
+
+This alternative version is suitable for those who prefer to use a native
+toolchain, or cannot run docker/amd64 containers for some reason (e.g. if
+building/testing directly on a Raspberry Pi).
 
 You will require an aarch64 toolchain in your PATH, including the following
 tools:
@@ -143,8 +153,8 @@ explicitly set `AARCH64_TOOLCHAIN_PREFIX` to the empty string:
 $ export AARCH64_TOOLCHAIN_PREFIX=''
 ```
 
-You will also need a z80 toolchain in your PATH, and `fuse`, if you wish to run
-the z80 unit tests against an emulated Spectrum 128K:
+You will also need a z80 toolchain in your PATH, and `fuse`, for running the
+Spectrum 128K unit tests against an emulated Spectrum 128K:
 
   * `fuse`
   * `z80-unknown-elf-as`
@@ -156,6 +166,10 @@ the z80 unit tests against an emulated Spectrum 128K:
 Just as above for the aarch64 toolchain, you can also use a different prefix
 than `z80-unknown-elf-` for the z80 toolchain by exporting the
 `Z80_TOOLCHAIN_PREFIX` environment variable.
+
+Note, GNU gas assembly syntax is assumed, so some z80 assemblers may use
+incompatible syntax. GNU gas assembly syntax was chosen for this project to
+keep the z80 and aarch64 assembly as closely aligned as possible.
 
 You will also require:
 
@@ -180,15 +194,23 @@ You will also require:
 
 To build, run `./all.sh` from the root folder to build everything.
 
-### Building under Docker (linux/amd64)
-
-Make sure `docker` is in your `PATH` and run `./docker.sh` from the root folder
-to build everything.
-
 ## Running
 
-After building using one of the methods above, the contents of the `/dist`
-directory can be copied to an SD card to place in your Raspberry Pi 3B, or for
-example they can be served over TFTP to a suitably configured Raspberry Pi that
-has been configured to network boot. The github.com/spectrum4/notes project has
-some information about that type of setup, if you are interested.
+After building using one of the methods above, the following distribution
+files/directories will be updated:
+
+  * file `/dist/z80/runtests.tzx` contains a Spectrum 128K casette tape image
+    for running the Spectrum 128K unit tests (see repository `/tests`
+    directory) under a Spectrum 128K emulator (such as FUSE)
+  * directory `/dist/aarch64/debug` contains a debug version of Spectrum +4,
+    which logs debug messages to Mini UART, runs unit tests and performs a
+    short demo on start up
+  * directory `/dist/aarch64/release` contains a release version of Spectrum
+    +4, without debug logging, unit tests, nor a start up demo
+
+In order to run the debug and/or release builds of Spectrum +4 on an actual
+Raspbery Pi 3B, either copy the contents of the given distribution directory to
+a formatted SD card, or serve the directory contents over TFTP to a suitably
+configured Raspberry Pi that has been configured to network boot. The
+[github.com/spectrum4/notes](https://github.com/spectrum4/notes#5-rpi-3b-bootloading)
+project has some information about that type of setup, if you are interested.

@@ -297,7 +297,7 @@ channel_address=$((0x$("${Z80_TOOLCHAIN_PREFIX}readelf" -W -a build/z80/runtests
 #   * http://k1.spdns.de/Develop/Projects/zasm/Info/TZX%20format.html
 #   * https://faqwiki.zxnet.co.uk/wiki/Spectrum_tape_interface
 #   * https://github.com/shred/tzxtools/blob/b4ad524c82f60100b7e06d74194eeb068adb859e/tzxlib/convert.py
-go run test/tzx-code-loader/main.go build/z80/runtests.img dist/z80/runtests.tzx 32768 "${channel_address}" runtests.b tests 1000
+go run test/tzx-code-loader/main.go build/z80/runtests.img dist/z80/runtests.tzx 32768 "${channel_address}" 2 runtests.b tests 1000
 
 # Do everything again, but this time with real random data (see comments above).
 {
@@ -308,7 +308,7 @@ mv tmp.randomdata.asm zxtest/randomdata.asm
 "${Z80_TOOLCHAIN_PREFIX}as" -I zxtest -o "build/z80/tmp.runtests.o" "zxtest/runtests.asm"
 "${Z80_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x8000 -o build/z80/tmp.runtests.elf  build/z80/tmp.runtests.o
 "${Z80_TOOLCHAIN_PREFIX}objcopy" --set-start=0x8000 build/z80/tmp.runtests.elf -O binary build/z80/tmp.runtests.img
-go run test/tzx-code-loader/main.go build/z80/tmp.runtests.img dist/z80/tmp.runtests.tzx 32768 "${channel_address}" runtests.b tmp.tests 1000
+go run test/tzx-code-loader/main.go build/z80/tmp.runtests.img dist/z80/tmp.runtests.tzx 32768 "${channel_address}" 3 runtests.b tmp.tests 1000
 
 echo
 echo "Build successful - see dist directory for results"
@@ -325,7 +325,7 @@ disown
 max_attempts=3
 attempts=0
 
-until [ "$(cat printout.txt | sed -n '/spectrum4_tests_end_marker/p' | wc -l)" -gt 0 ] || [ "${attempts}" -eq "${max_attempts}" ]; do
+until [ "$(cat printout.txt | sed -n '/All tests completed./p' | wc -l)" -gt 0 ] || [ "${attempts}" -eq "${max_attempts}" ]; do
   attempts=$((attempts+1))
   sleep 1
 done
@@ -338,6 +338,3 @@ if [ "${attempts}" -eq "${max_attempts}" ]; then
   echo 'Timed out!' >&2
   exit 64
 fi
-
-echo
-echo "Test run completed."

@@ -42,7 +42,7 @@ channel_assign:                           ; This label is translated to an
   xor     a                               ; A=0
   ld      b, (hl)
   cp      b                               ; [all_tests] == 0?
-  jp      z, 3f                           ; no tests defined, so return
+  jp      z, 10f                          ; no tests defined, so return
   inc     hl
 
   1:                                        ; Loop through all tests
@@ -107,13 +107,13 @@ channel_assign:                           ; This label is translated to an
       sub     b
       and     0x07                            ; Mask contains 1 bit per increment of B, so
                                               ; one mask byte needs to be read for every 8
-                                              ; increments of B, i.e. when (B & 0x07) == 0.
+                                              ; decrements of B, i.e. when ((0x14-B) & 0x07) == 0.
       jr      nz, 3f
       ld      c, (hl)                         ; read next mask byte into C
       inc     hl                              ; prepare HL for next mask read
     3:
       bit     0, c                            ; is register byte defined?
-      jr      z, 4f                           ; if not defined, skip forward to x3
+      jr      z, 4f                           ; if not defined, skip forward to 4:
       # register defined, replace random value
       ld      a, (de)                         ; read value into A
       inc     de
@@ -165,9 +165,6 @@ channel_assign:                           ; This label is translated to an
 
   test_exec_return:
 
-    ex      af, af'
-    exx
-
     push    hl
     push    de
     push    bc
@@ -183,9 +180,56 @@ channel_assign:                           ; This label is translated to an
     push    iy
     push    ix
 
-# TODO compare before and after
+# Compare routine exit registers against expected values
 
+    ld      (stack), sp
+    ld      ix, (stack)
+    ld      l, (ix+0x28)
+    ld      h, (ix+0x29)                    ; HL = address of register setup pointer
+    inc     hl
+    inc     hl                              ; HL = address of register effects pointer
+    ld      e, (hl)
+    inc     hl
+    ld      d, (hl)                         ; DE = register effects masks address
+    ld      l, e
+    ld      h, d                            ; HL = register effects masks address
+    inc     de
+    inc     de
+    inc     de                              ; DE = register effects values address
+    ld      b, 0x14                         ; B = loop counter for registers
 
+    5:
+      ld      a, 0x14
+      sub     b
+      and     0x07                            ; Mask contains 1 bit per increment of B, so
+                                              ; one mask byte needs to be read for every 8
+                                              ; decrements of B, i.e. when ((0x14-B) & 0x07) == 0.
+      jr      nz, 6f
+      ld      c, (hl)                         ; read next mask byte into C
+      inc     hl                              ; prepare HL for next mask read
+    6:
+      bit     0, c                            ; is register byte defined?
+      jr      z, 7f                           ; if not defined, skip forward to 7:
+      # register defined, fetch expected value
+      ld      a, (de)                         ; A = expected value = defined value
+      inc     de
+      jr      8f
+    7:
+      ld      a, (ix+0x14)                    ; A = expected value = pre-test value
+    8:
+      push    bc
+      ld      c, a                            ; C = expected value
+      ld      a, (ix)                         ; A = actual value
+      sub     c
+      jr      z, 9f                           ; if actual == expected, test passed; continue loop
+      call    test_fail
+    9:
+      pop     bc
+      srl     c                               ; shift mask 1 bit to the right
+      inc     ix
+      djnz    5b
+
+    # free stack and loop round for next test
 
     ld      (stack), sp
     ld      hl, (stack)
@@ -204,9 +248,9 @@ channel_assign:                           ; This label is translated to an
   call    print_msg_de                    ; print 'All tests completed.'
   call    print_newline
 
-3:
+10:
   ld      bc, 0                           ; BASIC return value; 0 => success
-4:
+11:
   # Prepare state for safely returning to BASIC. IY and HL' both need to be
   # restored and interrupts enabled. BC should already be set to an appropriate
   # return value by now, and all other register values are insignificant.
@@ -214,6 +258,13 @@ channel_assign:                           ; This label is translated to an
   pop     iy
   exx
   ei
+  ret
+
+# TODO log test failure message - currently just log a '.' to show that some test condition failed
+
+test_fail:
+  ld      a, '.'
+  rst     0x10
   ret
 
 

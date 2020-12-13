@@ -43,14 +43,10 @@ test_cl_addr_test_case_1_setup_sysvars:
 
 # Registers setup
 test_cl_addr_test_case_1_setup_registers:
-  .byte 0b11000000                        ; Set BC'
-  .byte 0b10100000                        ; Set A
-  .byte 0b00001111                        ; Set DE
-  .hword 0x1234                           ; BC' = 0x1234
-  .byte  0xbc                             ; A = 0xbc
-  .byte  0x0b                             ; B = 0x0b
-  .hword 0x2345                           ; DE = 0x2345
-  .hword 0x48A3                           ; HL = 0x48A3
+  .byte 0b00000000                        ; bc' af' iy  ix
+  .byte 0b10000000                        ; bc  af  hl' de'
+  .byte 0b00000000                        ; ..  ..  hl  de
+  .byte 0x0b                              ; B = 0x0b
 
 # Test case effects
 
@@ -65,8 +61,15 @@ test_cl_addr_test_case_1_effects_sysvars:
 # Registers effects
 test_cl_addr_test_case_1_effects_registers:
   .byte 0b00000000                        ; bc' af' iy  ix
-  .byte 0b00000000                        ; bc  af  hl' de'
-  .byte 0b00000000                        ; ..  ..  hl  de
+  .byte 0b00110000                        ; bc  af  hl' de'
+  .byte 0b00001110                        ; ..  ..  hl  de
+  .byte 0x0c                              ; S Z X H X P/V N C
+                                          ; 0 0 0 0 1  1  0 0
+                                          ; F = 0x0c
+  .byte 0x48                              ; A = 0x48
+  .byte 0x0d                              ; D = 0x0d
+  .hword 0x48a0                           ; HL = 0x48a0
+
 
 # Test case execution
 

@@ -147,7 +147,7 @@ new:                             // L019D
   str     x5, [x28, STKEND-sysvars]
   mov     w12, 0x38
   strb    w12, [x28, ATTR_P-sysvars]
-  strb    w12, [x28, MASK_P-sysvars]
+  strb    w12, [x28, ATTR_T-sysvars]
   strb    w12, [x28, BORDCR-sysvars]
   movl    w0, BORDER_COLOUR               // w0 = default border colour
   bl      paint_border

@@ -290,19 +290,27 @@ test_fail:
   ld      de, msg_fail
   call    print_msg_de                    ; Log "FAIL: "
   ld      (stack), sp
-  ld      hl, (stack)
+  ld      hl, (stack)                     ; HL = SP
   ld      d, 0
   ld      e, 0x32
-  add     hl, de
+  add     hl, de                          ; HL = SP + 0x32
+                                          ; SP+0x00 -> function pointer for logging entity that failed
+                                          ; SP+0x02 -> call return address from test_fail
+                                          ; SP+0x04 -> register effects mask address
+                                          ; SP+0x06 -> register effects values address
+                                          ; SP+0x08 -> BC (C=bit mask / B=register index)
+                                          ; SP+0x0a -> post-test registers
+                                          ; SP+0x1e -> pre-test registers
+                                          ; SP+0x32 -> address of register setup section pointer
   ld      e, (hl)
   inc     hl
-  ld      d, (hl)
+  ld      d, (hl)                         ; DE = address of register setup section pointer
   dec     de
-  dec     de
+  dec     de                              ; DE = address of register test name pointer
   ex      de, hl
   ld      e, (hl)
   inc     hl
-  ld      d, (hl)
+  ld      d, (hl)                         ; DE = address of register test name
   call    print_msg_de                    ; Log "<test case name>"
   pop     hl
   push    bc

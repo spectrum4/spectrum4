@@ -1,4 +1,11 @@
 ---
+spectrum128k:
+  address: 0x0e9b
+  routine: CL-ADDR
+
+spectrum4:
+  routine: cl_addr
+
 tests:
   - name: test case 1
     spectrum128k:
@@ -14,9 +21,10 @@ tests:
             value: 0x0c
           D:
             value: 0x0d
-          HL:
-            value: 0x48a0
-      address: 0x0e9b
+          H:
+            value: 0x48
+          L:
+            value: 0xa0
     spectrum4:
       setup:
         registers:

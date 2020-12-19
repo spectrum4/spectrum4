@@ -1,4 +1,11 @@
 ---
+spectrum128k:
+  address: 0x0a80
+  routine: PO-CHANGE
+
+spectrum4:
+  routine: po_change
+
 tests:
   - name: test case 1
     spectrum4:

@@ -1,36 +1,43 @@
 ---
+spectrum128k:
+  address: 0x0bdb
+  routine: PO-ATTR
+
+spectrum4:
+  routine: po_attr
+
 tests:
   - name: test case 1
-    spectrum128k:
-      setup:
-        stack:
-        sysvars:
-          ATTR_T:
-            # See http://www.breakintoprogstack.co.uk/computers/zx-spectrum/screen-memory-layout
-            # temp colours: FLASH 1; BRIGHT 0; PAPER 2; INK 5
-            value: 0b10010101
-          MASK_T:
-            # Current screen attributes are 0b01010101 => FLASH 0; BRIGHT 1; PAPER 2; INK 5
-            # Read attribute bits 1,2,4,6 from screen (0b01010101), and 0,3,5,7 from ATTR_T (0b10010101)
-            # => 0b11010101 => INK 5; PAPER 2; BRIGHT 1; FLASH 1
-            value: 0b01010110
-          P_FLAG:
-            # OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7 => FLASH 1: BRIGHT 1: PAPER 2: INK 7
-            value: 0b10010111
-        registers:
-          HL:
-            # section 1, line 5, column 4, pixel row 6
-            # x = (column 4)*8 pixels = 32 pixels = 0x00100000
-            # y = (section 1)*8*8 + (line 5)*8 + (pixel row 6) pixels = 110 pixels = 0x01101110
-            # display address = 0b010<y7><y6><y2><y1><y0><y5><y4><y3><x7><x6><x5><x4><x3>
-            #                 = 0b0100111010100100 = 0x4ea4
-            value: 0x4000 + 1*0x0800 + 5*0x20 + 4*1 + 6*0x100
-      effects:
-        registers:
-          A:
-            value: 0xd7
-          HL:
-            value: 0x59a4
+#   spectrum128k:
+#     setup:
+#       stack:
+#       sysvars:
+#         ATTR_T:
+#           # See http://www.breakintoprogstack.co.uk/computers/zx-spectrum/screen-memory-layout
+#           # temp colours: FLASH 1; BRIGHT 0; PAPER 2; INK 5
+#           value: 0b10010101
+#         MASK_T:
+#           # Current screen attributes are 0b01010101 => FLASH 0; BRIGHT 1; PAPER 2; INK 5
+#           # Read attribute bits 1,2,4,6 from screen (0b01010101), and 0,3,5,7 from ATTR_T (0b10010101)
+#           # => 0b11010101 => INK 5; PAPER 2; BRIGHT 1; FLASH 1
+#           value: 0b01010110
+#         P_FLAG:
+#           # OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7 => FLASH 1: BRIGHT 1: PAPER 2: INK 7
+#           value: 0b10010111
+#       registers:
+#         HL:
+#           # section 1, line 5, column 4, pixel row 6
+#           # x = (column 4)*8 pixels = 32 pixels = 0x00100000
+#           # y = (section 1)*8*8 + (line 5)*8 + (pixel row 6) pixels = 110 pixels = 0x01101110
+#           # display address = 0b010<y7><y6><y2><y1><y0><y5><y4><y3><x7><x6><x5><x4><x3>
+#           #                 = 0b0100111010100100 = 0x4ea4
+#           value: 0x4000 + 1*0x0800 + 5*0x20 + 4*1 + 6*0x100
+#     effects:
+#       registers:
+#         A:
+#           value: 0xd7
+#         HL:
+#           value: 0x59a4
 #       ram:
 #         - address: 0x59a4
 #           value: 0xd7

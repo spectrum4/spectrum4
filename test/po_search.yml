@@ -1,4 +1,11 @@
 ---
+spectrum128k:
+  address: 0x0c41
+  routine: PO-SEARCH
+
+spectrum4:
+  routine: po_search
+
 tests:
   - name: with custom table
     spectrum4:

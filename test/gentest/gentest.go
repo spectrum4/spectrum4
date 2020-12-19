@@ -24,9 +24,16 @@ type (
 	Generator struct {
 		inputDir        string
 		sortedTestFiles []string
-		unitTests       []UnitTest
+		unitTests       []UnitTests
 	}
 	UnitTests struct {
+		Spectrum128K struct {
+			Routine string
+			Address uint16
+		} `json:"spectrum128k"`
+		Spectrum4 struct {
+			Routine string
+		} `json:"spectrum4"`
 		Tests []UnitTest `json:"tests"`
 	}
 	UnitTest struct {
@@ -38,16 +45,11 @@ type (
 		Setup   SystemContext `json:"setup"`
 		Effects SystemContext `json:"effects"`
 		ASM     *string       `json:"asm"`
-		// internal fields
-		Routine string `json:"-"` // routine that the unit test tests
 	}
 	Spectrum128K struct {
 		Setup   SystemContext `json:"setup"`
 		Effects SystemContext `json:"effects"`
 		ASM     *string       `json:"asm"`
-		Address uint16        `json:"address"`
-		// internal fields
-		Routine string `json:"-"` // routine that the unit test tests
 	}
 	SystemContext struct {
 		Stack     NamedValue `json:"stack"`
@@ -114,7 +116,7 @@ func New(inputDir string) *Generator {
 	return &Generator{
 		inputDir:        inputDir,
 		sortedTestFiles: []string{},
-		unitTests:       []UnitTest{},
+		unitTests:       []UnitTests{},
 	}
 }
 
@@ -137,6 +139,7 @@ func (generator *Generator) FindFiles() error {
 }
 
 func (generator *Generator) LoadFiles() error {
+	generator.unitTests = []UnitTests{}
 	for _, yamlPath := range generator.sortedTestFiles {
 		absYAMLPath, err := filepath.Abs(yamlPath)
 		if err != nil {
@@ -162,33 +165,30 @@ func (generator *Generator) LoadFiles() error {
 			}
 			return fmt.Errorf("Unit test file %q has invalid properties: %s", absYAMLPath, err)
 		}
-		for i := range uts.Tests {
-			uts.Tests[i].Spectrum4.Routine = filepath.Base(yamlPath[:len(yamlPath)-4])
-		}
-		generator.unitTests = append(generator.unitTests, (uts.Tests)...)
+		generator.unitTests = append(generator.unitTests, *uts)
 	}
 	return nil
 }
 
 func (generator *Generator) GenerateZ80(sysVars []string, outputFile string) error {
-	return nil
-}
-
-func (generator *Generator) GenerateAarch64(sysVars []string, outputFile string) error {
 	file, err := os.Create(outputFile)
 	if err != nil {
 		return err
 	}
 	fmt.Printf("Generating %v...\n", outputFile)
-	generator.Header(file)
-	for _, unitTest := range generator.unitTests {
-		testCode, err := unitTest.Test(sysVars)
-		if err != nil {
-			return err
-		}
-		_, err = file.Write(testCode)
-		if err != nil {
-			return err
+	generator.Z80Header(file)
+	for _, unitTests := range generator.unitTests {
+		for i, unitTest := range unitTests.Tests {
+			if unitTest.Spectrum128K != nil {
+				testCode, err := unitTests.TestZ80(i)
+				if err != nil {
+					return err
+				}
+				_, err = file.Write(testCode)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
 	err = file.Close()
@@ -198,7 +198,35 @@ func (generator *Generator) GenerateAarch64(sysVars []string, outputFile string)
 	return nil
 }
 
-func (generator *Generator) Header(w io.Writer) {
+func (generator *Generator) GenerateAarch64(sysVars []string, outputFile string) error {
+	file, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Generating %v...\n", outputFile)
+	generator.Aarch64Header(file)
+	for _, unitTests := range generator.unitTests {
+		for i, unitTest := range unitTests.Tests {
+			if unitTest.Spectrum4 != nil {
+				testCode, err := unitTests.TestAarch64(i, sysVars)
+				if err != nil {
+					return err
+				}
+				_, err = file.Write(testCode)
+				if err != nil {
+					return err
+				}
+			}
+		}
+	}
+	err = file.Close()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (generator *Generator) CommonHeader(w io.Writer) {
 	fmt.Fprintln(w, "# This file is part of the Spectrum +4 Project.")
 	fmt.Fprintln(w, "# Licencing information can be found in the LICENCE file")
 	fmt.Fprintln(w, "# (C) 2019 Spectrum +4 Authors. All rights reserved.")
@@ -210,29 +238,152 @@ func (generator *Generator) Header(w io.Writer) {
 	fmt.Fprintln(w, ".text")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "")
-	fmt.Fprintln(w, ".align 3")
+}
+
+func (generator *Generator) Z80Header(w io.Writer) {
+	generator.CommonHeader(w)
 	fmt.Fprintln(w, "all_tests:")
-	fmt.Fprintf(w, "  .quad 0x%016x                // Number of tests.\n", len(generator.unitTests))
-	for _, unitTest := range generator.unitTests {
-		fmt.Fprintf(w, "  .quad %v\n", unitTest.SymbolName())
+	testCount := 0
+	for _, unitTests := range generator.unitTests {
+		for _, unitTest := range unitTests.Tests {
+			if unitTest.Spectrum128K != nil {
+				testCount++
+			}
+		}
+	}
+	fmt.Fprintf(w, "  .byte 0x%02x                              ; Number of tests.\n", testCount)
+	for _, unitTests := range generator.unitTests {
+		for j, unitTest := range unitTests.Tests {
+			if unitTest.Spectrum128K != nil {
+				fmt.Fprintf(w, "  .hword %v\n", unitTests.SymbolNameZ80(j))
+			}
+		}
 	}
 }
 
-func (unitTest *UnitTest) TestName() string {
-	return unitTest.Spectrum4.Routine + " " + unitTest.Name
+func (generator *Generator) Aarch64Header(w io.Writer) {
+	generator.CommonHeader(w)
+	fmt.Fprintln(w, ".align 3")
+	fmt.Fprintln(w, "all_tests:")
+	testCount := 0
+	for _, unitTests := range generator.unitTests {
+		for _, unitTest := range unitTests.Tests {
+			if unitTest.Spectrum4 != nil {
+				testCount++
+			}
+		}
+	}
+	fmt.Fprintf(w, "  .quad 0x%016x                // Number of tests.\n", testCount)
+	for _, unitTests := range generator.unitTests {
+		for j, unitTest := range unitTests.Tests {
+			if unitTest.Spectrum4 != nil {
+				fmt.Fprintf(w, "  .quad %v\n", unitTests.SymbolName(j))
+			}
+		}
+	}
 }
 
-func (unitTest *UnitTest) SymbolName() string {
-	return "test_" + strings.Replace(unitTest.TestName(), " ", "_", -1)
+func (unitTests *UnitTests) TestNameZ80(index int) string {
+	return unitTests.Spectrum128K.Routine + " " + unitTests.Tests[index].Name
 }
 
-func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
-	symbolName := unitTest.SymbolName()
+func (unitTests *UnitTests) TestName(index int) string {
+	return unitTests.Spectrum4.Routine + " " + unitTests.Tests[index].Name
+}
+
+func (tests *UnitTests) SymbolNameZ80(index int) string {
+	return "test_" + strings.Replace(strings.Replace(tests.TestNameZ80(index), " ", "_", -1), "-", "_", -1)
+}
+
+func (tests *UnitTests) SymbolName(index int) string {
+	return "test_" + strings.Replace(tests.TestName(index), " ", "_", -1)
+}
+
+func (tests *UnitTests) TestZ80(index int) ([]byte, error) {
+	unitTest := tests.Tests[index]
+	symbolName := tests.SymbolNameZ80(index)
 	w := new(bytes.Buffer)
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "##########################################################################")
-	fmt.Fprintf(w, "############# Test %v %v\n", unitTest.TestName(), strings.Repeat("#", 54-len(unitTest.TestName())))
+	fmt.Fprintf(w, "############# Test %v %v\n", tests.TestNameZ80(index), strings.Repeat("#", 54-len(tests.TestNameZ80(index))))
+	fmt.Fprintln(w, "##########################################################################")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "# Test case definition")
+	fmt.Fprintf(w, "%v:\n", symbolName)
+	fmt.Fprintf(w, "  .hword %v_name\n", symbolName)
+	fmt.Fprintf(w, "  .hword %v_setup_registers\n", symbolName)
+	fmt.Fprintf(w, "  .hword %v_effects_registers\n", symbolName)
+	fmt.Fprintf(w, "  .hword %v_exec\n", symbolName)
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "# Test case name")
+	fmt.Fprintf(w, "%v_name:\n", symbolName)
+	fmt.Fprintf(w, "  .asciz %q\n", tests.TestNameZ80(index))
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "# Test case setup")
+	fmt.Fprintln(w, "")
+
+	registers := []string{
+		"IX_lsb",
+		"IX_msb",
+		"IY_lsb",
+		"IY_msb",
+		"F'",
+		"A'",
+		"C'",
+		"B'",
+		"E'",
+		"D'",
+		"L'",
+		"H'",
+		"F",
+		"A",
+		"C",
+		"B",
+		"E",
+		"D",
+		"L",
+		"H",
+	}
+
+	err := unitTest.Spectrum128K.Setup.Registers.WriteZ80(w, "Registers setup", symbolName, "setup_registers", "register", registers)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "# Test case effects")
+
+	err = unitTest.Spectrum128K.Effects.Registers.WriteZ80(w, "Registers effects", symbolName, "effects_registers", "register", registers)
+	if err != nil {
+		return nil, err
+	}
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "# Test case execution")
+	fmt.Fprintln(w, "")
+	fmt.Fprintf(w, "%v_exec:\n", symbolName)
+	fmt.Fprintln(w, "  pop     hl")
+	fmt.Fprintf(w, "  call    0x%04x                          ; %v\n", tests.Spectrum128K.Address, tests.Spectrum128K.Routine)
+	fmt.Fprintln(w, "  jp      test_exec_return")
+	if unitTest.Spectrum128K.ASM != nil {
+		fmt.Fprintln(w, "")
+		fmt.Fprintln(w, "# Test case custom ASM")
+		fmt.Fprintln(w, "")
+		fmt.Fprintln(w, re.ReplaceAllString(*unitTest.Spectrum128K.ASM, "${1}"+symbolName+"_${2}:"))
+	}
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "##########################################################################")
+	return w.Bytes(), nil
+}
+
+func (tests *UnitTests) TestAarch64(index int, sysVars []string) ([]byte, error) {
+	unitTest := tests.Tests[index]
+	symbolName := tests.SymbolName(index)
+	w := new(bytes.Buffer)
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "")
+	fmt.Fprintln(w, "##########################################################################")
+	fmt.Fprintf(w, "############# Test %v %v\n", tests.TestName(index), strings.Repeat("#", 54-len(tests.TestName(index))))
 	fmt.Fprintln(w, "##########################################################################")
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, ".align 3")
@@ -249,7 +400,7 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "# Test case name")
 	fmt.Fprintf(w, "%v_name:\n", symbolName)
-	fmt.Fprintf(w, "  .asciz %q\n", unitTest.TestName())
+	fmt.Fprintf(w, "  .asciz %q\n", tests.TestName(index))
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "# Test case setup")
 	fmt.Fprintln(w, "")
@@ -319,7 +470,7 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, "  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.")
 	fmt.Fprintln(w, "  mov     x29, sp                         // Update frame pointer to new stack location.")
 	fmt.Fprintln(w, "  ldp     x0, x1, [x0]                    // Restore x0, x1 values")
-	fmt.Fprintf(w, "  bl      %v\n", unitTest.Spectrum4.Routine)
+	fmt.Fprintf(w, "  bl      %v\n", tests.Spectrum4.Routine)
 	fmt.Fprintln(w, "  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.")
 	fmt.Fprintln(w, "  ret")
 	if unitTest.Spectrum4.ASM != nil {
@@ -331,6 +482,61 @@ func (unitTest *UnitTest) Test(sysVars []string) ([]byte, error) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "##########################################################################")
 	return w.Bytes(), nil
+}
+
+func (nv NamedValue) WriteZ80(w io.Writer, title string, symbolName string, subsection string, indexDescription string, entryNames []string) error {
+
+	fmt.Fprintln(w, "")
+	fmt.Fprintf(w, "# %v\n", title)
+	fmt.Fprintf(w, "%v_%v:\n", symbolName, subsection)
+	maskValueCount := (len(entryNames) + 7) / 8
+	found := 0
+	entries := []string{}
+	for i := 0; i < maskValueCount; i++ {
+		var mask uint8 = 0
+		comments := []string{}
+		for j := 0; j < 8; j++ {
+			if j+i*8 == len(entryNames) {
+				break
+			}
+			entry := entryNames[j+i*8]
+			key := "[" + entry + "]"
+			if indexDescription == "register" {
+				key = entry
+			}
+			if sv, exists := nv[entry]; exists {
+				found++
+				mask |= 1 << j
+				switch {
+				case sv.Value != nil:
+					comments = append(comments, fmt.Sprintf("                                          ; Bit %v = 1 => %v (%v index %v) is absolute value", j, entry, indexDescription, j+i*8))
+					switch t := (*sv.Value).(type) {
+					case json.Number:
+						v, err := t.Int64()
+						if err != nil {
+							return fmt.Errorf("In symbol %v: %v", symbolName, err)
+						}
+						entries = append(entries, fmt.Sprintf("  .byte %-33v ; %v = 0x%02x", t, key, v))
+					default:
+						entries = append(entries, fmt.Sprintf("  .byte %-33v ; %v", t, key))
+					}
+				default:
+					return fmt.Errorf("No Value specified in %v", sv)
+				}
+			}
+		}
+		fmt.Fprintf(w, "  .byte 0b%08b\n", mask)
+		for i := range comments {
+			fmt.Fprintln(w, comments[i])
+		}
+	}
+	if len(nv) > found {
+		return fmt.Errorf("%v unknown entries for section %v_%v", len(nv)-found, symbolName, subsection)
+	}
+	for _, e := range entries {
+		fmt.Fprintln(w, e)
+	}
+	return nil
 }
 
 func (nv NamedValue) Write(w io.Writer, title string, symbolName string, subsection string, indexDescription string, entryNames []string, stackSetupEntries NamedValue) error {

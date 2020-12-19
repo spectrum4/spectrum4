@@ -23,8 +23,6 @@ var (
 type (
 	Generator struct {
 		inputDir        string
-		outputFile      string
-		writer          io.Writer
 		sortedTestFiles []string
 		unitTests       []UnitTest
 	}
@@ -47,6 +45,7 @@ type (
 		Setup   SystemContext `json:"setup"`
 		Effects SystemContext `json:"effects"`
 		ASM     *string       `json:"asm"`
+		Address uint16        `json:"address"`
 		// internal fields
 		Routine string `json:"-"` // routine that the unit test tests
 	}
@@ -111,10 +110,9 @@ func (nv NamedValue) IndexOf(entry string) int {
 	return -1
 }
 
-func New(inputDir string, outputFile string) *Generator {
+func New(inputDir string) *Generator {
 	return &Generator{
 		inputDir:        inputDir,
-		outputFile:      outputFile,
 		sortedTestFiles: []string{},
 		unitTests:       []UnitTest{},
 	}
@@ -172,14 +170,17 @@ func (generator *Generator) LoadFiles() error {
 	return nil
 }
 
-func (generator *Generator) GenerateFile(sysVars []string) error {
-	file, err := os.Create(generator.outputFile)
+func (generator *Generator) GenerateZ80(sysVars []string, outputFile string) error {
+	return nil
+}
+
+func (generator *Generator) GenerateAarch64(sysVars []string, outputFile string) error {
+	file, err := os.Create(outputFile)
 	if err != nil {
 		return err
 	}
-	fmt.Printf("Generating %v...\n", generator.outputFile)
-	generator.writer = file
-	generator.Header()
+	fmt.Printf("Generating %v...\n", outputFile)
+	generator.Header(file)
 	for _, unitTest := range generator.unitTests {
 		testCode, err := unitTest.Test(sysVars)
 		if err != nil {
@@ -197,8 +198,7 @@ func (generator *Generator) GenerateFile(sysVars []string) error {
 	return nil
 }
 
-func (generator *Generator) Header() {
-	w := generator.writer
+func (generator *Generator) Header(w io.Writer) {
 	fmt.Fprintln(w, "# This file is part of the Spectrum +4 Project.")
 	fmt.Fprintln(w, "# Licencing information can be found in the LICENCE file")
 	fmt.Fprintln(w, "# (C) 2019 Spectrum +4 Authors. All rights reserved.")

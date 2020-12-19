@@ -19,11 +19,7 @@ all_tests:
 # Test case definition
 test_cl_addr_test_case_1:
   .hword test_cl_addr_test_case_1_name
-# .hword test_cl_addr_test_case_1_setup_stack
-# .hword test_cl_addr_test_case_1_setup_sysvars
   .hword test_cl_addr_test_case_1_setup_registers
-# .hword test_cl_addr_test_case_1_effects_stack
-# .hword test_cl_addr_test_case_1_effects_sysvars
   .hword test_cl_addr_test_case_1_effects_registers
   .hword test_cl_addr_test_case_1_exec
 
@@ -33,14 +29,6 @@ test_cl_addr_test_case_1_name:
 
 # Test case setup
 
-# Stack setup
-test_cl_addr_test_case_1_setup_stack:
-  .byte 0                                 ; Number of stack entries = 0
-
-# System variables setup
-test_cl_addr_test_case_1_setup_sysvars:
-  .hword 0b00000000
-
 # Registers setup
 test_cl_addr_test_case_1_setup_registers:
   .byte 0b00000000                        ; BC' AF' IY  IX
@@ -49,14 +37,6 @@ test_cl_addr_test_case_1_setup_registers:
   .byte 0x0b                              ; B = 0x0b
 
 # Test case effects
-
-# Stack effects
-test_cl_addr_test_case_1_effects_stack:
-
-# System variable effects
-test_cl_addr_test_case_1_effects_sysvars:
-  .byte 0b00000000
-  .byte 0b00000000
 
 # Registers effects
 test_cl_addr_test_case_1_effects_registers:

@@ -1,6 +1,22 @@
 ---
 tests:
   - name: test case 1
+    spectrum128k:
+      setup:
+        registers:
+          B:
+            value: 0x0b
+      effects:
+        registers:
+          A:
+            value: 0x48
+          F:
+            value: 0x0c
+          D:
+            value: 0x0d
+          HL:
+            value: 0x48a0
+      address: 0x0e9b
     spectrum4:
       setup:
         registers:

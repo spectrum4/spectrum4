@@ -163,7 +163,7 @@ done
 } > src/profiles/debug/sysvars.s
 
 # Generate unit tests as part of debug profile
-go run test/spectrum4-generate-tests/main.go test src/bss.s src/profiles/debug/tests.s
+go run test/spectrum4-generate-tests/main.go test src/bss.s src/profiles/debug/tests.s zxtest/tests.asm
 
 find . \( -name '*.s' -o -name '*.asm' \) | while read sourcefile; do
   cat "${sourcefile}" | sed 's/  *$//' > x

@@ -49,13 +49,3 @@ tests:
             value: 0
           x6:
             value: 0
-      asm: |-
-        .align 3
-        table:
-          .asciz "hello"
-          .asciz "dog"
-          .asciz "cat"
-          .asciz "banana"
-        telephone:
-          .asciz "telephone"
-          .asciz "supper"

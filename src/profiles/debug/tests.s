@@ -471,16 +471,4 @@ test_po_search_with_keywords_exec:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
-# Test case custom ASM
-
-.align 3
-test_po_search_with_keywords_table:
-  .asciz "hello"
-  .asciz "dog"
-  .asciz "cat"
-  .asciz "banana"
-test_po_search_with_keywords_telephone:
-  .asciz "telephone"
-  .asciz "supper"
-
 ##########################################################################

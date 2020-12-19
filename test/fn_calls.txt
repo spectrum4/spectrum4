@@ -2,6 +2,7 @@ _start:
     uart_init
     init_framebuffer
     rand_init
+    fill_memory_with_junk
     run_tests
     restart
 sleep:
@@ -208,6 +209,9 @@ log_register:
     uart_x0
     uart_puts
 all_tests:
+fill_memory_with_junk:
+    uart_send
+    uart_send
 display_sysvars:
     uart_puts
     uart_send

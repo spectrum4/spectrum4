@@ -30,6 +30,7 @@ _start:
 1:
 .if       DEBUG_PROFILE
   bl      rand_init
+  bl      fill_memory_with_junk
   bl      run_tests
 .endif
   b       restart                         // Raspberry Pi 3B initialisation complete.

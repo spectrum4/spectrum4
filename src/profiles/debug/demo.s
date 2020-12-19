@@ -5,6 +5,29 @@
 .text
 .align 2
 
+
+fill_memory_with_junk:
+  mov     x3, x30
+  mov     x0, '*'
+  bl      uart_send
+  mov     x1, 0xf0f0f0f0f0f0f0f0
+  adr     x0, __bss_start
+  and     x0, x0, #~0x0f
+  ldr     w2, arm_size
+# When the following section is commented out, the display_memory routine
+# paints what it should, but with some additional junk. Should investigate
+# what is going on there.
+#
+# 1:
+#   stp     x1, x1, [x0], #16
+#   cmp     x0, x2
+#   b.lo    1b
+  mov     x0, '*'
+  bl      uart_send
+  mov     x30, x3
+  ret
+
+
 display_sysvars:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.

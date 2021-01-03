@@ -192,8 +192,8 @@ mkdir -p dist/aarch64
 #   -M: display kernel map
 #   -Ttext: address of text section
 #   -o: elf file to generate
-"${AARCH64_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -o build/aarch64/kernel8-debug.elf  build/aarch64/debug.o
-"${AARCH64_TOOLCHAIN_PREFIX}ld" -N -Ttext=0x0 -M -o build/aarch64/kernel8-release.elf  build/aarch64/release.o
+"${AARCH64_TOOLCHAIN_PREFIX}ld" --fix-cortex-a53-835769 --fix-cortex-a53-843419 -N -Ttext=0x0 -o build/aarch64/kernel8-debug.elf  build/aarch64/debug.o
+"${AARCH64_TOOLCHAIN_PREFIX}ld" --fix-cortex-a53-835769 --fix-cortex-a53-843419 -N -Ttext=0x0 -M -o build/aarch64/kernel8-release.elf  build/aarch64/release.o
 
 # Copy static files from this repo into subdirectories under aarch64/dist that
 # are needed on SD card.

@@ -542,13 +542,13 @@ snapshot_memory:
   // recurring quad sequence completed
     add     x2, x2, #16
     cmp     x2, x3
-    b.ge    6f
+    b.hs    6f
     stp     x7, x6, [x2, #-16]              // Store "repeated value magic value", number of repeats (excluding original)
     mov     x6, #0                          // Reset repeated entries counter
   4:
     add     x2, x2, #8
     cmp     x2, x3
-    b.ge    6f
+    b.hs    6f
     str     x4, [x2, #-8]                   // Store value
   5:
     mov     x4, x5
@@ -556,7 +556,7 @@ snapshot_memory:
     b.ne    1b                              // Repeat loop if end of region to compress not reached
   add     x2, x2, #24
   cmp     x2, x3
-  b.ge    6f
+  b.hs    6f
   stp     x7, x6, [x2, #-24]              // Store "repeated value magic value", number of repeats (excluding original)
   str     x5, [x2, #-8]                   // Store value
   ret

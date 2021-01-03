@@ -6,24 +6,22 @@
 .align 2
 
 
+# TODO: fill with repeating sequence of random data, with random length between e.g. 64 bytes and 128 bytes
 fill_memory_with_junk:
   mov     x3, x30
-  mov     x0, '*'
-  bl      uart_send
   mov     x1, 0xf0f0f0f0f0f0f0f0
   adr     x0, __bss_start
-  and     x0, x0, #~0x0f
+  1:
+    tst     x0, 0xf
+    b.eq    2f
+    strb    w1, [x0], #1
+    b       1b
+2:
   ldr     w2, arm_size
-# When the following section is uncommented, the display_memory routine
-# paints what it should, but with some additional junk. Should investigate
-# what is going on there.
-#
-# 1:
-#   stp     x1, x1, [x0], #16
-#   cmp     x0, x2
-#   b.lo    1b
-  mov     x0, '*'
-  bl      uart_send
+  3:
+    stp     x1, x1, [x0], #16
+    cmp     x0, x2
+    b.lo    3b
   mov     x30, x3
   ret
 
@@ -270,5 +268,3 @@ msg_title_sysvars:
 
 msg_hex_header:
   .asciz "           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f  "
-
-.bss

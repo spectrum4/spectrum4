@@ -2,6 +2,9 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
+
+.set MEMORY_DUMP_BUFFER_SIZE, 0x01000000  // 16MB
+
 .text
 .align 2
 
@@ -61,6 +64,27 @@ run_tests:
   cbz     x10, 36f                        // Return if no tests to run
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+
+#  x0 = start address to compress (inclusive) -> 8 byte aligned
+#  x1 = end address to compress (exclusive) -> 8 byte aligned, at least 16 more than x0
+#  x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
+#  x3 = end address of compressed data buffer (inclusive) -> 8 byte aligned
+
+  adrp    x0, pre_test_memory_dump
+  add     x0, x0, :lo12:pre_test_memory_dump
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, #0
+  adrp    x1, pre_test_memory_dump
+  add     x1, x1, :lo12:pre_test_memory_dump
+  mov     x2, x1
+  mov     x3, MEMORY_DUMP_BUFFER_SIZE
+  add     x3, x2, x3
+  bl      snapshot_memory
+  mov     x0, x2
+  bl      uart_x0
+  bl      uart_newline
+
   sub     sp, sp, (sysvars_end - sysvars)*2 + 256*2
                                           // Allocate space on stack for pre-test/post-test registers and system variables
   1:                                      // Loop executing tests
@@ -480,6 +504,68 @@ test_fail:
   ret
 
 
+# On entry:
+#  x0 = start address to compress (inclusive) -> 8 byte aligned
+#  x1 = end address to compress (exclusive) -> 8 byte aligned, at least 16 more than x0
+#  x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
+#  x3 = end address of compressed data buffer (inclusive) -> 8 byte aligned
+# On exit:
+#  x0 = x1
+#  x2 = end address of used compressed data (exclusive) -> 8 byte aligned
+#  x4 = [x1 - 16]
+#  x5 = [x1 - 8]
+#  x6 = repeat count of last quad
+#  x7 = 0x6a09e667bb67ae85
+snapshot_memory:
+  // x4 = quad at [address-8]
+  // x5 = quad at [address]
+  // x6 = repeat count of value (excluding original entry, i.e. n-1 where n = length of repeated sequence)
+  // x7 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
+  mov     x6, #0                          // Set quad repeat counter to zero
+  ldr     x7, =0x6a09e667bb67ae85
+  ldr     x4, [x0], #8
+  1:
+    ldr     x5, [x0], #8                    // Get next value.
+    cmp     x4, x5                          // Is new value different to previous one?
+    b.ne    2f                              // If so, jump ahead to 2:.
+  // new quad value matches previous quad value
+    add     x6, x6, #1                      // Bump counter
+    b       5f
+  2:
+  // new value found
+    cbnz    x6, 3f                          // If reached end of repeating quad sequence, jump ahead to 3:.
+  // previous value wasn't a repeating one
+    cmp     x4, x7                          // Was the raw value (coincidentally) the reserved repeating value code?
+    b.ne    4f                              // If not, jump ahead to store in raw form
+  // escape the magic value as a "repeated 0 times" repeated quad value
+  3:
+  // recurring quad sequence completed
+    add     x2, x2, #16
+    cmp     x2, x3
+    b.ge    6f
+    stp     x7, x6, [x2, #-16]              // Store "repeated value magic value", number of repeats (excluding original)
+    mov     x6, #0                          // Reset repeated entries counter
+  4:
+    add     x2, x2, #8
+    cmp     x2, x3
+    b.ge    6f
+    str     x4, [x2, #-8]                   // Store value
+  5:
+    mov     x4, x5
+    cmp     x0, x1                          // Reached end of memory to snapshot?
+    b.ne    1b                              // Repeat loop if end of region to compress not reached
+  add     x2, x2, #24
+  cmp     x2, x3
+  b.ge    6f
+  stp     x7, x6, [x2, #-24]              // Store "repeated value magic value", number of repeats (excluding original)
+  str     x5, [x2, #-8]                   // Store value
+  ret
+6:
+  adr     x0, msg_out_of_memory
+  bl      uart_puts
+  b       sleep
+
+
 msg_running_test_part_1: .asciz "Running test "
 msg_running_test_part_2: .asciz "...\r\n"
 
@@ -494,3 +580,13 @@ msg_fail_5: .ascii ", but should not have changed"
 msg_fail_6: .asciz ".\r\n"
 msg_fail_7: .asciz ": System Variable "
 msg_fail_8: .asciz ": RAM entry "
+
+msg_out_of_memory: .asciz "Out of memory!\r\n"
+
+
+.bss
+
+.align 3
+pre_test_memory_dump: .space MEMORY_DUMP_BUFFER_SIZE
+post_test_memory_dump: .space MEMORY_DUMP_BUFFER_SIZE
+pre_test_framebuffer:

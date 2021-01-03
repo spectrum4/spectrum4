@@ -14,7 +14,7 @@ fill_memory_with_junk:
   adr     x0, __bss_start
   and     x0, x0, #~0x0f
   ldr     w2, arm_size
-# When the following section is commented out, the display_memory routine
+# When the following section is uncommented, the display_memory routine
 # paints what it should, but with some additional junk. Should investigate
 # what is going on there.
 #

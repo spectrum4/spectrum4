@@ -30,7 +30,7 @@ _start:
 1:
 .if       DEBUG_PROFILE
   bl      rand_init
-  bl      fill_memory_with_junk
+# bl      fill_memory_with_junk
   bl      run_tests
 .endif
   b       restart                         // Raspberry Pi 3B initialisation complete.
@@ -39,7 +39,7 @@ _start:
 
 
 sleep:
-  wfe                                     // Sleep until woken.
+  wfi                                     // Sleep until woken.
   b       sleep                           // Go to sleep; it has been a long day.
 
 

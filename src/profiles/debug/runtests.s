@@ -508,7 +508,7 @@ test_fail:
 #  x0 = start address to compress (inclusive) -> 8 byte aligned
 #  x1 = end address to compress (exclusive) -> 8 byte aligned, at least 16 more than x0
 #  x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
-#  x3 = end address of compressed data buffer (inclusive) -> 8 byte aligned
+#  x3 = end address of compressed data buffer (exclusive) -> 8 byte aligned
 # On exit:
 #  x0 = x1
 #  x2 = end address of used compressed data (exclusive) -> 8 byte aligned
@@ -564,6 +564,36 @@ snapshot_memory:
   adr     x0, msg_out_of_memory
   bl      uart_puts
   b       sleep
+
+
+# On entry:
+#  x0 = start address to decompress to (inclusive) -> 8 byte aligned
+#  x1 = end address to decompress to (exclusive) -> 8 byte aligned, at least 16 more than x0
+#  x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
+# On exit:
+#  x0 = x1
+#  x2 = end address of used compressed data (exclusive) -> 8 byte aligned
+#  x4 = [x1 - 8]
+#  x5 = 0
+#  x7 = 0x6a09e667bb67ae85
+restore_snapshot:
+  ldr     x7, =0x6a09e667bb67ae85
+  1:
+    ldr     x4, [x2], #8
+    cmp     x4, x7
+    b.ne    3f
+  // repeated value found
+    ldp     x5, x4, [x2], #16               // x5 = repeat count (1 less than total entries), x4 = value
+    2:
+      cbz     x5, 3f
+      str     x4, [x0], #8
+      sub     x5, x5, #1
+      b       2b
+  3:
+    str     x4, [x0], #8
+    cmp     x0, x1
+    b.ne    1b
+  ret
 
 
 msg_running_test_part_1: .asciz "Running test "

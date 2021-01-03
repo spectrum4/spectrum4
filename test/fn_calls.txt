@@ -216,6 +216,7 @@ log_register:
 snapshot_memory:
     uart_puts
     sleep
+restore_snapshot:
 all_tests:
 fill_memory_with_junk:
 display_sysvars:

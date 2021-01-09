@@ -38,8 +38,5 @@
 .set MAILBOX_EMPTY_BIT,30
 .set MAILBOX_FULL_BIT, 31
 
-.set RAM_DISK_SIZE,    0x10000000
-.set HEAP_SIZE,        0x10000000
-
 .set FIRST_UDG_CHAR,   'A'
 .set UDG_COUNT,        21               // Number of User Defined Graphics to copy (=> 'A'-'U').

@@ -403,6 +403,19 @@ run_tests:
   ret
 
 
+log_ram:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  adr     x0, msg_fail_9
+  bl      uart_puts                       // Log ": Memory location [0x"
+  mov     x0, x8
+  bl      uart_x0                         // Log "<memory location in hex>"
+  mov     x0, ']'                         // Log "]"
+  bl      uart_send
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+
 log_ram_entry:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -453,6 +466,14 @@ log_register:
 # FAIL: po_change test case 1: Register x3 changed from 0x8ceb064787d0b39b to 0x0000000000001a68, but should not have changed.
 # FAIL: po_change test case 1: System Variable CURCHL changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
 # FAIL: po_change test case 1: Register x5 unchanged from 0xfe87f64783bc7a76 but should have changed to 0x00000f00f00f00f0.
+#
+# On entry:
+#   x12 = pre-test value
+#   x13 = post-test value
+#   x14 = expected value
+#   x16 = function to log entity that has incorrect value
+# On exit:
+#   x0 / x1 / x2 / x3 corrupted (uart_puts / x16 / uart_x0 / hex_x0)
 test_fail:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -567,15 +588,15 @@ snapshot_memory:
 
 
 # On entry:
-#  x0 = start address to decompress to (inclusive) -> 8 byte aligned
-#  x1 = end address to decompress to (exclusive) -> 8 byte aligned, at least 16 more than x0
-#  x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
+#   x0 = start address to decompress to (inclusive) -> 8 byte aligned
+#   x1 = end address to decompress to (exclusive) -> 8 byte aligned, at least 16 more than x0
+#   x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
 # On exit:
-#  x0 = x1
-#  x2 = end address of used compressed data (exclusive) -> 8 byte aligned
-#  x4 = [x1 - 8]
-#  x5 = 0
-#  x7 = 0x6a09e667bb67ae85
+#   x0 = x1
+#   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
+#   x4 = [x1 - 8]
+#   x5 = 0
+#   x7 = 0x6a09e667bb67ae85
 restore_snapshot:
   ldr     x7, =0x6a09e667bb67ae85
   1:
@@ -596,6 +617,56 @@ restore_snapshot:
   ret
 
 
+# On entry:
+#   x6 = pre-test compressed snapshot address
+#   x7 = expected compressed snapshot address
+#   x8 = start memory address (inclusive) of post-test data
+#   x9 = end memory address (exclusive) of post-test data
+compare_snapshots:
+// x8 will loop through quads until it reaches x9
+// x4 = current repeat count for pre-test
+// x5 = current repeat count for expected
+// x12 = pre-test value of [x8] (from snapshot)
+// x13 = post-test value of [x8] (from current value in RAM)
+// x14 = expected value of [x8] (from snapshot)
+  ldr     x7, =0x6a09e667bb67ae85
+  mov     x4, #0
+  mov     x5, #0
+  1:
+    cbz     x4, 2f                           // If not still repeating previous pre-test value, jump ahead to 2:
+    sub     x4, x4, #1                       // Decrement counter
+    b       3f                               // x12 already set from previous iteration, so jump ahead
+  2:
+    ldr     x12, [x6], #8                    // Read a new value
+    cmp     x12, x7                          // Is it the repeat marker?
+    b.ne    3f                               // If not, it is a regular value, jump ahead to 3:
+  // repeated value found
+    ldp     x4, x12, [x6], #16               // x4 = repeat count (1 less than total entries), x12 = value
+  3:
+  // x4 and x12 correctly set now
+    cbz     x5, 4f                           // If not still repeating previous pre-test value, jump ahead to 4:
+    sub     x5, x5, #1                       // Decrement counter
+    b       5f                               // x14 already set from previous iteration, so jump ahead
+  4:
+    ldr     x14, [x7], #8                    // Read a new value
+    cmp     x14, x7                          // Is it the repeat marker?
+    b.ne    5f                               // If not, it is a regular value, jump ahead to 5:
+  // repeated value found
+    ldp     x5, x14, [x7], #16               // x5 = repeat count (1 less than total entries), x14 = value
+  5:
+  // x5 and x14 correctly set now
+    ldr     x13, [x8]
+    cmp     x13, x14
+    b.eq    6f
+    mov     x16, log_ram                    // x16 = function to log ": Memory location [0x<address>]"
+    bl      test_fail
+  6:
+    add     x8, x8, #8
+    cmp     x8, x9
+    b.ne    1b
+  ret
+
+
 msg_running_test_part_1: .asciz "Running test "
 msg_running_test_part_2: .asciz "...\r\n"
 
@@ -610,6 +681,8 @@ msg_fail_5: .ascii ", but should not have changed"
 msg_fail_6: .asciz ".\r\n"
 msg_fail_7: .asciz ": System Variable "
 msg_fail_8: .asciz ": RAM entry "
+
+msg_fail_9: .asciz ": Memory location [0x"
 
 msg_out_of_memory: .asciz "Out of memory!\r\n"
 

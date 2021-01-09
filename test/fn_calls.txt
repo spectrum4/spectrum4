@@ -188,6 +188,10 @@ run_tests:
     uart_puts
     rand_block
     rand_block
+log_ram:
+    uart_puts
+    uart_x0
+    uart_send
 log_ram_entry:
     uart_puts
     uart_puts
@@ -217,6 +221,7 @@ snapshot_memory:
     uart_puts
     sleep
 restore_snapshot:
+compare_snapshots:
 all_tests:
 fill_memory_with_junk:
 display_sysvars:

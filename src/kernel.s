@@ -333,7 +333,7 @@ mbreq_end:
 # # Sets up stack pointers
 # # ------------------------------------------------------------------------------
 # setup_stack_pointers:
-#   mov       sp, stack_base
+#   adr       sp, stack_base
 #   ret
 #
 #

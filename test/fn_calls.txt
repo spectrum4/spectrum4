@@ -204,6 +204,8 @@ log_register:
     uart_puts
     uart_puts
     uart_puts
+    uart_send
+    uart_send
     uart_puts
     uart_x0
     uart_puts

@@ -631,37 +631,37 @@ compare_snapshots:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
 // x8 will loop through quads until it reaches x9
-// x4 = current repeat count for pre-test
-// x5 = current repeat count for expected
 // x12 = pre-test value of [x8] (from snapshot)
 // x13 = post-test value of [x8] (from current value in RAM)
 // x14 = expected value of [x8] (from snapshot)
+// x17 = current repeat count for pre-test
+// x18 = current repeat count for expected
   ldr     x15, =0x6a09e667bb67ae85
-  mov     x4, #0
-  mov     x5, #0
+  mov     x17, #0
+  mov     x18, #0
   1:
-    cbz     x4, 2f                           // If not still repeating previous pre-test value, jump ahead to 2:
-    sub     x4, x4, #1                       // Decrement counter
-    b       3f                               // x12 already set from previous iteration, so jump ahead
+    cbz     x17, 2f                         // If not still repeating previous pre-test value, jump ahead to 2:
+    sub     x17, x17, #1                    // Decrement counter
+    b       3f                              // x12 already set from previous iteration, so jump ahead
   2:
-    ldr     x12, [x6], #8                    // Read a new value
-    cmp     x12, x15                         // Is it the repeat marker?
-    b.ne    3f                               // If not, it is a regular value, jump ahead to 3:
+    ldr     x12, [x6], #8                   // Read a new value
+    cmp     x12, x15                        // Is it the repeat marker?
+    b.ne    3f                              // If not, it is a regular value, jump ahead to 3:
   // repeated value found
-    ldp     x4, x12, [x6], #16               // x4 = repeat count (1 less than total entries), x12 = value
+    ldp     x17, x12, [x6], #16             // x17 = repeat count (1 less than total entries), x12 = value
   3:
-  // x4 and x12 correctly set now
-    cbz     x5, 4f                           // If not still repeating previous pre-test value, jump ahead to 4:
-    sub     x5, x5, #1                       // Decrement counter
-    b       5f                               // x14 already set from previous iteration, so jump ahead
+  // x17 and x12 correctly set now
+    cbz     x18, 4f                         // If not still repeating previous pre-test value, jump ahead to 4:
+    sub     x18, x18, #1                    // Decrement counter
+    b       5f                              // x14 already set from previous iteration, so jump ahead
   4:
-    ldr     x14, [x7], #8                    // Read a new value
-    cmp     x14, x15                         // Is it the repeat marker?
-    b.ne    5f                               // If not, it is a regular value, jump ahead to 5:
+    ldr     x14, [x7], #8                   // Read a new value
+    cmp     x14, x15                        // Is it the repeat marker?
+    b.ne    5f                              // If not, it is a regular value, jump ahead to 5:
   // repeated value found
-    ldp     x5, x14, [x7], #16               // x5 = repeat count (1 less than total entries), x14 = value
+    ldp     x18, x14, [x7], #16             // x18 = repeat count (1 less than total entries), x14 = value
   5:
-  // x5 and x14 correctly set now
+  // x18 and x14 correctly set now
     ldr     x13, [x8]
     cmp     x13, x14
     b.eq    6f
@@ -685,7 +685,7 @@ msg_fail_2: .asciz " unchanged from "
 msg_fail_3: .asciz " to "
 msg_fail_4: .asciz ", but should have changed to "
 msg_fail_5: .ascii ", but should not have changed"
-                                          // Intentionally .ascii not .asciz, in order to join with msg_fail_6.
+                                        // Intentionally .ascii not .asciz, in order to join with msg_fail_6.
 msg_fail_6: .asciz ".\r\n"
 msg_fail_7: .asciz "System Variable "
 msg_fail_8: .asciz "RAM entry "

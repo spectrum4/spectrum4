@@ -20,31 +20,31 @@ run_tests:
   adrp    x2, memory_dumps
   add     x2, x2, :lo12:memory_dumps      // x2 = target address for snapshot
   bl      snapshot_all_ram                // Snapshot RAM so we can roll back between tests
-  mov     x13, x2                         // x13 = first free address after end of snapshot
+  mov     x6, x2                          // x6 = first free address after end of snapshot
   1:                                      // Loop executing tests
-    ldr     x5, [x20], #0x08                // x5 = address of test block
-    ldp     x6, x7, [x5], #0x10             // x6 = number of tests for test block
-                                            // x7 = address of routine to test
-    stp     x7, x20, [sp, #-16]!            // Stash address of routine to test, pointer into all_tests
+    ldr     x19, [x20], #0x08               // x19 = address of test block
+    ldp     x21, x22, [x19], #0x10          // x21 = number of tests for test block
+                                            // x22 = address of routine to test
+    stp     x22, x20, [sp, #-16]!           // Stash address of routine to test, pointer into all_tests
     2:
-      ldr     x8, [x5], #0x08                 // x8 = address of test
-      ldp     x9, x30, [x8], #0x10            // x9 = setup address
+      ldr     x23, [x19], #0x08               // x23 = address of test
+      ldp     x9, x30, [x23], #0x10           // x9 = setup address
                                               // x30 = setup_regs address
       adr     x0, msg_running_test_part_1
       bl      uart_puts                       // Log "Running test "
-      add     x0, x8, #0x20                   // x0 = address of test case name
+      add     x0, x23, #0x20                  // x0 = address of test case name
       bl      uart_puts                       // Log "<test case name>"
       adr     x0, msg_running_test_part_2
       bl      uart_puts                       // Log "...\r\n"
       blr     x9                              // Setup RAM
-      mov     x2, x13                         // x2 = Target address for pre-test snapshot, immediately after previous snapshot
+      mov     x2, x6                          // x2 = Target address for pre-test snapshot, immediately after previous snapshot
       bl      snapshot_all_ram                // Snapshot pre-test RAM
-      stp     x5, x8, [sp, #-16]!             // Stash pointer in tests block, pointer in test block
-      stp     x6, x10, [sp, #-16]!            // Stash test block remaining test count, total remaining test count
-      stp     x13, x2, [sp, #-16]!            // Stash pre-test snapshot location, post-test snapshot location
-      sub     sp, sp, #0x200                  // Allocate space on stack for pre-test/post-test registers
+      stp     x19, x23, [sp, #-16]!           // Stash pointer in tests block, pointer in test block
+      stp     x21, x10, [sp, #-16]!           // Stash test block remaining test count, total remaining test count
+      stp     x6, x2, [sp, #-16]!             // Stash pre-test snapshot location, post-test snapshot location
+      sub     sp, sp, #0x100                  // Allocate space on stack for pre-test/post-test registers
 
-    // Replace registers with random values
+    // Prepare pre-test registers with random values
 
       mov     x0, sp                          // x0 = start of pre-test register block
       mov     x1, #0x100                      // Register storage on stack takes up 0x100 bytes.
@@ -64,6 +64,7 @@ run_tests:
       ldp     x24, x25, [sp, #8 * 24]
       ldp     x26, x27, [sp, #8 * 26]
       ldr     x28, [sp, #8 * 28]
+    // TODO: load flags
 
       blr     x30                             // Call setup_regs routine
 
@@ -83,51 +84,82 @@ run_tests:
       stp     x24, x25, [sp, #8 * 24]
       stp     x26, x27, [sp, #8 * 26]
       str     x28, [sp, #8 * 28]
+    // TODO: store flags
 
-      ldr     x30, [sp, #0x220]               // x30 = address of routine to test
-
+      ldr     x30, [sp, #0x320]               // x30 = address of routine to test
       blr     x30                             // Call routine under test
 
     // Store post-test registers
-      stp     x0, x1, [sp, #256 + (8 * 0)]
-      stp     x2, x3, [sp, #256 + (8 * 2)]
-      stp     x4, x5, [sp, #256 + (8 * 4)]
-      stp     x6, x7, [sp, #256 + (8 * 6)]
-      stp     x8, x9, [sp, #256 + (8 * 8)]
-      stp     x10, x11, [sp, #256 + (8 * 10)]
-      stp     x12, x13, [sp, #256 + (8 * 12)]
-      stp     x14, x15, [sp, #256 + (8 * 14)]
-      stp     x16, x17, [sp, #256 + (8 * 16)]
-      stp     x18, x19, [sp, #256 + (8 * 18)]
-      stp     x20, x21, [sp, #256 + (8 * 20)]
-      stp     x22, x23, [sp, #256 + (8 * 22)]
-      stp     x24, x25, [sp, #256 + (8 * 24)]
-      stp     x26, x27, [sp, #256 + (8 * 26)]
-      str     x28, [sp, #256 + (8 * 28)]
+      sub     sp, sp, #0x100
+      stp     x0, x1, [sp]
+      stp     x2, x3, [sp, #8 * 2]
+      stp     x4, x5, [sp, #8 * 4]
+      stp     x6, x7, [sp, #8 * 6]
+      stp     x8, x9, [sp, #8 * 8]
+      stp     x10, x11, [sp, #8 * 10]
+      stp     x12, x13, [sp, #8 * 12]
+      stp     x14, x15, [sp, #8 * 14]
+      stp     x16, x17, [sp, #8 * 16]
+      stp     x18, x19, [sp, #8 * 18]
+      stp     x20, x21, [sp, #8 * 20]
+      stp     x22, x23, [sp, #8 * 22]
+      stp     x24, x25, [sp, #8 * 24]
+      stp     x26, x27, [sp, #8 * 26]
+      str     x28, [sp, #8 * 28]
+    // TODO: store flags
 
     // Restore stashed registers
-      add     x0, sp, #512                    // x0 = address of this routine's stashed registers
-      ldp     x13, x2, [x0], #16              // Restore pre-test snapshot location, post-test snapshot location
-      ldp     x6, x10, [x0], #16              // Restore test block remaining test count, total remaining test count
-      ldp     x5, x8, [x0], #16               // Restore pointer in tests block, pointer in test block
-      ldp     x7, x20, [x0], #16              // Restore address of routine to test, pointer into all_tests
-
-      mov     x15, x2                         // x15 = post-test snapshot location
+      ldr     x2, [sp, #0x308]                // x2 = post-test snapshot location
       bl      snapshot_all_ram                // Snapshot post-test RAM
-
-    // RAM effects
-
-      mov     x2, x13                         // x2 = pre-test snapshot
+      ldr     x2, [sp, #0x300]                // x2 = pointer in test block
       bl      restore_all_ram                 // Restore pre-test state
-      ldp     x9, x30, [x8], #0x10            // x9 = effects address
+      ldr     x23, [sp, #0x328]               // x23 = pointer in test block
+      ldp     x9, x30, [x23], #0x10           // x9 = effects address
                                               // x30 = effects_regs address
       blr     x9                              // Set expected RAM values
+      blr     x30                             // Set expected registers
 
+    // Store expected registers
+      sub     sp, sp, #0x100
+      stp     x0, x1, [sp]
+      stp     x2, x3, [sp, #8 * 2]
+      stp     x4, x5, [sp, #8 * 4]
+      stp     x6, x7, [sp, #8 * 6]
+      stp     x8, x9, [sp, #8 * 8]
+      stp     x10, x11, [sp, #8 * 10]
+      stp     x12, x13, [sp, #8 * 12]
+      stp     x14, x15, [sp, #8 * 14]
+      stp     x16, x17, [sp, #8 * 16]
+      stp     x18, x19, [sp, #8 * 18]
+      stp     x20, x21, [sp, #8 * 20]
+      stp     x22, x23, [sp, #8 * 22]
+      stp     x24, x25, [sp, #8 * 24]
+      stp     x26, x27, [sp, #8 * 26]
+      str     x28, [sp, #8 * 28]
+    // TODO: store flags
 
-    sub     x10, x10, #1                    // Decrement remaining test count
+    // Restore stashed registers
+      add     x0, sp, #0x300                  // x0 = address of this routine's stashed registers
+      ldp     x6, x7, [x0], #16               // Restore pre-test snapshot location, post-test snapshot location
+      ldp     x21, x10, [x0], #16             // Restore test block remaining test count, total remaining test count
+      ldp     x19, x23, [x0], #16             // Restore pointer in tests block, pointer in test block
+      ldp     x22, x20, [x0], #16             // Restore address of routine to test, pointer into all_tests
+
+    // TODO: Compare registers (should include flags)
+
+      mov     x8, #0                          // start address of region to snapshot
+      adrp    x9, memory_dumps
+      add     x9, x9, :lo12:memory_dumps      // first address not to snapshot
+      bl      compare_snapshots
+
+      add     sp, sp, #0x330
+      sub     x10, x10, #1                    // Decrement remaining test count
+      subs    x21, x21, #1
+      b.ne    2b                              // Loop if more tests to run
+
+    add     sp, sp, #0x10
     cbnz    x10, 1b                         // Loop if more tests to run
 
-  add     sp, sp, (sysvars_end - sysvars)*2 + 256*2
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
 36:
   ret
@@ -368,18 +400,34 @@ restore_snapshot:
 
 # On entry:
 #   x6 = pre-test compressed snapshot address
-#   x7 = expected compressed snapshot address
-#   x8 = start memory address (inclusive) of post-test data
-#   x9 = end memory address (exclusive) of post-test data
+#   x7 = post-test compressed snapshot address
+#   x8 = start memory address (inclusive) of expected data (uncompressed)
+#   x9 = end memory address (exclusive) of expected data (uncompressed)
+# On exit:
+#   x0
+#   x1
+#   x2
+#   x3
+#   x6
+#   x7
+#   x8
+#   x12
+#   x13
+#   x14
+#   x15
+#   x16
+#   x17
+#   x18
+    // TODO: Custom output for system vars
 compare_snapshots:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
 // x8 will loop through quads until it reaches x9
 // x12 = pre-test value of [x8] (from snapshot)
-// x13 = post-test value of [x8] (from current value in RAM)
-// x14 = expected value of [x8] (from snapshot)
+// x13 = post-test value of [x8] (from snapshot)
+// x14 = expected value of [x8] (from current value in RAM)
 // x17 = current repeat count for pre-test
-// x18 = current repeat count for expected
+// x18 = current repeat count for post-test
   ldr     x15, =0x6a09e667bb67ae85
   mov     x17, #0
   mov     x18, #0
@@ -397,17 +445,17 @@ compare_snapshots:
   // x17 and x12 correctly set now
     cbz     x18, 4f                         // If not still repeating previous pre-test value, jump ahead to 4:
     sub     x18, x18, #1                    // Decrement counter
-    b       5f                              // x14 already set from previous iteration, so jump ahead
+    b       5f                              // x13 already set from previous iteration, so jump ahead
   4:
-    ldr     x14, [x7], #8                   // Read a new value
-    cmp     x14, x15                        // Is it the repeat marker?
+    ldr     x13, [x7], #8                   // Read a new value
+    cmp     x13, x15                        // Is it the repeat marker?
     b.ne    5f                              // If not, it is a regular value, jump ahead to 5:
   // repeated value found
-    ldp     x18, x14, [x7], #16             // x18 = repeat count (1 less than total entries), x14 = value
+    ldp     x18, x13, [x7], #16             // x18 = repeat count (1 less than total entries), x13 = value
   5:
-  // x18 and x14 correctly set now
-    ldr     x13, [x8]
-    cmp     x13, x14
+  // x18 and x13 correctly set now
+    ldr     x14, [x8]
+    cmp     x14, x13
     b.eq    6f
     adr     x16, log_ram                    // x16 = function to log ": Memory location [0x<address>]"
     bl      test_fail

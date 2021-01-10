@@ -568,11 +568,8 @@ po_tv_1:                         // L0A7D
 # On exit:
 #   x5 = [CURCHL]
 po_change:                       // L0A80
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
   ldr     x5, [x28, CURCHL-sysvars]       // x5 = [CURCHL]
   str     x4, [x5]                        // Set current channel output routine
-  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 

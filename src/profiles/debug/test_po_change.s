@@ -12,8 +12,7 @@
 
 
 po_change_1_setup:
-  adr x0, po_change_1_channel_block
-  str x0, [x28, CURCHL-sysvars]           // [CURCHL] = po_change_1_channel_block
+  _str po_change_1_channel_block, CURCHL  // [CURCHL] = po_change_1_channel_block
   ret
 
 
@@ -23,9 +22,8 @@ po_change_1_setup_regs:
 
 
 po_change_1_effects:
-  adr x0, po_change_1_channel_block
-  ldr x5, =0xfedbca9876543210
-  str x5, [x0]                            // [po_change_1_channel_block] = 0xfedbca9876543210
+  _str 0xfedbca9876543210, po_change_1_channel_block
+                                          // [po_change_1_channel_block] = 0xfedbca9876543210
   ret
 
 

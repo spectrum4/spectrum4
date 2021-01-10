@@ -13,12 +13,12 @@
 
 
 po_attr_1_setup:
-  strb_sysvar ATTR_T, 0b10010101          // See http://www.breakintoprogstack.co.uk/computers/zx-spectrum/screen-memory-layout
+  _strb 0b10010101, ATTR_T                // See http://www.breakintoprogstack.co.uk/computers/zx-spectrum/screen-memory-layout
                                           // temp colours: FLASH 1; BRIGHT 0; PAPER 2; INK 5
-  strb_sysvar MASK_T, 0b01010110          // Current screen attributes are 0b01010101 => FLASH 0; BRIGHT 1; PAPER 2; INK 5
+  _strb 0b01010110, MASK_T                // Current screen attributes are 0b01010101 => FLASH 0; BRIGHT 1; PAPER 2; INK 5
                                           // Read attribute bits 1,2,4,6 from screen (0b01010101), and 0,3,5,7 from ATTR_T (0b10010101)
                                           // => 0b11010101 => INK 5; PAPER 2; BRIGHT 1; FLASH 1
-  strb_sysvar P_FLAG, 0b10010111          // OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7
+  _strb 0b10010111, P_FLAG                // OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7
                                           // => FLASH 1: BRIGHT 1: PAPER 2: INK 7
   # TODO - set screen attribute value to something more interesting than 0b01010101
   ret

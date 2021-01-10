@@ -11,87 +11,22 @@
 
 .align 3
 all_tests:
-  .quad 0x0000000000000005                // Number of tests.
-  .quad test_cl_addr_test_case_1
-  .quad test_po_attr_test_case_1
-  .quad test_po_change_test_case_1
-  .quad test_po_search_with_custom_table
-  .quad test_po_search_with_keywords
+  .quad 5                                 // total number of tests
+  .quad test_cl_addr
+  .quad test_po_attr
+  .quad test_po_change
+  .quad test_po_search
 
-
-##########################################################################
-############# Test cl_addr test case 1 ###################################
-##########################################################################
 
 .align 3
-# Test case definition
-test_cl_addr_test_case_1:
-  .quad test_cl_addr_test_case_1_name
-  .quad test_cl_addr_test_case_1_setup_stack
-  .quad test_cl_addr_test_case_1_setup_sysvars
-  .quad test_cl_addr_test_case_1_setup_registers
-  .quad test_cl_addr_test_case_1_effects_stack
-  .quad test_cl_addr_test_case_1_effects_sysvars
-  .quad test_cl_addr_test_case_1_effects_registers
-  .quad test_cl_addr_test_case_1_exec
+test_cl_addr:
+  .quad 1                                 // number of cl_addr tests
+  .quad cl_addr_shim
+  .quad cl_addr_1
 
-# Test case name
-test_cl_addr_test_case_1_name:
-  .asciz "cl_addr test case 1"
-
-# Test case setup
-
-.align 3
-# Stack setup
-test_cl_addr_test_case_1_setup_stack:
-  .quad 0                                 // Number of stack entries = 0
-
-.align 3
-# System variables setup
-test_cl_addr_test_case_1_setup_sysvars:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-
-.align 3
-# Registers setup
-test_cl_addr_test_case_1_setup_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000001
-                                          // Bits 0-1 = 0b01 => x0 (register index 0) is absolute value
-  .quad 60 - 1*20 - 5                     // x0
-
-# Test case effects
-
-.align 3
-# Stack effects
-test_cl_addr_test_case_1_effects_stack:
-
-.align 3
-# System variable effects
-test_cl_addr_test_case_1_effects_sysvars:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-
-.align 3
-# Registers effects
-test_cl_addr_test_case_1_effects_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000001010101010100
-                                          // Bits 2-3 = 0b01 => x1 (register index 1) is absolute value
-                                          // Bits 4-5 = 0b01 => x2 (register index 2) is absolute value
-                                          // Bits 6-7 = 0b01 => x3 (register index 3) is absolute value
-                                          // Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
-                                          // Bits 10-11 = 0b01 => x5 (register index 5) is absolute value
-                                          // Bits 12-13 = 0b01 => x6 (register index 6) is absolute value
-  .quad 1*20 + 5                          // x1
-  .quad display_file + 1*20*16*216 + 5*216 // x2
-  .quad 1                                 // x3
-  .quad 5                                 // x4
-  .quad 216                               // x5
-  .quad 69120                             // x6
-
-# Test case execution
 
 .align 2
-test_cl_addr_test_case_1_exec:
+cl_addr_shim:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldp     x0, x1, [x0]                    // Restore x0, x1 values
@@ -99,102 +34,25 @@ test_cl_addr_test_case_1_exec:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
-##########################################################################
-
-
-##########################################################################
-############# Test po_attr test case 1 ###################################
-##########################################################################
 
 .align 3
-# Test case definition
-test_po_attr_test_case_1:
-  .quad test_po_attr_test_case_1_name
-  .quad test_po_attr_test_case_1_setup_stack
-  .quad test_po_attr_test_case_1_setup_sysvars
-  .quad test_po_attr_test_case_1_setup_registers
-  .quad test_po_attr_test_case_1_effects_stack
-  .quad test_po_attr_test_case_1_effects_sysvars
-  .quad test_po_attr_test_case_1_effects_registers
-  .quad test_po_attr_test_case_1_exec
+cl_addr_1:
+  .quad 0
+  .quad cl_addr_1_setup_regs
+  .quad 0
+  .quad cl_addr_1_effects_regs
+  .asciz "cl_addr_1"
 
-# Test case name
-test_po_attr_test_case_1_name:
-  .asciz "po_attr test case 1"
-
-# Test case setup
 
 .align 3
-# Stack setup
-test_po_attr_test_case_1_setup_stack:
-  .quad 0                                 // Number of stack entries = 0
+test_po_attr:
+  .quad 1                                 // number of po_attr tests
+  .quad po_attr_shim
+  .quad po_attr_1
 
-.align 3
-# System variables setup
-test_po_attr_test_case_1_setup_sysvars:
-  .quad 0b0000000000010100000000000100000000000000000000000000000000000000
-                                          // Bits 38-39 = 0b01 => P_FLAG (sysvar index 19) is absolute value
-                                          // Bits 50-51 = 0b01 => ATTR_T (sysvar index 25) is absolute value
-                                          // Bits 52-53 = 0b01 => MASK_T (sysvar index 26) is absolute value
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 151                               // [P_FLAG]
-  .quad 149                               // [ATTR_T]
-  .quad 86                                // [MASK_T]
-
-.align 3
-# Registers setup
-test_po_attr_test_case_1_setup_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000001
-                                          // Bits 0-1 = 0b01 => x0 (register index 0) is absolute value
-  .quad display_file + 1*216*20*16 + 5*216 + 4*2 + 6*20*216 // x0
-
-# Test case effects
-
-.align 3
-# Stack effects
-test_po_attr_test_case_1_effects_stack:
-
-.align 3
-# System variable effects
-test_po_attr_test_case_1_effects_sysvars:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-
-.align 3
-# Registers effects
-test_po_attr_test_case_1_effects_registers:
-  .quad 0b0000000000000001000000000001010101010101010101000000000000000101
-                                          // Bits 0-1 = 0b01 => x0 (register index 0) is absolute value
-                                          // Bits 2-3 = 0b01 => x1 (register index 1) is absolute value
-                                          // Bits 18-19 = 0b01 => x9 (register index 9) is absolute value
-                                          // Bits 20-21 = 0b01 => x10 (register index 10) is absolute value
-                                          // Bits 22-23 = 0b01 => x11 (register index 11) is absolute value
-                                          // Bits 24-25 = 0b01 => x12 (register index 12) is absolute value
-                                          // Bits 26-27 = 0b01 => x13 (register index 13) is absolute value
-                                          // Bits 28-29 = 0b01 => x14 (register index 14) is absolute value
-                                          // Bits 30-31 = 0b01 => x15 (register index 15) is absolute value
-                                          // Bits 32-33 = 0b01 => x16 (register index 16) is absolute value
-                                          // Bits 34-35 = 0b01 => x17 (register index 17) is absolute value
-                                          // Bits 36-37 = 0b01 => x18 (register index 18) is absolute value
-                                          // Bits 48-49 = 0b01 => x24 (register index 24) is absolute value
-  .quad 151                               // x0
-  .quad 22165                             // x1
-  .quad display_file                      // x9
-  .quad 4                                 // x10
-  .quad 1*216*20*16 + 6*20*216 + 5*216 + 4*2 // x11
-  .quad 108                               // x12
-  .quad 85401593570131968                 // x13
-  .quad 1*20*16 + 6*20 + 5                // x14
-  .quad 14757451553962983424              // x15
-  .quad 1*108*20 + 5*108 + 4              // x16
-  .quad 22231                             // x17
-  .quad 1*5                               // x18
-  .quad attributes_file                   // x24
-
-# Test case execution
 
 .align 2
-test_po_attr_test_case_1_exec:
+po_attr_shim:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldp     x0, x1, [x0]                    // Restore x0, x1 values
@@ -202,98 +60,25 @@ test_po_attr_test_case_1_exec:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
-##########################################################################
-
-
-##########################################################################
-############# Test po_change test case 1 #################################
-##########################################################################
 
 .align 3
-# Test case definition
-test_po_change_test_case_1:
-  .quad test_po_change_test_case_1_name
-  .quad test_po_change_test_case_1_setup_stack
-  .quad test_po_change_test_case_1_setup_sysvars
-  .quad test_po_change_test_case_1_setup_registers
-  .quad test_po_change_test_case_1_effects_stack
-  .quad test_po_change_test_case_1_effects_sysvars
-  .quad test_po_change_test_case_1_effects_registers
-  .quad test_po_change_test_case_1_exec
+po_attr_1:
+  .quad po_attr_1_setup
+  .quad po_attr_1_setup_regs
+  .quad po_attr_1_effects
+  .quad po_attr_1_effects_regs
+  .asciz "po_attr_1"
 
-# Test case name
-test_po_change_test_case_1_name:
-  .asciz "po_change test case 1"
-
-# Test case setup
 
 .align 3
-# Stack setup
-test_po_change_test_case_1_setup_stack:
-  .quad 3                                 // Number of stack entries = 3
-  .quad test_po_change_test_case_1_setup_stack_channel_block
-  .quad test_po_change_test_case_1_setup_stack_new_input_routine
-  .quad test_po_change_test_case_1_setup_stack_old_input_routine
+test_po_change:
+  .quad 1                                 // number of po_change tests
+  .quad po_change_shim
+  .quad po_change_1
 
-.align 3
-test_po_change_test_case_1_setup_stack_channel_block:
-  .quad 16                                // 16 => pointer
-  .quad 2                                 // old_input_routine
-  .asciz "channel_block"                  // name: "channel_block"
-
-.align 3
-test_po_change_test_case_1_setup_stack_new_input_routine:
-  .quad 8                                 // 8 => value
-  .quad 18364758544493064720
-  .asciz "new_input_routine"              // name: "new_input_routine"
-
-.align 3
-test_po_change_test_case_1_setup_stack_old_input_routine:
-  .quad 8                                 // 8 => value
-  .quad 81985529216486895
-  .asciz "old_input_routine"              // name: "old_input_routine"
-
-.align 3
-# System variables setup
-test_po_change_test_case_1_setup_sysvars:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 0b0000000000000000000000000000000000000000000011000000000000000000
-                                          // Bits 18-19 = 0b11 => CURCHL (sysvar index 41) is pointer
-  .quad 0x0000000000000000                // [CURCHL] = channel_block
-
-.align 3
-# Registers setup
-test_po_change_test_case_1_setup_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000000001100000000
-                                          // Bits 8-9 = 0b11 => x4 (register index 4) is pointer
-  .quad 0x0000000000000001                // x4 = new_input_routine
-
-# Test case effects
-
-.align 3
-# Stack effects
-test_po_change_test_case_1_effects_stack:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000011
-                                          // Bits 0-1 = 0b11 => channel_block (stack entry index 0) is pointer
-  .quad 0x0000000000000001                // [channel_block] = new_input_routine
-
-.align 3
-# System variable effects
-test_po_change_test_case_1_effects_sysvars:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-
-.align 3
-# Registers effects
-test_po_change_test_case_1_effects_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000000110000000000
-                                          // Bits 10-11 = 0b11 => x5 (register index 5) is pointer
-  .quad 0x0000000000000000                // x5 = channel_block
-
-# Test case execution
 
 .align 2
-test_po_change_test_case_1_exec:
+po_change_shim:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldp     x0, x1, [x0]                    // Restore x0, x1 values
@@ -301,78 +86,26 @@ test_po_change_test_case_1_exec:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
-##########################################################################
-
-
-##########################################################################
-############# Test po_search with custom table ###########################
-##########################################################################
 
 .align 3
-# Test case definition
-test_po_search_with_custom_table:
-  .quad test_po_search_with_custom_table_name
-  .quad test_po_search_with_custom_table_setup_stack
-  .quad test_po_search_with_custom_table_setup_sysvars
-  .quad test_po_search_with_custom_table_setup_registers
-  .quad test_po_search_with_custom_table_effects_stack
-  .quad test_po_search_with_custom_table_effects_sysvars
-  .quad test_po_search_with_custom_table_effects_registers
-  .quad test_po_search_with_custom_table_exec
+po_change_1:
+  .quad po_change_1_setup
+  .quad po_change_1_setup_regs
+  .quad po_change_1_effects
+  .quad po_change_1_effects_regs
+  .asciz "po_change_1"
 
-# Test case name
-test_po_search_with_custom_table_name:
-  .asciz "po_search with custom table"
-
-# Test case setup
 
 .align 3
-# Stack setup
-test_po_search_with_custom_table_setup_stack:
-  .quad 0                                 // Number of stack entries = 0
+test_po_search:
+  .quad 2                                 // number of po_search tests
+  .quad po_search_shim
+  .quad po_search_1
+  .quad po_search_2
 
-.align 3
-# System variables setup
-test_po_search_with_custom_table_setup_sysvars:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-
-.align 3
-# Registers setup
-test_po_search_with_custom_table_setup_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000000000101000000
-                                          // Bits 6-7 = 0b01 => x3 (register index 3) is absolute value
-                                          // Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
-  .quad 3                                 // x3
-  .quad test_po_search_with_custom_table_table // x4
-
-# Test case effects
-
-.align 3
-# Stack effects
-test_po_search_with_custom_table_effects_stack:
-
-.align 3
-# System variable effects
-test_po_search_with_custom_table_effects_sysvars:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-
-.align 3
-# Registers effects
-test_po_search_with_custom_table_effects_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000001010100000000
-                                          // Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
-                                          // Bits 10-11 = 0b01 => x5 (register index 5) is absolute value
-                                          // Bits 12-13 = 0b01 => x6 (register index 6) is absolute value
-  .quad test_po_search_with_custom_table_telephone // x4
-  .quad 't'                               // x5
-  .quad 0                                 // x6
-
-# Test case execution
 
 .align 2
-test_po_search_with_custom_table_exec:
+po_search_shim:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   ldp     x0, x1, [x0]                    // Restore x0, x1 values
@@ -380,95 +113,20 @@ test_po_search_with_custom_table_exec:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
-# Test case custom ASM
 
 .align 3
-test_po_search_with_custom_table_table:
-  .asciz "hello"
-  .asciz "dog"
-  .asciz "cat"
-  .asciz "banana"
-test_po_search_with_custom_table_telephone:
-  .asciz "telephone"
-  .asciz "supper"
+po_search_1:
+  .quad 0
+  .quad po_search_1_setup_regs
+  .quad 0
+  .quad po_search_1_effects_regs
+  .asciz "po_search_1"
 
-##########################################################################
-
-
-##########################################################################
-############# Test po_search with keywords ###############################
-##########################################################################
 
 .align 3
-# Test case definition
-test_po_search_with_keywords:
-  .quad test_po_search_with_keywords_name
-  .quad test_po_search_with_keywords_setup_stack
-  .quad test_po_search_with_keywords_setup_sysvars
-  .quad test_po_search_with_keywords_setup_registers
-  .quad test_po_search_with_keywords_effects_stack
-  .quad test_po_search_with_keywords_effects_sysvars
-  .quad test_po_search_with_keywords_effects_registers
-  .quad test_po_search_with_keywords_exec
-
-# Test case name
-test_po_search_with_keywords_name:
-  .asciz "po_search with keywords"
-
-# Test case setup
-
-.align 3
-# Stack setup
-test_po_search_with_keywords_setup_stack:
-  .quad 0                                 // Number of stack entries = 0
-
-.align 3
-# System variables setup
-test_po_search_with_keywords_setup_sysvars:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-
-.align 3
-# Registers setup
-test_po_search_with_keywords_setup_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000000000101000000
-                                          // Bits 6-7 = 0b01 => x3 (register index 3) is absolute value
-                                          // Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
-  .quad 34                                // x3
-  .quad tkn_table                         // x4
-
-# Test case effects
-
-.align 3
-# Stack effects
-test_po_search_with_keywords_effects_stack:
-
-.align 3
-# System variable effects
-test_po_search_with_keywords_effects_sysvars:
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-  .quad 0b0000000000000000000000000000000000000000000000000000000000000000
-
-.align 3
-# Registers effects
-test_po_search_with_keywords_effects_registers:
-  .quad 0b0000000000000000000000000000000000000000000000000001010100000000
-                                          // Bits 8-9 = 0b01 => x4 (register index 4) is absolute value
-                                          // Bits 10-11 = 0b01 => x5 (register index 5) is absolute value
-                                          // Bits 12-13 = 0b01 => x6 (register index 6) is absolute value
-  .quad less_equal                        // x4
-  .quad 0                                 // x5
-  .quad 0                                 // x6
-
-# Test case execution
-
-.align 2
-test_po_search_with_keywords_exec:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  ldp     x0, x1, [x0]                    // Restore x0, x1 values
-  bl      po_search
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  ret
-
-##########################################################################
+po_search_2:
+  .quad 0
+  .quad po_search_2_setup_regs
+  .quad 0
+  .quad po_search_2_effects_regs
+  .asciz "po_search_2"

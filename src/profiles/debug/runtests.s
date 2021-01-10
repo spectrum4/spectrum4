@@ -11,52 +11,6 @@
 
 run_tests:
 
-# Register usage
-# ==============
-# x0-3 scratch registers
-# x5   sysvars_meta
-# x6   sysvar meta entry
-# x7   sysvar setup mask / ram setup entry type
-# x8   sysvar pointer mask
-# x9   sysvar index / ram entry index
-# x10  number of remaining tests
-# x11  address of test definition
-# x12  sysvar address
-# x13  address of individual sysvar definition / address of RAM setup entry
-# x14  sysvar value / ram setup value
-# x15  number of RAM setup entries
-# x16  function pointer for logging name of value being tested
-# x17  sysvars/ram/registers setup/effects block
-# x18  address on stack to set/test value
-# x19  start of sysvar expected values after mask entries
-# x20  address inside all_tests
-
-# Stack organisation
-# ==================
-#
-# RAM entries
-#   sp:
-#     post-test entries                     // (8 * RAM entries) bytes
-#   sp+8*x15:
-#     pre-test entries                      // (8 * RAM entries) bytes
-#
-# System variables
-#   x29-512-2*(sysvars_end-sysvars) == sp+16*x15:
-#     pre-test entries                      // (sysvars_end - sysvars) bytes
-#   x29-512-(sysvars_end-sysvars) == sp+16*x15+(sysvars_end-sysvars):
-#     post-test entries                     // (sysvars_end - sysvars) bytes
-#
-# Registers
-#   x29-512:
-#     pre-test entries                      // 256 bytes
-#   x29-256:
-#     post-test entries                     // 256 bytes
-#
-# x29:
-#
-#   Frame pointer                           // 8 bytes
-#   Link Register                           // 8 bytes
-
   ldr     w0, arm_size
   and     sp, x0, #~0x0f                  // Set stack pointer at top of ARM memory
   adr     x20, all_tests                  // x20 = address of test list

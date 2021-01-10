@@ -12,3 +12,7 @@
 .include "paint_debug.s"
 .include "reboot_debug.s"
 .include "itoa.s"
+.include "test_cl_addr.s"
+.include "test_po_attr.s"
+.include "test_po_change.s"
+.include "test_po_search.s"

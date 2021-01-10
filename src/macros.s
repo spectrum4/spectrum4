@@ -2,6 +2,20 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
+.macro _strb val, addr
+  mov       w0, \val & 0xff
+  adrp      x1, \addr
+  add       x1, x1, :lo12:\addr
+  strb      w0, [x1]
+.endm
+
+.macro _str val, addr
+  ldr       x0, =\val
+  adrp      x1, \addr
+  add       x1, x1, :lo12:\addr
+  str       x0, [x1]
+.endm
+
 # Load a 32-bit immediate using mov.
 .macro movl Wn, imm
   movz    \Wn,  \imm & 0xFFFF

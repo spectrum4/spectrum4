@@ -232,6 +232,7 @@ fetch_firmware 'start.elf'
 "${AARCH64_TOOLCHAIN_PREFIX}readelf" -W -a build/aarch64/kernel8-debug.elf
 
 # Keep a record of which functions call other functions to ease writing tests
+# TODO: need to fix this to work with new tests
 
 FN_CALLS=$("${AARCH64_TOOLCHAIN_PREFIX}objdump" -d build/aarch64/kernel8-debug.elf | sed -n '1,${;s/.*[[:space:]]bl*[[:space:]].*/&/p;s/.*<.*>:$/&/p;}' | sed '/msg_/d' | sed '/<test_/d' | sed 's/[^ ].*</</' | sed 's/<//g' | sed 's/>//g' | sed 's/^  */    /' | sed '/+/d')
 

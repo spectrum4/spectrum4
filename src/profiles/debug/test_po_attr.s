@@ -40,14 +40,14 @@ po_attr_1_effects_regs:
   mov x1, #0x5695                         // [ATTR_T] | ([MASK_T] << 8)
   adr x9, display_file                    // display_file
   mov x10, #4                             // x attribute coordinate
-  mov x11, 1*216*20*16 + 6*20*216 + 5*216 + 4*2
+  ldr x11, =1*216*20*16 + 6*20*216 + 5*216 + 4*2
                                           // display_file offset
   mov x12, #108                           // 108
-  mov x13, #0x012f684c00000000            // multiplication constant
+  ldr x13, =0x012f684c00000000            // multiplication constant
   mov x14, 1*20*16 + 6*20 + 5             // display_file offset / 216 (pixel line number in layout order)
   mov x15, 0xcccd000000000000             // multiplication constant
   mov x16, 1*108*20 + 5*108 + 4           // attribute_file offset
   mov x17, 0x56d7                         // [0-7] new attribute value; [8-15] [MASK_T]
   mov x18, 1*5                            // 5 * screen third (0/5/10)
-  mov x24, attributes_file                // attributes_file
+  adr x24, attributes_file                // attributes_file
   ret

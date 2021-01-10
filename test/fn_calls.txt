@@ -189,23 +189,18 @@ rand_init:
 rand_x0:
 rand_block:
 run_tests:
-    uart_x0
-    uart_newline
-    snapshot_memory
-    uart_x0
-    uart_newline
+    snapshot_all_ram
     uart_puts
     uart_puts
     uart_puts
+    snapshot_all_ram
     rand_block
-    rand_block
+    snapshot_all_ram
+    restore_all_ram
 log_ram:
     uart_puts
     uart_x0
     uart_send
-log_ram_entry:
-    uart_puts
-    uart_puts
 log_sysvar:
     uart_puts
     uart_puts
@@ -230,9 +225,13 @@ log_register:
     uart_puts
     uart_x0
     uart_puts
+snapshot_all_ram:
+    snapshot_memory
 snapshot_memory:
     uart_puts
     sleep
+restore_all_ram:
+    restore_snapshot
 restore_snapshot:
 compare_snapshots:
 cl_addr_1_setup_regs:
@@ -253,17 +252,9 @@ po_search_1_telephone:
 po_search_2_setup_regs:
 po_search_2_effects_regs:
 all_tests:
-cl_addr_shim:
-    cl_addr
 cl_addr_1:
-po_attr_shim:
-    po_attr
 po_attr_1:
-po_change_shim:
-    po_change
 po_change_1:
-po_search_shim:
-    po_search
 po_search_1:
 po_search_2:
 fill_memory_with_junk:

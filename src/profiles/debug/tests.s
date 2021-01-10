@@ -26,18 +26,8 @@ all_tests:
 .align 3
 test_cl_addr:
   .quad 1                                 // number of cl_addr tests
-  .quad cl_addr_shim
+  .quad cl_addr
   .quad cl_addr_1
-
-
-.align 2
-cl_addr_shim:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  ldp     x0, x1, [x0]                    // Restore x0, x1 values
-  bl      cl_addr
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  ret
 
 
 .align 3
@@ -52,18 +42,8 @@ cl_addr_1:
 .align 3
 test_po_attr:
   .quad 1                                 // number of po_attr tests
-  .quad po_attr_shim
+  .quad po_attr
   .quad po_attr_1
-
-
-.align 2
-po_attr_shim:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  ldp     x0, x1, [x0]                    // Restore x0, x1 values
-  bl      po_attr
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  ret
 
 
 .align 3
@@ -78,18 +58,8 @@ po_attr_1:
 .align 3
 test_po_change:
   .quad 1                                 // number of po_change tests
-  .quad po_change_shim
+  .quad po_change
   .quad po_change_1
-
-
-.align 2
-po_change_shim:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  ldp     x0, x1, [x0]                    // Restore x0, x1 values
-  bl      po_change
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  ret
 
 
 .align 3
@@ -104,19 +74,9 @@ po_change_1:
 .align 3
 test_po_search:
   .quad 2                                 // number of po_search tests
-  .quad po_search_shim
+  .quad po_search
   .quad po_search_1
   .quad po_search_2
-
-
-.align 2
-po_search_shim:
-  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                         // Update frame pointer to new stack location.
-  ldp     x0, x1, [x0]                    // Restore x0, x1 values
-  bl      po_search
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-  ret
 
 
 .align 3

@@ -68,7 +68,7 @@ run_tests:
       ldp     x26, x27, [sp, #8 * 26]
       adr     x28, sysvars
       str     x28, [sp, #8 * 28]
-    // TODO: load flags
+    // TODO: load flags with random settings
 
       cbz     x30, 4f
       blr     x30                             // Call setup_regs routine
@@ -172,7 +172,22 @@ run_tests:
       ldp     x19, x23, [x24, #32]            // Restore pointer in tests block, pointer in test block
       ldp     x22, x20, [x24, #48]            // Restore address of routine to test, pointer into all_tests
 
-    // TODO: Compare registers (should include flags)
+    // Compare registers
+      mov     x8, sp
+      mov     x9, #0                          // x9 = register index
+      7:
+        ldr     x12, [x8, #0x200]             // x12 = pre-test register value
+        ldr     x13, [x8, #0x100]             // x13 = post-test register value
+        ldr     x14, [x8], #0x08              // x14 = expected register value
+        cmp     x13, x14
+        b.eq    8f
+        adr     x16, log_register             // x16 = function to log "Register x<index>"
+        bl      test_fail
+      8:
+        add     x9, x9, #1
+        cmp     x9, #29
+        b.ne    7b
+    // TODO: Compare flags
 
     // TODO: the compare snapshots should also compare framebuffers
       mov     x8, #0                          // start address of region to snapshot
@@ -500,9 +515,9 @@ compare_snapshots:
   5:
   // x18 and x13 correctly set now
     ldr     x14, [x8]
-    cmp     x14, x13
+    cmp     x13, x14
     b.eq    6f
-    adr     x16, log_ram                    // x16 = function to log ": Memory location [0x<address>]"
+    adr     x16, log_ram                    // x16 = function to log "Memory location [0x<address>]"
     bl      test_fail
   6:
     add     x8, x8, #8

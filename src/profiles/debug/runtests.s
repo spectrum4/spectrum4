@@ -178,11 +178,13 @@ run_tests:
   ret
 
 
+# On entry:
+#   x8 = Memory location
 log_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   adr     x0, msg_fail_8
-  bl      uart_puts                       // Log ": Memory location [0x"
+  bl      uart_puts                       // Log "Memory location [0x"
   mov     x0, x8
   bl      uart_x0                         // Log "<memory location in hex>"
   mov     x0, ']'                         // Log "]"
@@ -195,18 +197,20 @@ log_sysvar:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   adr     x0, msg_fail_7
-  bl      uart_puts                       // Log ": System Variable "
+  bl      uart_puts                       // Log "System Variable "
   add     x0, x6, #9                      // x0 = address of system variable name
   bl      uart_puts                       // Log "<sysvar>"
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
 
+# On entry:
+#   x9 = x register index (0-30)
 log_register:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   adr     x0, msg_fail_0
-  bl      uart_puts                       // Log ": Register x"
+  bl      uart_puts                       // Log "Register x"
   sub     sp, sp, 32
   mov     x0, sp
   mov     x2, x9
@@ -229,11 +233,13 @@ log_register:
 # FAIL: po_change test case 1: Register x5 unchanged from 0xfe87f64783bc7a76 but should have changed to 0x00000f00f00f00f0.
 #
 # On entry:
-#   x11 = address of pointer to test name
+#   x8 = RAM test failure only: address that failed
+#   x9 = Register failure only: x register index
 #   x12 = pre-test value
 #   x13 = post-test value
 #   x14 = expected value
 #   x16 = function to log entity that has incorrect value
+#   x23 = address of test name minus 0x10
 # On exit:
 #   x0 / x1 / x2 / x3 corrupted (uart_puts / x16 / uart_x0 / hex_x0)
 test_fail:
@@ -241,7 +247,7 @@ test_fail:
   mov     x29, sp                         // Update frame pointer to new stack location.
   adr     x0, msg_fail
   bl      uart_puts                       // Log "FAIL: "
-  ldr     x0, [x11]                       // x0 = address of test name
+  add     x0, x23, #0x10                  // x0 = address of test case name
   bl      uart_puts                       // Log "<test case name>"
   mov     x0, ':'
   bl      uart_send                       // Log ":"

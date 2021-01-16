@@ -31,7 +31,8 @@ po_attr_1_setup_regs:
 
 
 po_attr_1_effects:
-  # TODO - there should be an attributes file update, and framebuffer updates
+  # TODO - framebuffer updates
+  _strb 0xd7, attributes_file + 1*108*20 + 5*108 + 4
   ret
 
 

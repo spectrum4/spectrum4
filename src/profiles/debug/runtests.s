@@ -28,8 +28,8 @@ run_tests:
     stp     x22, x20, [sp, #-16]!           // Stash address of routine to test, pointer into all_tests
     2:
       ldr     x23, [x19], #0x08               // x23 = address of test
-      ldp     x9, x30, [x23], #0x10           // x9 = setup address
-                                              // x30 = setup_regs address
+      ldp     x9, x17, [x23], #0x10           // x9 = setup address
+                                              // x17 = setup_regs address
       adr     x0, msg_running_test_part_1
       bl      uart_puts                       // Log "Running test "
       add     x0, x23, #0x10                  // x0 = address of test case name
@@ -38,7 +38,7 @@ run_tests:
       bl      uart_puts                       // Log "...\r\n"
       cbz     x9, 3f                          // Skip RAM setup if there is none
       blr     x9                              // Setup RAM
-3:
+    3:
       mov     x2, x6                          // x2 = Target address for pre-test snapshot, immediately after previous snapshot
       bl      snapshot_all_ram                // Snapshot pre-test RAM
       stp     x19, x23, [sp, #-16]!           // Stash pointer in tests block, pointer in test block
@@ -51,6 +51,7 @@ run_tests:
       mov     x0, sp                          // x0 = start of pre-test register block
       mov     x1, #0x100                      // Register storage on stack takes up 0x100 bytes.
       bl      rand_block                      // Write random bytes to stack so registers are random when popped.
+      mov     x30, x17
       ldp     x0, x1, [sp]
       ldp     x2, x3, [sp, #8 * 2]
       ldp     x4, x5, [sp, #8 * 4]
@@ -65,12 +66,13 @@ run_tests:
       ldp     x22, x23, [sp, #8 * 22]
       ldp     x24, x25, [sp, #8 * 24]
       ldp     x26, x27, [sp, #8 * 26]
-      ldr     x28, [sp, #8 * 28]
+      adr     x28, sysvars
+      str     x28, [sp, #8 * 28]
     // TODO: load flags
 
       cbz     x30, 4f
       blr     x30                             // Call setup_regs routine
-4:
+    4:
 
     // Store pre-test registers
       stp     x0, x1, [sp]
@@ -118,14 +120,31 @@ run_tests:
       ldr     x2, [sp, #0x200]                // x2 = pre-test snapshot location
       bl      restore_all_ram                 // Restore pre-test state
       ldr     x23, [sp, #0x228]               // x23 = pointer in test block
-      ldp     x9, x30, [x23], #0x10           // x9 = effects address
-                                              // x30 = effects_regs address
+      ldp     x9, x17, [x23], #0x10           // x9 = effects address
+                                              // x17 = effects_regs address
       cbz     x9, 5f
       blr     x9                              // Set expected RAM values
-5:
+    5:
+      mov     x30, x17
+      ldp     x0, x1, [sp, #0x100 + 8 * 0]
+      ldp     x2, x3, [sp, #0x100 + 8 * 2]
+      ldp     x4, x5, [sp, #0x100 + 8 * 4]
+      ldp     x6, x7, [sp, #0x100 + 8 * 6]
+      ldp     x8, x9, [sp, #0x100 + 8 * 8]
+      ldp     x10, x11, [sp, #0x100 + 8 * 10]
+      ldp     x12, x13, [sp, #0x100 + 8 * 12]
+      ldp     x14, x15, [sp, #0x100 + 8 * 14]
+      ldp     x16, x17, [sp, #0x100 + 8 * 16]
+      ldp     x18, x19, [sp, #0x100 + 8 * 18]
+      ldp     x20, x21, [sp, #0x100 + 8 * 20]
+      ldp     x22, x23, [sp, #0x100 + 8 * 22]
+      ldp     x24, x25, [sp, #0x100 + 8 * 24]
+      ldp     x26, x27, [sp, #0x100 + 8 * 26]
+      ldr     x28, [sp, #0x100 + 8 * 28]
+    // TODO: restore flags
       cbz     x30, 6f
       blr     x30                             // Set expected registers
-6:
+    6:
 
     // Store expected registers
       sub     sp, sp, #0x100
@@ -507,7 +526,7 @@ msg_fail_5: .ascii ", but should not have changed"
 msg_fail_6: .asciz ".\r\n"
 msg_fail_7: .asciz "System Variable "
 
-msg_fail_8: .asciz "Memory location [0x"
+msg_fail_8: .asciz "Memory location ["
 
 msg_out_of_memory: .asciz "Out of memory!\r\n"
 

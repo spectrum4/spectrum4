@@ -69,6 +69,40 @@
 .endif
 .endm
 
+.macro logregs
+  logreg 0
+  logreg 1
+  logreg 2
+  logreg 3
+  logreg 4
+  logreg 5
+  logreg 6
+  logreg 7
+  logreg 8
+  logreg 9
+  logreg 10
+  logreg 11
+  logreg 12
+  logreg 13
+  logreg 14
+  logreg 15
+  logreg 16
+  logreg 17
+  logreg 18
+  logreg 19
+  logreg 20
+  logreg 21
+  logreg 22
+  logreg 23
+  logreg 24
+  logreg 25
+  logreg 26
+  logreg 27
+  logreg 28
+  logreg 29
+  logreg 30
+.endm
+
 # .macro handle_invalid_entry type
 #   kernel_entry
 #   mov       x0, #\type

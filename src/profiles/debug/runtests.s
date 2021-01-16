@@ -147,10 +147,13 @@ run_tests:
 
     // TODO: Compare registers (should include flags)
 
+    // TODO: the compare snapshots should also compare framebuffers
       mov     x8, #0                          // start address of region to snapshot
       adrp    x9, memory_dumps
       add     x9, x9, :lo12:memory_dumps      // first address not to snapshot
       bl      compare_snapshots
+
+    // TODO: Restore initial pristine snapshot
 
       add     sp, sp, #0x330
       sub     x10, x10, #1                    // Decrement remaining test count
@@ -289,6 +292,12 @@ snapshot_all_ram:
   mov     x3, MEMORY_DUMPS_BUFFER_SIZE
   add     x3, x1, x3                      // first address after end of compressed data region
   bl      snapshot_memory                 // x2 = first address after end of snapshot
+# TODO: snapshot framebuffer
+# adr     x4, framebuffer
+# ldr     w0, [x4]
+# ldr     w1, [x4, #4]
+# add     w1, w0, w1
+# bl      snapshot_memory                 // x2 = first address after end of snapshot
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -357,6 +366,7 @@ snapshot_memory:
 
 # On entry:
 #   x2 = location of snapshot
+# TODO: restore framebuffer
 restore_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.

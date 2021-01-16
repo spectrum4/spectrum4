@@ -32,11 +32,13 @@ run_tests:
                                               // x30 = setup_regs address
       adr     x0, msg_running_test_part_1
       bl      uart_puts                       // Log "Running test "
-      add     x0, x23, #0x20                  // x0 = address of test case name
+      add     x0, x23, #0x10                  // x0 = address of test case name
       bl      uart_puts                       // Log "<test case name>"
       adr     x0, msg_running_test_part_2
       bl      uart_puts                       // Log "...\r\n"
+      cbz     x9, 3f                          // Skip RAM setup if there is none
       blr     x9                              // Setup RAM
+3:
       mov     x2, x6                          // x2 = Target address for pre-test snapshot, immediately after previous snapshot
       bl      snapshot_all_ram                // Snapshot pre-test RAM
       stp     x19, x23, [sp, #-16]!           // Stash pointer in tests block, pointer in test block
@@ -66,7 +68,9 @@ run_tests:
       ldr     x28, [sp, #8 * 28]
     // TODO: load flags
 
+      cbz     x30, 4f
       blr     x30                             // Call setup_regs routine
+4:
 
     // Store pre-test registers
       stp     x0, x1, [sp]
@@ -86,7 +90,7 @@ run_tests:
       str     x28, [sp, #8 * 28]
     // TODO: store flags
 
-      ldr     x30, [sp, #0x320]               // x30 = address of routine to test
+      ldr     x30, [sp, #0x130]               // x30 = address of routine to test
       blr     x30                             // Call routine under test
 
     // Store post-test registers
@@ -109,15 +113,19 @@ run_tests:
     // TODO: store flags
 
     // Restore stashed registers
-      ldr     x2, [sp, #0x308]                // x2 = post-test snapshot location
+      ldr     x2, [sp, #0x208]                // x2 = post-test snapshot location
       bl      snapshot_all_ram                // Snapshot post-test RAM
-      ldr     x2, [sp, #0x300]                // x2 = pointer in test block
+      ldr     x2, [sp, #0x200]                // x2 = pre-test snapshot location
       bl      restore_all_ram                 // Restore pre-test state
-      ldr     x23, [sp, #0x328]               // x23 = pointer in test block
+      ldr     x23, [sp, #0x228]               // x23 = pointer in test block
       ldp     x9, x30, [x23], #0x10           // x9 = effects address
                                               // x30 = effects_regs address
+      cbz     x9, 5f
       blr     x9                              // Set expected RAM values
+5:
+      cbz     x30, 6f
       blr     x30                             // Set expected registers
+6:
 
     // Store expected registers
       sub     sp, sp, #0x100
@@ -139,11 +147,11 @@ run_tests:
     // TODO: store flags
 
     // Restore stashed registers
-      add     x0, sp, #0x300                  // x0 = address of this routine's stashed registers
-      ldp     x6, x7, [x0], #16               // Restore pre-test snapshot location, post-test snapshot location
-      ldp     x21, x10, [x0], #16             // Restore test block remaining test count, total remaining test count
-      ldp     x19, x23, [x0], #16             // Restore pointer in tests block, pointer in test block
-      ldp     x22, x20, [x0], #16             // Restore address of routine to test, pointer into all_tests
+      add     x24, sp, #0x300                 // x24 = address of this routine's stashed registers
+      ldp     x6, x7, [x24]                   // Restore pre-test snapshot location, post-test snapshot location
+      ldp     x21, x10, [x24, #16]            // Restore test block remaining test count, total remaining test count
+      ldp     x19, x23, [x24, #32]            // Restore pointer in tests block, pointer in test block
+      ldp     x22, x20, [x24, #48]            // Restore address of routine to test, pointer into all_tests
 
     // TODO: Compare registers (should include flags)
 
@@ -155,6 +163,8 @@ run_tests:
 
     // TODO: Restore initial pristine snapshot
 
+    // Restore stashed registers
+      ldp     x6, x7, [x24]                   // Restore pre-test snapshot location, post-test snapshot location
       add     sp, sp, #0x330
       sub     x10, x10, #1                    // Decrement remaining test count
       subs    x21, x21, #1
@@ -312,28 +322,28 @@ snapshot_all_ram:
 #  x2 = end address of used compressed data (exclusive) -> 8 byte aligned
 #  x4 = [x1 - 16]
 #  x5 = [x1 - 8]
-#  x6 = repeat count of last quad
-#  x7 = 0x6a09e667bb67ae85
+#  x26 = repeat count of last quad
+#  x27 = 0x6a09e667bb67ae85
 snapshot_memory:
   // x4 = quad at [address-8]
   // x5 = quad at [address]
-  // x6 = repeat count of value (excluding original entry, i.e. n-1 where n = length of repeated sequence)
-  // x7 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
-  mov     x6, #0                          // Set quad repeat counter to zero
-  ldr     x7, =0x6a09e667bb67ae85
+  // x26 = repeat count of value (excluding original entry, i.e. n-1 where n = length of repeated sequence)
+  // x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
+  mov     x26, #0                         // Set quad repeat counter to zero
+  ldr     x27, =0x6a09e667bb67ae85
   ldr     x4, [x0], #8
   1:
     ldr     x5, [x0], #8                    // Get next value.
     cmp     x4, x5                          // Is new value different to previous one?
     b.ne    2f                              // If so, jump ahead to 2:.
   // new quad value matches previous quad value
-    add     x6, x6, #1                      // Bump counter
+    add     x26, x26, #1                    // Bump counter
     b       5f
   2:
   // new value found
-    cbnz    x6, 3f                          // If reached end of repeating quad sequence, jump ahead to 3:.
+    cbnz    x26, 3f                         // If reached end of repeating quad sequence, jump ahead to 3:.
   // previous value wasn't a repeating one
-    cmp     x4, x7                          // Was the raw value (coincidentally) the reserved repeating value code?
+    cmp     x4, x27                         // Was the raw value (coincidentally) the reserved repeating value code?
     b.ne    4f                              // If not, jump ahead to store in raw form
   // escape the magic value as a "repeated 0 times" repeated quad value
   3:
@@ -341,8 +351,8 @@ snapshot_memory:
     add     x2, x2, #16
     cmp     x2, x3
     b.hs    6f
-    stp     x7, x6, [x2, #-16]              // Store "repeated value magic value", number of repeats (excluding original)
-    mov     x6, #0                          // Reset repeated entries counter
+    stp     x27, x26, [x2, #-16]            // Store "repeated value magic value", number of repeats (excluding original)
+    mov     x26, #0                         // Reset repeated entries counter
   4:
     add     x2, x2, #8
     cmp     x2, x3
@@ -355,7 +365,7 @@ snapshot_memory:
   add     x2, x2, #24
   cmp     x2, x3
   b.hs    6f
-  stp     x7, x6, [x2, #-24]              // Store "repeated value magic value", number of repeats (excluding original)
+  stp     x27, x26, [x2, #-24]            // Store "repeated value magic value", number of repeats (excluding original)
   str     x5, [x2, #-8]                   // Store value
   ret
 6:
@@ -387,12 +397,12 @@ restore_all_ram:
 #   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
 #   x4 = [x1 - 8]
 #   x5 = 0
-#   x7 = 0x6a09e667bb67ae85
+#   x27 = 0x6a09e667bb67ae85
 restore_snapshot:
-  ldr     x7, =0x6a09e667bb67ae85
+  ldr     x27, =0x6a09e667bb67ae85
   1:
     ldr     x4, [x2], #8
-    cmp     x4, x7
+    cmp     x4, x27
     b.ne    3f
   // repeated value found
     ldp     x5, x4, [x2], #16               // x5 = repeat count (1 less than total entries), x4 = value

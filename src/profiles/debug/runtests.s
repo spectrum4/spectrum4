@@ -111,8 +111,8 @@ run_tests:
       stp     x22, x23, [sp, #8 * 22]
       stp     x24, x25, [sp, #8 * 24]
       stp     x26, x27, [sp, #8 * 26]
-      str     x28, [sp, #8 * 28]
-    // TODO: store flags
+      mrs     x0, nzcv                        // Fetch flags (Negative, Zero, Carry, oVerflow)
+      stp     x28, x0, [sp, #8 * 28]
 
     // Restore stashed registers
       ldr     x2, [sp, #0x208]                // x2 = post-test snapshot location

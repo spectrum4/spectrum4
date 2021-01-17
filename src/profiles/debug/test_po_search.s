@@ -20,6 +20,7 @@ po_search_1_effects_regs:
   adr x4, po_search_1_telephone           // x4 = po_search_1_telephone
   mov x5, 't'                             // x5 = 't'
   mov x6, #0                              // x6 = 0
+  nzcv #0b1101, #0b0010                   // Clear Negative, Zero, oVerflow flags, set Carry flag
   ret
 
 
@@ -51,4 +52,5 @@ po_search_2_effects_regs:
   adr x4, less_equal                      // x4 = po_search_1_telephone
   mov x5, #0                              // x5 = 0
   mov x6, #0                              // x6 = 0
+  nzcv #0b1101, #0b0010                   // Clear Negative, Zero, oVerflow flags, set Carry flag
   ret

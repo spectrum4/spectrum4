@@ -2,12 +2,14 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
+
 .macro _strb val, addr
   mov       w0, \val & 0xff
   adrp      x1, \addr
   add       x1, x1, :lo12:\addr
   strb      w0, [x1]
 .endm
+
 
 .macro _str val, addr
   ldr       x0, =\val
@@ -16,11 +18,13 @@
   str       x0, [x1]
 .endm
 
+
 # Load a 32-bit immediate using mov.
 .macro movl Wn, imm
   movz    \Wn,  \imm & 0xFFFF
   movk    \Wn, (\imm >> 16) & 0xFFFF, lsl #16
 .endm
+
 
 .macro log text
 .if       DEBUG_PROFILE
@@ -37,6 +41,7 @@
   ldp       x29, x30, [sp], #16
 .endif
 .endm
+
 
 .macro logreg index
 .if       DEBUG_PROFILE
@@ -68,6 +73,7 @@
   ldp     x29, x30, [sp], #16
 .endif
 .endm
+
 
 .macro logregs
   logreg 0
@@ -103,6 +109,19 @@
   logreg 30
 .endm
 
+
+.macro nzcv clear, set
+  stp     x0, x1, [sp, #-16]!
+  mrs     x0, nzcv
+  mov     x1, \clear << 28
+  bic     x0, x0, x1
+  mov     x1, \set << 28
+  orr     x0, x0, x1
+  msr     nzcv, x0
+  ldp     x0, x1, [sp], #16
+.endm
+
+
 # .macro handle_invalid_entry type
 #   kernel_entry
 #   mov       x0, #\type
@@ -111,11 +130,13 @@
 #   bl        show_invalid_entry_message
 #   b         hang_core
 # .endm
-
+#
+#
 # .macro ventry label
 #   .align 7
 #   b         \label
 # .endm
+#
 #
 # .macro push_registers
 #   sub       sp, sp, #0x100
@@ -137,6 +158,7 @@
 #   str       x30, [sp, #16 * 15]
 # .endm
 #
+#
 # .macro pop_registers
 #   ldp       x0, x1, [sp, #16 * 0]
 #   ldp       x2, x3, [sp, #16 * 1]
@@ -156,7 +178,8 @@
 #   ldr       x30, [sp, #16 * 15]
 #   add       sp, sp, #0x100
 # .endm
-
+#
+#
 # .macro kernel_exit
 #   pop_registers
 #   eret

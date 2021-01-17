@@ -52,6 +52,13 @@ run_tests:
       mov     x1, #0x100                      // Register storage on stack takes up 0x100 bytes.
       bl      rand_block                      // Write random bytes to stack so registers are random when popped.
       mov     x30, x17
+
+    // Set random values for NZCV flags
+      ldr     x1, [sp, #8*29]
+      mrs     x0, nzcv
+      bfi     x0, x1, #28, #4
+      msr     nzcv, x0
+
       ldp     x0, x1, [sp]
       ldp     x2, x3, [sp, #8 * 2]
       ldp     x4, x5, [sp, #8 * 4]
@@ -68,7 +75,6 @@ run_tests:
       ldp     x26, x27, [sp, #8 * 26]
       adr     x28, sysvars
       str     x28, [sp, #8 * 28]
-    // TODO: load flags with random settings
 
       cbz     x30, 4f
       blr     x30                             // Call setup_regs routine
@@ -89,8 +95,9 @@ run_tests:
       stp     x22, x23, [sp, #8 * 22]
       stp     x24, x25, [sp, #8 * 24]
       stp     x26, x27, [sp, #8 * 26]
-      str     x28, [sp, #8 * 28]
-    // TODO: store flags
+      mrs     x0, nzcv                        // Fetch flags (Negative, Zero, Carry, oVerflow)
+      stp     x28, x0, [sp, #8 * 28]
+      ldr     x0, [sp]
 
       ldr     x30, [sp, #0x130]               // x30 = address of routine to test
       blr     x30                             // Call routine under test
@@ -126,6 +133,15 @@ run_tests:
       blr     x9                              // Set expected RAM values
     5:
       mov     x30, x17
+
+    // Set NZCV flags
+      ldp     x28, x1, [sp, #0x100 + 8 * 28]
+      and     x1, x1, #0xF0000000            // Clear all bits of x1 except 28-31
+      mrs     x0, nzcv                       // Get current flags
+      and     x0, x0, #~0xF0000000           // Clear only bits 28-31 of x0
+      orr     x0, x0, x1                     // Combine x0 and x1
+      msr     nzcv, x0                       // Write result back to flags
+
       ldp     x0, x1, [sp, #0x100 + 8 * 0]
       ldp     x2, x3, [sp, #0x100 + 8 * 2]
       ldp     x4, x5, [sp, #0x100 + 8 * 4]
@@ -140,8 +156,6 @@ run_tests:
       ldp     x22, x23, [sp, #0x100 + 8 * 22]
       ldp     x24, x25, [sp, #0x100 + 8 * 24]
       ldp     x26, x27, [sp, #0x100 + 8 * 26]
-      ldr     x28, [sp, #0x100 + 8 * 28]
-    // TODO: restore flags
       cbz     x30, 6f
       blr     x30                             // Set expected registers
     6:
@@ -163,7 +177,8 @@ run_tests:
       stp     x24, x25, [sp, #8 * 24]
       stp     x26, x27, [sp, #8 * 26]
       str     x28, [sp, #8 * 28]
-    // TODO: store flags
+      mrs     x0, nzcv                        // Fetch flags (Negative, Zero, Carry, oVerflow)
+      stp     x28, x0, [sp, #8 * 28]
 
     // Restore stashed registers
       add     x24, sp, #0x300                 // x24 = address of this routine's stashed registers
@@ -185,7 +200,8 @@ run_tests:
         bl      test_fail
       8:
         add     x9, x9, #1
-        cmp     x9, #29
+// TODO: change this back to #29 and test for flags with custom reporting instead of pretending flags are in the x29 register
+        cmp     x9, #30
         b.ne    7b
     // TODO: Compare flags
 

@@ -197,6 +197,12 @@ run_tests:
     rand_block
     snapshot_all_ram
     restore_all_ram
+    uart_puts
+    uart_puts
+    uart_send
+    uart_send
+    uart_puts
+    uart_puts
     compare_snapshots
 log_ram:
     uart_puts

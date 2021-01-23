@@ -182,7 +182,6 @@ run_tests:
 
     // Restore stashed registers
       add     x24, sp, #0x300                 // x24 = address of this routine's stashed registers
-      ldp     x6, x7, [x24]                   // Restore pre-test snapshot location, post-test snapshot location
       ldp     x21, x10, [x24, #16]            // Restore test block remaining test count, total remaining test count
       ldp     x19, x23, [x24, #32]            // Restore pointer in tests block, pointer in test block
       ldp     x22, x20, [x24, #48]            // Restore address of routine to test, pointer into all_tests
@@ -191,21 +190,52 @@ run_tests:
       mov     x8, sp
       mov     x9, #0                          // x9 = register index
       7:
-        ldr     x12, [x8, #0x200]             // x12 = pre-test register value
-        ldr     x13, [x8, #0x100]             // x13 = post-test register value
-        ldr     x14, [x8], #0x08              // x14 = expected register value
+        ldr     x12, [x8, #0x200]               // x12 = pre-test register value
+        ldr     x13, [x8, #0x100]               // x13 = post-test register value
+        ldr     x14, [x8], #0x08                // x14 = expected register value
         cmp     x13, x14
         b.eq    8f
-        adr     x16, log_register             // x16 = function to log "Register x<index>"
+        adr     x16, log_register               // x16 = function to log "Register x<index>"
         bl      test_fail
       8:
         add     x9, x9, #1
-// TODO: change this back to #29 and test for flags with custom reporting instead of pretending flags are in the x29 register
-        cmp     x9, #30
+        cmp     x9, #29
         b.ne    7b
-    // TODO: Compare flags
+
+    // Compare flags
+      mov     w6, flag_msg_offsets
+      mov     w7, #0x80000000                 // Mask for bit 31
+      ldr     w12, [x8, #0x200]               // w12 = pre-test NZCV
+      ldr     w13, [x8, #0x100]               // w13 = post-test NZCV
+      ldr     w14, [x8], #0x08                // w14 = expected NZCV
+      eor     w9, w13, w14                    // w9 bits 28-31 hold 0 if expected == actual for counterpart NZCV flag, or 1 if not
+      9:
+        tst     w9, w7                          // Mask individual flag bit under test
+        b.eq    10f                             // If flag was set correctly, jump ahead to 10:
+      // Test fail - flag set incorrectly
+        adr     x0, msg_fail
+        bl      uart_puts                       // Log "FAIL: "
+        add     x0, x23, #0x10                  // x0 = address of test case name
+        bl      uart_puts                       // Log "<test case name>"
+        mov     x0, ':'
+        bl      uart_send                       // Log ":"
+        mov     x0, ' '
+        bl      uart_send                       // Log " "
+        ldrb    w18, [x6]
+        add     x0, x6, x18
+        bl      uart_puts                       // Log "<flag description>"
+        adr     x15, msg_clear_but_should_be_set
+        adr     x16, msg_set_but_should_be_clear
+        tst     w13, w7
+        csel    x0, x15, x16, eq
+        bl      uart_puts                       // Log " clear but should be set.\r\n" or "set but should be clear.\r\n"
+      10:
+        add     x6, x6, #1
+        lsr     w7, w7, #1
+        tbz     w7, #27, 9b
 
     // TODO: the compare snapshots should also compare framebuffers
+      ldp     x6, x7, [x24]                   // Restore pre-test snapshot location, post-test snapshot location
       mov     x8, #0                          // start address of region to snapshot
       adrp    x9, memory_dumps
       add     x9, x9, :lo12:memory_dumps      // first address not to snapshot
@@ -560,6 +590,28 @@ msg_fail_7: .asciz "System Variable "
 msg_fail_8: .asciz "Memory location ["
 
 msg_out_of_memory: .asciz "Out of memory!\r\n"
+
+
+flag_msg_offsets:
+.byte msg_n_flag - .
+.byte msg_z_flag - .
+.byte msg_c_flag - .
+.byte msg_v_flag - .
+
+
+msg_n_flag:
+.asciz "Negative flag (N)"
+msg_z_flag:
+.asciz "Zero flag (Z)"
+msg_c_flag:
+.asciz "Carry flag (C)"
+msg_v_flag:
+.asciz "Overflow flag (V)"
+
+msg_set_but_should_be_clear:
+.asciz " set but should be clear.\r\n"
+msg_clear_but_should_be_set:
+.asciz " clear but should be set.\r\n"
 
 
 .bss

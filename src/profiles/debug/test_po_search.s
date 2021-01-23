@@ -7,8 +7,7 @@
 .align 2
 
 
-# This test calls po_search with a custom search table to retrieve the 5th item.
-
+# po_search_1 calls po_search with a custom search table to retrieve the 5th item.
 
 po_search_1_setup_regs:
   mov x3, #0x3                            // x3 = 3
@@ -39,8 +38,7 @@ po_search_1_telephone:
 .align 2
 
 
-# This test calls po_search using the ROM token table to retrieve the 24th token.
-
+# po_search_2 calls po_search using the ROM token table to retrieve the 24th token.
 
 po_search_2_setup_regs:
   mov x3, #0x22                           // x3 = 22

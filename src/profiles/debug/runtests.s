@@ -379,6 +379,8 @@ test_fail:
 
 # On entry:
 #   x2 = location to write compressed data to
+# TODO: when src/profiles/debug/demo.s has more sophisticated fill_memory_with_junk, this routine
+#       should reference the random sequence that routine uses
 snapshot_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.

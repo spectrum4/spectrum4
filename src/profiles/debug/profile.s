@@ -286,8 +286,8 @@ run_tests:
         ldrb    w18, [x6]
         add     x0, x6, x18
         bl      uart_puts                       // Log "<flag description>"
-        adr     x15, msg_clear_but_should_be_set
-        adr     x16, msg_set_but_should_be_clear
+        adr     x15, msg_should_be_set
+        adr     x16, msg_should_not_be_set
         tst     w13, w7
         csel    x0, x15, x16, eq
         bl      uart_puts                       // Log " clear but should be set.\r\n" or "set but should be clear.\r\n"
@@ -1106,7 +1106,6 @@ base10:
 
 .data
 
-msg_clear_but_should_be_set:   .asciz " should be set.\r\n"
 msg_colon0x:                   .asciz ": 0x"
 msg_done:                      .asciz "DONE.\r\n"
 msg_fail:                      .asciz "FAIL: "
@@ -1127,7 +1126,8 @@ msg_out_of_memory:             .asciz "Out of memory!\r\n"
 msg_rebooting:                 .asciz "Rebooting..."
 msg_running_test_part_1:       .asciz "Running test "
 msg_running_test_part_2:       .asciz "...\r\n"
-msg_set_but_should_be_clear:   .asciz " should not be set.\r\n"
+msg_should_be_set:             .asciz " should be set.\r\n"
+msg_should_not_be_set:         .asciz " should not be set.\r\n"
 msg_snapshotting_ram:          .asciz "Snapshotting RAM... "
 msg_title_sysvars:             .asciz "System Variables\r\n================\r\n"
 

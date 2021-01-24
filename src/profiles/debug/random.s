@@ -9,9 +9,13 @@
 
 
 rand_init:
+  mov     x5, x30
+  mov     x0, msg_init_rand
+  bl      uart_puts
   mov     x1, #0x4000
   movk    x1, #0x3f10, lsl #16
-  mov     w0, #0x40000                    // "warmup count": the initial numbers generated are "less random" so will be discarded
+# mov     w0, #0x00040000                 // "warmup count": the initial numbers generated are "less random" so will be discarded
+  mov     w0, #0x00100000                 // "warmup count": the initial numbers generated are "less random" so will be discarded
   str     w0, [x1, #0x04]                 // [0x3f104004] = 0x00040000
   ldr     w0, [x1, #0x10]
   orr     w0, w0, #0x01
@@ -19,6 +23,9 @@ rand_init:
   ldr     w0, [x1]
   orr     w0, w0, #0x01
   str     w0, [x1]                        // Set bit 0 of [0x3f104000]  (enable the hardware generator)
+  mov     x0, msg_done
+  bl      uart_puts
+  mov     x30, x5
   ret
 
 
@@ -35,6 +42,12 @@ rand_x0:
   ret
 
 
+msg_init_rand:
+  .asciz "Initialising random number generator unit... "
+
+msg_done:
+  .asciz "DONE.\r\n"
+
 # Write random data to a buffer.
 #
 # On entry:
@@ -45,6 +58,7 @@ rand_x0:
 #   x1 = 0
 #   x2 = 0x3f104000
 #   x3 = last random word written to buffer
+.align 2
 rand_block:
   and     x0, x0, #~0b11
   and     x1, x1, #~0b11

@@ -6,26 +6,63 @@
 .align 2
 
 
-# TODO: fill with repeating sequence of random data, with random length between e.g. 64 bytes and 128 bytes
+# Fill with repeating sequence of random data, with random length one of
+# 0x40/0x50/0x60/0x70/0x80/0x90/0xa0/0xb0.
 fill_memory_with_junk:
-  mov     x3, x30
-  mov     x1, 0xf0f0f0f0f0f0f0f0
-  adr     x0, __bss_start
+  mov     x11, x30
+  mov     x0, msg_filling_memory_with_junk
+  bl      uart_puts
+  adrp    x6, bss_debug_start
+  add     x6, x6, :lo12:bss_debug_start
+
+// Choose random sequence length
+  bl      rand_x0                         // Fetch random bits in x0
+  and     w1, w0, #0x00000070             // 0x00/0x10/0x20/0x30/0x40/0x50/0x60/0x70
+  add     w1, w1, #0x00000040             // 0x40/0x50/0x60/0x70/0x80/0x90/0xa0/0xb0
+  adrp    x7, rand_seq_length
+  add     x7, x7, :lo12:rand_seq_length
+  strb    w1, [x7]
+
+// Generate random sequence
+  adrp    x5, rand_data
+  add     x5, x5, :lo12:rand_data
+  mov     x0, x5
+  mov     x4, x1                          // Preserve sequence byte length in x4
+  bl      rand_block
+
+  adr     x8, __bss_start
+  udiv    x9, x8, x4                      // x9 = int(__bss_start/x4)
+  umsubl  x10, w9, w4, x8                 // x10 = x8 - x4 * int(x8/x4) = __bss_start % (random sequence length)
   1:
-    tst     x0, 0xf
+    tst     x10, 0x0f
     b.eq    2f
-    strb    w1, [x0], #1
+    ldrb    w3, [x5, x10]
+    strb    w3, [x8], #1
+    add     x10, x10, #1
     b       1b
 2:
-  ldr     w2, arm_size
   3:
-    stp     x1, x1, [x0], #16
-    cmp     x0, x2
-    b.lo    3b
-  mov     x30, x3
+    cmp     x10, x4
+    csel    x10, xzr, x10, eq
+    cmp     x8, x6
+    b.hs    4f
+    add     x7, x5, x10
+    ldp     x9, x3, [x7]
+    stp     x9, x3, [x8], #0x10
+    add     x10, x10, #0x10
+    b       3b
+4:
+  mov     x0, msg_done
+  bl      uart_puts
+  mov     x30, x11
   ret
 
 
+msg_filling_memory_with_junk:
+  .asciz "Filling memory with junk... "
+
+
+.align 2
 display_sysvars:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -268,3 +305,12 @@ msg_title_sysvars:
 
 msg_hex_header:
   .asciz "           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f  "
+
+
+.bss
+
+.align 0
+rand_seq_length: .space 1
+
+.align 4
+rand_data: .space 0x100

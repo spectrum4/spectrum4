@@ -2,6 +2,11 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
+.bss
+.align 4
+bss_debug_start:
+
+.text
 .include "random.s"
 .include "runtests.s"
 .include "tests.s"

@@ -237,14 +237,17 @@ run_tests:
     // TODO: the compare snapshots should also compare framebuffers
       ldp     x6, x7, [x24]                   // Restore pre-test snapshot location, post-test snapshot location
       mov     x8, #0                          // start address of region to snapshot
-      adrp    x9, memory_dumps
-      add     x9, x9, :lo12:memory_dumps      // first address not to snapshot
+      adrp    x9, bss_debug_start
+      add     x9, x9, :lo12:bss_debug_start   // first address not to snapshot
       bl      compare_snapshots
 
-    // TODO: Restore initial pristine snapshot
+    // Restore initial pristine snapshot
+      adrp    x2, memory_dumps
+      add     x2, x2, :lo12:memory_dumps      // x2 = target address for snapshot
+      bl      restore_all_ram                 // Restore pre-test state
 
     // Restore stashed registers
-      ldp     x6, x7, [x24]                   // Restore pre-test snapshot location, post-test snapshot location
+      ldr     x6, [x24]                       // Restore pre-test snapshot location
       add     sp, sp, #0x330
       sub     x10, x10, #1                    // Decrement remaining test count
       subs    x21, x21, #1
@@ -384,12 +387,20 @@ test_fail:
 snapshot_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  mov     x26, x2
+  adr     x0, msg_snapshotting_ram
+  bl      uart_puts
   mov     x0, #0                          // start address of region to snapshot
-  adrp    x1, memory_dumps
-  add     x1, x1, :lo12:memory_dumps      // first address not to snapshot
+  adrp    x1, bss_debug_start
+  add     x1, x1, :lo12:bss_debug_start   // first address not to snapshot
+  mov     x2, x26
   mov     x3, MEMORY_DUMPS_BUFFER_SIZE
   add     x3, x1, x3                      // first address after end of compressed data region
   bl      snapshot_memory                 // x2 = first address after end of snapshot
+  mov     x26, x2
+  adr     x0, msg_done
+  bl      uart_puts
+  mov     x2, x26
 # TODO: snapshot framebuffer
 # adr     x4, framebuffer
 # ldr     w0, [x4]
@@ -398,6 +409,10 @@ snapshot_all_ram:
 # bl      snapshot_memory                 // x2 = first address after end of snapshot
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
+
+
+msg_snapshotting_ram:
+  .asciz "Snapshotting RAM... "
 
 
 # On entry:
@@ -412,6 +427,7 @@ snapshot_all_ram:
 #  x5 = [x1 - 8]
 #  x26 = repeat count of last quad
 #  x27 = 0x6a09e667bb67ae85
+.align 2
 snapshot_memory:
   // x4 = quad at [address-8]
   // x5 = quad at [address]
@@ -445,7 +461,7 @@ snapshot_memory:
     add     x2, x2, #8
     cmp     x2, x3
     b.hs    6f
-    str     x4, [x2, #-8]                   // Store value
+    stur    x4, [x2, #-8]                   // Store value
   5:
     mov     x4, x5
     cmp     x0, x1                          // Reached end of memory to snapshot?
@@ -469,8 +485,8 @@ restore_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x0, #0                          // start address to restore snapshot to
-  adrp    x1, memory_dumps
-  add     x1, x1, :lo12:memory_dumps      // first address not to restore
+  adrp    x1, bss_debug_start
+  add     x1, x1, :lo12:bss_debug_start   // first address not to restore
   bl      restore_snapshot
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
@@ -610,13 +626,25 @@ msg_c_flag:
 msg_v_flag:
 .asciz "Overflow flag (V)"
 
+
 msg_set_but_should_be_clear:
-.asciz " set but should be clear.\r\n"
+.asciz " should not be set.\r\n"
 msg_clear_but_should_be_set:
-.asciz " clear but should be set.\r\n"
+.asciz " should be set.\r\n"
+
+
+.align 4
+snapshot_regions:
+.quad 0
+.quad bss_debug_start
+sn_fb:
+.quad 0  // updated after framebuffer initialisation
+.quad 0  // updated after framebuffer initialisation
+# end marker, not an actual region
+.quad 0  // value unused
+.quad 0  // 0 end address => this quad pair marks end of region list, not an actual region
 
 
 .bss
-
 .align 3
 memory_dumps: .space MEMORY_DUMPS_BUFFER_SIZE

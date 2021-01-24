@@ -4,6 +4,22 @@ _start:
     rand_init
     fill_memory_with_junk
     run_tests
+    uart_send
+    base10
+    uart_puts
+    uart_send
+    uart_send
+    uart_x0
+    uart_newline
+    display_memory
+    uart_send
+    base10
+    uart_puts
+    uart_send
+    uart_send
+    uart_x0
+    uart_newline
+    display_memory
     restart
 sleep:
     sleep
@@ -14,6 +30,23 @@ poke_address:
     poke_address
     poke_address
 wait_cycles:
+uart_init:
+uart_send:
+reboot:
+    paint_string
+    wait_cycles
+    mbox_call
+    sleep
+paint_border:
+    paint_rectangle
+    paint_rectangle
+    paint_rectangle
+    paint_rectangle
+paint_rectangle:
+fill_rectangle:
+fill_line:
+paint_window:
+    paint_rectangle
 restart:
     new
 pin:
@@ -168,23 +201,6 @@ co_temp_5:
     po_table_1
     po_tokens
     po_fetch
-uart_init:
-uart_send:
-reboot:
-    paint_string
-    wait_cycles
-    mbox_call
-    sleep
-paint_border:
-    paint_rectangle
-    paint_rectangle
-    paint_rectangle
-    paint_rectangle
-paint_rectangle:
-fill_rectangle:
-fill_line:
-paint_window:
-    paint_rectangle
 rand_init:
     uart_puts
     uart_puts

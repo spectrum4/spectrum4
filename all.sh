@@ -125,7 +125,7 @@ mkdir -p build/z80
 mkdir -p build/aarch64
 
 # Generate src/profiles/debug/sysvars.s
-SYSVARS="$(cat src/bss.s | sed -n '/sysvars:/,/sysvars_end:/p' | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space \([^ ]*\) .*$/\1 \2/p')"
+SYSVARS="$(cat src/all.s | sed -n '/sysvars:/,/sysvars_end:/p' | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space \([^ ]*\) .*$/\1 \2/p')"
 SYSVAR_COUNT=$(echo "${SYSVARS}" | wc -l)
 SYSVAR_MASK_BYTES=$(((SYSVAR_COUNT+31)/32*8))
 {

@@ -444,6 +444,15 @@ test_fail:
 
 # On entry:
 #   x2 = location to write compressed data to
+# On exit:
+#   x0 = address of msg_done
+#   x1 = AUX_BASE
+#   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
+#   x3 = [AUX_MU_LSR]
+#   x4 = [x1 - 16]
+#   x5 = [x1 - 8]
+#   x26 = end address of used compressed data (exclusive) -> 8 byte aligned
+#   x27 = 0x6a09e667bb67ae85
 # TODO: when src/profiles/debug/demo.s has more sophisticated fill_memory_with_junk, this routine
 #       should reference the random sequence that routine uses
 snapshot_all_ram:
@@ -485,6 +494,8 @@ snapshot_all_ram:
 #  x5 = [x1 - 8]
 #  x26 = repeat count of last quad
 #  x27 = 0x6a09e667bb67ae85
+# TODO: snapshot using XOR/EOR against random sequence
+# TODO: probably can use x7,x8,x11,x12 - double check this first though!
 snapshot_memory:
   // x4 = quad at [address-8]
   // x5 = quad at [address]

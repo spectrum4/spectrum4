@@ -12,7 +12,7 @@
 #   https://github.com/torvalds/linux/blob/d4f6d923238dbdb69b8525e043fedef2670d4f2c/drivers/char/hw_random/bcm2835-rng.c
 rand_init:
   mov     x5, x30
-  mov     x0, msg_init_rand
+  adr     x0, msg_init_rand
   bl      uart_puts
   mov     x1, #0x4000
   movk    x1, #0x3f10, lsl #16
@@ -25,7 +25,7 @@ rand_init:
   ldr     w0, [x1]
   orr     w0, w0, #0x01
   str     w0, [x1]                        // Set bit 0 of [0x3f104000]  (enable the hardware generator)
-  mov     x0, msg_done
+  adr     x0, msg_done
   bl      uart_puts
   mov     x30, x5
   ret
@@ -663,7 +663,7 @@ compare_snapshots:
 # 0x40/0x50/0x60/0x70/0x80/0x90/0xa0/0xb0.
 fill_memory_with_junk:
   mov     x11, x30
-  mov     x0, msg_filling_memory_with_junk
+  adr     x0, msg_filling_memory_with_junk
   bl      uart_puts
   adrp    x6, bss_debug_start
   add     x6, x6, :lo12:bss_debug_start
@@ -702,7 +702,7 @@ fill_memory_with_junk:
     add     x10, x10, #0x10
     b       3b
 4:
-  mov     x0, msg_done
+  adr     x0, msg_done
   bl      uart_puts
   mov     x30, x11
   ret

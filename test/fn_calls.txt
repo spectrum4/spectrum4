@@ -4,21 +4,7 @@ _start:
     rand_init
     fill_memory_with_junk
     run_tests
-    uart_send
-    base10
-    uart_puts
-    uart_send
-    uart_send
-    uart_x0
-    uart_newline
     display_memory
-    uart_send
-    base10
-    uart_puts
-    uart_send
-    uart_send
-    uart_x0
-    uart_newline
     display_memory
     restart
 sleep:

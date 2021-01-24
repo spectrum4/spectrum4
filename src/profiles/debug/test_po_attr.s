@@ -21,6 +21,7 @@ po_attr_1_setup:
   _strb 0b10010111, P_FLAG                // OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7
                                           // => FLASH 1: BRIGHT 1: PAPER 2: INK 7
   # TODO - set screen attribute value to something more interesting than 0b01010101
+  _strb 0b01010101, attributes_file + 1*108*20 + 5*108 + 4
   ret
 
 

@@ -171,14 +171,12 @@ _start:
   bl      fill_memory_with_junk
   bl      run_tests
   adr     x0, __bss_start
-  logreg  0
   and     x0, x0, ~0xf
   mov     x1, #50
   mov     x2, #0
   bl      display_memory
   adrp    x0, rand_data
   add     x0, x0, :lo12:rand_data
-  logreg  0
   mov     x1, #0x20
   mov     x2, #0
   bl      display_memory

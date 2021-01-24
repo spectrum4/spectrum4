@@ -113,7 +113,6 @@ run_tests:
       mov     x0, sp                          // x0 = start of pre-test register block
       mov     x1, #0x100                      // Register storage on stack takes up 0x100 bytes.
       bl      rand_block                      // Write random bytes to stack so registers are random when popped.
-      mov     x30, x17
 
     // Set random values for NZCV flags
       ldr     x1, [sp, #8*29]
@@ -121,6 +120,7 @@ run_tests:
       bfi     x0, x1, #28, #4
       msr     nzcv, x0
 
+      mov     x30, x17
       ldp     x0, x1, [sp]
       ldp     x2, x3, [sp, #8 * 2]
       ldp     x4, x5, [sp, #8 * 4]
@@ -194,7 +194,6 @@ run_tests:
       cbz     x9, 5f
       blr     x9                              // Set expected RAM values
     5:
-      mov     x30, x17
 
     // Set NZCV flags
       ldp     x28, x1, [sp, #0x100 + 8 * 28]
@@ -204,6 +203,7 @@ run_tests:
       orr     x0, x0, x1                     // Combine x0 and x1
       msr     nzcv, x0                       // Write result back to flags
 
+      mov     x30, x17
       ldp     x0, x1, [sp, #0x100 + 8 * 0]
       ldp     x2, x3, [sp, #0x100 + 8 * 2]
       ldp     x4, x5, [sp, #0x100 + 8 * 4]
@@ -265,7 +265,7 @@ run_tests:
         b.ne    7b
 
     // Compare flags
-      mov     w6, flag_msg_offsets
+      adr     x6, flag_msg_offsets
       mov     w7, #0x80000000                 // Mask for bit 31
       ldr     w12, [x8, #0x200]               // w12 = pre-test NZCV
       ldr     w13, [x8, #0x100]               // w13 = post-test NZCV

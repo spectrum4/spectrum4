@@ -72,8 +72,6 @@ rand_block:
 
 
 run_tests:
-  ldr     w0, arm_size
-  and     sp, x0, #~0x0f                  // Set stack pointer at top of ARM memory
   adr     x20, all_tests                  // x20 = address of test list
   ldr     x10, [x20], #8                  // x10 = number of tests
   cbz     x10, 36f                        // Return if no tests to run
@@ -453,14 +451,12 @@ test_fail:
 #   x5 = [x1 - 8]
 #   x26 = end address of used compressed data (exclusive) -> 8 byte aligned
 #   x27 = 0x6a09e667bb67ae85
-# TODO: when src/profiles/debug/demo.s has more sophisticated fill_memory_with_junk, this routine
-#       should reference the random sequence that routine uses
 snapshot_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x26, x2
-  adr     x0, msg_snapshotting_ram
-  bl      uart_puts
+# adr     x0, msg_snapshotting_ram
+# bl      uart_puts
   mov     x0, #0                          // start address of region to snapshot
   adrp    x1, bss_debug_start
   add     x1, x1, :lo12:bss_debug_start   // first address not to snapshot
@@ -468,10 +464,11 @@ snapshot_all_ram:
   mov     x3, MEMORY_DUMPS_BUFFER_SIZE
   add     x3, x1, x3                      // first address after end of compressed data region
   bl      snapshot_memory                 // x2 = first address after end of snapshot
-  mov     x26, x2
-  adr     x0, msg_done
-  bl      uart_puts
-  mov     x2, x26
+# mov     x26, x2
+# adr     x0, msg_done
+# bl      uart_puts
+# mov     x2, x26
+
 # TODO: snapshot framebuffer
 # adr     x4, framebuffer
 # ldr     w0, [x4]
@@ -492,20 +489,34 @@ snapshot_all_ram:
 #  x2 = end address of used compressed data (exclusive) -> 8 byte aligned
 #  x4 = [x1 - 16]
 #  x5 = [x1 - 8]
-#  x26 = repeat count of last quad
-#  x27 = 0x6a09e667bb67ae85
-# TODO: snapshot using XOR/EOR against random sequence
-# TODO: probably can use x7,x8,x11,x12 - double check this first though!
+#  x7 = first address after random block
+#  x8 = address in random block
+#  x11 = rand_data
+#  x26 = repeat count of last quad (excluding original entry, i.e. n-1 where n = length of repeated sequence)
+#  x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
 snapshot_memory:
-  // x4 = quad at [address-8]
-  // x5 = quad at [address]
-  // x26 = repeat count of value (excluding original entry, i.e. n-1 where n = length of repeated sequence)
-  // x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
+  adrp    x7, rand_seq_length
+  add     x7, x7, :lo12:rand_seq_length
+  ldrb    w4, [x7]                        // w4 = random block length
+  adrp    x11, rand_data
+  add     x11, x11, :lo12:rand_data       // x11 = address of random data
+  udiv    x8, x0, x4                      // x8 = int(start_address_decompressed/x4)
+  umsubl  x8, w8, w4, x0                  // x8 = x0 - x4 * int(x0/x4) = start_address_decompressed % random_sequence_length
+  add     x8, x8, x11                     // x8 = address inside random block that holds quad for masking start address
+  add     x7, x4, x11                     // x7 = first address after random block
   mov     x26, #0                         // Set quad repeat counter to zero
   ldr     x27, =0x6a09e667bb67ae85
   ldr     x4, [x0], #8
+  ldr     x12, [x8], #8
+  cmp     x8, x7
+  csel    x8, x8, x11, ne
+  eor     x4, x4, x12
   1:
     ldr     x5, [x0], #8                    // Get next value.
+    ldr     x12, [x8], #8
+    cmp     x8, x7
+    csel    x8, x8, x11, ne
+    eor     x5, x5, x12
     cmp     x4, x5                          // Is new value different to previous one?
     b.ne    2f                              // If so, jump ahead to 2:.
   // new quad value matches previous quad value
@@ -570,7 +581,17 @@ restore_all_ram:
 #   x4 = [x1 - 8]
 #   x5 = 0
 #   x27 = 0x6a09e667bb67ae85
+#  TODO: update reg list
 restore_snapshot:
+  adrp    x7, rand_seq_length
+  add     x7, x7, :lo12:rand_seq_length
+  ldrb    w4, [x7]                        // w4 = random block length
+  adrp    x11, rand_data
+  add     x11, x11, :lo12:rand_data       // x11 = address of random data
+  udiv    x8, x0, x4                      // x8 = int(start_address_decompressed/x4)
+  umsubl  x8, w8, w4, x0                  // x8 = x0 - x4 * int(x0/x4) = start_address_decompressed % random_sequence_length
+  add     x8, x8, x11                     // x8 = address inside random block that holds quad for masking start address
+  add     x7, x4, x11                     // x7 = first address after random block
   ldr     x27, =0x6a09e667bb67ae85
   1:
     ldr     x4, [x2], #8
@@ -580,11 +601,19 @@ restore_snapshot:
     ldp     x5, x4, [x2], #16               // x5 = repeat count (1 less than total entries), x4 = value
     2:
       cbz     x5, 3f
-      str     x4, [x0], #8
+      ldr     x12, [x8], #8
+      cmp     x8, x7
+      csel    x8, x8, x11, ne
+      eor     x12, x4, x12
+      str     x12, [x0], #8
       sub     x5, x5, #1
       b       2b
   3:
-    str     x4, [x0], #8
+    ldr     x12, [x8], #8
+    cmp     x8, x7
+    csel    x8, x8, x11, ne
+    eor     x12, x4, x12
+    str     x12, [x0], #8
     cmp     x0, x1
     b.ne    1b
   ret
@@ -600,9 +629,12 @@ restore_snapshot:
 #   x1
 #   x2
 #   x3
+#   x4
+#   x5
 #   x6
 #   x7
 #   x8
+#   x11
 #   x12
 #   x13
 #   x14
@@ -610,10 +642,22 @@ restore_snapshot:
 #   x16
 #   x17
 #   x18
-    // TODO: Custom output for system vars
+#   x22
+#   x23
+#   x25
+# TODO: Custom output for system vars
 compare_snapshots:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+  adrp    x23, rand_seq_length
+  add     x23, x23, :lo12:rand_seq_length
+  ldrb    w4, [x23]                        // w4 = random block length
+  adrp    x11, rand_data
+  add     x11, x11, :lo12:rand_data       // x11 = address of random data
+  udiv    x25, x8, x4                     // x25 = int(start_address_decompressed/x4)
+  umsubl  x25, w25, w4, x8                // x25 = x8 - x4 * int(x8/x4) = start_address_decompressed % random_sequence_length
+  add     x25, x25, x11                   // x25 = address inside random block that holds quad for masking start address
+  add     x23, x4, x11                     // x23 = first address after random block
 // x8 will loop through quads until it reaches x9
 // x12 = pre-test value of [x8] (from snapshot)
 // x13 = post-test value of [x8] (from snapshot)
@@ -626,33 +670,39 @@ compare_snapshots:
   1:
     cbz     x17, 2f                         // If not still repeating previous pre-test value, jump ahead to 2:
     sub     x17, x17, #1                    // Decrement counter
-    b       3f                              // x12 already set from previous iteration, so jump ahead
+    b       3f                              // x4 already set from previous iteration, so jump ahead
   2:
-    ldr     x12, [x6], #8                   // Read a new value
-    cmp     x12, x15                        // Is it the repeat marker?
+    ldr     x4, [x6], #8                   // Read a new value
+    cmp     x4, x15                        // Is it the repeat marker?
     b.ne    3f                              // If not, it is a regular value, jump ahead to 3:
   // repeated value found
-    ldp     x17, x12, [x6], #16             // x17 = repeat count (1 less than total entries), x12 = value
+    ldp     x17, x4, [x6], #16             // x17 = repeat count (1 less than total entries), x4 = value
   3:
-  // x17 and x12 correctly set now
+  // x17 and x4 correctly set now
     cbz     x18, 4f                         // If not still repeating previous pre-test value, jump ahead to 4:
     sub     x18, x18, #1                    // Decrement counter
-    b       5f                              // x13 already set from previous iteration, so jump ahead
+    b       5f                              // x5 already set from previous iteration, so jump ahead
   4:
-    ldr     x13, [x7], #8                   // Read a new value
-    cmp     x13, x15                        // Is it the repeat marker?
+    ldr     x5, [x7], #8                   // Read a new value
+    cmp     x5, x15                        // Is it the repeat marker?
     b.ne    5f                              // If not, it is a regular value, jump ahead to 5:
   // repeated value found
-    ldp     x18, x13, [x7], #16             // x18 = repeat count (1 less than total entries), x13 = value
+    ldp     x18, x5, [x7], #16             // x18 = repeat count (1 less than total entries), x5 = value
   5:
-  // x18 and x13 correctly set now
+  // x18 and x5 correctly set now
     ldr     x14, [x8]
+    ldr     x22, [x25]
+    eor     x12, x22, x4
+    eor     x13, x22, x5
     cmp     x13, x14
     b.eq    6f
     adr     x16, log_ram                    // x16 = function to log "Memory location [0x<address>]"
     bl      test_fail
   6:
     add     x8, x8, #8
+    add     x25, x25, #8
+    cmp     x25, x23
+    csel    x25, x25, x11, ne
     cmp     x8, x9
     b.ne    1b
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.

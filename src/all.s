@@ -169,17 +169,9 @@ _start:
   adr     x2, sn_fb
   stp     x0, x1, [x2]
   bl      fill_memory_with_junk
+  ldr     w0, arm_size
+  and     sp, x0, #~0x0f                  // Set stack pointer at top of ARM memory
   bl      run_tests
-  adr     x0, __bss_start
-  and     x0, x0, ~0xf
-  mov     x1, #50
-  mov     x2, #0
-  bl      display_memory
-  adrp    x0, rand_data
-  add     x0, x0, :lo12:rand_data
-  mov     x1, #0x20
-  mov     x2, #0
-  bl      display_memory
 .endif
   b       restart                         // Raspberry Pi 3B initialisation complete.
                                           // Now call entry point in rom0.s which

@@ -9,7 +9,7 @@
 
 # This test calls po_attr passing the address of a pixel from the display file (section 1,
 # line 5, column 4, pixel row 6). It first sets the current attribute of the character cell to
-# TODO xxxxx, and ATTR_T, MASK_T, P_FLAG to other interesting values.
+# 0b01010101, and ATTR_T, MASK_T, P_FLAG to other interesting values.
 
 
 po_attr_1_setup:

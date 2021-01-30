@@ -116,6 +116,7 @@ pr_all:
     poke_address
     po_attr
 po_attr:
+    poke_address
 po_msg:
     po_table
 po_tokens:
@@ -206,6 +207,7 @@ run_tests:
     uart_puts
     uart_puts
     compare_snapshots
+    compare_snapshots
     restore_all_ram
 log_ram:
     uart_puts
@@ -237,10 +239,12 @@ log_register:
     uart_puts
 snapshot_all_ram:
     snapshot_memory
+    snapshot_memory
 snapshot_memory:
     uart_puts
     sleep
 restore_all_ram:
+    restore_snapshot
     restore_snapshot
 restore_snapshot:
 compare_snapshots:
@@ -248,7 +252,10 @@ fill_memory_with_junk:
     uart_puts
     rand_x0
     rand_block
+    fill_region_with_junk
+    fill_region_with_junk
     uart_puts
+fill_region_with_junk:
 display_sysvars:
     uart_puts
     uart_send

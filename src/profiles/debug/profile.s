@@ -294,11 +294,14 @@ run_tests:
         lsr     w7, w7, #1
         tbz     w7, #27, 9b
 
-    // TODO: the compare snapshots should also compare framebuffers
       ldp     x6, x7, [x24]                   // Restore pre-test snapshot location, post-test snapshot location
       mov     x8, #0                          // start address of region to snapshot
       adrp    x9, bss_debug_start
       add     x9, x9, :lo12:bss_debug_start   // first address not to snapshot
+      bl      compare_snapshots
+      adr     x8, framebuffer
+      ldp     w8, w9, [x8]
+      add     x9, x8, x9
       bl      compare_snapshots
 
     // Restore initial pristine snapshot
@@ -468,13 +471,10 @@ snapshot_all_ram:
 # adr     x0, msg_done
 # bl      uart_puts
 # mov     x2, x26
-
-# TODO: snapshot framebuffer
-# adr     x4, framebuffer
-# ldr     w0, [x4]
-# ldr     w1, [x4, #4]
-# add     w1, w0, w1
-# bl      snapshot_memory                 // x2 = first address after end of snapshot
+  adr     x0, framebuffer
+  ldp     w0, w1, [x0]
+  add     x1, x0, x1
+  bl      snapshot_memory                 // x2 = first address after end of snapshot
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -559,13 +559,16 @@ snapshot_memory:
 
 # On entry:
 #   x2 = location of snapshot
-# TODO: restore framebuffer
 restore_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x0, #0                          // start address to restore snapshot to
   adrp    x1, bss_debug_start
   add     x1, x1, :lo12:bss_debug_start   // first address not to restore
+  bl      restore_snapshot
+  adr     x0, framebuffer
+  ldp     w0, w1, [x0]
+  add     x1, x0, x1
   bl      restore_snapshot
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
@@ -643,21 +646,21 @@ restore_snapshot:
 #   x17
 #   x18
 #   x22
-#   x23
 #   x25
+#   x26
 # TODO: Custom output for system vars
 compare_snapshots:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  adrp    x23, rand_seq_length
-  add     x23, x23, :lo12:rand_seq_length
-  ldrb    w4, [x23]                        // w4 = random block length
+  adrp    x26, rand_seq_length
+  add     x26, x26, :lo12:rand_seq_length
+  ldrb    w4, [x26]                        // w4 = random block length
   adrp    x11, rand_data
   add     x11, x11, :lo12:rand_data       // x11 = address of random data
   udiv    x25, x8, x4                     // x25 = int(start_address_decompressed/x4)
   umsubl  x25, w25, w4, x8                // x25 = x8 - x4 * int(x8/x4) = start_address_decompressed % random_sequence_length
   add     x25, x25, x11                   // x25 = address inside random block that holds quad for masking start address
-  add     x23, x4, x11                     // x23 = first address after random block
+  add     x26, x4, x11                     // x26 = first address after random block
 // x8 will loop through quads until it reaches x9
 // x12 = pre-test value of [x8] (from snapshot)
 // x13 = post-test value of [x8] (from snapshot)
@@ -701,7 +704,7 @@ compare_snapshots:
   6:
     add     x8, x8, #8
     add     x25, x25, #8
-    cmp     x25, x23
+    cmp     x25, x26
     csel    x25, x25, x11, ne
     cmp     x8, x9
     b.ne    1b
@@ -715,8 +718,6 @@ fill_memory_with_junk:
   mov     x11, x30
   adr     x0, msg_filling_memory_with_junk
   bl      uart_puts
-  adrp    x6, bss_debug_start
-  add     x6, x6, :lo12:bss_debug_start
 // Choose random sequence length
   bl      rand_x0                         // Fetch random bits in x0
   and     w1, w0, #0x00000070             // 0x00/0x10/0x20/0x30/0x40/0x50/0x60/0x70
@@ -730,7 +731,25 @@ fill_memory_with_junk:
   mov     x0, x5
   mov     x4, x1                          // Preserve sequence byte length in x4
   bl      rand_block
+// First random block: __bss_start -> bss_debug_start
   adr     x8, __bss_start
+  adrp    x6, bss_debug_start
+  add     x6, x6, :lo12:bss_debug_start
+  bl      fill_region_with_junk
+// Second random block: framebuffer
+  adr     x0, framebuffer
+  ldp     w8, w6, [x0]
+  add     x6, x8, x6
+  bl      fill_region_with_junk
+// Log completed
+  adr     x0, msg_done
+  bl      uart_puts
+  mov     x30, x11
+  ret
+
+
+fill_region_with_junk:
+  mov     x0, x30
   udiv    x9, x8, x4                      // x9 = int(__bss_start/x4)
   umsubl  x10, w9, w4, x8                 // x10 = x8 - x4 * int(x8/x4) = __bss_start % (random sequence length)
   1:
@@ -752,9 +771,7 @@ fill_memory_with_junk:
     add     x10, x10, #0x10
     b       3b
 4:
-  adr     x0, msg_done
-  bl      uart_puts
-  mov     x30, x11
+  mov     x30, x0
   ret
 
 

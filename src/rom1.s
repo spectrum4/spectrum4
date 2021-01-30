@@ -1094,6 +1094,8 @@ pr_all:                          // L0B7F
 #       address; instead we should just pass the attributes file address into the
 #       routine.
 po_attr:                         // L0BDB
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
   adr     x9, display_file                // x9 = start display file address
   adr     x24, attributes_file            // x24 = start attributes file address
   sub     x11, x0, x9                     // x11 = display file offset
@@ -1148,7 +1150,11 @@ po_attr:                         // L0BDB
 // PAPER is 0/1/2/3 (black/blue/red/magenta)
   eor     w17, w17, #0b00000111           // INK = white (orr instruction also ok here)
 2:
-  strb    w17, [x24, x16]                 // Update attribute file entry
+  strb    w17, [x24, x16]
+  add     x0, x24, x16
+  mov     w1, w17
+  bl      poke_address                    // Update attribute file entry
+  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack.
   ret
 
 

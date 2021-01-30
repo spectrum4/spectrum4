@@ -13,43 +13,194 @@
 
 
 po_attr_1_setup:
-  _strb 0b10010101, ATTR_T                // See http://www.breakintoprogstack.co.uk/computers/zx-spectrum/screen-memory-layout
+  _strb   0b10010101, ATTR_T              // See http://www.breakintoprogstack.co.uk/computers/zx-spectrum/screen-memory-layout
                                           // temp colours: FLASH 1; BRIGHT 0; PAPER 2; INK 5
-  _strb 0b01010110, MASK_T                // Current screen attributes are 0b01010101 => FLASH 0; BRIGHT 1; PAPER 2; INK 5
+  _strb   0b01010110, MASK_T              // Current screen attributes are 0b01010101 => FLASH 0; BRIGHT 1; PAPER 2; INK 5
                                           // Read attribute bits 1,2,4,6 from screen (0b01010101), and 0,3,5,7 from ATTR_T (0b10010101)
                                           // => 0b11010101 => INK 5; PAPER 2; BRIGHT 1; FLASH 1
-  _strb 0b10010111, P_FLAG                // OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7
+  _strb   0b10010111, P_FLAG              // OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7
                                           // => FLASH 1: BRIGHT 1: PAPER 2: INK 7
+  # CJ's Elephant Antics brick sprite
+  _strhbe 0b0000000000000000, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x0*20*216
+  _strhbe 0b0111111111111100, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x1*20*216
+  _strhbe 0b1101101010000110, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x2*20*216
+  _strhbe 0b1111111111101010, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x3*20*216
+  _strhbe 0b1011111111011000, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x4*20*216
+  _strhbe 0b1111011110111010, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x5*20*216
+  _strhbe 0b1010110111110000, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x6*20*216
+  _strhbe 0b1101111011101010, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x7*20*216
+  _strhbe 0b1011111111011000, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x8*20*216
+  _strhbe 0b1111101110110010, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x9*20*216
+  _strhbe 0b1011011100100000, display_file + 1*216*20*16 + 5*216 + 4*2 + 0xa*20*216
+  _strhbe 0b1110111001001010, display_file + 1*216*20*16 + 5*216 + 4*2 + 0xb*20*216
+  _strhbe 0b1001110010010000, display_file + 1*216*20*16 + 5*216 + 4*2 + 0xc*20*216
+  _strhbe 0b1100000000000010, display_file + 1*216*20*16 + 5*216 + 4*2 + 0xd*20*216
+  _strhbe 0b0101010101010100, display_file + 1*216*20*16 + 5*216 + 4*2 + 0xe*20*216
+  _strhbe 0b0000000000000000, display_file + 1*216*20*16 + 5*216 + 4*2 + 0xf*20*216
   # TODO - set screen attribute value to something more interesting than 0b01010101
-  _strb 0b01010101, attributes_file + 1*108*20 + 5*108 + 4
+  _strb   0b01010101, attributes_file + 1*108*20 + 5*108 + 4
   ret
 
 
 po_attr_1_setup_regs:
-  ldr x0, = display_file + 1*216*20*16 + 5*216 + 4*2 + 6*20*216
+  ldr     x0, = display_file + 1*216*20*16 + 5*216 + 4*2 + 6*20*216
                                           // section 1, line 5, column 4, pixel row 6
   ret
 
 
 po_attr_1_effects:
-  # TODO - framebuffer updates
-  _strb 0xd7, attributes_file + 1*108*20 + 5*108 + 4
+// Attributes file update
+  _strb   0xd7, attributes_file + 1*108*20 + 5*108 + 4
+// Framebuffer updates
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0x0
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0x0
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0x0
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0x0
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0x0
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0x0
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0x0
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0x0
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0x1
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0x1
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0x1
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0x1
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0x1
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0x1
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0x1
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0x1
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0x2
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0x2
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0x2
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0x2
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0x2
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0x2
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0x2
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0x2
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0x3
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0x3
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0x3
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0x3
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0x3
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0x3
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0x3
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0x3
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0x4
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0x4
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0x4
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0x4
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0x4
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0x4
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0x4
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0x4
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0x5
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0x5
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0x5
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0x5
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0x5
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0x5
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0x5
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0x5
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0x6
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0x6
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0x6
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0x6
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0x6
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0x6
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0x6
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0x6
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0x7
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0x7
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0x7
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0x7
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0x7
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0x7
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0x7
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0x7
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0x8
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0x8
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0x8
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0x8
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0x8
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0x8
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0x8
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0x8
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0x9
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0x9
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0x9
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0x9
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0x9
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0x9
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0x9
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0x9
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0xa
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0xa
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0xa
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0xa
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0xa
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0xa
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0xa
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0xa
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0xb
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0xb
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0xb
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0xb
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0xb
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0xb
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0xb
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0xb
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0xc
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0xc
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0xc
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0xc
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0xc
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0xc
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0xc
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0xc
+  _pixel  0x00ffffff00ffffff, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0xd
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0xd
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0xd
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0xd
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0xd
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0xd
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0xd
+  _pixel  0x00ff000000ffffff, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0xd
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0xe
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0xe
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0xe
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0xe
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0xe
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0xe
+  _pixel  0x00ffffff00ff0000, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0xe
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0xe
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x0, BORDER_TOP + 16*(1*20 + 5) + 0xf
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x2, BORDER_TOP + 16*(1*20 + 5) + 0xf
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x4, BORDER_TOP + 16*(1*20 + 5) + 0xf
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x6, BORDER_TOP + 16*(1*20 + 5) + 0xf
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0x8, BORDER_TOP + 16*(1*20 + 5) + 0xf
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xa, BORDER_TOP + 16*(1*20 + 5) + 0xf
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xc, BORDER_TOP + 16*(1*20 + 5) + 0xf
+  _pixel  0x00ff000000ff0000, BORDER_LEFT + 16*4 + 0xe, BORDER_TOP + 16*(1*20 + 5) + 0xf
   ret
 
 
 po_attr_1_effects_regs:
-  mov x0, #0x97                           // [P_FLAG]
-  mov x1, #0x5695                         // [ATTR_T] | ([MASK_T] << 8)
-  adr x9, display_file                    // display_file
-  mov x10, #4                             // x attribute coordinate
-  ldr x11, =1*216*20*16 + 6*20*216 + 5*216 + 4*2
-                                          // display_file offset
-  mov x12, #108                           // 108
-  ldr x13, =0x012f684c00000000            // multiplication constant
-  mov x14, 1*20*16 + 6*20 + 5             // display_file offset / 216 (pixel line number in layout order)
-  mov x15, 0xcccd000000000000             // multiplication constant
-  mov x16, 1*108*20 + 5*108 + 4           // attribute_file offset
-  mov x17, 0x56d7                         // [0-7] new attribute value; [8-15] [MASK_T]
-  mov x18, 1*5                            // 5 * screen third (0/5/10)
-  adr x24, attributes_file                // attributes_file
+  movl    w0, 0x5c660
+  mov     x1, #0
+  mov     x3, #0
+  mov     x5, #0xff
+  mov     x6, #0
+  mov     x7, #0xff0000
+  mov     x8, #0
+  mov     x9, #0x3f60
+  mov     x10, #4
+  movl    w11, 0x20f61
+  mov     x12, #0x6c
+  mov     x13, #0xff
+  mov     x14, #0xff
+  mov     x15, #0xffffff
+  mov     x16, #0xa90
+  mov     x17, #0xd7
+  mov     x18, #0x5
+  adr     x24, attributes_file
+  nzcv    #0b0110
   ret

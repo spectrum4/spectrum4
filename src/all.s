@@ -34,6 +34,22 @@
 .endm
 
 
+.macro _strh val, addr
+  mov     w0, \val & 0xffff
+  adrp    x1, \addr
+  add     x1, x1, :lo12:\addr
+  strh    w0, [x1]
+.endm
+
+
+.macro _strhbe val, addr
+  mov     w0, ((\val & 0xff) << 8) | ((\val & 0xff00) >> 8)
+  adrp    x1, \addr
+  add     x1, x1, :lo12:\addr
+  strh    w0, [x1]
+.endm
+
+
 .macro _str val, addr
   ldr     x0, =\val
   adrp    x1, \addr
@@ -42,10 +58,26 @@
 .endm
 
 
+.macro _pixel val, x, y
+  adr     x2, framebuffer
+  ldr     w0, [x2]
+  ldr     w1, [x2, pitch-framebuffer]
+  mov     w2, \y
+  umaddl  x0, w1, w2, x0
+  mov     w1, \x
+  movz    x2, \val & 0xffff
+  movk    x2, (\val >> 16) & 0xffff, lsl #16
+  movk    x2, (\val >> 32) & 0xffff, lsl #32
+  movk    x2, (\val >> 48) & 0xffff, lsl #48
+  add     x0, x0, x1, lsl #2
+  str     x2, [x0]
+.endm
+
+
 # Load a 32-bit immediate using mov.
 .macro movl Wn, imm
-  movz    \Wn,  \imm & 0xFFFF
-  movk    \Wn, (\imm >> 16) & 0xFFFF, lsl #16
+  movz    \Wn, \imm & 0xffff
+  movk    \Wn, (\imm >> 16) & 0xffff, lsl #16
 .endm
 
 
@@ -163,11 +195,6 @@ _start:
 1:
 .if       DEBUG_PROFILE
   bl      rand_init
-  adr     x4, framebuffer
-  ldp     w0, w1, [x4]
-  add     w1, w0, w1
-  adr     x2, sn_fb
-  stp     x0, x1, [x2]
   bl      fill_memory_with_junk
   ldr     w0, arm_size
   and     sp, x0, #~0x0f                  // Set stack pointer at top of ARM memory

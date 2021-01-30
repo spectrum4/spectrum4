@@ -74,9 +74,23 @@ rand_block:
 run_tests:
   adr     x20, all_tests                  // x20 = address of test list
   ldr     x10, [x20], #8                  // x10 = number of tests
-  cbz     x10, 36f                        // Return if no tests to run
+  cbz     x10, 11f                        // Return if no tests to run
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
+// Stash framebuffer address, size and pitch on stack
+# adr     x0, framebuffer
+# ldp     w5, w6, [x0]
+# stp     w5, w6, [sp, #-16]!
+# ldr     w7, [x0, pitch-framebuffer]
+# str     w7, [sp, #8]
+// Replace framebuffer address, size and pitch with test framebuffer values
+# adrp    x1, test_framebuffer
+# add     x1, x1, :lo12:test_framebuffer
+# mov     x2, #4*1920*1280
+# stp     w1, w2, [x0]
+# mov     w4, #4*1920
+# str     w4, [x3]
+// Create an initial snapshot for restoring state between tests
   adrp    x2, memory_dumps
   add     x2, x2, :lo12:memory_dumps      // x2 = target address for snapshot
   bl      snapshot_all_ram                // Snapshot RAM so we can roll back between tests
@@ -319,8 +333,15 @@ run_tests:
     add     sp, sp, #0x10
     cbnz    x10, 1b                         // Loop if more tests to run
 
+  // Restore real framebuffer address, size, pitch
+# adr     x0, framebuffer
+# ldp     w5, w6, [sp]                    // Retrieve stacked framebuffer address and size
+# stp     w5, w6, [x0]                    // Restore framebuffer address, size
+# ldr     w7, [sp, #8]                    // Retrieve stacked pitch
+# str     w7, [x0, pitch-framebuffer]     // Restore pitch
+# add     sp, sp, #16                     // Keep stack pointer 16-byte aligned
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-36:
+11:
   ret
 
 
@@ -1219,19 +1240,10 @@ msg_flag_n:                    .asciz "Negative flag (N)"
 msg_flag_v:                    .asciz "Overflow flag (V)"
 msg_flag_z:                    .asciz "Zero flag (Z)"
 
-.align 4
-snapshot_regions:
-.quad 0
-.quad bss_debug_start
-sn_fb:
-.quad 0  // updated after framebuffer initialisation
-.quad 0  // updated after framebuffer initialisation
-# end marker, not an actual region
-.quad 0  // value unused
-.quad 0  // 0 end address => this quad pair marks end of region list, not an actual region
-
-
 .bss
+
+# .align 12
+# test_framebuffer: .space 4 * 1920 * 1280
 
 .align 4
 bss_debug_start:

@@ -257,7 +257,7 @@ poke_address_3_effects:
 
 poke_address_3_effects_regs:
 // section 2, line 12, character 7, plus 16 pixel row increments of 216*20
-  adr     x0, display_file + 2*216*16*20 + 12*216 + 7*2 + 216*16*20
+  adr     x0, display_file + 2*216*16*20 + 12*216 + 7*2 + 16*216*20
   mov     w1, #0x2a00
   mov     w3, #0x0
   mov     w5, #0x0

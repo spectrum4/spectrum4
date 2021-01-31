@@ -184,14 +184,15 @@ po_attr_1_effects:
 
 
 po_attr_1_effects_regs:
-  movl    w0, 0x5c660
+// section 1, line 5, character 4, plus 16 pixel row increments of 216*20
+  adr     x0, display_file + 1*216*16*20 + 5*216 + 4*2 + 16*216*20
   mov     x1, #0
   mov     x3, #0
   mov     x5, #0xff
   mov     x6, #0
   mov     x7, #0xff0000
   mov     x8, #0
-  mov     x9, #0x3f60
+  adr     x9, mbreq
   mov     x10, #4
   movl    w11, 0x20f61
   mov     x12, #0x6c

@@ -2,7 +2,7 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
-.set MEMORY_DUMPS_BUFFER_SIZE, 0x01000000  // 16MB
+.set MEMORY_DUMPS_BUFFER_SIZE, 0x02000000 // 32MB
 
 .text
 .align 2
@@ -46,7 +46,39 @@ run_tests:
       adr     x0, msg_running_test_part_2
       bl      uart_puts                       // Log "...\r\n"
       cbz     x9, 3f                          // Skip RAM setup if there is none
+      sub     sp, sp, #0x100
+      stp     x0, x1, [sp]
+      stp     x2, x3, [sp, #8 * 2]
+      stp     x4, x5, [sp, #8 * 4]
+      stp     x6, x7, [sp, #8 * 6]
+      stp     x8, x9, [sp, #8 * 8]
+      stp     x10, x11, [sp, #8 * 10]
+      stp     x12, x13, [sp, #8 * 12]
+      stp     x14, x15, [sp, #8 * 14]
+      stp     x16, x17, [sp, #8 * 16]
+      stp     x18, x19, [sp, #8 * 18]
+      stp     x20, x21, [sp, #8 * 20]
+      stp     x22, x23, [sp, #8 * 22]
+      stp     x24, x25, [sp, #8 * 24]
+      stp     x26, x27, [sp, #8 * 26]
+      stp     x28, x29, [sp, #8 * 28]
       blr     x9                              // Setup RAM
+      ldp     x0, x1, [sp]
+      ldp     x2, x3, [sp, #8 * 2]
+      ldp     x4, x5, [sp, #8 * 4]
+      ldp     x6, x7, [sp, #8 * 6]
+      ldp     x8, x9, [sp, #8 * 8]
+      ldp     x10, x11, [sp, #8 * 10]
+      ldp     x12, x13, [sp, #8 * 12]
+      ldp     x14, x15, [sp, #8 * 14]
+      ldp     x16, x17, [sp, #8 * 16]
+      ldp     x18, x19, [sp, #8 * 18]
+      ldp     x20, x21, [sp, #8 * 20]
+      ldp     x22, x23, [sp, #8 * 22]
+      ldp     x24, x25, [sp, #8 * 24]
+      ldp     x26, x27, [sp, #8 * 26]
+      ldp     x28, x29, [sp, #8 * 28]
+      add     sp, sp, #0x100
     3:
       mov     x2, x6                          // x2 = Target address for pre-test snapshot, immediately after previous snapshot
       bl      snapshot_all_ram                // Snapshot pre-test RAM
@@ -139,7 +171,39 @@ run_tests:
       ldp     x9, x17, [x23], #0x10           // x9 = effects address
                                               // x17 = effects_regs address
       cbz     x9, 5f
-      blr     x9                              // Set expected RAM values
+      sub     sp, sp, #0x100
+      stp     x0, x1, [sp]
+      stp     x2, x3, [sp, #8 * 2]
+      stp     x4, x5, [sp, #8 * 4]
+      stp     x6, x7, [sp, #8 * 6]
+      stp     x8, x9, [sp, #8 * 8]
+      stp     x10, x11, [sp, #8 * 10]
+      stp     x12, x13, [sp, #8 * 12]
+      stp     x14, x15, [sp, #8 * 14]
+      stp     x16, x17, [sp, #8 * 16]
+      stp     x18, x19, [sp, #8 * 18]
+      stp     x20, x21, [sp, #8 * 20]
+      stp     x22, x23, [sp, #8 * 22]
+      stp     x24, x25, [sp, #8 * 24]
+      stp     x26, x27, [sp, #8 * 26]
+      stp     x28, x29, [sp, #8 * 28]
+      blr     x9                              // Setup RAM
+      ldp     x0, x1, [sp]
+      ldp     x2, x3, [sp, #8 * 2]
+      ldp     x4, x5, [sp, #8 * 4]
+      ldp     x6, x7, [sp, #8 * 6]
+      ldp     x8, x9, [sp, #8 * 8]
+      ldp     x10, x11, [sp, #8 * 10]
+      ldp     x12, x13, [sp, #8 * 12]
+      ldp     x14, x15, [sp, #8 * 14]
+      ldp     x16, x17, [sp, #8 * 16]
+      ldp     x18, x19, [sp, #8 * 18]
+      ldp     x20, x21, [sp, #8 * 20]
+      ldp     x22, x23, [sp, #8 * 22]
+      ldp     x24, x25, [sp, #8 * 24]
+      ldp     x26, x27, [sp, #8 * 26]
+      ldp     x28, x29, [sp, #8 * 28]
+      add     sp, sp, #0x100
     5:
 
     // Set NZCV flags
@@ -1248,8 +1312,10 @@ msg_flag_n:                    .asciz "Negative flag (N)"
 msg_flag_v:                    .asciz "Overflow flag (V)"
 msg_flag_z:                    .asciz "Zero flag (Z)"
 
-.bss
 
+
+.include "tests.s"                      //  Include tests.s before "bss_debug_start"
+.bss
 # .align 12
 # test_framebuffer: .space 4 * 1920 * 1280
 
@@ -1267,6 +1333,5 @@ rand_data: .space 0x100
 
 
 # Include generated code...
-.include "tests.s"
 .include "sysvars.s"
 .include "screen.s"

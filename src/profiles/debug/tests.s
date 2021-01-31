@@ -18,7 +18,7 @@
 .text
 .align 3
 all_tests:
-  .quad 9                                 // total number of tests
+  .quad 10
   .quad test_poke_address
   .quad test_display_sysvar
   .quad test_cl_addr
@@ -29,11 +29,12 @@ all_tests:
 
 .align 3
 test_poke_address:
-  .quad 3
+  .quad 4
   .quad poke_address
   .quad poke_address_1
   .quad poke_address_2
   .quad poke_address_3
+  .quad poke_address_4
 
 
 .align 3
@@ -61,6 +62,15 @@ poke_address_3:
   .quad poke_address_3_effects
   .quad poke_address_3_effects_regs
   .asciz "poke_address_3"
+
+
+.align 3
+poke_address_4:
+  .quad poke_address_4_setup
+  .quad poke_address_4_setup_regs
+  .quad poke_address_4_effects
+  .quad poke_address_4_effects_regs
+  .asciz "poke_address_4"
 
 
 .align 3

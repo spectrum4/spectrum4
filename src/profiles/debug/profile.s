@@ -2,7 +2,7 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2019 Spectrum +4 Authors. All rights reserved.
 
-.set MEMORY_DUMPS_BUFFER_SIZE, 0x02000000 // 32MB
+.set MEMORY_DUMPS_BUFFER_SIZE, 0x01000000 // 16MB
 
 .text
 .align 2

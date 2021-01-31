@@ -311,10 +311,11 @@ poke_address:
   adr     x9, display_file                // Check if address is in display file
   adr     x24, attributes_file
   subs    x11, x0, x9                     // x11 = display file offset
-  b.lo    1f                              // if x0 < x9, jump ahead since before display file
+  b.lo    2f                              // if x0 < x9, jump ahead since before display file
   adr     x10, display_file_end           // Now compare address to upper limit of display file
   cmp     x0, x10
-  b.hs    1f                              // if x0 >= x10 (display file end) jump ahead since after display file
+  b.hs    2f                              // if x0 >= x10 (display file end) jump ahead since after display file
+// x0 in display file
   // framebuffer addresses = pitch*(BORDER_TOP + 16*((x11/216)%20) + (x11/(216*20))%16 + 320*(x11/(216*20*16))) + address of framebuffer + 4 * (BORDER_LEFT + 8*(x11%216) + [0-7])
   // attribute address = attributes_file+((x11/2)%108)+108*(((x11/216)%20)+20*(x11/(216*20*16)))
   adr     x9, mbreq                       // x9 = address of mailbox request.
@@ -380,45 +381,46 @@ poke_address:
   add     w7, w7, w6, lsl #8
   add     w7, w7, w5, lsl #16
   mov     w8, #8
-3:
-  tst     x1, #0x80                       // pixel set?
-  csel    w3, w7, w15, eq
-  str     w3, [x23], #4
-  lsl     w1, w1, #1
-  subs    w8, w8, #1
-  b.ne    3b
-  b       2f
-1:
+  1:
+    tst     x1, #0x80                       // pixel set?
+    csel    w3, w7, w15, eq
+    str     w3, [x23], #4
+    lsl     w1, w1, #1
+    subs    w8, w8, #1
+    b.ne    1b
+  b       4f
+2:
   subs    x11, x0, x24                    // x11 = attributes file offset
-  b.lo    2f                              // if x0 < x24, jump ahead since before attributes file
+  b.lo    4f                              // if x0 < x24, jump ahead since before attributes file
   adr     x10, attributes_file_end        // Now compare address to upper limit of attributes file
   cmp     x0, x10
-  b.hs    2f                              // if x0 >= x10 (attributes file end), jump ahead since after attributes file
+  b.hs    4f                              // if x0 >= x10 (attributes file end), jump ahead since after attributes file
+// x0 in attributes file
   // TODO: rewrite this section to be more efficient (don't call poke_address recursively)
   add     x10, x9, x11, lsl #1            // x10 = disp base address + attr offset * 2
-  mov     x8, #64800                      // 216 * 20 * 15
-  cmp     x11, #2160
-  csel    x12, x8, xzr, hs
-  add     x10, x10, x12
-  mov     x3, #4320
-  cmp     x11, x3
-  csel    x12, x8, xzr, hs
-  add     x0, x10, x12
-  mov     x3, #16
+  mov     x8, #64800                      // x8 = 216 * 20 * 15
+  cmp     x11, #2160                      // x11 >= 108 * 20? (=> attribute in section 1/2)
+  csel    x12, x8, xzr, hs                // If attribute address in section 0, x12 = 0 else 216*20*15
+  add     x10, x10, x12                   // If attribute address in section 0 or 1, x10 = display address of top left pixel
+  mov     x3, #4320                       // x3 = 108 * 20 * 2 (attribute offset section 2)
+  cmp     x11, x3                         // x11 >= 108 * 20 * 2? (=> attribute in section 2)
+  csel    x12, x8, xzr, hs                // If attribute address in section 0/1, x12 = 0 else 216*20*15
+  add     x0, x10, x12                    // x0 = display address of top left pixel
+  mov     x3, #16                         // x3 = pixel row counter (16 -> 0)
+  3:
+    stp     x3, x0, [sp, #-16]!
+    ldrb    w1, [x0]
+    bl      poke_address                    // refresh left 8 pixels
+    ldp     x3, x0, [sp]
+    add     x0, x0, #1                      // next  address
+    ldrb    w1, [x0]
+    bl      poke_address                    // refresh right 8 pixels
+    ldp     x3, x0, [sp], #16
+    add     x0, x0, #4000
+    add     x0, x0, #320                    // bump x0 by 216*20 - start of next pixel row for current character
+    subs    x3, x3, #1                      // decrement counter
+    b.ne    3b                              // repeat until 16 pixel rows updated for current character
 4:
-  stp     x3, x0, [sp, #-16]!
-  ldrb    w1, [x0]
-  bl      poke_address
-  ldp     x3, x0, [sp]
-  add     x0, x0, #1
-  ldrb    w1, [x0]
-  bl      poke_address
-  ldp     x3, x0, [sp], #16
-  add     x0, x0, #4000
-  add     x0, x0, #320
-  subs    x3, x3, #1
-  b.ne    4b
-2:
   ldp     x23, x24, [sp], #0x10           // Restore old x23, x24.
   ldp     x21, x22, [sp], #0x10           // Restore old x21, x22.
   ldp     x19, x20, [sp], #0x10           // Restore old x19, x20.

@@ -42,7 +42,6 @@ poke_address_2_setup:
 poke_address_2_setup_regs:
   adr     x0, display_file + 16*216
   mov     x1, #34
-  nzcv    #0b0110
   ret
 
 
@@ -72,6 +71,7 @@ poke_address_2_effects_regs:
   mov     x16, 0x6c0
   mov     x17, 0x38
   mov     x18, 0x0
+  nzcv    #0b0110
   ret
 
 
@@ -116,7 +116,6 @@ poke_address_3_setup:
 poke_address_3_setup_regs:
   adr     x0, attributes_file + 2*20*108 + 12*108 + 7
   mov     x1, #78
-  nzcv    #0b0110
   ret
 
 
@@ -274,6 +273,7 @@ poke_address_3_effects_regs:
   mov     w16, #0x15f7
   mov     w17, #0x4e
   mov     w18, #0x0a
+  nzcv    #0b0110
   ret
 
 
@@ -284,7 +284,6 @@ poke_address_4_setup:
 poke_address_4_setup_regs:
   adr     x0, COL
   mov     x1, #17
-  nzcv    #0b0110
   ret
 
 

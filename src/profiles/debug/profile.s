@@ -817,7 +817,7 @@ display_sysvars:
 
 
 # On entry:
-#   x20: address of entry inside sysvars_meta
+#   x20: address of sysvar metadata (sysvar_XXXXXX)
 display_sysvar:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.

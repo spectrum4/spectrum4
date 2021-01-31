@@ -22,5 +22,5 @@ cl_addr_1_effects_regs:
   mov x3, #1                              // screen line / 20
   mov x4, #5                              // screen line % 20
   mov x5, #216                            // 216
-  ldr x6, =69120                          // 69120
+  ldr x6, =69120                          // 69120 (0x10e00)
   ret

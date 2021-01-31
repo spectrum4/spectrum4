@@ -45,6 +45,11 @@ run_tests:
       bl      uart_puts                       // Log "<test case name>"
       adr     x0, msg_running_test_part_2
       bl      uart_puts                       // Log "...\r\n"
+
+      mov     x0, #1
+      adr     x1, uart_disable
+      strb    w0, [x1]                        // Disable UART output for test code
+
       cbz     x9, 3f                          // Skip RAM setup if there is none
       sub     sp, sp, #0x100
       stp     x0, x1, [sp]
@@ -63,6 +68,7 @@ run_tests:
       stp     x26, x27, [sp, #8 * 26]
       stp     x28, x29, [sp, #8 * 28]
       blr     x9                              // Setup RAM
+
       ldp     x0, x1, [sp]
       ldp     x2, x3, [sp, #8 * 2]
       ldp     x4, x5, [sp, #8 * 4]
@@ -161,6 +167,9 @@ run_tests:
       stp     x26, x27, [sp, #8 * 26]
       mrs     x0, nzcv                        // Fetch flags (Negative, Zero, Carry, oVerflow)
       stp     x28, x0, [sp, #8 * 28]
+
+      adr     x1, uart_disable
+      strb    wzr, [x1]                       // Enable UART output for test framework output
 
     // Restore stashed registers
       ldr     x2, [sp, #0x208]                // x2 = post-test snapshot location
@@ -882,6 +891,22 @@ display_sysvars:
 
 # On entry:
 #   x20: address of sysvar metadata (sysvar_XXXXXX)
+# On exit:
+#   x0 =
+#     1 byte sysvar: stack pointer - 62
+#     2 byte sysvar: stack pointer - 60
+#     4 byte sysvar: stack pointer - 56
+#     8 byte sysvar: stack pointer - 48
+#         otherwise: stack pointer - 61
+#   x1 = AUX_BASE
+#   x2 = 0
+#   x3 = [AUX_MU_LSR] = 0x21
+#   x4 =
+#     1/2/4/8 byte sysvar: sysvar value
+#               otherwise: unchanged
+#   NZCV =
+#     1/2/4/8 byte sysvar: 0b1000
+#               otherwise: 0b0110
 display_sysvar:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -1115,7 +1140,7 @@ uart_newline:
 # On entry:
 #   x0 = address of null terminated string
 # On exit:
-#   x0 = address of null terminated string (unchanged)
+#   x0 = address of null terminator
 #   x1 = AUX_BASE
 #   x2 = 0
 #   x3 = [AUX_MU_LSR]
@@ -1131,6 +1156,20 @@ uart_puts:
 2:
   ldr     w3, [x1, AUX_MU_LSR]            // w3 = [AUX_MU_LSR_REG]
   tbz     x3, #5, 2b                      // Repeat last statement until bit 5 is set.
+
+/////////////////////
+// This following section allows us to disable UART output during testing but
+// setting the one byte test system variable 'uart_disable' to a non zero value
+// without affecting any register values so to not impact tests.
+.if       DEBUG_PROFILE
+  adr     x1, uart_disable
+  ldrb    w1, [x1]
+  cbnz    x1, uart_puts
+  mov     x1, AUX_BASE & 0xffff0000
+  movk    x1, AUX_BASE & 0x0000ffff       // x1 = 0x3f215000 = AUX_BASE
+.endif
+/////////////////////
+
   strb    w2, [x1, AUX_MU_IO_REG]         //   [AUX_MU_IO_REG] = w2
   mov     w2, 'c'
 3:
@@ -1141,6 +1180,20 @@ uart_puts:
 4:
   ldr     w3, [x1, AUX_MU_LSR]            // w3 = [AUX_MU_LSR_REG]
   tbz     x3, #5, 4b                      // Repeat last statement until bit 5 is set.
+
+/////////////////////
+// This following section allows us to disable UART output during testing but
+// setting the one byte test system variable 'uart_disable' to a non zero value
+// without affecting any register values so to not impact tests.
+.if       DEBUG_PROFILE
+  adr     x1, uart_disable
+  ldrb    w1, [x1]
+  cbnz    x1, uart_puts
+  mov     x1, AUX_BASE & 0xffff0000
+  movk    x1, AUX_BASE & 0x0000ffff       // x1 = 0x3f215000 = AUX_BASE
+.endif
+/////////////////////
+
   strb    w2, [x1, AUX_MU_IO_REG]         //   [AUX_MU_IO_REG] = w2
   b       1b
 5:
@@ -1277,6 +1330,10 @@ base10:
 
 .data
 
+.align 0
+uart_disable: .byte 0
+
+.align 0
 msg_colon0x:                   .asciz ": 0x"
 msg_done:                      .asciz "DONE.\r\n"
 msg_fail:                      .asciz "FAIL: "

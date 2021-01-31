@@ -18,7 +18,7 @@
 .text
 .align 3
 all_tests:
-  .quad 10
+  .quad 13
   .quad test_poke_address
   .quad test_display_sysvar
   .quad test_cl_addr
@@ -75,18 +75,48 @@ poke_address_4:
 
 .align 3
 test_display_sysvar:
-  .quad 1
+  .quad 4
   .quad display_sysvar
   .quad display_sysvar_1
+  .quad display_sysvar_2
+  .quad display_sysvar_8
+  .quad display_sysvar_other
 
 
 .align 3
 display_sysvar_1:
-  .quad 0
+  .quad display_sysvar_1_setup
   .quad display_sysvar_1_setup_regs
   .quad 0
   .quad display_sysvar_1_effects_regs
   .asciz "display_sysvar_1"
+
+
+.align 3
+display_sysvar_2:
+  .quad display_sysvar_2_setup
+  .quad display_sysvar_2_setup_regs
+  .quad 0
+  .quad display_sysvar_2_effects_regs
+  .asciz "display_sysvar_2"
+
+
+.align 3
+display_sysvar_8:
+  .quad display_sysvar_8_setup
+  .quad display_sysvar_8_setup_regs
+  .quad 0
+  .quad display_sysvar_8_effects_regs
+  .asciz "display_sysvar_8"
+
+
+.align 3
+display_sysvar_other:
+  .quad 0
+  .quad display_sysvar_other_setup_regs
+  .quad 0
+  .quad display_sysvar_other_effects_regs
+  .asciz "display_sysvar_other"
 
 
 .align 3

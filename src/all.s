@@ -517,15 +517,38 @@ uart_init:
 # ------------------------------------------------------------------------------
 # Send a byte over Mini UART
 # ------------------------------------------------------------------------------
+# On entry:
+#   x0: char to send
+# On exit:
+#   x1: AUX_BASE
+#   x2: Last read of [AUX_MU_LSR_REG] when waiting for bit 5 to be set
 uart_send:
   mov     x1, AUX_BASE & 0xffff0000
   movk    x1, AUX_BASE & 0x0000ffff       // x1 = 0x3f215000 = AUX_BASE
 1:
   ldr     w2, [x1, AUX_MU_LSR]            // w2 = [AUX_MU_LSR_REG]
   tbz     x2, #5, 1b                      // Repeat last statement until bit 5 is set.
+
+/////////////////////
+// This following section allows us to disable UART output during testing but
+// setting the one byte test system variable 'uart_disable' to a non zero value
+// without affecting any register values so to not impact tests.
+.if       DEBUG_PROFILE
+  adr     x1, uart_disable
+  ldrb    w1, [x1]
+  cbnz    w1, 2f
+  mov     x1, AUX_BASE & 0xffff0000
+  movk    x1, AUX_BASE & 0x0000ffff       // x1 = 0x3f215000 = AUX_BASE
+  b       3f
+2:
+  mov     x1, AUX_BASE & 0xffff0000
+  movk    x1, AUX_BASE & 0x0000ffff       // x1 = 0x3f215000 = AUX_BASE
+  ret
+3:
+.endif
   strb    w0, [x1, AUX_MU_IO_REG]         //   [AUX_MU_IO_REG] = w0
   ret
-
+/////////////////////
 
 .set PM_BASE,                    0x3f100000
 .set PM_WDOG,                    0x24

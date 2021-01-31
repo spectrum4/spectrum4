@@ -6,71 +6,6 @@
 
 .text
 .align 2
-
-
-# These hardware random number generator routines are inspired by:
-#   https://github.com/torvalds/linux/blob/d4f6d923238dbdb69b8525e043fedef2670d4f2c/drivers/char/hw_random/bcm2835-rng.c
-rand_init:
-  mov     x5, x30
-  adr     x0, msg_init_rand
-  bl      uart_puts
-  mov     x1, #0x4000
-  movk    x1, #0x3f10, lsl #16
-# mov     w0, #0x00040000                 // "warmup count": the initial numbers generated are "less random" so will be discarded
-  mov     w0, #0x00100000                 // "warmup count": the initial numbers generated are "less random" so will be discarded
-  str     w0, [x1, #0x04]                 // [0x3f104004] = 0x00040000
-  ldr     w0, [x1, #0x10]
-  orr     w0, w0, #0x01
-  str     w0, [x1, #0x10]                 // Set bit 0 of [0x3f104010]  (mask the interrupt)
-  ldr     w0, [x1]
-  orr     w0, w0, #0x01
-  str     w0, [x1]                        // Set bit 0 of [0x3f104000]  (enable the hardware generator)
-  adr     x0, msg_done
-  bl      uart_puts
-  mov     x30, x5
-  ret
-
-
-rand_x0:
-  mov     x1, #0x4000
-  movk    x1, #0x3f10, lsl #16            // x1 = 0x3f104000
-  1:                                      // Wait until ([0x3f104004] >> 24) >= 2
-    ldr     w0, [x1, #0x04]                 // Since bits 24-31 tell us how many words
-    lsr     w0, w0, #25                     // are available, this must be at least one,
-    cbz     w0, 1b                          // before we can safely read two words.
-  ldr     w0, [x1, #0x08]                 // w0 = [0x3f104008] (random data)
-  ldr     w2, [x1, #0x08]                 // w2 = [0x3f104008] (random data)
-  bfi     x0, x2, #32, #32                // Copy bits from w2 into high bits of x0.
-  ret
-
-
-# Write random data to a buffer.
-#
-# On entry:
-#   x0 = address of buffer (4 byte aligned)
-#   x1 = size of buffer (multiple of 4 bytes)
-# On exit:
-#   x0 = first address after buffer
-#   x1 = 0
-#   x2 = 0x3f104000
-#   x3 = last random word written to buffer
-rand_block:
-  and     x0, x0, #~0b11
-  and     x1, x1, #~0b11
-  mov     x2, #0x4000
-  movk    x2, #0x3f10, lsl #16            // x2 = 0x3f104000
-  1:                                      // Loop until buffer filled
-    2:                                      // Wait until ([0x3f104004] >> 24) >= 1
-      ldr     w3, [x2, #0x04]                 // Since bits 24-31 tell us how many words
-      lsr     w3, w3, #24                     // are available, this must be at least one.
-      cbz     w3, 2b
-    ldr     w3, [x2, #0x08]                 // w3 = [0x3f104008] (random data)
-    str     w3, [x0], #0x04                 // Write to buffer.
-    subs    x1, x1, #0x04
-    cbnz    x1, 1b
-  ret
-
-
 run_tests:
   adr     x20, all_tests                  // x20 = address of test list
   ldr     x10, [x20], #8                  // x10 = number of tests
@@ -796,92 +731,163 @@ fill_region_with_junk:
   ret
 
 
+# These hardware random number generator routines are inspired by:
+#   https://github.com/torvalds/linux/blob/d4f6d923238dbdb69b8525e043fedef2670d4f2c/drivers/char/hw_random/bcm2835-rng.c
+rand_init:
+  mov     x5, x30
+  adr     x0, msg_init_rand
+  bl      uart_puts
+  mov     x1, #0x4000
+  movk    x1, #0x3f10, lsl #16
+# mov     w0, #0x00040000                 // "warmup count": the initial numbers generated are "less random" so will be discarded
+  mov     w0, #0x00100000                 // "warmup count": the initial numbers generated are "less random" so will be discarded
+  str     w0, [x1, #0x04]                 // [0x3f104004] = 0x00040000
+  ldr     w0, [x1, #0x10]
+  orr     w0, w0, #0x01
+  str     w0, [x1, #0x10]                 // Set bit 0 of [0x3f104010]  (mask the interrupt)
+  ldr     w0, [x1]
+  orr     w0, w0, #0x01
+  str     w0, [x1]                        // Set bit 0 of [0x3f104000]  (enable the hardware generator)
+  adr     x0, msg_done
+  bl      uart_puts
+  mov     x30, x5
+  ret
+
+
+rand_x0:
+  mov     x1, #0x4000
+  movk    x1, #0x3f10, lsl #16            // x1 = 0x3f104000
+  1:                                      // Wait until ([0x3f104004] >> 24) >= 2
+    ldr     w0, [x1, #0x04]                 // Since bits 24-31 tell us how many words
+    lsr     w0, w0, #25                     // are available, this must be at least one,
+    cbz     w0, 1b                          // before we can safely read two words.
+  ldr     w0, [x1, #0x08]                 // w0 = [0x3f104008] (random data)
+  ldr     w2, [x1, #0x08]                 // w2 = [0x3f104008] (random data)
+  bfi     x0, x2, #32, #32                // Copy bits from w2 into high bits of x0.
+  ret
+
+
+# Write random data to a buffer.
+#
+# On entry:
+#   x0 = address of buffer (4 byte aligned)
+#   x1 = size of buffer (multiple of 4 bytes)
+# On exit:
+#   x0 = first address after buffer
+#   x1 = 0
+#   x2 = 0x3f104000
+#   x3 = last random word written to buffer
+rand_block:
+  and     x0, x0, #~0b11
+  and     x1, x1, #~0b11
+  mov     x2, #0x4000
+  movk    x2, #0x3f10, lsl #16            // x2 = 0x3f104000
+  1:                                      // Loop until buffer filled
+    2:                                      // Wait until ([0x3f104004] >> 24) >= 1
+      ldr     w3, [x2, #0x04]                 // Since bits 24-31 tell us how many words
+      lsr     w3, w3, #24                     // are available, this must be at least one.
+      cbz     w3, 2b
+    ldr     w3, [x2, #0x08]                 // w3 = [0x3f104008] (random data)
+    str     w3, [x0], #0x04                 // Write to buffer.
+    subs    x1, x1, #0x04
+    cbnz    x1, 1b
+  ret
+
+
 display_sysvars:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  stp     x19, x20, [sp, #-16]!           // callee-saved registers used later on.
-  stp     x21, x22, [sp, #-16]!           // callee-saved registers used later on.
-  stp     x23, x24, [sp, #-16]!           // callee-saved registers used later on.
-  sub     sp, sp, #32                     // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
+  stp     x19, x23, [sp, #-16]!           // callee-saved registers used later on.
+  stp     x20, x21, [sp, #-16]!           // callee-saved registers used later on.
   adr     x0, msg_title_sysvars
   bl      uart_puts
   adr     x19, sysvars_meta               // x0 = address of sysvars metadata table
   mov     w23, SYSVAR_COUNT               // x23 = number of system variables to log
   1:
-    mov     x0, '['
-    bl      uart_send                       // Print "["
     ldr     x20, [x19], #8                  // x20 = sysvar_meta entry
-    ldr     x0, [x20]                       // x0 = address offset of sys var
-    add     x0, x0, x28
-    bl      uart_x0                         // Print "<sys var address>"
-    mov     x0, ']'
-    bl      uart_send                       // Print "]"
-    mov     x0, ' '
-    bl      uart_send                       // Print " "
-    add     x0, x20, #9
-    bl      uart_puts                       // Print system variable name
-    ldrb    w21, [x20, #8]                  // w21 = size of sysvar data in bytes
-    ldr     x24, [x20]                      // x24 = address offset of sys var
-    cmp     w21, #1
-    b.eq    3f
-    cmp     w21, #2
-    b.eq    4f
-    cmp     w21, #4
-    b.eq    5f
-    cmp     w21, #8
-    b.eq    6f
-    // not 2/4/8 bytes => print one byte at a time
-    mov     x0, ':'
-    bl      uart_send
-    mov     x0, ' '
-    bl      uart_send
-    add     x24, x24, x28
-    2:
-      ldrb    w0, [x24], #1
-      mov     x1, sp
-      mov     x2, #8
-      bl      hex_x0
-      mov     w0, #0x0020
-      strh    w0, [x1], #2                    // Add a space and trailing zero.
-      mov     x0, sp
-      bl      uart_puts
-      subs    w21, w21, #1
-      b.ne    2b
-    b       8f
-  3:
-    // 1 byte
-    ldrb    w4, [x28, x24]
-    b       7f
-  4:
-    // 2 bytes
-    ldrh    w4, [x28, x24]
-    b       7f
-  5:
-    // 4 bytes
-    ldr     w4, [x28, x24]
-    b       7f
-  6:
-    // 8 bytes
-    ldr     x4, [x28, x24]
-  7:
-    adr     x0, msg_colon0x
-    bl      uart_puts                       // Print ": 0x"
-    mov     x0, x4
-    mov     x1, sp
-    mov     x2, x21, lsl #3                 // x2 = size of sysvar data in bits
-    bl      hex_x0
-    strb    wzr, [x1]                       // Add a trailing zero.
-    mov     x0, sp
-    bl      uart_puts
-  8:
+    bl      display_sysvar
     bl      uart_newline
     sub     w23, w23, #1
     cbnz    w23, 1b
   bl      uart_newline
+  ldp     x20, x21, [sp], #16             // Pop callee-saved registers.
+  ldp     x19, x23, [sp], #16             // Pop callee-saved registers.
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+display_sysvar:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  stp     x21, x24, [sp, #-16]!           // callee-saved registers used later on.
+  sub     sp, sp, #32                     // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
+  mov     x0, '['
+  bl      uart_send                       // Print "["
+  ldr     x0, [x20]                       // x0 = address offset of sys var
+  add     x0, x0, x28
+  bl      uart_x0                         // Print "<sys var address>"
+  mov     x0, ']'
+  bl      uart_send                       // Print "]"
+  mov     x0, ' '
+  bl      uart_send                       // Print " "
+  add     x0, x20, #9
+  bl      uart_puts                       // Print system variable name
+  ldrb    w21, [x20, #8]                  // w21 = size of sysvar data in bytes
+  ldr     x24, [x20]                      // x24 = address offset of sys var
+  cmp     w21, #1
+  b.eq    3f
+  cmp     w21, #2
+  b.eq    4f
+  cmp     w21, #4
+  b.eq    5f
+  cmp     w21, #8
+  b.eq    6f
+  // not 2/4/8 bytes => print one byte at a time
+  mov     x0, ':'
+  bl      uart_send
+  mov     x0, ' '
+  bl      uart_send
+  add     x24, x24, x28
+  2:
+    ldrb    w0, [x24], #1
+    mov     x1, sp
+    mov     x2, #8
+    bl      hex_x0
+    mov     w0, #0x0020
+    strh    w0, [x1], #2                    // Add a space and trailing zero.
+    mov     x0, sp
+    bl      uart_puts
+    subs    w21, w21, #1
+    b.ne    2b
+  b       8f
+3:
+  // 1 byte
+  ldrb    w4, [x28, x24]
+  b       7f
+4:
+  // 2 bytes
+  ldrh    w4, [x28, x24]
+  b       7f
+5:
+  // 4 bytes
+  ldr     w4, [x28, x24]
+  b       7f
+6:
+  // 8 bytes
+  ldr     x4, [x28, x24]
+7:
+  adr     x0, msg_colon0x
+  bl      uart_puts                       // Print ": 0x"
+  mov     x0, x4
+  mov     x1, sp
+  mov     x2, x21, lsl #3                 // x2 = size of sysvar data in bits
+  bl      hex_x0
+  strb    wzr, [x1]                       // Add a trailing zero.
+  mov     x0, sp
+  bl      uart_puts
+8:
   add     sp, sp, #32                     // Free buffer.
-  ldp     x23, x24, [sp], #16             // Pop callee-saved registers.
-  ldp     x21, x22, [sp], #16             // Pop callee-saved registers.
-  ldp     x19, x20, [sp], #16             // Pop callee-saved registers.
+  ldp     x21, x24, [sp], #16             // Pop callee-saved registers.
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 

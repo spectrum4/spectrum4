@@ -186,11 +186,6 @@ co_temp_5:
     po_table_1
     po_tokens
     po_fetch
-rand_init:
-    uart_puts
-    uart_puts
-rand_x0:
-rand_block:
 run_tests:
     snapshot_all_ram
     uart_puts
@@ -256,8 +251,17 @@ fill_memory_with_junk:
     fill_region_with_junk
     uart_puts
 fill_region_with_junk:
+rand_init:
+    uart_puts
+    uart_puts
+rand_x0:
+rand_block:
 display_sysvars:
     uart_puts
+    display_sysvar
+    uart_newline
+    uart_newline
+display_sysvar:
     uart_send
     uart_x0
     uart_send
@@ -270,8 +274,6 @@ display_sysvars:
     uart_puts
     hex_x0
     uart_puts
-    uart_newline
-    uart_newline
 display_zx_screen:
     poke_address
 display_memory:

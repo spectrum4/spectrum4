@@ -7,16 +7,8 @@
 .align 2
 
 
-display_sysvar_1_setup:
-  ret
-
-
 display_sysvar_1_setup_regs:
   adr     x20, sysvar_MEMBOT
-  ret
-
-
-display_sysvar_1_effects:
   ret
 
 

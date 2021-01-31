@@ -9,10 +9,6 @@
 
 
 # poke_address_1 pokes an address above the attributes file
-poke_address_1_setup:
-  ret
-
-
 poke_address_1_setup_regs:
   adrp    x0, poke_address_test
   add     x0, x0, :lo12:poke_address_test
@@ -274,10 +270,6 @@ poke_address_3_effects_regs:
   mov     w17, #0x4e
   mov     w18, #0x0a
   nzcv    #0b0110
-  ret
-
-
-poke_address_4_setup:
   ret
 
 

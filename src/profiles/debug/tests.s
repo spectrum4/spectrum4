@@ -39,7 +39,7 @@ test_poke_address:
 
 .align 3
 poke_address_1:
-  .quad poke_address_1_setup
+  .quad 0
   .quad poke_address_1_setup_regs
   .quad poke_address_1_effects
   .quad poke_address_1_effects_regs
@@ -66,7 +66,7 @@ poke_address_3:
 
 .align 3
 poke_address_4:
-  .quad poke_address_4_setup
+  .quad 0
   .quad poke_address_4_setup_regs
   .quad poke_address_4_effects
   .quad poke_address_4_effects_regs
@@ -82,9 +82,9 @@ test_display_sysvar:
 
 .align 3
 display_sysvar_1:
-  .quad display_sysvar_1_setup
+  .quad 0
   .quad display_sysvar_1_setup_regs
-  .quad display_sysvar_1_effects
+  .quad 0
   .quad display_sysvar_1_effects_regs
   .asciz "display_sysvar_1"
 

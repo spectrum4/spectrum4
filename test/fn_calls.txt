@@ -308,7 +308,6 @@ paint_string:
 paint_copyright:
     paint_string
 base10:
-poke_address_1_setup:
 poke_address_1_setup_regs:
 poke_address_1_effects:
 poke_address_1_effects_regs:
@@ -320,13 +319,10 @@ poke_address_3_setup:
 poke_address_3_setup_regs:
 poke_address_3_effects:
 poke_address_3_effects_regs:
-poke_address_4_setup:
 poke_address_4_setup_regs:
 poke_address_4_effects:
 poke_address_4_effects_regs:
-display_sysvar_1_setup:
 display_sysvar_1_setup_regs:
-display_sysvar_1_effects:
 display_sysvar_1_effects_regs:
 cl_addr_1_setup_regs:
 cl_addr_1_effects_regs:

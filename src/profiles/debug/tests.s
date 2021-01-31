@@ -36,6 +36,7 @@ test_poke_address:
   .quad poke_address_3
 
 
+.align 3
 poke_address_1:
   .quad poke_address_1_setup
   .quad poke_address_1_setup_regs
@@ -44,6 +45,7 @@ poke_address_1:
   .asciz "poke_address_1"
 
 
+.align 3
 poke_address_2:
   .quad poke_address_2_setup
   .quad poke_address_2_setup_regs
@@ -52,6 +54,7 @@ poke_address_2:
   .asciz "poke_address_2"
 
 
+.align 3
 poke_address_3:
   .quad poke_address_3_setup
   .quad poke_address_3_setup_regs
@@ -67,6 +70,7 @@ test_display_sysvar:
   .quad display_sysvar_1
 
 
+.align 3
 display_sysvar_1:
   .quad display_sysvar_1_setup
   .quad display_sysvar_1_setup_regs

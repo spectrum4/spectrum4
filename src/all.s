@@ -511,6 +511,11 @@ uart_init:
   b.ne    2b                              // Repeat until x0 == 0.
   str     wzr, [x4, GPPUDCLK0]            //   [GPPUDCLK0] = 0x00000000 => Remove control signal to lines 14, 15.
   str     w3, [x1, AUX_MU_CNTL]           //   [AUX_MU_CNTL_REG] = 0x00000003 => Enable Mini UART Tx/Rx
+.if       DEBUG_PROFILE
+  adrp    x0, uart_disable
+  add     x0, x0, :lo12:uart_disable
+  strb    wzr, [x0]
+.endif
   ret                                     // Return.
 
 
@@ -534,7 +539,8 @@ uart_send:
 // setting the one byte test system variable 'uart_disable' to a non zero value
 // without affecting any register values so to not impact tests.
 .if       DEBUG_PROFILE
-  adr     x1, uart_disable
+  adrp    x1, uart_disable
+  add     x1, x1, :lo12:uart_disable
   ldrb    w1, [x1]
   cbnz    w1, 2f
   mov     x1, AUX_BASE & 0xffff0000

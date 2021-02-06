@@ -47,7 +47,8 @@ run_tests:
       bl      uart_puts                       // Log "...\r\n"
 
       mov     x0, #1
-      adr     x1, uart_disable
+      adrp    x1, uart_disable
+      add     x1, x1, :lo12:uart_disable
       strb    w0, [x1]                        // Disable UART output for test code
 
       cbz     x9, 3f                          // Skip RAM setup if there is none
@@ -168,7 +169,8 @@ run_tests:
       mrs     x0, nzcv                        // Fetch flags (Negative, Zero, Carry, oVerflow)
       stp     x28, x0, [sp, #8 * 28]
 
-      adr     x1, uart_disable
+      adrp    x1, uart_disable
+      add     x1, x1, :lo12:uart_disable
       strb    wzr, [x1]                       // Enable UART output for test framework output
 
     // Restore stashed registers
@@ -893,14 +895,14 @@ display_sysvars:
 #   x20: address of sysvar metadata (sysvar_XXXXXX)
 # On exit:
 #   x0 =
-#     1 byte sysvar: stack pointer - 62
-#     2 byte sysvar: stack pointer - 60
-#     4 byte sysvar: stack pointer - 56
-#     8 byte sysvar: stack pointer - 48
-#         otherwise: stack pointer - 61
+#     1 byte sysvar: stack pointer - 61
+#     2 byte sysvar: stack pointer - 59
+#     4 byte sysvar: stack pointer - 55
+#     8 byte sysvar: stack pointer - 47
+#         otherwise: stack pointer - 60
 #   x1 = AUX_BASE
 #   x2 = 0
-#   x3 = [AUX_MU_LSR] = 0x21
+#   x3 = [AUX_MU_LSR] = 0x61
 #   x4 =
 #     1/2/4/8 byte sysvar: sysvar value
 #               otherwise: unchanged
@@ -1162,7 +1164,8 @@ uart_puts:
 // setting the one byte test system variable 'uart_disable' to a non zero value
 // without affecting any register values so to not impact tests.
 .if       DEBUG_PROFILE
-  adr     x1, uart_disable
+  adrp    x1, uart_disable
+  add     x1, x1, :lo12:uart_disable
   ldrb    w1, [x1]
   cbnz    x1, uart_puts
   mov     x1, AUX_BASE & 0xffff0000
@@ -1186,7 +1189,8 @@ uart_puts:
 // setting the one byte test system variable 'uart_disable' to a non zero value
 // without affecting any register values so to not impact tests.
 .if       DEBUG_PROFILE
-  adr     x1, uart_disable
+  adrp    x1, uart_disable
+  add     x1, x1, :lo12:uart_disable
   ldrb    w1, [x1]
   cbnz    x1, uart_puts
   mov     x1, AUX_BASE & 0xffff0000
@@ -1331,9 +1335,6 @@ base10:
 .data
 
 .align 0
-uart_disable: .byte 0
-
-.align 0
 msg_colon0x:                   .asciz ": 0x"
 msg_done:                      .asciz "DONE.\r\n"
 msg_fail:                      .asciz "FAIL: "
@@ -1378,6 +1379,9 @@ msg_flag_z:                    .asciz "Zero flag (Z)"
 
 .align 4
 bss_debug_start:
+
+.align 0
+uart_disable: .space 1
 
 .align 0
 rand_seq_length: .space 1

@@ -18,7 +18,7 @@ display_sysvar_1_setup_regs:
 
 
 display_sysvar_1_effects_regs:
-  add     x0, sp, #0x100 - 61
+  sub     x0, sp, 61
   movl    w1, AUX_BASE
   mov     x2, #0
   mov     x3, #0x61
@@ -38,7 +38,7 @@ display_sysvar_2_setup_regs:
 
 
 display_sysvar_2_effects_regs:
-  add     x0, sp, #0x100 - 59
+  sub     x0, sp, #59
   movl    w1, AUX_BASE
   mov     x2, #0
   mov     x3, #0x61
@@ -58,7 +58,7 @@ display_sysvar_8_setup_regs:
 
 
 display_sysvar_8_effects_regs:
-  add     x0, sp, #0x100 - 47
+  sub     x0, sp, #47
   movl    w1, AUX_BASE
   mov     x2, #0
   mov     x3, #0x61
@@ -73,7 +73,7 @@ display_sysvar_other_setup_regs:
 
 
 display_sysvar_other_effects_regs:
-  add     x0, sp, #0x100 - 60
+  sub     x0, sp, #60
   movl    w1, AUX_BASE
   mov     x2, #0
   mov     x3, #0x61

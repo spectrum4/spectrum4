@@ -68,7 +68,9 @@ run_tests:
       stp     x24, x25, [sp, #8 * 24]
       stp     x26, x27, [sp, #8 * 26]
       stp     x28, x29, [sp, #8 * 28]
+      sub     sp, sp, #0x230                  // Stack pointer to match routine under test
       blr     x9                              // Setup RAM
+      add     sp, sp, #0x230
 
       ldp     x0, x1, [sp]
       ldp     x2, x3, [sp, #8 * 2]
@@ -125,7 +127,9 @@ run_tests:
       str     x28, [sp, #8 * 28]
 
       cbz     x30, 4f
+      sub     sp, sp, #0x200                  // Stack pointer to match routine under test
       blr     x30                             // Call setup_regs routine
+      add     sp, sp, #0x200
     4:
 
     // Store pre-test registers
@@ -148,7 +152,9 @@ run_tests:
       ldr     x0, [sp]
 
       ldr     x30, [sp, #0x130]               // x30 = address of routine to test
+      sub     sp, sp, #0x200                  // Stack pointer to match routine under test
       blr     x30                             // Call routine under test
+      add     sp, sp, #0x200
 
     // Store post-test registers
       sub     sp, sp, #0x100
@@ -241,7 +247,9 @@ run_tests:
       ldp     x24, x25, [sp, #0x100 + 8 * 24]
       ldp     x26, x27, [sp, #0x100 + 8 * 26]
       cbz     x30, 6f
+      sub     sp, sp, #0x100                  // Stack pointer to match routine under test
       blr     x30                             // Set expected registers
+      add     sp, sp, #0x100
     6:
 
     // Store expected registers

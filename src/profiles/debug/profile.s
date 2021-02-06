@@ -902,7 +902,7 @@ display_sysvars:
 #         otherwise: stack pointer - 60
 #   x1 = AUX_BASE
 #   x2 = 0
-#   x3 = [AUX_MU_LSR] = 0x61
+#   x3 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals)
 #   x4 =
 #     1/2/4/8 byte sysvar: sysvar value
 #               otherwise: unchanged

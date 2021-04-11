@@ -319,14 +319,7 @@ run_tests:
         tbz     w7, #27, 9b
 
       ldp     x6, x7, [x24]                   // Restore pre-test snapshot location, post-test snapshot location
-      mov     x8, #0                          // start address of region to snapshot
-      adrp    x9, bss_debug_start
-      add     x9, x9, :lo12:bss_debug_start   // first address not to snapshot
-      bl      compare_snapshots
-      adr     x8, framebuffer
-      ldp     w8, w9, [x8]
-      add     x9, x8, x9
-      bl      compare_snapshots
+      bl      compare_all_snapshots
 
     // Restore initial pristine snapshot
       adrp    x2, memory_dumps
@@ -482,6 +475,8 @@ snapshot_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x26, x2
+  mov     x0, #2                          // 2 RAM regions to snapshot
+  str     x0, [x26], #8                   // Store number of RAM regions to snapshot
 # adr     x0, msg_snapshotting_ram
 # bl      uart_puts
   mov     x0, #0                          // start address of region to snapshot
@@ -523,6 +518,11 @@ snapshot_all_ram:
 #  x26 = repeat count of last quad (excluding original entry, i.e. n-1 where n = length of repeated sequence)
 #  x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
 snapshot_memory:
+  add     x2, x2, #16                     // Number of bytes required to store start and end addresses in buffer
+  cmp     x2, x3                          // Check buffer has enough space for storing start/end addresses
+  b.hs    6f                              // If not, throw buffer-overflow error
+  stur    x0, [x2, #-16]                  // Store start address of data region to start of buffer
+  stur    x1, [x2, #-8]                   // Store end address of data region to start of buffer
   adrp    x7, rand_seq_length
   add     x7, x7, :lo12:rand_seq_length
   ldrb    w4, [x7]                        // w4 = random block length
@@ -590,14 +590,14 @@ snapshot_memory:
 restore_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  mov     x0, #0                          // start address to restore snapshot to
-  adrp    x1, bss_debug_start
-  add     x1, x1, :lo12:bss_debug_start   // first address not to restore
-  bl      restore_snapshot
-  adr     x0, framebuffer
-  ldp     w0, w1, [x0]
-  add     x1, x0, x1
-  bl      restore_snapshot
+  ldr     x6, [x2], #8                    // x0 = number of continuous regions to restore
+  1:
+    cbz     x6, 2f
+    ldp     x0, x1, [x2], #16               // x0 = start address to decompress to, x1 = end address (exclusive)
+    bl      restore_snapshot
+    sub     x6, x6, #1
+    b       1b
+2:
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -647,6 +647,49 @@ restore_snapshot:
     str     x12, [x0], #8
     cmp     x0, x1
     b.ne    1b
+  ret
+
+
+# On entry:
+#   x6 = pre-test compressed snapshot address
+#   x7 = post-test compressed snapshot address
+# On exit:
+#   x0
+#   x1
+#   x2
+#   x3
+#   x4
+#   x5
+#   x6
+#   x7
+#   x8
+#   x9
+#   x11
+#   x12
+#   x13
+#   x14
+#   x15
+#   x16
+#   x17
+#   x18
+#   x22
+#   x25
+#   x26
+#   x27
+compare_all_snapshots:
+  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                         // Update frame pointer to new stack location.
+  ldr     x27, [x6], #8
+  add     x7, x7, #8
+  1:
+    cbz     x27, 2f
+    ldp     x8, x9, [x6], #16
+    add     x7, x7, #16
+    bl      compare_snapshots
+    sub     x27, x27, #1
+    b       1b
+2:
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
 

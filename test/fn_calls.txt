@@ -201,8 +201,7 @@ run_tests:
     uart_send
     uart_puts
     uart_puts
-    compare_snapshots
-    compare_snapshots
+    compare_all_snapshots
     restore_all_ram
 log_ram:
     uart_puts
@@ -240,8 +239,9 @@ snapshot_memory:
     sleep
 restore_all_ram:
     restore_snapshot
-    restore_snapshot
 restore_snapshot:
+compare_all_snapshots:
+    compare_snapshots
 compare_snapshots:
 fill_memory_with_junk:
     uart_puts

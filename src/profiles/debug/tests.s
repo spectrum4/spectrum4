@@ -9,6 +9,7 @@
 
 .include "test_poke_address.s"
 .include "test_display_sysvar.s"
+.include "test_display_sysvars.s"
 .include "test_cl_addr.s"
 .include "test_po_attr.s"
 .include "test_po_change.s"
@@ -18,9 +19,10 @@
 .text
 .align 3
 all_tests:
-  .quad 13
+  .quad 14
   .quad test_poke_address
   .quad test_display_sysvar
+  .quad test_display_sysvars
   .quad test_cl_addr
   .quad test_po_attr
   .quad test_po_change
@@ -117,6 +119,22 @@ display_sysvar_other:
   .quad 0
   .quad display_sysvar_other_effects_regs
   .asciz "display_sysvar_other"
+
+
+.align 3
+test_display_sysvars:
+  .quad 1
+  .quad display_sysvars
+  .quad display_sysvars_1
+
+
+.align 3
+display_sysvars_1:
+  .quad display_sysvars_1_setup
+  .quad 0
+  .quad 0
+  .quad display_sysvars_1_effects_regs
+  .asciz "display_sysvars_1"
 
 
 .align 3

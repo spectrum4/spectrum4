@@ -333,6 +333,8 @@ display_sysvar_8_setup_regs:
 display_sysvar_8_effects_regs:
 display_sysvar_other_setup_regs:
 display_sysvar_other_effects_regs:
+display_sysvars_1_setup:
+display_sysvars_1_effects_regs:
 cl_addr_1_setup_regs:
 cl_addr_1_effects_regs:
 po_attr_1_setup:
@@ -359,6 +361,7 @@ display_sysvar_1:
 display_sysvar_2:
 display_sysvar_8:
 display_sysvar_other:
+display_sysvars_1:
 cl_addr_1:
 po_attr_1:
 po_change_1:

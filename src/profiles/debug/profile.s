@@ -475,7 +475,7 @@ snapshot_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
   mov     x26, x2
-  mov     x0, #2                          // 2 RAM regions to snapshot
+  mov     x0, #2                          // Number of RAM regions to snapshot
   str     x0, [x26], #8                   // Store number of RAM regions to snapshot
 # adr     x0, msg_snapshotting_ram
 # bl      uart_puts
@@ -494,10 +494,6 @@ snapshot_all_ram:
   ldp     w0, w1, [x0]
   add     x1, x0, x1
   bl      snapshot_memory                 // x2 = first address after end of snapshot
-# mov     x0, sp
-# ldr     w1, arm_size
-# and     x1, x1, #~0x0f                  // x1 = top of ARM memory
-# bl      snapshot_memory                 // x2 = first address after end of snapshot
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -590,7 +586,7 @@ snapshot_memory:
 restore_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  ldr     x6, [x2], #8                    // x0 = number of continuous regions to restore
+  ldr     x6, [x2], #8                    // x6 = number of continuous regions to restore
   1:
     cbz     x6, 2f
     ldp     x0, x1, [x2], #16               // x0 = start address to decompress to, x1 = end address (exclusive)

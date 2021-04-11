@@ -9,5 +9,5 @@
 .set PAPER_COLOUR,     0x00cccccc       // Default paper colour (background colour of screen).
 .set INK_COLOUR,       0x00000000       // Default ink colour (foreground colour of text on screen).
 
-.set RAM_DISK_SIZE,    0x00100000       // 1MB
-.set HEAP_SIZE,        0x00100000       // 1MB
+.set RAM_DISK_SIZE,    0x00010000       // 64KB
+.set HEAP_SIZE,        0x00010000       // 64KB

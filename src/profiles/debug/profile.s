@@ -463,33 +463,28 @@ test_fail:
 # On entry:
 #   x2 = location to write compressed data to
 # On exit:
-#   x0 = address of msg_done
-#   x1 = AUX_BASE
+#   x0 = start address of last continuous region
+#   x1 = end address (exclusive) of last continuous region
 #   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
-#   x3 = [AUX_MU_LSR]
+#   x3 = end address of compressed data (exclusive) -> 8 byte aligned
 #   x4 = [x1 - 16]
 #   x5 = [x1 - 8]
-#   x26 = end address of used compressed data (exclusive) -> 8 byte aligned
-#   x27 = 0x6a09e667bb67ae85
+#   x7 = first address after random block
+#   x8 = address in random block
+#   x11 = rand_data
+#   x26 = repeat count of last quad (excluding original entry, i.e. n-1 where n = length of repeated sequence)
+#   x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
 snapshot_all_ram:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-  mov     x26, x2
+  mov     x3, MEMORY_DUMPS_BUFFER_SIZE
+  add     x3, x2, x3                      // first address after end of compressed data region
   mov     x0, #2                          // Number of RAM regions to snapshot
-  str     x0, [x26], #8                   // Store number of RAM regions to snapshot
-# adr     x0, msg_snapshotting_ram
-# bl      uart_puts
+  str     x0, [x2], #8                    // Store number of RAM regions to snapshot
   mov     x0, #0                          // start address of region to snapshot
   adrp    x1, bss_debug_start
   add     x1, x1, :lo12:bss_debug_start   // first address not to snapshot
-  mov     x2, x26
-  mov     x3, MEMORY_DUMPS_BUFFER_SIZE
-  add     x3, x1, x3                      // first address after end of compressed data region
   bl      snapshot_memory                 // x2 = first address after end of snapshot
-# mov     x26, x2
-# adr     x0, msg_done
-# bl      uart_puts
-# mov     x2, x26
   adr     x0, framebuffer
   ldp     w0, w1, [x0]
   add     x1, x0, x1
@@ -499,20 +494,20 @@ snapshot_all_ram:
 
 
 # On entry:
-#  x0 = start address to compress (inclusive) -> 8 byte aligned
-#  x1 = end address to compress (exclusive) -> 8 byte aligned, at least 16 more than x0
-#  x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
-#  x3 = end address of compressed data buffer (exclusive) -> 8 byte aligned
+#   x0 = start address to compress (inclusive) -> 8 byte aligned
+#   x1 = end address to compress (exclusive) -> 8 byte aligned, at least 16 more than x0
+#   x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
+#   x3 = end address of compressed data buffer (exclusive) -> 8 byte aligned
 # On exit:
-#  x0 = x1
-#  x2 = end address of used compressed data (exclusive) -> 8 byte aligned
-#  x4 = [x1 - 16]
-#  x5 = [x1 - 8]
-#  x7 = first address after random block
-#  x8 = address in random block
-#  x11 = rand_data
-#  x26 = repeat count of last quad (excluding original entry, i.e. n-1 where n = length of repeated sequence)
-#  x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
+#   x0 = x1
+#   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
+#   x4 = [x1 - 16]
+#   x5 = [x1 - 8]
+#   x7 = first address after random block
+#   x8 = address in random block
+#   x11 = rand_data
+#   x26 = repeat count of last quad (excluding original entry, i.e. n-1 where n = length of repeated sequence)
+#   x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
 snapshot_memory:
   add     x2, x2, #16                     // Number of bytes required to store start and end addresses in buffer
   cmp     x2, x3                          // Check buffer has enough space for storing start/end addresses
@@ -1421,7 +1416,6 @@ msg_running_test_part_1:       .asciz "Running test "
 msg_running_test_part_2:       .asciz "...\r\n"
 msg_should_be_set:             .asciz " should be set.\r\n"
 msg_should_not_be_set:         .asciz " should not be set.\r\n"
-msg_snapshotting_ram:          .asciz "Snapshotting RAM... "
 msg_title_sysvars:             .asciz "System Variables\r\n================\r\n"
 
 flag_msg_offsets:

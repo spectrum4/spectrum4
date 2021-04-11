@@ -6,25 +6,18 @@
 
 .text
 .align 2
+# Run all system tests.
+#
+# On entry:
+#   <nothing>
+# On exit:
+#   God knows
 run_tests:
   adr     x20, all_tests                  // x20 = address of test list
   ldr     x10, [x20], #8                  // x10 = number of tests
   cbz     x10, 11f                        // Return if no tests to run
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
-// Stash framebuffer address, size and pitch on stack
-# adr     x0, framebuffer
-# ldp     w5, w6, [x0]
-# stp     w5, w6, [sp, #-16]!
-# ldr     w7, [x0, pitch-framebuffer]
-# str     w7, [sp, #8]
-// Replace framebuffer address, size and pitch with test framebuffer values
-# adrp    x1, test_framebuffer
-# add     x1, x1, :lo12:test_framebuffer
-# mov     x2, #4*1920*1280
-# stp     w1, w2, [x0]
-# mov     w4, #4*1920
-# str     w4, [x3]
 // Create an initial snapshot for restoring state between tests
   adrp    x2, memory_dumps
   add     x2, x2, :lo12:memory_dumps      // x2 = target address for snapshot
@@ -97,7 +90,6 @@ run_tests:
       sub     sp, sp, #0x100                  // Allocate space on stack for pre-test/post-test registers
 
     // Prepare pre-test registers with random values
-
       mov     x0, sp                          // x0 = start of pre-test register block
       mov     x1, #0x100                      // Register storage on stack takes up 0x100 bytes.
       bl      rand_block                      // Write random bytes to stack so registers are random when popped.
@@ -351,13 +343,6 @@ run_tests:
     add     sp, sp, #0x10
     cbnz    x10, 1b                         // Loop if more tests to run
 
-  // Restore real framebuffer address, size, pitch
-# adr     x0, framebuffer
-# ldp     w5, w6, [sp]                    // Retrieve stacked framebuffer address and size
-# stp     w5, w6, [x0]                    // Restore framebuffer address, size
-# ldr     w7, [sp, #8]                    // Retrieve stacked pitch
-# str     w7, [x0, pitch-framebuffer]     // Restore pitch
-# add     sp, sp, #16                     // Keep stack pointer 16-byte aligned
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
 11:
   ret
@@ -514,6 +499,10 @@ snapshot_all_ram:
   ldp     w0, w1, [x0]
   add     x1, x0, x1
   bl      snapshot_memory                 // x2 = first address after end of snapshot
+# mov     x0, sp
+# ldr     w1, arm_size
+# and     x1, x1, #~0x0f                  // x1 = top of ARM memory
+# bl      snapshot_memory                 // x2 = first address after end of snapshot
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -693,13 +682,13 @@ compare_snapshots:
   mov     x29, sp                         // Update frame pointer to new stack location.
   adrp    x26, rand_seq_length
   add     x26, x26, :lo12:rand_seq_length
-  ldrb    w4, [x26]                        // w4 = random block length
+  ldrb    w4, [x26]                       // w4 = random block length
   adrp    x11, rand_data
   add     x11, x11, :lo12:rand_data       // x11 = address of random data
   udiv    x25, x8, x4                     // x25 = int(start_address_decompressed/x4)
   umsubl  x25, w25, w4, x8                // x25 = x8 - x4 * int(x8/x4) = start_address_decompressed % random_sequence_length
   add     x25, x25, x11                   // x25 = address inside random block that holds quad for masking start address
-  add     x26, x4, x11                     // x26 = first address after random block
+  add     x26, x4, x11                    // x26 = first address after random block
 // x8 will loop through quads until it reaches x9
 // x12 = pre-test value of [x8] (from snapshot)
 // x13 = post-test value of [x8] (from snapshot)
@@ -714,22 +703,22 @@ compare_snapshots:
     sub     x17, x17, #1                    // Decrement counter
     b       3f                              // x4 already set from previous iteration, so jump ahead
   2:
-    ldr     x4, [x6], #8                   // Read a new value
-    cmp     x4, x15                        // Is it the repeat marker?
+    ldr     x4, [x6], #8                    // Read a new value
+    cmp     x4, x15                         // Is it the repeat marker?
     b.ne    3f                              // If not, it is a regular value, jump ahead to 3:
   // repeated value found
-    ldp     x17, x4, [x6], #16             // x17 = repeat count (1 less than total entries), x4 = value
+    ldp     x17, x4, [x6], #16              // x17 = repeat count (1 less than total entries), x4 = value
   3:
   // x17 and x4 correctly set now
     cbz     x18, 4f                         // If not still repeating previous pre-test value, jump ahead to 4:
     sub     x18, x18, #1                    // Decrement counter
     b       5f                              // x5 already set from previous iteration, so jump ahead
   4:
-    ldr     x5, [x7], #8                   // Read a new value
-    cmp     x5, x15                        // Is it the repeat marker?
+    ldr     x5, [x7], #8                    // Read a new value
+    cmp     x5, x15                         // Is it the repeat marker?
     b.ne    5f                              // If not, it is a regular value, jump ahead to 5:
   // repeated value found
-    ldp     x18, x5, [x7], #16             // x18 = repeat count (1 less than total entries), x5 = value
+    ldp     x18, x5, [x7], #16              // x18 = repeat count (1 less than total entries), x5 = value
   5:
   // x18 and x5 correctly set now
     ldr     x14, [x8]
@@ -877,6 +866,19 @@ rand_block:
   ret
 
 
+# Logs all sysvars to UART.
+#
+# On entry:
+#   <nothing>
+# On exit:
+#   x0 = 0x0a
+#   x1 = AUX_BASE
+#   x2 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals) when waiting to send final newline
+#   x3 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals) when waiting to write final sysvar value
+#   x4 = value of last logged 1/2/4/8 byte sysvar (currently [PR_CC])
+#   NZCV: depends on size of last sysvar, currently last sysvar is MEMBOT, so 0b0110
+#     if last sysvar is 1/2/4/8 byte sysvar: 0b1000
+#     otherwise: 0b0110
 display_sysvars:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.
@@ -899,8 +901,16 @@ display_sysvars:
   ret
 
 
+# Logs sysvar to UART. No leading/trailing whitespace.
+#
+# Examples:
+#   [0x000000000003b871] WIDTH: 0x50
+#   [0x000000000003b890] RNFIRST: 0x000a
+#   [0x000000000003b8c8] SFNEXT: 0x0000000000170a10
+#   [0x000000000003b894] STRMS: 01 00 19 00 31 00 01 00 01 00 19 00 49 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+#
 # On entry:
-#   x20: address of sysvar metadata (sysvar_XXXXXX)
+#   x20: address of sysvar metadata (sysvar_XXXXXX label)
 # On exit:
 #   x0 =
 #     1 byte sysvar: stack pointer - 61
@@ -923,16 +933,16 @@ display_sysvar:
   stp     x21, x24, [sp, #-16]!           // callee-saved registers used later on.
   sub     sp, sp, #32                     // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
   mov     x0, '['
-  bl      uart_send                       // Print "["
+  bl      uart_send                       // Log "["
   ldr     x0, [x20]                       // x0 = address offset of sys var
   add     x0, x0, x28
-  bl      uart_x0                         // Print "<sys var address>"
+  bl      uart_x0                         // Log "<sys var address>"
   mov     x0, ']'
-  bl      uart_send                       // Print "]"
+  bl      uart_send                       // Log "]"
   mov     x0, ' '
-  bl      uart_send                       // Print " "
+  bl      uart_send                       // Log " "
   add     x0, x20, #9
-  bl      uart_puts                       // Print system variable name
+  bl      uart_puts                       // Log system variable name
   ldrb    w21, [x20, #8]                  // w21 = size of sysvar data in bytes
   ldr     x24, [x20]                      // x24 = address offset of sys var
   cmp     w21, #1
@@ -943,7 +953,7 @@ display_sysvar:
   b.eq    5f
   cmp     w21, #8
   b.eq    6f
-  // not 2/4/8 bytes => print one byte at a time
+  // not 1/2/4/8 bytes => print one byte at a time
   mov     x0, ':'
   bl      uart_send
   mov     x0, ' '
@@ -978,7 +988,7 @@ display_sysvar:
   ldr     x4, [x28, x24]
 7:
   adr     x0, msg_colon0x
-  bl      uart_puts                       // Print ": 0x"
+  bl      uart_puts                       // Log ": 0x"
   mov     x0, x4
   mov     x1, sp
   mov     x2, x21, lsl #3                 // x2 = size of sysvar data in bits
@@ -1132,6 +1142,13 @@ demo:
 # ------------------------------------------------------------------------------
 # Send '\r\n' over Mini UART
 # ------------------------------------------------------------------------------
+#
+# On entry:
+#   <nothing>
+# On exit:
+#   x0: 0x0a
+#   x1: AUX_BASE
+#   x2: Last read of [AUX_MU_LSR_REG] when waiting for bit 5 to be set
 uart_newline:
   stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.
   mov     x29, sp                         // Update frame pointer to new stack location.

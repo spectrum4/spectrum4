@@ -189,6 +189,7 @@ You will also require:
   * `rm`
   * `sed`
   * `sleep`
+  * `sort`
   * `wc`
   * `which` (which likely in turn requires `/bin/sh`)
 

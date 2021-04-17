@@ -311,7 +311,7 @@ mkdir -p dist/z80
 #
 # The idea here is to work around the limitation that the Spectrum 128K has no
 # means to generate cryptographically secure random data, and therefore instead
-# to inject the random data at build time. However We don't want to check in
+# to inject the random data at build time. However, we don't want to check in
 # the binary versions with random data since they would change with every
 # build, and thus we check in the version with static data.
 

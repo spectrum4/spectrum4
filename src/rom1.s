@@ -2003,10 +2003,11 @@ chan_p:                          // L164D
 # On exit:
 #   x0 unchanged
 #   x1 = address of 64 bit key if found, otherwise 0
-#   x2 = 64 bit value for key if found, otherwise undefined value
+#   x2 = 64 bit value for key if found, otherwise unchanged
 #   x9 = number of records not checked
-#  x10 = last 64 bit key checked
-#   <no other changes>
+#  x10 = value of the last 64 bit key in the table to be checked
+#    Z = 1 if key found; 0 if key not found
+#  NCV = 010 if key found; result of `cmp x0, x10` if key not found
 indexer:                         // L16DC
   ldr     x9, [x1], #-8                   // x9 = number of records
                                           // x1 = lookup table address - 8 = address of first record - 16

@@ -8,6 +8,7 @@
 .include "test_cl_addr.s"
 .include "test_display_sysvar.s"
 .include "test_display_sysvars.s"
+.include "test_indexer.s"
 .include "test_po_attr.s"
 .include "test_po_change.s"
 .include "test_po_search.s"
@@ -17,10 +18,11 @@
 .text
 .align 3
 all_tests:
-  .quad 14
+  .quad 18
   .quad test_cl_addr
   .quad test_display_sysvar
   .quad test_display_sysvars
+  .quad test_indexer
   .quad test_po_attr
   .quad test_po_change
   .quad test_po_search
@@ -103,6 +105,52 @@ display_sysvars_1:
   .quad 0
   .quad display_sysvars_1_effects_regs
   .asciz "display_sysvars_1"
+
+
+.align 3
+test_indexer:
+  .quad 4
+  .quad indexer
+  .quad indexer_1
+  .quad indexer_2
+  .quad indexer_3
+  .quad indexer_4
+
+
+.align 3
+indexer_1:
+  .quad 0
+  .quad indexer_1_setup_regs
+  .quad 0
+  .quad indexer_1_effects_regs
+  .asciz "indexer_1"
+
+
+.align 3
+indexer_2:
+  .quad 0
+  .quad indexer_2_setup_regs
+  .quad 0
+  .quad indexer_2_effects_regs
+  .asciz "indexer_2"
+
+
+.align 3
+indexer_3:
+  .quad 0
+  .quad indexer_3_setup_regs
+  .quad 0
+  .quad indexer_3_effects_regs
+  .asciz "indexer_3"
+
+
+.align 3
+indexer_4:
+  .quad 0
+  .quad indexer_4_setup_regs
+  .quad 0
+  .quad indexer_4_effects_regs
+  .asciz "indexer_4"
 
 
 .align 3

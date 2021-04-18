@@ -147,14 +147,12 @@ key_input:
 chan_open:
     chan_flag
 chan_flag:
-    indexer
 chn_cd_lu:
 chan_k:
     temps
 chan_s:
     temps
 chan_p:
-indexer:
 report_j:
 co_temp_5:
     po_t_udg_1

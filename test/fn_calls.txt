@@ -7,9 +7,6 @@ sleep:
 init_framebuffer:
     mbox_call
 mbox_call:
-poke_address:
-    poke_address
-    poke_address
 wait_cycles:
 uart_init:
 uart_send:
@@ -62,16 +59,12 @@ po_comma:
 po_quest:
     po_able
 po_tv_2:
-    po_change
 po_2_oper:
     po_tv_1
 po_1_oper:
     po_tv_1
 po_tv_1:
-    po_change
-po_change:
 po_cont:
-    po_change
 po_at_set:
     co_temp_5
     to_end
@@ -107,17 +100,11 @@ po_char_2:
 pr_all:
     add_char
     po_scr
-    poke_address
-    poke_address
-    po_attr
-po_attr:
-    poke_address
 po_msg:
     po_table
 po_tokens:
     po_table
 po_table:
-    po_search
     po_table_1
 po_table_1:
     po_save
@@ -125,7 +112,6 @@ po_table_1:
     po_save
 po_save:
     print_w0
-po_search:
 po_scr:
     cl_set
     po_scr_3
@@ -143,7 +129,6 @@ cls:
 cls_lower:
     temps
     cl_line
-    poke_address
     cl_chan
 cl_chan:
     chan_open
@@ -155,13 +140,8 @@ cl_all:
     cl_line
     cl_set
 cl_set:
-    cl_addr
     po_store
 cl_line:
-    cl_addr
-    poke_address
-    poke_address
-cl_addr:
 add_char:
 key_input:
 chan_open:

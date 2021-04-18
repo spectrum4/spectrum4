@@ -289,15 +289,11 @@ fetch_firmware 'start.elf'
 
 # Keep a record of which functions call other functions to ease writing tests
 # TODO: need to fix this to work with new tests
-
-FN_CALLS=$("${AARCH64_TOOLCHAIN_PREFIX}objdump" -d build/aarch64/kernel8-debug.elf | sed -n '1,${;s/.*[[:space:]]bl*[[:space:]].*/&/p;s/.*<.*>:$/&/p;}' | sed '/msg_/d' | sed '/<test_/d' | sed 's/[^ ].*</</' | sed 's/<//g' | sed 's/>//g' | sed 's/^  */    /' | sed '/+/d')
-
+FN_CALLS=$("${AARCH64_TOOLCHAIN_PREFIX}objdump" -d build/aarch64/kernel8-release.elf | sed -n '1,${;s/.*[[:space:]]bl*[[:space:]].*/&/p;s/.*<.*>:$/&/p;}' | sed '/msg_/d' | sed '/<test_/d' | sed 's/[^ ].*</</' | sed 's/<//g' | sed 's/>//g' | sed 's/^  */    /' | sed '/+/d')
 while read ymlfile; do
   FN_CALLS="$(echo "${FN_CALLS}" | sed "/^    ${ymlfile}\$/d" | sed "/^${ymlfile}:\$/d")"
 done < <(find test -maxdepth 1 -name '*.yml' | sed -n 's/^test\/\(.*\)\.yml$/\1/p')
-
 echo "${FN_CALLS}" > test/fn_calls.txt
-
 
 # Ensure dist/z80 directory exists, leaving in place if already there from previous
 # run.

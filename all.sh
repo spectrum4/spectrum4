@@ -288,14 +288,11 @@ fetch_firmware 'start.elf'
 "${AARCH64_TOOLCHAIN_PREFIX}readelf" -W -a build/aarch64/kernel8-debug.elf
 
 # Keep a record of which functions call other functions to ease writing tests
-# TODO: need to fix this to work with new tests
 FN_CALLS=$("${AARCH64_TOOLCHAIN_PREFIX}objdump" -d build/aarch64/kernel8-release.elf | sed -n '1,${;s/.*[[:space:]]bl*[[:space:]].*/&/p;s/.*<.*>:$/&/p;}' | sed '/msg_/d' | sed '/<test_/d' | sed 's/[^ ].*</</' | sed 's/<//g' | sed 's/>//g' | sed 's/^  */    /' | sed '/+/d')
 while read testroutine; do
   FN_CALLS="$(echo "${FN_CALLS}" | sed "/^[[:space:]]*${testroutine}:*\$/d")"
 done < <(find src/profiles/debug -maxdepth 1 -name 'test_*.s' | sed -n 's/^.*test_\(.*\)\.s$/\1/p')
 echo "${FN_CALLS}" > test/fn_calls.txt
-
-# find src/profiles/debug -name 'test_*'
 
 # Ensure dist/z80 directory exists, leaving in place if already there from previous
 # run.

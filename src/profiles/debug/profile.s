@@ -338,6 +338,8 @@ run_tests:
 
   ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
 11:
+  adr     x0, msg_all_tests_completed
+  bl      uart_puts                       // Log "All tests completed.\r\n"
   ret
 
 
@@ -864,9 +866,14 @@ rand_x0:
   mov     x1, #0x4000
   movk    x1, #0x3f10, lsl #16            // x1 = 0x3f104000
   1:                                      // Wait until ([0x3f104004] >> 24) >= 2
-    ldr     w0, [x1, #0x04]                 // Since bits 24-31 tell us how many words
-    lsr     w0, w0, #25                     // are available, this must be at least one,
-    cbz     w0, 1b                          // before we can safely read two words.
+    ldr     w0, [x1, #0x04]                 // Bits 24-31 tell us how many words
+    lsr     w0, w0, RNG_BIT_SHIFT           // are available, which needs to be at
+    cbz     w0, 1b                          // least two, since we are going to
+                                            // read two words. However under qemu
+                                            // bits 24-31 are always 0b00000001 so
+                                            // we use a symbol for the the shift
+                                            // size; it is 25, unless building for
+                                            // QEMU, when it is 24.
   ldr     w0, [x1, #0x08]                 // w0 = [0x3f104008] (random data)
   ldr     w2, [x1, #0x08]                 // w2 = [0x3f104008] (random data)
   bfi     x0, x2, #32, #32                // Copy bits from w2 into high bits of x0.
@@ -1417,6 +1424,7 @@ msg_running_test_part_2:       .asciz "...\r\n"
 msg_should_be_set:             .asciz " should be set.\r\n"
 msg_should_not_be_set:         .asciz " should not be set.\r\n"
 msg_title_sysvars:             .asciz "System Variables\r\n================\r\n"
+msg_all_tests_completed:       .asciz "All tests completed.\r\n"
 
 flag_msg_offsets:
 .byte msg_flag_n - .

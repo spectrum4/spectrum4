@@ -11,8 +11,14 @@ COPY build/curl /usr/local/bin
 RUN apt-get update
 RUN apt-get upgrade -y
 
-# xz-utils is needed by tar command below and build-essential is needed for building z80 binutils and libspectrum/fuse and libglib2.0 is needed for building libspectrum and bsdmainutils contains hexdump
-RUN apt-get install -y wget xz-utils build-essential libglib2.0 bsdmainutils
+# xz-utils is needed by tar command below
+# build-essential is needed for building z80 binutils and libspectrum/fuse
+# libglib2.0 is needed for building libspectrum
+# bsdmainutils contains hexdump
+# libpixman-1-dev and meson needed for building qemu
+RUN apt-get install -y wget xz-utils build-essential libglib2.0 bsdmainutils libpixman-1-dev meson
+
+RUN curl -L https://download.qemu-project.org/qemu-5.2.0.tar.xz > qemu-5.2.0.tar.xz && tar xvf qemu-5.2.0.tar.xz && mkdir qemu-5.2.0/build && cd qemu-5.2.0/build && ../configure --target-list=aarch64-softmmu --disable-vnc && make -j4 && make install
 
 # install libspectrum (needed by fuse)
 RUN curl -L https://sourceforge.net/projects/fuse-emulator/files/libspectrum/1.4.4/libspectrum-1.4.4.tar.gz/download > libspectrum-1.4.4.tar.gz && tar xvfz libspectrum-1.4.4.tar.gz && cd libspectrum-1.4.4 && ./configure && make && make install && cd ..
@@ -34,7 +40,7 @@ RUN wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.35.1.t
 # and copy everything needed into /dist
 # LD_LIBRARY_PATH needed for ldd to find libspectrum.so.8
 ENV LD_LIBRARY_PATH /usr/local/lib
-RUN for tool in /bin/sh aarch64-none-elf-as aarch64-none-elf-ld aarch64-none-elf-objcopy aarch64-none-elf-objdump aarch64-none-elf-readelf bash cat cmp cp curl dirname env find fuse head hexdump mkdir mv rm sed sleep sort wc which z80-unknown-elf-as z80-unknown-elf-ld z80-unknown-elf-objcopy z80-unknown-elf-objdump z80-unknown-elf-readelf; do file=$(which ${tool}); ldd $file 2>/dev/null || true; echo $file; done | sed 's/(.*//' | sed 's/^[^\/]*//' | grep '^/' | sort -u | while read line; do echo "${line}"; mkdir -p "$(dirname "/dist${line}")"; cp -vp "${line}" "/dist${line}"; done
+RUN for tool in /bin/sh aarch64-none-elf-as aarch64-none-elf-ld aarch64-none-elf-objcopy aarch64-none-elf-objdump aarch64-none-elf-readelf bash cat cmp cp curl dirname env find fuse head hexdump mkdir mv qemu-system-aarch64 rm sed sleep sort wc which z80-unknown-elf-as z80-unknown-elf-ld z80-unknown-elf-objcopy z80-unknown-elf-objdump z80-unknown-elf-readelf; do file=$(which ${tool}); ldd $file 2>/dev/null || true; echo $file; done | sed 's/(.*//' | sed 's/^[^\/]*//' | grep '^/' | sort -u | while read line; do echo "${line}"; mkdir -p "$(dirname "/dist${line}")"; cp -vp "${line}" "/dist${line}"; done
 
 # add certificates needed by curl to /dist
 RUN mkdir -p /dist/etc/ssl/certs && cp -vp /etc/ssl/certs/ca-certificates.crt /dist/etc/ssl/certs/ca-certificates.crt
@@ -46,6 +52,9 @@ RUN mkdir -p /dist/usr/local/share && mv /usr/local/share/fuse /dist/usr/local/s
 RUN mkdir -p /dist/usr/lib && curl -L 'https://golang.org/dl/go1.15.5.linux-amd64.tar.gz' > /dist/usr/lib/go1.15.5.linux-amd64.tar.gz
 RUN cd /dist/usr/lib && tar xvfz go1.15.5.linux-amd64.tar.gz && rm go1.15.5.linux-amd64.tar.gz
 RUN mkdir -p /dist/tmp
+
+# add qemu keymaps etc
+RUN mv /usr/local/share/qemu /dist/usr/local/share/qemu
 
 # now build a fresh image, with just the files in /dist
 FROM scratch

@@ -11,3 +11,11 @@
 
 .set RAM_DISK_SIZE,    0x00010000       // 64KB
 .set HEAP_SIZE,        0x00010000       // 64KB
+
+.ifdef QEMU
+  .set AUX_MU_LSR_DATA_READY, 0x60
+  .set RNG_BIT_SHIFT,    24
+.else
+  .set AUX_MU_LSR_DATA_READY, 0x61
+  .set RNG_BIT_SHIFT,    25
+.endif

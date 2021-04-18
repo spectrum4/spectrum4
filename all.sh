@@ -234,9 +234,10 @@ done
 # run.
 mkdir -p dist/aarch64
 
-# Assemble `src/all.s` to `build/aarch64/all.o`
+# Assemble `src/all.s` to `build/aarch64/{debug,release,qemu-debug}.o`
 "${AARCH64_TOOLCHAIN_PREFIX}as" -I src -I src/profiles/debug -o "build/aarch64/debug.o" "src/all.s"
 "${AARCH64_TOOLCHAIN_PREFIX}as" -I src -I src/profiles/release -o "build/aarch64/release.o" "src/all.s"
+"${AARCH64_TOOLCHAIN_PREFIX}as" --defsym QEMU=1 -I src -I src/profiles/debug -o "build/aarch64/qemu-debug.o" "src/all.s"
 
 # Link binaries that were previously assembled. Options passed to the linker
 # are:
@@ -250,6 +251,7 @@ mkdir -p dist/aarch64
 #   -o: elf file to generate
 "${AARCH64_TOOLCHAIN_PREFIX}ld" --fix-cortex-a53-835769 --fix-cortex-a53-843419 -N -Ttext=0x0 -o build/aarch64/kernel8-debug.elf  build/aarch64/debug.o
 "${AARCH64_TOOLCHAIN_PREFIX}ld" --fix-cortex-a53-835769 --fix-cortex-a53-843419 -N -Ttext=0x0 -M -o build/aarch64/kernel8-release.elf  build/aarch64/release.o
+"${AARCH64_TOOLCHAIN_PREFIX}ld" --fix-cortex-a53-835769 --fix-cortex-a53-843419 -N -Ttext=0x0 -M -o build/aarch64/kernel8-qemu-debug.elf  build/aarch64/qemu-debug.o
 
 # Copy static files from this repo into subdirectories under aarch64/dist that
 # are needed on SD card.
@@ -366,27 +368,44 @@ echo
 echo "Build successful - see dist directory for results"
 
 
-# Run tests
+function run_tests {
+  local pid=$!
+  disown
+  local outputfile="${1}"
+  local max_attempts=10
+  local attempts=0
 
+  until [ "$(cat "${outputfile}" | sed -n '/All tests completed./p' | wc -l)" -gt 0 ] || [ "${attempts}" -eq "${max_attempts}" ]; do
+    attempts=$((attempts+1))
+    sleep 1
+  done
+
+  kill -9 "${pid}" >/dev/null 2>&1
+  cat "${outputfile}"
+
+  if [ "${attempts}" -eq "${max_attempts}" ]; then
+    echo 'Timed out!' >&2
+    exit 67
+  fi
+}
+
+
+# Run z80 tests
 echo > printout.txt
-
 fuse --machine 128 --no-sound --zxprinter --printer --tape dist/z80/tmp.runtests.tzx --auto-load --no-autosave-settings >/dev/null 2>&1 &
-
-fuse_pid=$!
-disown
-max_attempts=3
-attempts=0
-
-until [ "$(cat printout.txt | sed -n '/All tests completed./p' | wc -l)" -gt 0 ] || [ "${attempts}" -eq "${max_attempts}" ]; do
-  attempts=$((attempts+1))
-  sleep 1
-done
-
-kill -9 "${fuse_pid}" >/dev/null 2>&1
-cat printout.txt
+run_tests printout.txt
 rm printout.txt
 
-if [ "${attempts}" -eq "${max_attempts}" ]; then
-  echo 'Timed out!' >&2
-  exit 64
+
+# Run aarch64 tests
+qemu-system-aarch64 -M raspi3b -kernel build/aarch64/kernel8-qemu-debug.elf -serial null -serial stdio >serial.txt 2>&1 &
+cat serial.txt
+run_tests serial.txt
+if [ "$(cat serial.txt | sed -n '/^FAIL:/p' | wc -l)" -gt 0 ]; then
+  rm serial.txt
+  echo 'Test failures!' >&2
+  exit 68
 fi
+rm serial.txt
+
+echo "All tests passed."

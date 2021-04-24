@@ -167,6 +167,11 @@ Just as above for the aarch64 toolchain, you can also use a different prefix
 than `z80-unknown-elf-` for the z80 toolchain by exporting the
 `Z80_TOOLCHAIN_PREFIX` environment variable.
 
+You will also require `qemu-system-aarch64` for running the Spectrum +4 test
+suite:
+
+  * `qemu-system-aarch64` (v5.2.0 or later)
+
 Note, GNU gas assembly syntax is assumed, so some z80 assemblers may use
 incompatible syntax. GNU gas assembly syntax was chosen for this project to
 keep the z80 and aarch64 assembly as closely aligned as possible.

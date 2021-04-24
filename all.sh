@@ -81,7 +81,7 @@ function check_dependencies {
 # Technically, checks for 'bash' and 'env' aren't really needed, since if this
 # is running, they are installed - however, in case this list is copied around,
 # good to include them as required tools...
-check_dependencies bash cat cmp cp curl dirname env find fuse go head hexdump mkdir mv rm sed sleep sort wc which
+check_dependencies bash cat cmp cp curl dirname env find fuse go head hexdump mkdir mv qemu-system-aarch64 rm sed sleep sort wc which
 
 echo
 

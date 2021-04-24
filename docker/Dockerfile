@@ -48,13 +48,13 @@ RUN mkdir -p /dist/etc/ssl/certs && cp -vp /etc/ssl/certs/ca-certificates.crt /d
 # add fuse ROMs
 RUN mkdir -p /dist/usr/local/share && mv /usr/local/share/fuse /dist/usr/local/share/fuse
 
+# add qemu keymaps etc
+RUN mv /usr/local/share/qemu /dist/usr/local/share/qemu
+
 # install go 1.15.5
 RUN mkdir -p /dist/usr/lib && curl -L 'https://golang.org/dl/go1.15.5.linux-amd64.tar.gz' > /dist/usr/lib/go1.15.5.linux-amd64.tar.gz
 RUN cd /dist/usr/lib && tar xvfz go1.15.5.linux-amd64.tar.gz && rm go1.15.5.linux-amd64.tar.gz
 RUN mkdir -p /dist/tmp
-
-# add qemu keymaps etc
-RUN mv /usr/local/share/qemu /dist/usr/local/share/qemu
 
 # now build a fresh image, with just the files in /dist
 FROM scratch

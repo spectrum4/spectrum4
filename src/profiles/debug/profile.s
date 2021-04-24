@@ -336,10 +336,10 @@ run_tests:
     add     sp, sp, #0x10
     cbnz    x10, 1b                         // Loop if more tests to run
 
-  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
-11:
   adr     x0, msg_all_tests_completed
   bl      uart_puts                       // Log "All tests completed.\r\n"
+  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.
+11:
   ret
 
 

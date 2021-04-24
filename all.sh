@@ -372,6 +372,8 @@ function run_tests {
   local pid=$!
   disown
   local outputfile="${1}"
+  local timeoutexitcode="${2}"
+  local failuresexitcode="${3}"
   local max_attempts=10
   local attempts=0
 
@@ -381,31 +383,37 @@ function run_tests {
   done
 
   kill -9 "${pid}" >/dev/null 2>&1
-  cat "${outputfile}"
+  cat "${outputfile}" | sed -n '1,/All tests completed./p'
+  failure_count="$(cat "${outputfile}" | sed -n '/^FAIL:/p' | wc -l)"
+  rm -f "${outputfile}"
 
   if [ "${attempts}" -eq "${max_attempts}" ]; then
     echo 'Timed out!' >&2
-    exit 67
+    exit "${timeoutexitcode}"
   fi
+
+  if [ "${failure_count}" -gt 0 ]; then
+    echo 'Test failures!' >&2
+    exit "${failuresexitcode}"
+  fi
+  echo "All tests passed."
 }
 
 
-# Run z80 tests
-echo > printout.txt
+echo
+echo
+echo "Running Spectrum 128K tests under Fuse emulator..."
+echo "=================================================="
+rm -f printout.txt
+echo -n > printout.txt
 fuse --machine 128 --no-sound --zxprinter --printer --tape dist/z80/tmp.runtests.tzx --auto-load --no-autosave-settings >/dev/null 2>&1 &
-run_tests printout.txt
-rm printout.txt
+run_tests printout.txt 67 68
 
 
-# Run aarch64 tests
+echo
+echo
+echo "Running Spectrum +4 tests under QEMU..."
+echo "======================================="
+rm -f serial.txt
 qemu-system-aarch64 -M raspi3b -kernel build/aarch64/kernel8-qemu-debug.elf -serial null -serial stdio >serial.txt 2>&1 &
-cat serial.txt
-run_tests serial.txt
-if [ "$(cat serial.txt | sed -n '/^FAIL:/p' | wc -l)" -gt 0 ]; then
-  rm serial.txt
-  echo 'Test failures!' >&2
-  exit 68
-fi
-rm serial.txt
-
-echo "All tests passed."
+run_tests serial.txt 69 70

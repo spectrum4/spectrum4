@@ -553,7 +553,8 @@ fi
 
 echo
 echo "Running Spectrum +4 tests under QEMU..."
-run_tests qemu-tests "build/spectrum4/kernel8-qemu-debug.elf" "serial.txt" 69 70 300
+# Use the img file for the cache results since the elf file has variations based on the assembler
+run_tests qemu-tests "dist/spectrum4/debug/kernel8.img" "serial.txt" 69 70 300
 
 split "Ran +4 tests under QEMU"
 

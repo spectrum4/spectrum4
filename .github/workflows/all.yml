@@ -1,0 +1,10 @@
+name: Build and Test
+on: [push, pull_request]
+jobs:
+  all:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: ./docker.sh
+    - run: git status && test $(git status --porcelain | wc -l) == 0
+    - run: rm -f dist/spectrum128k/* && mv src/spectrum4/passing_tests/* src/spectrum4 && mv src/spectrum128k/passing_tests/* src/spectrum128k && ./docker.sh && git status dist/spectrum128k && test $(git status --porcelain dist/spectrum128k | wc -l) == 0

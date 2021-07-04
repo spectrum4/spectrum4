@@ -1,0 +1,110 @@
+_start:
+    uart_init
+    init_framebuffer
+    restart
+sleep:
+    sleep
+init_framebuffer:
+    mbox_call
+mbox_call:
+wait_cycles:
+uart_init:
+uart_send:
+reboot:
+    wait_cycles
+    mbox_call
+    sleep
+paint_border:
+    paint_rectangle
+    paint_rectangle
+    paint_rectangle
+    paint_rectangle
+paint_rectangle:
+fill_rectangle:
+fill_line:
+paint_window:
+    paint_rectangle
+restart:
+    new
+pin:
+pout:
+new:
+    paint_border
+    cls
+    sleep
+print_message:
+initial_channel_info:
+initial_channel_info_END:
+initial_stream_data_END:
+error_1:
+tkn_table:
+tkn_rnd:
+tkn_or:
+tkn_and:
+tkn_less_equal:
+tkn_copy:
+print_out:
+    po_able
+    po_quest
+ctlchrtab:
+po_back:
+po_right:
+    po_able
+po_enter:
+    copy_buff
+po_comma:
+    po_fill
+po_quest:
+    po_able
+po_tv_2:
+po_2_oper:
+    po_tv_1
+po_1_oper:
+    po_tv_1
+po_tv_1:
+po_cont:
+po_at_set:
+    co_temp_5
+    to_end
+to_co_temp_5:
+    co_temp_5
+    to_end
+to_end:
+po_fill:
+po_able:
+    po_any
+po_any:
+    po_t_udg
+po_t_udg:
+    co_temp_5
+rejoin_po_t_udg:
+    po_char_2
+    po_char_2
+po_char_2:
+    copy_buff
+po_msg:
+po_scr_2:
+    po_msg
+po_scr_3:
+report_5:
+cls:
+    cl_all
+    cls_lower
+cls_lower:
+    cl_line
+cl_all:
+    cl_line
+cl_line:
+copy_buff:
+add_char:
+    one_space
+    add_ch_1
+add_ch_1:
+key_input:
+chn_cd_lu:
+one_space:
+report_j:
+co_temp_5:
+    rejoin_po_t_udg
+tkn_spectrum:
+tkn_play:

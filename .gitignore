@@ -1,0 +1,11 @@
+printout.txt
+serial.txt
+fuse_log.txt
+*.cleaned
+/build/*
+/dist/spectrum128k/runtests-cryptorandom_*.tzx
+/dist/spectrum128k/*.wav
+/docker/build/*
+/src/spectrum128k/randomdata.s
+/src/spectrum128k/tests.s
+/src/spectrum4/tests.s

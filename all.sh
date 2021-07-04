@@ -124,7 +124,10 @@ function run_tests {
      [ "${failure_count}" -gt 0 ] || \
      [ "$(cat "${cache_file}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ] || \
      [ "$(cat "${cache_file}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] || \
-     [ "$(cat "${cache_file}" | sed -n '/All tests completed./p' | wc -l)" -eq 0 ]; then
+     ( \
+       [ "$(cat "${cache_file}" | sed -n '/All tests completed./p' | wc -l)" -eq 0 ] && \
+       [ "$(cat "${cache_file}" | sed -n '/No tests to run./p' | wc -l)" -eq 0 ] \
+     ); then
     failed='true'
   fi
 

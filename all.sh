@@ -86,34 +86,57 @@ function check_dependencies {
 }
 
 function run_tests {
-  local pid=$!
-  disown
-  local outputfile="${1}"
-  local timeoutexitcode="${2}"
-  local failuresexitcode="${3}"
-  local max_attempts="${4}"
+  local func="${1}"
+  local binary="${2}"
+  local output_file="${3}"
+  local timeoutexitcode="${4}"
+  local failuresexitcode="${5}"
+  local max_attempts="${6}"
+
+  binary_md5="$(md5sum "${binary}" | sed 's/ .*//')"
+  cache_file="cache/${binary_md5}"
   local attempts=0
 
-  until [ "$(cat "${outputfile}" | sed -n '/All tests completed./p' | wc -l)" -gt 0 ] \
-    || [ "$(cat "${outputfile}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] \
-    || [ "$(cat "${outputfile}" | sed -n '/No tests to run./p' | wc -l)" -gt 0 ] \
-    || [ "$(cat "${outputfile}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ] \
-    || [ "${attempts}" -eq "${max_attempts}" ]; do
-    attempts=$((attempts+1))
-    sleep 1
-  done
+  if [ -f "${cache_file}" ]; then
+    echo "Found cached test results in ${cache_file}:"
+  else
+    "${func}"
+    local pid=$!
+    disown
 
-  kill -9 "${pid}" >/dev/null 2>&1
-  cat "${outputfile}" | sed -n '1,/All tests completed./p' | sed 's/^/  /'
-  failure_count="$(cat "${outputfile}" | sed -n '/^FAIL:/p' | wc -l)"
-  rm -f "${outputfile}"
+    until [ "$(cat "${output_file}" | sed -n '/All tests completed./p' | wc -l)" -gt 0 ] \
+      || [ "$(cat "${output_file}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] \
+      || [ "$(cat "${output_file}" | sed -n '/No tests to run./p' | wc -l)" -gt 0 ] \
+      || [ "$(cat "${output_file}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ] \
+      || [ "${attempts}" -eq "${max_attempts}" ]; do
+      attempts=$((attempts+1))
+      sleep 1
+    done
+
+    kill -9 "${pid}" >/dev/null 2>&1
+
+    mv "${output_file}" "${cache_file}"
+  fi
+
+  failure_count="$(cat "${cache_file}" | sed -n '/^FAIL:/p' | wc -l)"
+  local failed='false'
+  if [ "${attempts}" -eq "${max_attempts}" ] || \
+     [ "${failure_count}" -gt 0 ] || \
+     [ "$(cat "${cache_file}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ] || \
+     [ "$(cat "${cache_file}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] || \
+     [ "$(cat "${cache_file}" | sed -n '/All tests completed./p' | wc -l)" -eq 0 ]; then
+    failed='true'
+  fi
+
+  cat "${cache_file}" | sed -n '1,/All tests completed./p' | sed 's/^/  /'
 
   if [ "${attempts}" -eq "${max_attempts}" ]; then
     echo "${SPECTRUM4_SCRIPT}:" 'Timed out!' >&2
     exit "${timeoutexitcode}"
   fi
 
-  if [ "${failure_count}" -gt 0 ]; then
+  if "${failed}"; then
+    echo "${SPECTRUM4_SCRIPT}: Test failures"
     exit "${failuresexitcode}"
   fi
 }
@@ -219,6 +242,15 @@ function randomdata-header {
   echo '.text'
   echo ''
   echo 'random_data:'
+}
+
+function fuse-tests {
+  echo -n > printout.txt
+  fuse --speed 100000 --machine 128 --no-sound --zxprinter --printer --tape "dist/spectrum128k/runtests-cryptorandom_${routine}.tzx" --auto-load --no-autosave-settings >fuse_log.txt 2>&1 &
+}
+
+function qemu-tests {
+  qemu-system-aarch64 -M raspi3b -kernel build/spectrum4/kernel8-qemu-debug.elf -serial null -serial stdio >serial.txt 2>&1 &
 }
 
 function split {
@@ -521,8 +553,7 @@ fi
 
 echo
 echo "Running Spectrum +4 tests under QEMU..."
-qemu-system-aarch64 -M raspi3b -kernel build/spectrum4/kernel8-qemu-debug.elf -serial null -serial stdio >serial.txt 2>&1 &
-run_tests serial.txt 69 70 300
+run_tests qemu-tests "build/spectrum4/kernel8-qemu-debug.elf" "serial.txt" 69 70 300
 
 split "Ran +4 tests under QEMU"
 
@@ -627,13 +658,6 @@ else
     verbose
     verbose -e "  \x1b\x5b\x33\x32\x6d\xe2\x9c\x93\x1b\x5b\x30\x6d dist/spectrum128k/runtests-cryptorandom_${routine}.tzx"
 
-    echo -n > printout.txt
-    fuse --speed 100000 --machine 128 --no-sound --zxprinter --printer --tape "dist/spectrum128k/runtests-cryptorandom_${routine}.tzx" --auto-load --no-autosave-settings >fuse_log.txt 2>&1 &
-    run_tests printout.txt 67 68 30
-    rm fuse_log.txt
-
-    split "Ran ${routine} 128k tests"
-
     if ! "${SKIP_GENERATION}"; then
 
       # The z80 build process is run twice - the first time with random data generated
@@ -688,6 +712,11 @@ else
 
       split "Generated static ${routine} tzx/wav files"
     fi
+
+    # Note, we pass the non-cryptorandom binary for the cached results argument, in order to get cached results if possible
+    run_tests fuse-tests "dist/spectrum128k/runtests_${routine}.tzx" "printout.txt" 67 68 30
+
+    split "Ran ${routine} 128k tests"
   done
 fi
 
@@ -708,6 +737,14 @@ if ! "${SKIP_GENERATION}"; then
 
   split "Cleaned up shell files"
 fi
+
+md5s="$(md5sum dist/spectrum128k/runtests_*.tzx dist/spectrum4/debug/kernel8.img | sed 's/ .*//')"
+find cache -type f | sed 's/^cache\///' | while read file; do
+  if [ "${md5s/${file}/-}" == "${md5s}" ]; then
+    echo "Removing cache file cache/${file}..."
+    rm "cache/${file}"
+  fi
+done
 
 echo
 echo -e "All ok"'!'" \U0001f9d9"

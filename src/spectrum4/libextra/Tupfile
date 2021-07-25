@@ -1,0 +1,6 @@
+.gitignore
+
+: sysvars.sh |> ./%f > %o |> %B.gen-s
+
+: foreach *.s *.gen-s | ../../../utils/asm-format/asm-format |> ^o^ cat %f | ../../../utils/asm-format/asm-format check |>
+: foreach *.sh | ../../../utils/shell-format/shell-format |> ^o^ cat %f | ../../../utils/shell-format/shell-format check |>

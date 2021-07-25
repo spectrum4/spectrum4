@@ -1,0 +1,16 @@
+.gitignore
+
+import Z80_TOOLCHAIN_PREFIX=z80-unknown-elf-
+
+# Build ROMs
+
+: foreach rom0.s rom1.s |> $(Z80_TOOLCHAIN_PREFIX)as -o %o %f |> %B.o {rom-obj}
+: foreach {rom-obj} |> ^t^ $(Z80_TOOLCHAIN_PREFIX)ld -N -Ttext=0x0 --unresolved-symbols=ignore-all -o %o %f |> %B.elf-tmp {rom-elf-tmp}
+: foreach {rom-elf-tmp} |> $(Z80_TOOLCHAIN_PREFIX)readelf -W -s %f > %o |> %B.symbols
+: rom0.elf-tmp rom1.o |> $(Z80_TOOLCHAIN_PREFIX)ld -N -Ttext=0x0 --allow-multiple-definition -R %1f -o %o %2f |> rom1.elf {rom-elf}
+: rom1.elf-tmp rom0.o |> $(Z80_TOOLCHAIN_PREFIX)ld -N -Ttext=0x0 --allow-multiple-definition -R %1f -o %o %2f |> rom0.elf {rom-elf}
+: foreach {rom-elf} |> $(Z80_TOOLCHAIN_PREFIX)objcopy --set-start=0x0 %f -O binary %o |> %B.img
+
+: foreach *.s *.gen-s | ../../../utils/asm-format/asm-format |> ^o^ cat %f | ../../../utils/asm-format/asm-format check |>
+: rom0.img |> ^o^ ./check-md5.sh %f b4d2692115a9f2924df92a3cbfb358fb 72 |>
+: rom1.img |> ^o^ ./check-md5.sh %f 6e09e5d3c4aef166601669feaaadc01c 73 |>

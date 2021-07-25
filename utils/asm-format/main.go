@@ -3,30 +3,43 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"log"
 	"os"
 	"regexp"
 	"strings"
 )
 
 func main() {
-	transform(os.Stdin)
+	check := false
+	if len(os.Args) > 1 {
+		check = os.Args[1] == "check"
+	}
+	exitCode := transform(os.Stdin, check)
+	if exitCode == 1 {
+		log.Print("Source code needs formatting")
+	}
+	os.Exit(exitCode)
 }
 
-func transform(file *os.File) {
+func transform(file *os.File, check bool) (exitCode int) {
 	scanner := bufio.NewScanner(file)
 	r1 := regexp.MustCompile("[[:space:]]*;")
 	r2 := regexp.MustCompile("[[:space:]]*//")
 	r3 := regexp.MustCompile("// L[0-9A-F][0-9A-F][0-9A-F][0-9A-F]$")
 	for scanner.Scan() {
-		line := scanner.Text()
+		oldline := scanner.Text()
 		// if ';' or '//' in first 10 characters, or not in string at all, don't touch line
-		line = strings.TrimRight(strings.ReplaceAll(line, "\t", "    "), " ")
+		line := strings.TrimRight(strings.ReplaceAll(oldline, "\t", "    "), " ")
 		start := line
 		if len(start) > 10 {
 			start = start[:10]
 		}
 		if strings.Contains(start, ";") || strings.Contains(start, "#") || strings.Contains(start, "//") || (!strings.Contains(line, ";") && !strings.Contains(line, "//")) {
-			fmt.Println(line)
+			if !check {
+				fmt.Println(line)
+			} else if line != oldline {
+				return 1
+			}
 			continue
 		}
 		// remove leading space before first ';' or '//'
@@ -52,8 +65,13 @@ func transform(file *os.File) {
 			line = line[:first] + strings.Repeat(" ", numberOfExtraSpaces) + line[first:]
 		}
 		if first > indent {
-			line = line[:first] + "\n" + strings.Repeat(" ", indent) + line[first:]
+			line = strings.TrimRight(line[:first], " ") + "\n" + strings.Repeat(" ", indent) + line[first:]
 		}
-		fmt.Println(line)
+		if !check {
+			fmt.Println(line)
+		} else if line != oldline {
+			return 1
+		}
 	}
+	return 0
 }

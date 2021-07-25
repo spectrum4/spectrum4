@@ -61,6 +61,7 @@ You will also require:
   * `go`
   * `head`
   * `hexdump`
+  * `ln`
   * `md5sum`
   * `mkdir`
   * `mv`
@@ -69,9 +70,19 @@ You will also require:
   * `sleep`
   * `sort`
   * `tape2wav` (from fuse-utils)
+  * `tup`
   * `wc`
   * `which` (which likely in turn requires `/bin/sh`)
 
-To build, run `./all.sh` from the root folder to build everything.
+To check your environment is suitable for building, run `./check-env.sh` from
+the root folder to build everything.
 
-Run `./all.sh -h` to see additional build/test options.
+Run `./check-env.sh -h` to see additional options.
+
+Once the output of `check-env.sh` says that your environment is suitably
+configured, you can build simply by running `tup` in any directory of the
+repository.
+
+Note, if you switch between running `tup` and `./tup-under-docker.sh`,
+everything will be rebuilt, so it is far more efficient to use one or the
+other, rather than alternate between the two.

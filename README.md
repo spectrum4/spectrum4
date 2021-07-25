@@ -125,8 +125,8 @@ programs, machine code routines, and RAM disk storage.
 
 ## Building
 
-To build/test everything, simply run `./docker.sh`. This requires that docker
-is installed on your system.
+To build/test everything, simply run `./tup-under-docker.sh`. This requires
+that docker is installed on your system.
 
 To see further help options, run `./docker.sh -h`.
 
@@ -140,19 +140,17 @@ on your host (e.g. if building/testing directly on a Raspberry Pi) then see
 After building using one of the methods above, the following distribution
 files/directories will be updated:
 
-  * file `/dist/spectrum128k/runtests.tzx` contains a Spectrum 128K casette
-    tape image for running the Spectrum 128K unit tests under a Spectrum 128K
-    emulator (such as FUSE) feeding from a static random data sample
-  * file `/dist/spectrum128k/runtests.wav` is the same, but for loading on a real
-    Spectrum 128K machine (it is an audio file of the casette tape)
-  * (for local builds only) additional files with `-cryptorandom` suffixes will be
-    generated, which on each build, contain different cryptographically generated
-    random data for providing additional fuzzing for test inputs
-  * directory `/dist/spectrum4/debug` contains a debug version of Spectrum +4,
-    which logs debug messages to Mini UART, runs unit tests and performs a
-    short demo on start up
-  * directory `/dist/spectrum4/release` contains a release version of Spectrum
-    +4, without debug logging, unit tests, nor a start up demo
+  * Directory `src/spectrum4/dist/debug` contains a debug and release version of
+    Spectrum +4, which logs debug messages to Mini UART, and performs a short
+    demo on start up.
+  * Directory `src/spectrum128k/tests` contains Spectrum 128K casette tape images
+    (*.tzx files) and casette tape audio samples (*.wav files) for running the
+    Spectrum 128K unit tests under a Spectrum 128K emulator (such as FUSE or
+    Retro Virtual Machine) or on a real Spectrum 128K machine.
+  * Directory `/src/spectrum4/dist/release` contains a release version of Spectrum
+    +4, without debug logging, nor a start up demo.
+  * Directory `/src/spectrum4/targets` contains Raspberry Pi 3B kernel images
+    for running unit tests, either under QEMU, or on a real Raspberry Pi.
 
 In order to run the debug and/or release builds of Spectrum +4 on an actual
 Raspbery Pi 3B, either copy the contents of the given distribution directory to
@@ -165,7 +163,10 @@ Alternatively, to run Spectrum +4 under QEMU instead of a real Raspberry Pi 3B,
 run something like:
 
 ```
-$ qemu-system-aarch64 -M raspi3b -kernel build/spectrum4/kernel8-qemu-debug.elf -serial null -serial stdio
+$ qemu-system-aarch64 -M raspi3b -kernel src/spectrum4/targets/qemu-debug.elf -serial null -serial stdio
 ```
 
-Note, __you will likely need QEMU version 5.2.0 or later__.
+Note, __you will likely need QEMU version 5.2.0 or later__. Also note that the `.elf`
+file is passed to the `-kernel` option, rather than the `.img` file, in order that
+QEMU loads the kernel at address 0x0 rather than 0x80000, which seems not to be
+possible when passing the .img file directly.

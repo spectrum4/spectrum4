@@ -1,0 +1,19 @@
+.gitignore
+
+# Generate Tests
+: test_cl_chan.sh | ../../../utils/asm-format/asm-format |> ./%f |> test_cl_chan.gen-s {gen-test}
+: test_cl_set.sh | ../../../utils/asm-format/asm-format |> ./%f |> test_cl_set.lowerscreen.gen-s test_cl_set.printer.gen-s test_cl_set.upperscreen.gen-s {gen-test}
+: test_po_attr.sh | ../../../utils/asm-format/asm-format |> ./%f |> test_po_attr.gen-s {gen-test}
+: test_po_mosaic_half.sh | ../../../utils/asm-format/asm-format |> ./%f |> test_po_mosaic_half.gen-s {gen-test}
+: test_po_scr.sh | ../../../utils/asm-format/asm-format |> ./%f |> test_po_scr.lowerscreen.gen-s test_po_scr.upperscreen.gen-s {gen-test}
+: test_po_table_1.sh | ../../../utils/asm-format/asm-format |> ./%f |> test_po_table_1.gen-s {gen-test}
+: test_po_tokens.sh | ../../../utils/asm-format/asm-format |> ./%f |> %B.f0.gen-s %B.f1.gen-s %B.s0.gen-s %B.s1.gen-s {gen-test}
+
+# Generate Test Runners
+: foreach test_*.s test_*.gen-s | ../../../utils/asm-format/asm-format |> ^o^ ./tests.sh %f > %o |> %B.suite
+: foreach *.suite | ../../../utils/asm-format/asm-format |> ^o^ ./suites.sh %f > %o |> %B.runner <runners>
+: *.suite | ../../../utils/asm-format/asm-format |> ^o^ ./suites.sh %f > %o |> all_suites.runner
+
+# Check sources are formatted
+: foreach *.s *.gen-s *.suite *.runner | ../../../utils/asm-format/asm-format |> ^o^ cat %f | ../../../utils/asm-format/asm-format check |>
+: foreach *.sh | ../../../utils/shell-format/shell-format |> ^o^ cat %f | ../../../utils/shell-format/shell-format check |>

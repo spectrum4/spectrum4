@@ -1,0 +1,17 @@
+.gitignore
+
+import AARCH64_TOOLCHAIN_PREFIX=aarch64-none-elf-
+
+: foreach ../tests/test_*.runner | ../tests/<runners> |> ./test-targets.sh %f > %o |> %B.target
+: foreach *.target | ../tests/all_suites.runner ../libextra/sysvars.gen-s |> ^o^ $(AARCH64_TOOLCHAIN_PREFIX)as -I .. -I ../kernel -I ../roms -I ../tests -I ../demo -I ../libextra -o %o %f |> %B.o {obj}
+: foreach {obj} |> ^o^ $(AARCH64_TOOLCHAIN_PREFIX)ld --fix-cortex-a53-835769 --fix-cortex-a53-843419 -N -Ttext=0x0 -o %o %f |> %B.elf {elf}
+: foreach {elf} |> ^o^ $(AARCH64_TOOLCHAIN_PREFIX)objcopy --set-start=0x0 %f -O binary %o |> %B.img {img}
+: foreach {elf} |> $(AARCH64_TOOLCHAIN_PREFIX)objdump -d %f > %o |> %B.disassembly
+: foreach {elf} |> $(AARCH64_TOOLCHAIN_PREFIX)readelf -W -s %f > %o |> %B.symbols
+: foreach test_*.elf |> ./qemu-tests.sh %B |> %B.log
+
+: foreach *.s *.gen-s | ../../../utils/asm-format/asm-format |> ^o^ cat %f | ../../../utils/asm-format/asm-format check |>
+: foreach *.sh | ../../../utils/shell-format/shell-format |> ^o^ cat %f | ../../../utils/shell-format/shell-format check |>
+
+# Report on untested routines
+: release.elf ../tests/test_*.suite |> AARCH64_TOOLCHAIN_PREFIX=$(AARCH64_TOOLCHAIN_PREFIX) ./routines_without_tests.sh %f > %o |> ../tests/routines_without_tests.txt

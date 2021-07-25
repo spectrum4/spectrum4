@@ -1,0 +1,3 @@
+.gitignore
+
+: foreach *.sh | ../utils/shell-format/shell-format |> ^o^ cat %f | ../utils/shell-format/shell-format check |>

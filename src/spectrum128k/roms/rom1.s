@@ -3447,9 +3447,72 @@ ctlchrtab:
 ; -------------------
 ; Cursor left routine
 ; -------------------
-; Backspace and up a line if that action is from the left of screen.
-; For ZX printer backspace up to first column but not beyond.
-
+; Backspace one character. If backspacing from left side of screen (chan S/K), go to last char of previous line, if
+; not on first line of S/K. For ZX printer if cannot backspace because at start of line, do nothing. Update stored
+; position.
+;
+; If printer in use:
+;   On entry:
+;     Bit 1 of FLAGS set
+;     C = current printer column (33 for leftmost column, ... 2 for rightmost column, 1 = end of line)
+;   On exit:
+;     A = 33 - C = actual printer x position (0 for leftmost column, ... 31 for rightmost column, 32 = end of line)
+;     C = new printer column (33 for leftmost column, ... 2 for rightmost column, 1 = end of line):
+;         entry C != 33;
+;           exit C = entry C + 1
+;         entry C == 33:
+;           exit C = 33;
+;     D = 0
+;     E = 33 - C = actual printer x position (0 for leftmost column, ... 31 for rightmost column, 32 = end of line)
+;     HL = printer buffer address = 0x5b00 + (33-exit C)
+;     F = X3_FLAG | H_FLAG
+;     [P_POSN_X] set to printer position (=exit C)
+;     [PR_CC] set to printer buffer address (=exit HL)
+;
+; If upper screen in use:
+;   On entry:
+;     Bit 1 of FLAGS clear
+;     Bit 0 of [TV_FLAG] clear
+;     B = current upper screen row (24 - actual upper screen row)
+;         => 24 for top upper screen line, 23 for second upper screen line, ...
+;     C = current upper screen column (33 for leftmost column, ... 2 for rightmost column, 1 = end of line)
+;   On exit:
+;     A = 33 - C = actual upper screen x position (0 for leftmost column, ... 31 for rightmost column, 32 = end of line)
+;     C = new upper screen column (33 for leftmost column, ... 2 for rightmost column, 1 = end of line):
+;         entry C != 33;
+;           exit B = ....
+;           exit C = entry C + 1
+;         entry C == 33:
+;           entry B != ....
+;             exit B = ....
+;             exit C = ....
+;           entry B == ....
+;             exit B = ....
+;             exit C = ....
+;     D = 0
+;     E = 33 - C = actual upper screen x position (0 for leftmost column, ... 31 for rightmost column, 32 = end of line)
+;     HL = 0x4000 + (33-C) + 32*8*8*int((24-B)/8) + 32*((24-B)%8) = display file address for upper screen position
+;     F = H_FLAG|X3_FLAG|PV_FLAG|Z_FLAG
+;     [S_POSN_{X,Y}] set to upper screen position (=BC)
+;     [DF_CC] set to display file address of upper screen position (=HL)
+;
+; If lower screen in use:
+;   On entry:
+;     Bit 1 of FLAGS clear
+;     Bit 0 of [TV_FLAG] set
+;     [DF_SZ] set to number of lines for lower screen
+;     B = value to store in S_POSN_Y_L and ECHO_E_Y = 48 - [DF_SZ] - actual lower screen row
+;         => 24 for top lower screen line, 23 for second lower screen line, ...
+;     C = value to store in S_POSN_X_L and ECHO_E_X (33 for leftmost column, ... 2 for rightmost column, 1 = end of line)
+;   On exit:
+;     A = 33 - C = actual lower screen x position (0 for leftmost column, ... 31 for rightmost column, 32 = end of line)
+;     D = 0
+;     E = 33 - C = actual lower screen x position (0 for leftmost column, ... 31 for rightmost column, 32 = end of line)
+;     HL = 0x4000 + (33-C) + 32*8*8*int((48-B-[DF_SZ])/8) + 32*((48-B-[DF_SZ])%8) = display file address for lower screen position
+;     F = X3_FLAG | H_FLAG
+;     [S_POSN_{X,Y}_L] set to lower screen position (=BC)
+;     [ECHO_E_{X,Y}] set to lower screen position (=BC)
+;     [DF_CC_L] set to display file address of lower screen position (=HL)
 po_back:
         INC     C                         ; move left one column.
         LD      A,$22                     ; value $21 is leftmost column.

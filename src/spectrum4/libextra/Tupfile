@@ -1,0 +1,8 @@
+.gitignore
+
+include_rules
+
+: sysvars.sh |> ./%f > %o |> %B.gen-s
+
+: foreach *.s *.gen-s |> !check-asm-formatted |>
+: foreach *.sh|> !check-shell-formatted |>

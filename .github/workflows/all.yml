@@ -1,0 +1,9 @@
+name: Build and Test
+on: [push, pull_request]
+jobs:
+  all:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - run: ./tup-under-docker.sh || ./tup-under-docker.sh || ./tup-under-docker.sh || ./tup-under-docker.sh
+    - run: git status && test $(git status --porcelain | wc -l) == 0

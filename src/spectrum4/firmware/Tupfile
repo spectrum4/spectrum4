@@ -1,0 +1,6 @@
+.gitignore
+
+firmware_revision = 98835e734d19a69e55a50360e5f56d098b8f79d2
+
+# Download firmware
+: |> for file in %o; do curl -s -L "https://github.com/raspberrypi/firmware/blob/$(firmware_revision)/boot/${file}?raw=true" > "${file}"; done |> LICENCE.broadcom bootcode.bin fixup.dat start.elf

@@ -1,0 +1,19 @@
+.gitignore
+
+include_rules
+
+import AARCH64_TOOLCHAIN_PREFIX=aarch64-none-elf-
+
+: foreach ../tests/test_*.runner | ../tests/<runners> |> ./test-targets.sh %f > %o |> %B.target
+: foreach *.target | ../tests/all_suites.runner ../libextra/sysvars.gen-s |> ^o^ $(AARCH64_TOOLCHAIN_PREFIX)as $(ASFLAGS_AARCH64) -o %o %f |> %B.o {obj}
+: foreach {obj} |> ^o^ $(AARCH64_TOOLCHAIN_PREFIX)ld $(LDFLAGS_AARCH64) -o %o %f |> %B.elf {elf}
+: foreach {elf} |> ^o^ $(AARCH64_TOOLCHAIN_PREFIX)objcopy --set-start=0x0 %f -O binary %o |> %B.img {img}
+: foreach {elf} |> $(AARCH64_TOOLCHAIN_PREFIX)objdump -d %f > %o |> %B.disassembly
+: foreach {elf} |> $(AARCH64_TOOLCHAIN_PREFIX)readelf -W -s %f > %o |> %B.symbols
+: foreach test_*.elf |> ./qemu-tests.sh %B |> %B.log
+
+: foreach *.s *.gen-s |> !check-asm-formatted |>
+: foreach *.sh|> !check-shell-formatted |>
+
+# Report on untested routines
+: release.elf ../tests/test_*.suite |> AARCH64_TOOLCHAIN_PREFIX=$(AARCH64_TOOLCHAIN_PREFIX) ./routines_without_tests.sh %f > %o |> ../tests/routines_without_tests.txt

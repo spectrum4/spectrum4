@@ -4189,16 +4189,42 @@ po_attr_2:
 ; ----------------
 ; Message printing
 ; ----------------
-; This entry point is used to print tape, boot-up, scroll? and error messages
-; On entry the DE register points to an initial step-over byte or
-; the inverted end-marker of the previous entry in the table.
-; A contains the message number, often zero to print first message.
-; (HL has nothing important usually P_FLAG)
+; Find message in table, print it, with possible leading space (no trailing
+; space). This entry point is used to print tape, boot-up, scroll? and error
+; messages.
+;
+; Leading space if A >= 32 and first char >= 'A' and bit 0 of [IY+(FLAGS-C_IY)] is clear.
+;
+; On entry:
+;   Bit 0 of [IY+(FLAGS-C_IY)] set if leading space should be suppressed
+;   A = index of entry:
+;         first message cannot be retrieved (typically '?'+$80)
+;         0 for second message
+;         1 for third message
+;         ...
+;   DE = address of message table
+;   [[CURCHL]] = print routine to call
+;   ... any settings that routine at [[CURCHL]] requires ...
+; On exit:
+;   D = 0
+;   E = L
+;   HL preserved (regardless of whether [[CURCHL]] changes it)
+;   AF is determined as follows:
+;
+;     if message ends with '$' or message ends in a char >= 'A':
+;       A = 0 (regardless of whether [[CURCHL]] changes it)
+;       F = Carry set, Negative set, ... (result of CP 0x03) (regardless of whether [[CURCHL]] changes it)
+;     else:
+;       A = last char of message * 2 (regardless of whether [[CURCHL]] changes it)
+;       F = C_FLAG | N_FLAG, ... (result of CP 0x82) (regardless of whether [[CURCHL]] changes it)
+;
+;   Plus any other register changes that [[CURCHL]] makes when printing the message (or trailing space) ...
 
 po_msg:
         PUSH    HL                        ; put hi-byte zero on stack to suppress
         LD      H,$00                     ; trailing spaces
-        EX      (SP),HL                   ; ld h,0; push hl would have done ?.
+        EX      (SP),HL                   ; ld h,0; push hl would have done ?
+                                          ; (perhaps preserving hl was important)
         JR      po_table                  ; forward to PO-TABLE.
 
 ; ---

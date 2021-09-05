@@ -94,6 +94,7 @@ po_msg_01_setup_regs:
   ld      iy, 0x5000
   ld      a, 0x2
   ld      de, msg_po_msg_test
+  ld      l, 118
   ret
 
 po_msg_01_effects:
@@ -103,8 +104,8 @@ po_msg_01_effects:
 
 po_msg_01_effects_regs:
   ld      a, 2*'0'
-  ldf     0x97
-  ld      de, 0x0007                      ; TODO - why?!?
+  ldf     S_FLAG | H_FLAG | PV_FLAG | N_FLAG | C_FLAG
+  ld      de, 118
   ret
 
 msg_po_msg_01_out:
@@ -119,6 +120,7 @@ po_msg_02_setup_regs:
   ld      iy, 0x5000
   ld      a, 32
   ld      de, msg_po_msg_test
+  ld      l, 217
   ret
 
 po_msg_02_effects:
@@ -128,8 +130,8 @@ po_msg_02_effects:
 
 po_msg_02_effects_regs:
   ld      a, '2'*2
-  ldf     0x87
-  ld      de, 0x0007                      ; TODO - why?!?
+  ldf     S_FLAG | PV_FLAG | N_FLAG | C_FLAG
+  ld      de, 217
   ret
 
 # Output adds a leading space...
@@ -146,6 +148,7 @@ po_msg_03_setup_regs:
   ld      iy, 0x5000
   ld      a, 33
   ld      de, msg_po_msg_test
+  ld      l, 43
   ret
 
 po_msg_03_effects:
@@ -155,8 +158,8 @@ po_msg_03_effects:
 
 po_msg_03_effects_regs:
   ld      a, '3'*2
-  ldf     0x87
-  ld      de, 0x0007                      ; TODO - why?!?
+  ldf     S_FLAG | PV_FLAG | N_FLAG | C_FLAG
+  ld      de, 43
   ret
 
 msg_po_msg_03_out:

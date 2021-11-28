@@ -47,17 +47,17 @@ po_table_1:                              // L0C17
     bl      print_w0                              // Print it, preserving registers.
     b       1b                                    // Repeat loop
 2:
-  cmp       w6, '$'                               // Was last character '$'?
-  b.eq      3f                                    // If so, jump forward to 3: to consider trailing space.
-  cmp       w6, 'A'                               // Was it < 'A' i.e. '#', '>', '=' from tokens or ' ', '.'
+  cmp     w6, '$'                                 // Was last character '$'?
+  b.eq    3f                                      // If so, jump forward to 3: to consider trailing space.
+  cmp     w6, 'A'                                 // Was it < 'A' i.e. '#', '>', '=' from tokens or ' ', '.'
                                                   // (from tape) or '?' from scroll?
-  b.lo      4f                                    // No trailing space, so exit routine.
+  b.lo    4f                                      // No trailing space, so exit routine.
 3:
-  cmp       w5, #0x03                             // Test against RND, INKEY$ and PI which have no parameters
+  cmp     w5, #0x03                               // Test against RND, INKEY$ and PI which have no parameters
                                                   // and therefore no trailing space.
-  b.lo      4f                                    // If one of them, no trailing space, so jump forward to 4:.
-  mov       w0, ' '                               // Otherwise print a trailing space (' ').
-  bl        print_w0
+  b.lo    4f                                      // If one of them, no trailing space, so jump forward to 4:.
+  mov     w0, ' '                                 // Otherwise print a trailing space (' ').
+  bl      print_w0
 4:
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret

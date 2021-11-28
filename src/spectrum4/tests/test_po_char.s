@@ -3,10 +3,6 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 
-.text
-.align 2
-
-
 .if ROMS_INCLUDE
 .else
   .include "chan_flag.s"
@@ -39,6 +35,10 @@
 
 .set po_char1_dfaddr, display_file + 216*20*16*po_char1_screenthird + po_char1_yoffset*216 + po_char1_x*2
 .set po_char1_afaddr, attributes_file + 108*20*po_char1_screenthird + po_char1_yoffset*108 + po_char1_x
+
+
+.text
+.align 2
 
 po_char_1_setup:
   _str    char_set-32*32, CHARS

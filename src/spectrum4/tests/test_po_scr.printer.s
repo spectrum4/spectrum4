@@ -2,9 +2,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-.text
-.align 2
-
 
 .if ROMS_INCLUDE
 .else
@@ -25,6 +22,9 @@
   .include "print_w0.s"
   .include "temps.s"
 .endif
+
+.text
+.align 2
 
 
 po_scr_printer_setup:

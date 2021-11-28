@@ -2,9 +2,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-.text
-.align 2
-
 .if ROMS_INCLUDE
 .else
   .include "add_ch_1.s"
@@ -69,6 +66,9 @@
   .include "to_end.s"
   .include "to_report_bb.s"
 .endif
+
+.text
+.align 2
 
 # Copy default CHANS to heap
 test_chan_flag_init:

@@ -20384,7 +20384,7 @@ print_token_udg_patch:
 
         JP      rejoin_po_t_udg           ; Rejoin original ROM routine
 
-2:      BIT     4,(IY+(FLAGS-C_IY))       ; FLAGS3 - Bit 4=1 if in 128K mode
+2:      BIT     4,(IY+(FLAGS-C_IY))       ; FLAGS - Bit 4=1 if in 128K mode
         JR      Z,1b                      ; Rejoin code for when in 48K mode
 
 ; In 128K mode here

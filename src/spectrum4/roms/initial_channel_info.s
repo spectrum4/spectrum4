@@ -29,3 +29,4 @@ initial_channel_info:                    // L0589
                                                   // points directly to entries in this table, so this table
                                                   // isn't iterated through when opening a channel.
 initial_channel_info_END:
+  nop                                             // remove this later - added so that labels are unique to avoid bugs in finding routines without tests

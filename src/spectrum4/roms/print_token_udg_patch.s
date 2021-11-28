@@ -38,7 +38,7 @@ print_token_udg_patch:                   // L3B9F
   bl      po_table_1                              // Print SPECTRUM or PLAY.
   // TODO: set carry flag??? Why???
   ldrb    w4, [x28, FLAGS-sysvars]                // w4 = [FLAGS]
-  tbnz    w4, #1, 5f                              // If printer in use, jump forward to 4:.
+  tbnz    w4, #1, 5f                              // If printer in use, jump forward to 5:.
   // Printer not in use
   b       4f
 3:

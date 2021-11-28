@@ -14,3 +14,4 @@ initial_stream_data:                     // L059E
   .byte 0x19, 0x00                                // Stream  2 leads to channel 'S'.
   .byte 0x49, 0x00                                // Stream  3 leads to channel 'P'.
 initial_stream_data_END:
+  nop                                             // remove this later - added so that labels are unique to avoid bugs in finding routines without tests

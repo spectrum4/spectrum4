@@ -2,14 +2,14 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-.text
-.align 2
-
 
 .if ROMS_INCLUDE
 .else
   .include "print_w0.s"
 .endif
+
+.text
+.align 2
 
 
 # indexer_1 looks up a key that is not in the lookup table. The key happens

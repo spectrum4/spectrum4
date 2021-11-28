@@ -4,15 +4,15 @@
 
 
 
-.text
-.align 2
-
-
 .if ROMS_INCLUDE
 .else
   .include "print_w0.s"
 .endif
 
+
+
+.text
+.align 2
 
 # poke_address_1 pokes an address above the attributes file
 poke_address_1_setup_regs:

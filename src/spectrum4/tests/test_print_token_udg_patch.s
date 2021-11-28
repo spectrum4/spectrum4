@@ -16,6 +16,8 @@
   .include "copy_buff.s"
   .include "indexer.s"
   .include "po_attr.s"
+  .include "po_char.s"
+  .include "po_char_2.s"
   .include "po_msg.s"
   .include "po_scr.s"
   .include "po_search.s"
@@ -25,21 +27,26 @@
   .include "pr_all.s"
   .include "print_w0.s"
   .include "temps.s"
+  .include "rejoin_po_t_udg.s"
+  .include "po_tokens.s"
+  .include "po_fetch.s"
+  .include "new_tokens.s"
+  .include "tkn_table.s"
 .endif
 
 
-.set po_char_2_1_x, 7
-.set po_char_2_1_screenthird, 2
-.set po_char_2_1_yoffset, 3
+.set print_token_udg_patch_01_x,11
+.set print_token_udg_patch_01_screenthird, 0
+.set print_token_udg_patch_01_yoffset, 5
 
-.set po_char_2_1_dfaddr, display_file + 216*20*16*po_char_2_1_screenthird + po_char_2_1_yoffset*216 + po_char_2_1_x*2
-.set po_char_2_1_afaddr, attributes_file + 108*20*po_char_2_1_screenthird + po_char_2_1_yoffset*108 + po_char_2_1_x
+.set print_token_udg_patch_01_dfaddr, display_file + 216*20*16*print_token_udg_patch_01_screenthird + print_token_udg_patch_01_yoffset*216 + print_token_udg_patch_01_x*2
+.set print_token_udg_patch_01_afaddr, attributes_file + 108*20*print_token_udg_patch_01_screenthird + print_token_udg_patch_01_yoffset*108 + print_token_udg_patch_01_x
 
 
 .text
 .align 2
-
-po_char_2_1_setup:
+print_token_udg_patch_01_setup:
+  _str    char_set+('a'-' ')*32, UDG
   _resbit 1, FLAGS
   _resbit 0, TV_FLAG
   _strb   0x03, DF_SZ                             // lower screen is 3 lines
@@ -53,34 +60,35 @@ po_char_2_1_setup:
                                                   // INK 5
 
                                                   // Display file
-  _strhbe 0b0000011000111100, po_char_2_1_dfaddr+20*216*0
-  _strhbe 0b1000001010011111, po_char_2_1_dfaddr+20*216*1
-  _strhbe 0b1111101111101110, po_char_2_1_dfaddr+20*216*2
-  _strhbe 0b0011110001010100, po_char_2_1_dfaddr+20*216*3
-  _strhbe 0b0000100000000100, po_char_2_1_dfaddr+20*216*4
-  _strhbe 0b1100100000101011, po_char_2_1_dfaddr+20*216*5
-  _strhbe 0b1010101001001000, po_char_2_1_dfaddr+20*216*6
-  _strhbe 0b0000001100100110, po_char_2_1_dfaddr+20*216*7
-  _strhbe 0b0011000001101101, po_char_2_1_dfaddr+20*216*8
-  _strhbe 0b1011110011011110, po_char_2_1_dfaddr+20*216*9
-  _strhbe 0b0000010011110001, po_char_2_1_dfaddr+20*216*10
-  _strhbe 0b1111111100000000, po_char_2_1_dfaddr+20*216*11
-  _strhbe 0b0101100100101100, po_char_2_1_dfaddr+20*216*12
-  _strhbe 0b1011101001000000, po_char_2_1_dfaddr+20*216*13
-  _strhbe 0b0010101110110110, po_char_2_1_dfaddr+20*216*14
-  _strhbe 0b0011110011000000, po_char_2_1_dfaddr+20*216*15
+  _strhbe 0b0000011000111100, print_token_udg_patch_01_dfaddr+20*216*0
+  _strhbe 0b1000001010011111, print_token_udg_patch_01_dfaddr+20*216*1
+  _strhbe 0b1111101111101110, print_token_udg_patch_01_dfaddr+20*216*2
+  _strhbe 0b0011110001010100, print_token_udg_patch_01_dfaddr+20*216*3
+  _strhbe 0b0000100000000100, print_token_udg_patch_01_dfaddr+20*216*4
+  _strhbe 0b1100100000101011, print_token_udg_patch_01_dfaddr+20*216*5
+  _strhbe 0b1010101001001000, print_token_udg_patch_01_dfaddr+20*216*6
+  _strhbe 0b0000001100100110, print_token_udg_patch_01_dfaddr+20*216*7
+  _strhbe 0b0011000001101101, print_token_udg_patch_01_dfaddr+20*216*8
+  _strhbe 0b1011110011011110, print_token_udg_patch_01_dfaddr+20*216*9
+  _strhbe 0b0000010011110001, print_token_udg_patch_01_dfaddr+20*216*10
+  _strhbe 0b1111111100000000, print_token_udg_patch_01_dfaddr+20*216*11
+  _strhbe 0b0101100100101100, print_token_udg_patch_01_dfaddr+20*216*12
+  _strhbe 0b1011101001000000, print_token_udg_patch_01_dfaddr+20*216*13
+  _strhbe 0b0010101110110110, print_token_udg_patch_01_dfaddr+20*216*14
+  _strhbe 0b0011110011000000, print_token_udg_patch_01_dfaddr+20*216*15
 
-  _strb   0b10101110, po_char_2_1_afaddr          // Attributes file
+  _strb   0b10101110, print_token_udg_patch_01_afaddr
+                                                  // Attributes file
                                                   //   FLASH 1
                                                   //   PAPER 5
                                                   //   INK 6
   ret
 
-po_char_2_1_setup_regs:
-  mov     w0, (60-20*po_char_2_1_screenthird-po_char_2_1_yoffset)
-  mov     w1, (109-po_char_2_1_x)
-  ldr     x2, =po_char_2_1_dfaddr
-  mov     w3, 'k'
+print_token_udg_patch_01_setup_regs:
+  mov     w0, (60-20*print_token_udg_patch_01_screenthird-print_token_udg_patch_01_yoffset)
+  mov     w1, (109-print_token_udg_patch_01_x)
+  ldr     x2, =print_token_udg_patch_01_dfaddr
+  mov     w3, #0x9a                               // UDG K = 'k' (since [UDG] = address of 'a' in test)
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
                                                   //   0b0000110000000000
@@ -97,10 +105,9 @@ po_char_2_1_setup_regs:
                                                   //   0b0000110000110000
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
-  adr     x4, char_set-32*32
   ret
 
-po_char_2_1_effects:
+print_token_udg_patch_01_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   _resbit 0, FLAGS
@@ -122,37 +129,37 @@ po_char_2_1_effects:
                                                   // 0b1011101001000000 xor 0b0000110000110000
                                                   // 0b0010101110110110 xor 0b0000000000000000
                                                   // 0b0011110011000000 xor 0b0000000000000000
-  _strhbe 0b0000011000111100, po_char_2_1_dfaddr+20*216*0
-  _strhbe 0b1000001010011111, po_char_2_1_dfaddr+20*216*1
-  _strhbe 0b1111011111101110, po_char_2_1_dfaddr+20*216*2
-  _strhbe 0b0011000000110100, po_char_2_1_dfaddr+20*216*3
-  _strhbe 0b0000010011100100, po_char_2_1_dfaddr+20*216*4
-  _strhbe 0b1100010111101011, po_char_2_1_dfaddr+20*216*5
-  _strhbe 0b1010010111001000, po_char_2_1_dfaddr+20*216*6
-  _strhbe 0b0000110000100110, po_char_2_1_dfaddr+20*216*7
-  _strhbe 0b0011111101101101, po_char_2_1_dfaddr+20*216*8
-  _strhbe 0b1011001101011110, po_char_2_1_dfaddr+20*216*9
-  _strhbe 0b0000100100110001, po_char_2_1_dfaddr+20*216*10
-  _strhbe 0b1111001111100000, po_char_2_1_dfaddr+20*216*11
-  _strhbe 0b0101010101011100, po_char_2_1_dfaddr+20*216*12
-  _strhbe 0b1011011001110000, po_char_2_1_dfaddr+20*216*13
-  _strhbe 0b0010101110110110, po_char_2_1_dfaddr+20*216*14
-  _strhbe 0b0011110011000000, po_char_2_1_dfaddr+20*216*15
+  _strhbe 0b0000011000111100, print_token_udg_patch_01_dfaddr+20*216*0
+  _strhbe 0b1000001010011111, print_token_udg_patch_01_dfaddr+20*216*1
+  _strhbe 0b1111011111101110, print_token_udg_patch_01_dfaddr+20*216*2
+  _strhbe 0b0011000000110100, print_token_udg_patch_01_dfaddr+20*216*3
+  _strhbe 0b0000010011100100, print_token_udg_patch_01_dfaddr+20*216*4
+  _strhbe 0b1100010111101011, print_token_udg_patch_01_dfaddr+20*216*5
+  _strhbe 0b1010010111001000, print_token_udg_patch_01_dfaddr+20*216*6
+  _strhbe 0b0000110000100110, print_token_udg_patch_01_dfaddr+20*216*7
+  _strhbe 0b0011111101101101, print_token_udg_patch_01_dfaddr+20*216*8
+  _strhbe 0b1011001101011110, print_token_udg_patch_01_dfaddr+20*216*9
+  _strhbe 0b0000100100110001, print_token_udg_patch_01_dfaddr+20*216*10
+  _strhbe 0b1111001111100000, print_token_udg_patch_01_dfaddr+20*216*11
+  _strhbe 0b0101010101011100, print_token_udg_patch_01_dfaddr+20*216*12
+  _strhbe 0b1011011001110000, print_token_udg_patch_01_dfaddr+20*216*13
+  _strhbe 0b0010101110110110, print_token_udg_patch_01_dfaddr+20*216*14
+  _strhbe 0b0011110011000000, print_token_udg_patch_01_dfaddr+20*216*15
 
-  ldr     x0, =po_char_2_1_dfaddr
+  ldr     x0, =print_token_udg_patch_01_dfaddr
   bl      po_attr
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
-po_char_2_1_effects_regs:
+print_token_udg_patch_01_effects_regs:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   str     x24, [sp, #-16]!
-  ldr     x0, =po_char_2_1_dfaddr
+  ldr     x0, =print_token_udg_patch_01_dfaddr
   bl      po_attr
-  mov     w0, (60-20*po_char_2_1_screenthird-po_char_2_1_yoffset)
-  mov     w1, (109-po_char_2_1_x)-1
-  ldr     x2, =po_char_2_1_dfaddr+1
+  mov     w0, (60-20*print_token_udg_patch_01_screenthird-print_token_udg_patch_01_yoffset)
+  mov     w1, (109-print_token_udg_patch_01_x)-1
+  ldr     x2, =print_token_udg_patch_01_dfaddr+1
   ldr     x24, [sp], #0x10
   adr     x4, char_set+('k'-' ')*32
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.

@@ -20377,35 +20377,35 @@ print_token_udg_patch:
         CP      $A4                       ; PLAY (U)
         JR      Z,2f
 
-; In 48K mode here
-
 1:      SUB     $A5                       ; Check as per original ROM
-        JP      NC,po_t
+        JP      NC,po_t                   ; If TOKEN jump to po_t
 
+; Printing a UDG char
         JP      rejoin_po_t_udg           ; Rejoin original ROM routine
 
+; Character $A3 or $A4
 2:      BIT     4,(IY+(FLAGS-C_IY))       ; FLAGS - Bit 4=1 if in 128K mode
-        JR      Z,1b                      ; Rejoin code for when in 48K mode
+        JR      Z,1b                      ; If 48K mode print UDG
 
 ; In 128K mode here
-
+; SPECTRUM or PLAY
         LD      DE,4f
         PUSH    DE                        ; Stack return address
 
-        SUB     $A3                       ; Check whether the SPECTRUM token
+        SUB     $A3                       ; Check whether the SPECTRUM token - and clears carry, since A >= $A3
 
         LD      DE,tkn_spectrum           ; SPECTRUM token
         JR      Z,3f
 
         LD      DE,tkn_play               ; PLAY token
-
+; DE now points to correct token
 3:      LD      A,$04                     ; Signal not RND, INKEY$ or PI so that a trailing space is printed
         PUSH    AF
-        JP      po_table_1                ; Rejoin printing routine PO-TABLE+3
+        JP      po_table_1                ; Rejoin printing routine po_table_1, with carry clear
 
 ; Return address from above
 
-4:      SCF                               ; Return as if no trailing space
+4:      SCF                               ; Return as if no trailing space - don't think this affects future routine calls
 
         BIT     1,(IY+(FLAGS-C_IY))       ; Test if printer is in use
         RET     NZ                        ; NZ=printer in use

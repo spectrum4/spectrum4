@@ -2,8 +2,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-.text
-
 
 .if ROMS_INCLUDE
 .else
@@ -12,6 +10,8 @@
   .include "print_w0.s"
 .endif
 
+
+.text
 
 # Since there is considerable test coverage of po_search, po_table and
 # po_tokens, only minimal testing provided here.

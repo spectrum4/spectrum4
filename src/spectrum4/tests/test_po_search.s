@@ -2,15 +2,15 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-.text
-.align 2
-
 
 .if ROMS_INCLUDE
 .else
   .include "print_w0.s"
   .include "tkn_table.s"
 .endif
+
+.text
+.align 2
 
 
 # po_search_1 calls po_search with a custom search table to retrieve the 5th item.

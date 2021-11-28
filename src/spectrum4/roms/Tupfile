@@ -1,0 +1,9 @@
+.gitignore
+
+include_rules
+
+import AARCH64_TOOLCHAIN_PREFIX=aarch64-none-elf-
+
+: foreach *.sh|> !check-shell-formatted |>
+: *.s |> ./join_sources.sh |> rom0_full.gen-s rom1_full.gen-s
+: foreach *.s *.gen-s |> !check-asm-formatted |>

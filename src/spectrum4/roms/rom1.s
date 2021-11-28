@@ -109,6 +109,7 @@
 .include "chan_s.s"
 .include "chan_p.s"
 .include "one_space.s"
+.include "make_room.s"
 .include "indexer.s"
 .include "report_j.s"
 .include "report_bb.s"

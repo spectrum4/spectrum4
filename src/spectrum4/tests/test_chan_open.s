@@ -25,6 +25,7 @@
   .include "key_input.s"
   .include "new_tokens.s"
   .include "one_space.s"
+  .include "make_room.s"
   .include "pin.s"
   .include "po_1_oper.s"
   .include "po_2_oper.s"

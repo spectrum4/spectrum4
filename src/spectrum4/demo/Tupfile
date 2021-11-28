@@ -1,0 +1,7 @@
+.gitignore
+
+include_rules
+
+import AARCH64_TOOLCHAIN_PREFIX=aarch64-none-elf-
+
+: foreach *.s *.gen-s |> !check-asm-formatted |>

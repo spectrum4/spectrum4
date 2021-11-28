@@ -3,18 +3,18 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 
-.text
-.align 2
-
-
 .if ROMS_INCLUDE
 .else
   .include "print_w0.s"
 .endif
 
 
-# This test calls cl_addr to get the address of top left pixel of screen line 25.
 
+
+.text
+.align 2
+
+# This test calls cl_addr to get the address of top left pixel of screen line 25.
 
 cl_addr_1_setup_regs:
   mov x0, 60 - 1*20 - 5                           // 60 - screen line 25

@@ -18,7 +18,7 @@
 #     [ATTR_T]
 #     [MASK_T]
 # On exit:
-#   [FLAGS] bit 0 == 1 if w3==' ' else 0
+#   [FLAGS] bit 0 cleared
 #   x3 += 21 (0 to 20)
 #   If printer in use:
 #     printer buffer updated (and potentially flushed)

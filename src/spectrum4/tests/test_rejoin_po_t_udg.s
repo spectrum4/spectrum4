@@ -3,10 +3,6 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 
-.text
-.align 2
-
-
 .if ROMS_INCLUDE
 .else
   .include "chan_flag.s"
@@ -40,6 +36,10 @@
 
 .set rejoin_po_t_udg_1_dfaddr, display_file + 216*20*16*rejoin_po_t_udg_1_screenthird + rejoin_po_t_udg_1_yoffset*216 + rejoin_po_t_udg_1_x*2
 .set rejoin_po_t_udg_1_afaddr, attributes_file + 108*20*rejoin_po_t_udg_1_screenthird + rejoin_po_t_udg_1_yoffset*108 + rejoin_po_t_udg_1_x
+
+
+.text
+.align 2
 
 rejoin_po_t_udg_1_setup:
   _str    char_set+('f'-' ')*32, UDG

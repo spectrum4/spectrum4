@@ -2,8 +2,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-.text
-
 
 .if ROMS_INCLUDE
 .else
@@ -12,6 +10,8 @@
   .include "po_table_1.s"
   .include "print_w0.s"
 .endif
+
+.text
 
 
 # Need a loooooong table here, since leading space requires >= 32 entries

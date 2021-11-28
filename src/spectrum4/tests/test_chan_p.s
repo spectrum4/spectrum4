@@ -2,15 +2,15 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-.text
-.align 2
-
 
 .if ROMS_INCLUDE
 .else
   .include "print_w0.s"
 .endif
 
+
+.text
+.align 2
 
 chan_p_01_effects:
   _setbit 1, FLAGS

@@ -3,14 +3,14 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 
-.text
-.align 2
-
-
 .if ROMS_INCLUDE
 .else
   .include "print_w0.s"
 .endif
+
+
+.text
+.align 2
 
 
 display_sysvar_1_setup:

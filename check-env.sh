@@ -5,9 +5,10 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 
-#################################################
-# This bash script builds everything from source.
-#################################################
+#########################################################################
+# This bash script checks that all required executables are installed for
+# building and testing spectrum4 on the host environment.
+#########################################################################
 
 
 # verify_and_show_tool checks that a given toolchain command is present on the

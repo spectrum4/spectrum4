@@ -150,10 +150,10 @@ po_char_2_1_effects_regs:
   str     x24, [sp, #-16]!
   ldr     x0, =po_char_2_1_dfaddr
   bl      po_attr
+  ldr     x24, [sp], #0x10
   mov     w0, (60-20*po_char_2_1_screenthird-po_char_2_1_yoffset)
   mov     w1, (109-po_char_2_1_x)-1
   ldr     x2, =po_char_2_1_dfaddr+1
-  ldr     x24, [sp], #0x10
   adr     x4, char_set+('k'-' ')*32
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret

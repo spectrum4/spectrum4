@@ -247,10 +247,10 @@ pr_all_lowerscreen_ink9_inverse1_effects_regs:
   str     x24, [sp, #-16]!
   ldr     x0, =pr_all2_dfaddr
   bl      po_attr
+  ldr     x24, [sp], #0x10
   mov     w0, (120-8-20*pr_all2_screenthird-pr_all2_yoffset)
   mov     w1, (109-pr_all2_x)-1
   ldr     x2, =pr_all2_dfaddr+1
-  ldr     x24, [sp], #0x10
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

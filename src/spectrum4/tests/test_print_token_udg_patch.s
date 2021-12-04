@@ -154,13 +154,31 @@ print_token_udg_patch_01_effects:
 print_token_udg_patch_01_effects_regs:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
-  str     x24, [sp, #-16]!
-  ldr     x0, =print_token_udg_patch_01_dfaddr
-  bl      po_attr
+# ldr     x0, =print_token_udg_patch_01_dfaddr
+# str     x24, [sp, #-16]!
+# bl      po_attr
+# ldr     x24, [sp], #0x10
   mov     w0, (60-20*print_token_udg_patch_01_screenthird-print_token_udg_patch_01_yoffset)
   mov     w1, (109-print_token_udg_patch_01_x)-1
-  ldr     x2, =print_token_udg_patch_01_dfaddr+1
-  ldr     x24, [sp], #0x10
+  add     x2, x2, 1
+
+  mov     x3, 0x0000000000000000
+  mov     x5, 0x0000000000000000
+  mov     x6, 0x0000000000000000
+  mov     x7, 0x0000000000000000
+  mov     x8, 0x0000000000000000
+  ldr     x9, =mbreq
+  mov     x10, 0x000000000000000b
+  ldr     x11, =0x000000000001016f
+  mov     x12, 0x000000000000006c
+  mov     x13, 0x0000000000000000
+  mov     x14, 0x00000000000000ff
+  mov     x15, 0x000000000000ff00
+  mov     x16, 0x0000000000000227
+  mov     x17, 0x0000000000000044
+  mov     x18, 0x0000000000000000
+  nzcv    0b0110
+
   adr     x4, char_set+('k'-' ')*32
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret

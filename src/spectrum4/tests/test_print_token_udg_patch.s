@@ -34,6 +34,12 @@
   .include "tkn_table.s"
 .endif
 
+# This first test tests printing character 0x9a (154), which is UDG 'K'. [UDG]
+# is set so that this maps to the standard 'k' character in char_set. The
+# display file and attributes file are first prepared, and various system
+# variables are updated that affect the printing, in order to test as many
+# parameters as possible of the rendering process.  Prints to upper screen.
+
 
 .set print_token_udg_patch_01_x,11
 .set print_token_udg_patch_01_screenthird, 0
@@ -47,8 +53,8 @@
 .align 2
 print_token_udg_patch_01_setup:
   _str    char_set+('a'-' ')*32, UDG
-  _resbit 1, FLAGS
-  _resbit 0, TV_FLAG
+  _resbit 1, FLAGS                                // print to screen (not printer)
+  _resbit 0, TV_FLAG                              // print to upper screen
   _strb   0x03, DF_SZ                             // lower screen is 3 lines
   _strb   0b01100011, P_FLAG                      // temp OVER 1
                                                   // perm OVER 1
@@ -185,11 +191,12 @@ print_token_udg_patch_01_effects_regs:
 
 
 
+# This test prints char 0xfd (BASIC keyword "CLEAR") to printer with bit 0 of
+# [FLAGS] set to 0 (leading space _not_ suppressed) using a mock print-out
+# routine that doesn't disturb any registers. Expected output is " CLEAR ".
+
+
 .align 2
-# Test print_token_udg_patch_02 tests print_token_udg_patch when passed w3=0xfd
-# (BASIC keyword "CLEAR") with bit 0 of [FLAGS] set to 0 (leading space _not_
-# suppressed) when used with a mock print-out routine that doesn't disturb any
-# registers. Expected output is " CLEAR ".
 print_token_udg_patch_02_setup:
   _str    fake_channel_block, CURCHL              // [CURCHL] = fake_channel_block
   _resbit 0, FLAGS                                // leading space _not_ suppressed
@@ -228,11 +235,14 @@ msg_print_token_udg_patch_02: .asciz " CLEAR "
 
 
 
+
+# This test prints char 0xa3 (BASIC keyword "SPECTRUM" when in 128K mode) to
+# printer with bit 0 of [FLAGS] set to 0 (leading space _not_ suppressed) using a
+# mock print-out routine that doesn't disturb any registers. Expected output is
+# " SPECTRUM ".
+
+
 .align 2
-# Test print_token_udg_patch_03 tests print_token_udg_patch when passed w3=0xa3
-# (BASIC keyword "SPECTRUM" when in 128K mode) with bit 0 of [FLAGS] set to 0
-# (leading space _not_ suppressed) when used with a mock print-out routine that
-# doesn't disturb any registers. Expected output is " SPECTRUM ".
 print_token_udg_patch_03_setup:
   _str    fake_channel_block, CURCHL              // [CURCHL] = fake_channel_block
   _resbit 0, FLAGS                                // leading space _not_ suppressed
@@ -270,12 +280,12 @@ print_token_udg_patch_03_effects_regs:
 msg_print_token_udg_patch_03: .asciz " SPECTRUM "
 
 
+# This test prints char 0xa4 (BASIC keyword "PLAY" when in 128K mode) to printer
+# with bit 0 of [FLAGS] set to 1 (leading space suppressed) using a mock
+# print-out routine that doesn't disturb any registers. Expected output is
+# "PLAY ".
 
 .align 2
-# Test print_token_udg_patch_04 tests print_token_udg_patch when passed w3=0xa4
-# (BASIC keyword "PLAY" when in 128K mode) with bit 0 of [FLAGS] set to 1
-# (leading space suppressed) when used with a mock print-out routine that doesn't
-# disturb any registers. Expected output is "PLAY ".
 print_token_udg_patch_04_setup:
   _str    fake_channel_block, CURCHL              // [CURCHL] = fake_channel_block
   _setbit 0, FLAGS                                // leading space suppressed
@@ -313,10 +323,21 @@ print_token_udg_patch_04_effects_regs:
 msg_print_token_udg_patch_04: .asciz "PLAY "
 
 
+
+
+# This test tests printing character 0xa4 (164), which is UDG 'U'. [UDG] is set
+# so that this maps to the standard 'k' character in char_set. The display file
+# and attributes file are first prepared, and various system variables are
+# updated that affect the printing, in order to test as many parameters as
+# possible of the rendering process. Prints to upper screen.
+
+
+# Choose an arbitrary location on screen to print to
 .set print_token_udg_patch_05_x,11
 .set print_token_udg_patch_05_screenthird, 0
 .set print_token_udg_patch_05_yoffset, 5
 
+# Calculate display file and attributes file addresses for the above character cell location
 .set print_token_udg_patch_05_dfaddr, display_file + 216*20*16*print_token_udg_patch_05_screenthird + print_token_udg_patch_05_yoffset*216 + print_token_udg_patch_05_x*2
 .set print_token_udg_patch_05_afaddr, attributes_file + 108*20*print_token_udg_patch_05_screenthird + print_token_udg_patch_05_yoffset*108 + print_token_udg_patch_05_x
 
@@ -324,10 +345,10 @@ msg_print_token_udg_patch_04: .asciz "PLAY "
 .text
 .align 2
 print_token_udg_patch_05_setup:
-  _str    char_set+('A'-'U'+'k'-' ')*32, UDG
-  _resbit 1, FLAGS
-  _resbit 4, FLAGS                                // 128K mode -UDG 'U' not PLAY keyword
-  _resbit 0, TV_FLAG
+  _str    char_set+('A'-'U'+'k'-' ')*32, UDG      // set [UDG] such that UDG 'U' uses the char_set 'k' bitmap
+  _resbit 1, FLAGS                                // print to screen (not printer)
+  _resbit 4, FLAGS                                // 128K mode (to ensure UDG 'U' and not PLAY keyword)
+  _resbit 0, TV_FLAG                              // print to upper screen
   _strb   0x03, DF_SZ                             // lower screen is 3 lines
   _strb   0b01100011, P_FLAG                      // temp OVER 1
                                                   // perm OVER 1
@@ -431,12 +452,6 @@ print_token_udg_patch_05_effects:
   ret
 
 print_token_udg_patch_05_effects_regs:
-# stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
-# mov     x29, sp                                 // Update frame pointer to new stack location.
-# ldr     x0, =print_token_udg_patch_05_dfaddr
-# str     x24, [sp, #-16]!
-# bl      po_attr
-# ldr     x24, [sp], #0x10
   mov     w0, (60-20*print_token_udg_patch_05_screenthird-print_token_udg_patch_05_yoffset)
   mov     w1, (109-print_token_udg_patch_05_x)-1
   add     x2, x2, 1
@@ -459,5 +474,4 @@ print_token_udg_patch_05_effects_regs:
   nzcv    0b0110
 
   adr     x4, char_set+('k'-' ')*32
-# ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret

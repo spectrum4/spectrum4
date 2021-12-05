@@ -178,7 +178,6 @@ print_token_udg_patch_01_effects_regs:
   mov     x17, 0x0000000000000044
   mov     x18, 0x0000000000000000
   nzcv    0b0110
-
   ret
 
 
@@ -193,6 +192,7 @@ print_token_udg_patch_02_setup:
   _str    fake_channel_block, CURCHL              // [CURCHL] = fake_channel_block
   _resbit 0, FLAGS                                // leading space _not_ suppressed
   _setbit 1, FLAGS                                // printer in use
+  ret
 
 .align 2
 print_token_udg_patch_02_setup_regs:
@@ -238,6 +238,7 @@ print_token_udg_patch_03_setup:
   _resbit 0, FLAGS                                // leading space _not_ suppressed
   _setbit 1, FLAGS                                // printer in use
   _setbit 4, FLAGS                                // 128K mode - SPECTRUM keyword not UDG 'T'
+  ret
 
 .align 2
 print_token_udg_patch_03_setup_regs:
@@ -268,8 +269,8 @@ print_token_udg_patch_03_effects_regs:
 msg_print_token_udg_patch_03: .asciz " SPECTRUM "
 
 
-# This test prints char 0xa4 (BASIC keyword "PLAY" when in 128K mode) to printer
-# with bit 0 of [FLAGS] set to 1 (leading space suppressed) using a mock
+# This test prints char 0xa4 (BASIC keyword "PLAY" when in 128K mode) to upper
+# screen with bit 0 of [FLAGS] set to 1 (leading space suppressed) using a mock
 # print-out routine that doesn't disturb any registers. Expected output is
 # "PLAY ".
 
@@ -277,8 +278,10 @@ msg_print_token_udg_patch_03: .asciz " SPECTRUM "
 print_token_udg_patch_04_setup:
   _str    fake_channel_block, CURCHL              // [CURCHL] = fake_channel_block
   _setbit 0, FLAGS                                // leading space suppressed
-  _setbit 1, FLAGS                                // printer in use
+  _resbit 1, FLAGS                                // screen in use
   _setbit 4, FLAGS                                // 128K mode - PLAY keyword not UDG 'U'
+  _resbit 0, TV_FLAG                              // upper screen in use
+  ret
 
 .align 2
 print_token_udg_patch_04_setup_regs:
@@ -296,8 +299,9 @@ print_token_udg_patch_04_effects:
 
 .align 2
 print_token_udg_patch_04_effects_regs:
-  mov     x0, ' '
-  ldr     x1, =fake_printout
+  ldrb    w0, [x28, S_POSN_Y-sysvars]
+  ldrb    w1, [x28, S_POSN_X-sysvars]
+  ldr     x2, [x28, DF_CC-sysvars]
   mov     x3, #1
   ldrb    w4, [x28, FLAGS-sysvars]                // w4 = [FLAGS]
   mov     x5, #4
@@ -622,6 +626,7 @@ print_token_udg_patch_07_setup:
   _resbit 1, FLAGS                                // print to screen (not printer)
   _resbit 0, TV_FLAG                              // print to upper screen
   _setbit 4, FLAGS                                // 128K mode - SPECTRUM keyword not UDG 'T'
+  ret
 
 .align 2
 print_token_udg_patch_07_setup_regs:

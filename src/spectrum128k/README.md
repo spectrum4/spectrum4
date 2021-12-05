@@ -53,10 +53,6 @@ Note, each test file will be assembled into separate Spectrum 128K `.tzx` and
 other, and also to avoid running out of memory on the Spectrum 128K to store
 all of the unit tests.
 
-The tests are executed by `all.sh`/`docker.sh` in the root directory. By
-default, all tests are run, but this can be limited to a desired set. See
-`all.sh -h` / `docker.sh -h` for more information.
-
 
 ## Generated tests
 
@@ -65,17 +61,3 @@ multiple inputs values. To generate tests, include a script in this directory
 called `test_<something>.sh`. This should generate
 `src/spectrum128k/test_<ROM_routine>[.<chunk>].s` files, with a warning comment
 at the top of the file that the file is generated.
-
-
-## Passing tests
-
-When the porting of an assembly routine is finished, and its tests pass, the
-tests can be disabled by moving them to the `passing_tests` subdirectory, in
-order that they do not get run by default, in order to save time.
-
-To reenable tests that are in the `passing_tests` subdirectory, simply move
-them back into this directory.
-
-Note, in the Github CI, all tests in the `passing_tests` subdirectory are
-reinstated before calling `docker.sh`, in order to catch unwanted failures that
-might otherwise go unnoticed.

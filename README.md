@@ -170,4 +170,4 @@ $ qemu-system-aarch64 -M raspi3b -kernel src/spectrum4/targets/qemu-debug.elf -s
 Note, __you will likely need QEMU version 5.2.0 or later__. Also note that the `.elf`
 file is passed to the `-kernel` option, rather than the `.img` file, in order that
 QEMU loads the kernel at address 0x0 rather than 0x80000, which seems not to be
-possible when passing the .img file directly.
+possible when passing the `.img` file directly.

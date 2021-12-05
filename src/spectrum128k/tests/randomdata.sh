@@ -8,6 +8,8 @@ export SHELLOPTS
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
+cd "$(dirname "${0}")"
+
 {
   echo '# This file is part of the Spectrum +4 Project.'
   echo '# Licencing information can be found in the LICENCE file'

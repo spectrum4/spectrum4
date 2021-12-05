@@ -171,7 +171,11 @@ for fake_or_fake_reg_update in f s; do
         else
           echo "  _str    fake_reg_update_channel_block, CURCHL      // [CURCHL] = fake_reg_update_channel_block"
         fi
-        echo "  _strb   ${flagsbit0}, FLAGS                          // ${leadingspace_description}"
+        if [ "${flagsbit0}" == "0" ]; then
+          echo "  _resbit 0, FLAGS                                   // ${leadingspace_description}"
+        else
+          echo "  _setbit 0, FLAGS                                   // ${leadingspace_description}"
+        fi
         echo
         echo '.align 2'
         echo "${testname}_setup_regs:"

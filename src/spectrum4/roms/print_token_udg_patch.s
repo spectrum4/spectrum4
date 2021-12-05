@@ -1,16 +1,16 @@
 .text
 .align 2
-# Print key words or UDGs (chars 0x90-0xff).
+# Print keywords (with possible leading and/or trailing space) or UDGs (chars 0x90-0xff).
 #
 # On entry:
-#   w1 = (109 - column), or 1 for end-of-line
-#   x2 = address in display file / printer buffer(?)
 #   w3 = char (144-255 / 0x90-0xff)
 #   x28 = sysvars
 #   If printing a keyword:
 #     [[CURCHL]] = print routine to call
 #     ... any settings that routine at [[CURCHL]] requires ...
 #   Else: (printing a UDG):
+#     w1 = (109 - column), or 1 for end-of-line
+#     x2 = address in display file / printer buffer(?)
 #     [P_FLAG] bit 0 and bit 2 (temp OVER, temp INVERSE)
 #     [UDG] = address of UDG character table (address of UDG 'A' bitmap)
 #     If printer not in use:
@@ -84,27 +84,29 @@
 #       Else:
 #         x4 = address of 32 byte character bit pattern
 #   If printing keyword:
-#     for SPECTRUM/PLAY:
-#       x3 = 0 (SPECTRUM) / 1 (PLAY)
-#       x5 = 4
-#     else:
-#       x3 unchanged
-#       x5 = x3
-#     x4 = first address after zero termination byte of BASIC keyword in token table
 #     x6 = last char of keyword (not including the trailing zero byte nor any added trailing space)
-#     NZCV = ???
-#     If printer in use:
-#       w0 = [FLAGS]
-#       w1 = [P_POSN_X] (109 - actual printer column)
-#       x2 = [PR_CC] (address in printer buffer)
-#     If upper screen in use:
-#       w0 = [S_POSN_Y] (60 - actual upper screen row)
-#       w1 = [S_POSN_X] (109 - actual upper screen column)
-#       x2 = [DF_CC] (address of upper screen cursor in display file)
-#     If lower screen in use:
-#       w0 = [S_POSN_Y_L] (120 - [DF_SZ] - actual lower screen row)
-#       w1 = [S_POSN_X_L] (109 - actual lower screen column)
-#       x2 = [DF_CC_L] (address of lower screen cursor in display file)
+#     for SPECTRUM/PLAY:
+#       x0 = ' '
+#       x1 = [[CURCHL]]
+#       x3 = 0 (SPECTRUM) / 1 (PLAY)
+#       x4 = [FLAGS]
+#       x5 = 4
+#       NZCV = 0b0010 (at a guess)
+#     for other keywords:
+#       NZCV = ???
+#       x4 = first address after zero termination byte of BASIC keyword in token table
+#       If printer in use:
+#         w0 = [FLAGS]
+#         w1 = [P_POSN_X] (109 - actual printer column)
+#         x2 = [PR_CC] (address in printer buffer)
+#       If upper screen in use:
+#         w0 = [S_POSN_Y] (60 - actual upper screen row)
+#         w1 = [S_POSN_X] (109 - actual upper screen column)
+#         x2 = [DF_CC] (address of upper screen cursor in display file)
+#       If lower screen in use:
+#         w0 = [S_POSN_Y_L] (120 - [DF_SZ] - actual lower screen row)
+#         w1 = [S_POSN_X_L] (109 - actual lower screen column)
+#         x2 = [DF_CC_L] (address of lower screen cursor in display file)
 print_token_udg_patch:                   // L3B9F
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

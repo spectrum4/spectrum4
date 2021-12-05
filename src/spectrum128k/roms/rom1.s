@@ -20389,55 +20389,34 @@ kpi_invalid:
 ;           A = last char of keyword * 2
 ;         For all other keywords:
 ;           A = ' '
-;     B:
-;       If printer in use:
-;         If [[CURCHL]] changes it:
-;           that value
-;         Else:
-;           B unchanged
-;       If lower screen in use:
-;         [S_POSN_Y_L]
-;       If upper screen in use:
-;         [S_POSN_Y]
-;     C:
-;       If printer in use:
-;         If keyword SPECTRUM/PLAY:
-;           If [[CURCHL]] changes it:
-;             that value
-;           Else:
-;             C unchanged
-;         Else:
-;           [P_POSN_X]
-;       If lower screen in use:
-;         [S_POSN_X_L]
-;       If upper screen in use:
-;         [S_POSN_X]
-;     D:
-;       If keyword SPECTRUM/PLAY:
-;         4
-;       Else:
-;         entry A - 165
-;     E:
-;       If keyword SPECTRUM/PLAY:
-;         Flags set for entry A SUB 163
-;       Else:
-;         Flags set for entry A SUB 165
 ;     F:
 ;       H / X3 set
 ;       If upper screen in use:
 ;         Z / PV set
 ;       If keyword one of SPECTRUM / PLAY / RND / INKEY$ / PI / <= / >= / <> / OPEN # / CLOSE #:
 ;         C set
-;     HL:
-;       If printer in use:
-;         If keyword SPECTRUM/PLAY:
-;           HL unchanged, even if [[CURCHL]] makes changes
-;         Else:
-;           [PR_CC]
-;       If lower screen in use:
-;         [DF_CC_L]
-;       If upper screen in use:
-;         [DF_CC]
+;     If keyword SPECTRUM/PLAY:
+;       D = 4
+;       E = Flags set for entry A SUB 163
+;     Other keywords:
+;       D = entry A - 165
+;       E = Flags set for entry A SUB 165
+;     If lower screen in use:
+;       B = [S_POSN_Y_L]
+;       C = [S_POSN_X_L]
+;       HL = [DF_CC_L]
+;     If upper screen in use:
+;       B = [S_POSN_Y]
+;       C = [S_POSN_X]
+;       HL = [DF_CC]
+;     If printer in use:
+;       B: Whatever [[CURCHL]] does to B
+;       If keyword SPECTRUM/PLAY:
+;         C = Whatever [[CURCHL]] does to C
+;         HL = unchanged, even if [[CURCHL]] modifies it
+;       Other keywords:
+;         C = [P_POSN_X]
+;         HL = [PR_CC]
 print_token_udg_patch:
         CP      $A3                       ; SPECTRUM (T)
         JR      Z,2f

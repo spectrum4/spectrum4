@@ -20372,52 +20372,72 @@ kpi_invalid:
 ; ---------------------
 
 ; On entry:
+;   A = char to print (144-255 / 0x90-0xff)
 ;   If printing keyword:
-;     A = char to print (144-255 / 0x90-0xff)
 ;     Bit 0 of [IY+(FLAGS-C_IY)] clear if leading space required.
 ;     [[CURCHL]] = print routine to call
 ;     ... any settings that routine at [[CURCHL]] requires ...
 ; On exit:
-;   If printing any keyword:
-;     Register changes that [[CURCHL]] makes when printing the message (or trailing space) except for HL, DE, A, F
-;     If upper screen in use:
-;       B=[S_POSN_Y]
-;       C=[S_POSN_X]
-;       HL=[DF_CC]
-;       F=
-;         PV / X3 / H / Z set
-;         X5 / S / N
-;         C set for SPECTRUM / PLAY or clear for other keywords
-;     If lower screen in use:
-;       B=[S_POSN_Y_L]
-;       C=[S_POSN_X_L]
-;       HL=[DF_CC_L]
-;       F=
-;         X3 / H set (X3 = bit 3 of high byte of FLAGS = bit 3 of 0x5c = 1)
-;         X5 / S / N / PV / Z clear (X5 taken from bit 5 of high byte of FLAGS = bit 5 of 0x5c = 0)
-;         C set for SPECTRUM / PLAY or clear for other keywords
-;   If printing SPECTRUM / PLAY:
-;     D = 4
-;     E = Z_FLAG | N_FLAG for SPECTRUM / N_FLAG for PLAY
-;     A = ' ' (unless [[CURCHL]] changes it when printing trailing space
-;     F = C_FLAG | H_FLAG ??
-;   For other tokens:
-;     For RND / INKEY$ / PI:
-;       A unchanged
-;     For <= / >= / <> / OPEN # / CLOSE #:
-;       A = last char of message * 2
-;     For all other keywords:
-;       A = ' ' (unless [[CURCHL]] updates A when printing trailing space)
-;     D = entry A - 165
-;     E = X3_FLAG (???) | N_FLAG
-;     If printer in use:
-;       Any changes that [[CURCHL]] makes to B
-;       C=[P_POSN_X]
-;       HL=[PR_CC]
-;       F=
-;         X3 / H set
-;         X5 / S / N / PV / Z clear
-;         C set for SPECTRUM / PLAY or clear for other keywords
+;   If printing a keyword:
+;     A:
+;       If [[CURCHL]] changes A:
+;         that value
+;       Else:
+;         For RND / INKEY$ / PI:
+;           A = entry A - 165
+;         For <= / >= / <> / OPEN # / CLOSE #:
+;           A = last char of keyword * 2
+;         For all other keywords:
+;           A = ' '
+;     B:
+;       If printer in use:
+;         If [[CURCHL]] changes it:
+;           that value
+;         Else:
+;           B unchanged
+;       If lower screen in use:
+;         [S_POSN_Y_L]
+;       If upper screen in use:
+;         [S_POSN_Y]
+;     C:
+;       If printer in use:
+;         If keyword SPECTRUM/PLAY:
+;           If [[CURCHL]] changes it:
+;             that value
+;           Else:
+;             C unchanged
+;         Else:
+;           [P_POSN_X]
+;       If lower screen in use:
+;         [S_POSN_X_L]
+;       If upper screen in use:
+;         [S_POSN_X]
+;     D:
+;       If keyword SPECTRUM/PLAY:
+;         4
+;       Else:
+;         entry A - 165
+;     E:
+;       If keyword SPECTRUM/PLAY:
+;         Flags set for entry A SUB 163
+;       Else:
+;         Flags set for entry A SUB 165
+;     F:
+;       H / X3 set
+;       If upper screen in use:
+;         Z / PV set
+;       If keyword one of SPECTRUM / PLAY / RND / INKEY$ / PI / <= / >= / <> / OPEN # / CLOSE #:
+;         C set
+;     HL:
+;       If printer in use:
+;         If keyword SPECTRUM/PLAY:
+;           HL unchanged, even if [[CURCHL]] makes changes
+;         Else:
+;           [PR_CC]
+;       If lower screen in use:
+;         [DF_CC_L]
+;       If upper screen in use:
+;         [DF_CC]
 print_token_udg_patch:
         CP      $A3                       ; SPECTRUM (T)
         JR      Z,2f

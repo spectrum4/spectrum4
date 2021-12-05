@@ -59,6 +59,8 @@ function sub_flags {
 }
 
 keywords=(
+  "SPECTRUM"
+  "PLAY"
   "RND"
   "INKEY$"
   "PI"
@@ -170,25 +172,26 @@ for printer_in_use in 0 1; do
           echo
           echo
 
-          for a in {165..255}; do
+          for a in {163..255}; do
             hexa=$(printf "%02x" $a)
             i=$((a-165))
+            j=$((a-163))
             hexi=$(printf "%02x" $i)
-            keyword=${keywords[$i]}
+            keyword=${keywords[$j]}
             testname="po_t_udg_${hexa}_${fake_or_fake_reg_update}${flagsbit0}${printer_in_use}${lower_screen_in_use}"
             msgname="msg_${testname}"
             trailingspace=' '
-            leadingspace=''
-            leadingspace_description='leading space suppressed'
             if [ "${fake_or_fake_reg_update}" == "f" ]; then
               mock_description="doesn't disturb any registers"
             else
               mock_description='disturbs all registers in the register file'
             fi
-
             if [ "${flagsbit0}" == "0" ]; then
               leadingspace=' '
               leadingspace_description='leading space _not_ suppressed'
+            else
+              leadingspace=''
+              leadingspace_description='leading space suppressed'
             fi
             case "${keyword}" in
               "RND" | "INKEY$" | "PI" | "FN" | "POINT" | "SCREEN$" | "ATTR" | "AT" | "TAB" | "VAL$" | "CODE" | "VAL" | "LEN" | "SIN" | "COS" | "TAN" | "ASN" | "ACS" | "ATN" | "LN" | "EXP" | "INT" | "SQR" | "SGN" | "ABS" | "PEEK" | "IN" | "USR" | "STR$" | "CHR$" | "NOT" | "BIN" | "<=" | ">=" | "<>")
@@ -237,6 +240,7 @@ for printer_in_use in 0 1; do
               echo "  _strh   0x6321, S_POSN_X_L              ; current lower screen cursor position"
               echo "  _strh   0xaf73, DF_CC_L                 ; current (fake) lower screen address in display file"
             fi
+            echo "  _setbit 4, FLAGS                        ; 128K mode"
             echo "  _strh   0x4002, 0x4000                  ; set start address of output"
             echo "  ret"
             echo
@@ -261,6 +265,16 @@ for printer_in_use in 0 1; do
             flags="${flags}|X3_FLAG"
 
             case "${keyword}" in
+              "SPECTRUM" | "PLAY")
+                flags="${flags}|C_FLAG"
+                if [ "${fake_or_fake_reg_update}" == "s" ]; then
+                  echo '  push    hl'
+                  echo '  call    touch_all_registers'
+                  echo '  pop     hl'
+                else
+                  echo "  ld      a, ' '"
+                fi
+                ;;
               "RND" | "INKEY$" | "PI")
                 flags="${flags}|C_FLAG"
                 if [ "${fake_or_fake_reg_update}" == "s" ]; then
@@ -285,12 +299,20 @@ for printer_in_use in 0 1; do
                 fi
                 ;;
             esac
+            if [ "${a}" -lt 165 ]; then
+              echo "  ld      d, 0x04"
+              sub=163
+            else
+              echo "  ld      d, 0x${hexi}"
+              sub=165
+            fi
             echo "  ldf     ${flags}"
-            echo "  ld      d, 0x${hexi}"
-            echo "  ld      e, $(sub_flags "${a}" 165)          ; entry A SUB 165 (0xa5)"
+            echo "  ld      e, $(sub_flags "${a}" "${sub}")          ; entry A SUB ${sub} (0x$(printf "%02x" ${sub}))"
             if [ "${printer_in_use}" == "1" ]; then
-              echo "  ld      c, 0x46"
-              echo "  ld      hl, 0x3527"
+              if [ "${a}" -ge 165 ]; then
+                echo "  ld      c, 0x46"
+                echo "  ld      hl, 0x3527"
+              fi
             elif [ "${lower_screen_in_use}" == "1" ]; then
               echo "  ld      bc, 0x6321"
               echo "  ld      hl, 0xaf73"

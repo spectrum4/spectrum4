@@ -69,4 +69,4 @@ function fuse-tests {
 cd "$(dirname "${0}")"
 test="${1}"
 test_log="${test}.log"
-run_tests fuse-tests "${test_log}" 69 70 60
+run_tests fuse-tests "${test_log}" 69 70 300

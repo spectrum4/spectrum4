@@ -31,7 +31,7 @@ function run_tests {
     sleep 1
   done
 
-  kill -9 "${pid}" >/dev/null 2>&1
+  kill -9 "${pid}" >/dev/null 2>&1 || true
 
   failure_count="$(cat "${output_file}" | sed -n '/^FAIL:/p' | wc -l)"
   local failed='false'

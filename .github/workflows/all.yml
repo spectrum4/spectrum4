@@ -5,5 +5,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - run: ./tup-under-docker.sh || ./tup-under-docker.sh || ./tup-under-docker.sh || ./tup-under-docker.sh
+    - run: ./tup-under-docker.sh
     - run: git status && test $(git status --porcelain | wc -l) == 0

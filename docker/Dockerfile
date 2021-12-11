@@ -41,7 +41,7 @@ RUN wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.36.1.t
 
 RUN curl -L 'https://download.qemu-project.org/qemu-5.2.0.tar.xz' > qemu-5.2.0.tar.xz && tar xvf qemu-5.2.0.tar.xz && mkdir qemu-5.2.0/build && cd qemu-5.2.0/build && ../configure --target-list=aarch64-softmmu --disable-vnc && make -j4 && make install && cd ..
 
-RUN curl -L 'https://github.com/gittup/tup/archive/df26484cf223288d31c248a3d50407f2a336df2b.zip' > tup.zip && unzip tup.zip && cd tup-* && CFLAGS="-g" ./build.sh && mv build/tup /usr/local/bin && cd ..
+RUN curl -L 'https://github.com/gittup/tup/archive/43e19d62656a2c20fbdfb75989a9b681c5b6b216.zip' > tup.zip && unzip tup.zip && cd tup-* && CFLAGS="-g" ./build.sh && mv build/tup /usr/local/bin && cd ..
 # RUN apt-get install -y software-properties-common && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 486D3664 && apt-add-repository 'deb http://ppa.launchpad.net/anatol/tup/ubuntu precise main' && apt-get update --allow-insecure-repositories && apt-get install tup
 
 # for all executables required, find their library dependencies (using ldd),

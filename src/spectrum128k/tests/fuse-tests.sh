@@ -71,4 +71,4 @@ test="${1}"
 tzx_file="${test}.tzx"
 test_log="${test}.log"
 fuse_log="${test}.fuselog"
-run_tests fuse-tests "${test_log}" 67 68 60
+run_tests fuse-tests "${test_log}" 67 68 300

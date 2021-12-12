@@ -1008,7 +1008,7 @@ fake_printout_touch_regs:
 # mov     x28, #0x0a1c
   mov     x29, #0x0a1d
   mov     x30, #0x0a1e
-# nzcv    #0b0101
+  nzcv    #0b0101
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

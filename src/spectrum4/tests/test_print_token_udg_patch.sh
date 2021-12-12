@@ -284,10 +284,18 @@ for printer_in_use in 0 1; do
               echo "  nzcv    #0b1000"
               ;;
               "FN")
-              echo "  nzcv    #0b0110"
+              if [ "${fake_or_fake_reg_update}" == "f" ]; then
+                echo "  nzcv    #0b0110"
+              else
+                echo "  nzcv    #0b0101"
+              fi
               ;;
               *)
-              echo "  nzcv    #0b0010"
+              if [ "${fake_or_fake_reg_update}" == "f" ]; then
+                echo "  nzcv    #0b0010"
+              else
+                echo "  nzcv    #0b0101"
+              fi
               ;;
             esac
             if [ "${fake_or_fake_reg_update}" == "s" ]; then

@@ -85,6 +85,15 @@
 #       Else:
 #         x4 = address of 32 byte character bit pattern
 #   If printing keyword:
+#     If printer in use:
+#       for SPECTRUM/PLAY:
+#         x0 = ' ', or whatever [[CURCHL]] changes it to
+#         x1 = [[CURCHL]], or whatever [[CURCHL]] changes it to
+#         x2 unchanged
+#       for other keywords:
+#         w0 = [FLAGS]
+#         w1 = [P_POSN_X] (109 - actual printer column)
+#         x2 = [PR_CC] (address in printer buffer)
 #     If upper screen in use:
 #       w0 = [S_POSN_Y] (60 - actual upper screen row)
 #       w1 = [S_POSN_X] (109 - actual upper screen column)
@@ -93,24 +102,23 @@
 #       w0 = [S_POSN_Y_L] (120 - [DF_SZ] - actual lower screen row)
 #       w1 = [S_POSN_X_L] (109 - actual lower screen column)
 #       x2 = [DF_CC_L] (address of lower screen cursor in display file)
-#     x6 = last char of keyword (not including the trailing zero byte nor any added trailing space)
 #     for SPECTRUM/PLAY:
 #       x3 = 0 (SPECTRUM) / 1 (PLAY)
 #       x4 = [FLAGS]
 #       x5 = 4
-#       NZCV = 0b0010 (at a guess)
-#       If printer in use:
-#         x0 = ' '
-#         x1 = [[CURCHL]]
 #     for other keywords:
-#       NZCV = ???
 #       x3 -= 0xa5 (165)
 #       x4 = first address after zero termination byte of BASIC keyword in token table
 #       x5 = exit x3
-#       If printer in use:
-#         w0 = [FLAGS]
-#         w1 = [P_POSN_X] (109 - actual printer column)
-#         x2 = [PR_CC] (address in printer buffer)
+#     x6 = last char of keyword (not including the trailing zero byte nor any added trailing space)
+#     for RND/INKEY$/PI/<=/>=/<>/OPEN #/CLOSE #:
+#       nzcv = 0b1000
+#     for FN:
+#       nzcv = 0b0110, or whatever [[CURCHL]] changes it to
+#     for everything else:
+#       nzcv = 0b0010, or whatever [[CURCHL]] changes it to
+#     x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18, x19, x20, x21, x22, x23, x24, x25, x26, x27 =
+#       whataver [[CURCHL]] changes them to
 print_token_udg_patch:                   // L3B9F
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

@@ -31,4 +31,4 @@ import Z80_TOOLCHAIN_PREFIX=z80-unknown-elf-
 : foreach {test-tzx} |> ^o^ ./fuse-tests.sh %B |> %B.log %B.fuselog
 
 : foreach *.s *.gen-s *.runner |> !check-asm-formatted |>
-: foreach *.sh|> !check-shell-formatted |>
+: foreach *.sh |> !check-shell-formatted |>

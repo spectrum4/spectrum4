@@ -13,7 +13,7 @@ import AARCH64_TOOLCHAIN_PREFIX=aarch64-none-elf-
 : foreach test_*.elf |> ./qemu-tests.sh %B |> %B.log
 
 : foreach *.s *.gen-s |> !check-asm-formatted |>
-: foreach *.sh|> !check-shell-formatted |>
+: foreach *.sh |> !check-shell-formatted |>
 
 # Report on untested routines
 : release.elf ../tests/test_*.suite |> AARCH64_TOOLCHAIN_PREFIX=$(AARCH64_TOOLCHAIN_PREFIX) ./routines_without_tests.sh %f > %o |> ../tests/routines_without_tests.txt

@@ -19,4 +19,4 @@ include_rules
 
 # Check sources are formatted
 : foreach *.s *.gen-s *.suite *.runner |> !check-asm-formatted |>
-: foreach *.sh|> !check-shell-formatted |>
+: foreach *.sh |> !check-shell-formatted |>

@@ -188,7 +188,7 @@ for printer_in_use in 0 1; do
             fi
             if [ "${flagsbit0}" == "0" ]; then
               leadingspace=' '
-              leadingspace_description='leading space _not_ suppressed'
+              leadingspace_description='leading space allowed'
             else
               leadingspace=''
               leadingspace_description='leading space suppressed'
@@ -196,7 +196,7 @@ for printer_in_use in 0 1; do
             case "${keyword}" in
               "RND" | "INKEY$" | "PI" | "FN" | "POINT" | "SCREEN$" | "ATTR" | "AT" | "TAB" | "VAL$" | "CODE" | "VAL" | "LEN" | "SIN" | "COS" | "TAN" | "ASN" | "ACS" | "ATN" | "LN" | "EXP" | "INT" | "SQR" | "SGN" | "ABS" | "PEEK" | "IN" | "USR" | "STR$" | "CHR$" | "NOT" | "BIN" | "<=" | ">=" | "<>")
                 leadingspace=''
-                leadingspace_description='leading space suppressed'
+                leadingspace_description="${leadingspace_description} although \"$keyword\" has no leading space"
                 ;;
             esac
             case "${keyword}" in

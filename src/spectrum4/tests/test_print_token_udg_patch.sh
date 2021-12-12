@@ -172,7 +172,7 @@ for printer_in_use in 0 1; do
             fi
             if [ "${flagsbit0}" == "0" ]; then
               leadingspace=' '
-              leadingspace_description='leading space _not_ suppressed'
+              leadingspace_description='leading space allowed'
             else
               leadingspace=''
               leadingspace_description='leading space suppressed'
@@ -180,7 +180,7 @@ for printer_in_use in 0 1; do
             case "${keyword}" in
               "RND" | "INKEY$" | "PI" | "FN" | "POINT" | "SCREEN$" | "ATTR" | "AT" | "TAB" | "VAL$" | "CODE" | "VAL" | "LEN" | "SIN" | "COS" | "TAN" | "ASN" | "ACS" | "ATN" | "LN" | "EXP" | "INT" | "SQR" | "SGN" | "ABS" | "PEEK" | "IN" | "USR" | "STR$" | "CHR$" | "NOT" | "BIN" | "<=" | ">=" | "<>")
                 leadingspace=''
-                leadingspace_description='leading space suppressed'
+                leadingspace_description="${leadingspace_description} although \"$keyword\" has no leading space"
                 ;;
             esac
             case "${keyword}" in
@@ -204,13 +204,11 @@ for printer_in_use in 0 1; do
               echo "  _str    fake_reg_update_channel_block, CURCHL"
               echo "                                               // test channel block that uses fake_printout_touch_registers routine"
             fi
-
             if [ "${flagsbit0}" == "0" ]; then
               echo "  _resbit 0, FLAGS                             // leading space allowed"
             else
               echo "  _setbit 0, FLAGS                             // leading space suppressed"
             fi
-
             if [ "${printer_in_use}" == "0" ]; then
               echo "  _resbit 1, FLAGS                             // printer not in use (used by po_fetch)"
             else
@@ -243,8 +241,8 @@ for printer_in_use in 0 1; do
             if [ "${printer_in_use}" == "1" ]; then
               case "${keyword}" in
                 "SPECTRUM" | "PLAY")
-                echo "  mov     x0, ' '"
                 if [ "${fake_or_fake_reg_update}" == "f" ]; then
+                  echo "  mov     x0, ' '"
                   echo '  adr     x1, fake_printout'
                 else
                   echo "  mov     x0, #0x0a00"

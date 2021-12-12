@@ -200,22 +200,53 @@ for fake_or_fake_reg_update in f s; do
             echo '  nzcv    0b1000'
             ;;
           "FN")
-            echo "  mov     x0, ' '"
+            if [ "${fake_or_fake_reg_update}" == "f" ]; then
+              echo "  mov     x0, ' '"
+            else
+              echo '  mov     x0, #0x0a00'
+            fi
             echo '  nzcv    0b0110'
             ;;
           *)
-            echo "  mov     x0, ' '"
+            if [ "${fake_or_fake_reg_update}" == "f" ]; then
+              echo "  mov     x0, ' '"
+            else
+              echo '  mov     x0, #0x0a00'
+            fi
             echo '  nzcv    0b0010'
             ;;
         esac
         if [ "${fake_or_fake_reg_update}" == "f" ]; then
           echo '  adr     x1, fake_printout'
         else
-          echo '  adr     x1, fake_printout_touch_regs'
+          echo "  mov     x1, #0x0a01"
         fi
         echo "  adr     x4, tkn_table+${tkntableoffset}"
         echo "  mov     x5, 0x${hexi}"
         echo "  mov     x6, '${keyword: -1}'"
+        if [ "${fake_or_fake_reg_update}" == "s" ]; then
+          echo "  mov     x7, #0x0a07"
+          echo "  mov     x8, #0x0a08"
+          echo "  mov     x9, #0x0a09"
+          echo "  mov     x10, #0x0a0a"
+          echo "  mov     x11, #0x0a0b"
+          echo "  mov     x12, #0x0a0c"
+          echo "  mov     x13, #0x0a0d"
+          echo "  mov     x14, #0x0a0e"
+          echo "  mov     x15, #0x0a0f"
+          echo "  mov     x16, #0x0a10"
+          echo "  mov     x17, #0x0a11"
+          echo "  mov     x18, #0x0a12"
+          echo "  mov     x19, #0x0a13"
+          echo "  mov     x20, #0x0a14"
+          echo "  mov     x21, #0x0a15"
+          echo "  mov     x22, #0x0a16"
+          echo "  mov     x23, #0x0a17"
+          echo "  mov     x24, #0x0a18"
+          echo "  mov     x25, #0x0a19"
+          echo "  mov     x26, #0x0a1a"
+          echo "  mov     x27, #0x0a1b"
+        fi
         echo '  ret'
         echo
         echo '.align 0'

@@ -1671,7 +1671,7 @@ L057D:  LD   A,(DE)                       ; Fetch next byte.
         POP  DE                           ; Restore message byte pointer.
         LD   A,(DE)                       ;
         INC  DE                           ;
-        ADD  A,A                          ; Carry flag will be set if byte is $FF.
+        ADD  A,A                          ; Carry flag will be set if bit 7 set
         JR   NC,L057D                     ; Else print next character.
 
         RET                               ;

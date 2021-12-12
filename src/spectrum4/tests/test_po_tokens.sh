@@ -134,17 +134,17 @@ for fake_or_fake_reg_update in f s; do
         testname="po_tokens_${flagsbit0}${fake_or_fake_reg_update}${hexi}"
         msgname="msg_${testname}"
         trailingspace=' '
-        leadingspace=''
-        leadingspace_description='leading space suppressed'
         if [ "${fake_or_fake_reg_update}" == "f" ]; then
           mock_description="doesn't disturb any registers"
         else
           mock_description='disturbs all registers in the register file'
         fi
-
         if [ "${flagsbit0}" == "0" ]; then
           leadingspace=' '
           leadingspace_description='leading space _not_ suppressed'
+        else
+          leadingspace=''
+          leadingspace_description='leading space suppressed'
         fi
         case "${keyword}" in
           "RND" | "INKEY$" | "PI" | "FN" | "POINT" | "SCREEN$" | "ATTR" | "AT" | "TAB" | "VAL$" | "CODE" | "VAL" | "LEN" | "SIN" | "COS" | "TAN" | "ASN" | "ACS" | "ATN" | "LN" | "EXP" | "INT" | "SQR" | "SGN" | "ABS" | "PEEK" | "IN" | "USR" | "STR$" | "CHR$" | "NOT" | "BIN" | "<=" | ">=" | "<>")
@@ -160,11 +160,12 @@ for fake_or_fake_reg_update in f s; do
         expectedtext="${leadingspace}${keyword}${trailingspace}"
         echo
         echo
-        echo '.align 2'
         echo "# Test ${testname} tests po_tokens when passed w3=0x${hexi} (BASIC keyword \"${keyword}\")"
         echo "# with bit 0 of [FLAGS] set to ${flagsbit0} (${leadingspace_description}) when used with"
         echo "# a mock print-out routine that ${mock_description}."
         echo "# Expected output is \"${expectedtext}\"."
+        echo
+        echo ".align 2"
         echo "${testname}_setup:"
         if [ "${fake_or_fake_reg_update}" == "f" ]; then
           echo "  _str    fake_channel_block, CURCHL                 // [CURCHL] = fake_channel_block"
@@ -188,8 +189,8 @@ for fake_or_fake_reg_update in f s; do
         echo '  mov     x29, sp                                      // Update frame pointer to new stack location.'
         echo "  adr     x2, ${msgname}"
         echo "  bl      print_string                                 // Expect output \"${expectedtext}\""
-        echo '  ldp     x29, x30, [sp], #16                          // Pop frame pointer, procedure link register off stack.'
-        echo '  ret'
+        echo "  ldp     x29, x30, [sp], #16                          // Pop frame pointer, procedure link register off stack."
+        echo "  ret"
         echo
         echo '.align 2'
         echo "${testname}_effects_regs:"

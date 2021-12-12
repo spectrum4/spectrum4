@@ -10,6 +10,7 @@ include_rules
 : test_po_scr.sh |> !calls-asm-format |> test_po_scr.lowerscreen.gen-s test_po_scr.upperscreen.gen-s {gen-test}
 : test_po_table_1.sh |> !calls-asm-format |> test_po_table_1.gen-s {gen-test}
 : test_po_tokens.sh |> !calls-asm-format |> %B.f0.gen-s %B.f1.gen-s %B.s0.gen-s %B.s1.gen-s {gen-test}
+: test_print_token_udg_patch.sh |> !calls-asm-format |> %B.f000.gen-s %B.f001.gen-s %B.f010.gen-s %B.f011.gen-s %B.f100.gen-s %B.f101.gen-s %B.f110.gen-s %B.f111.gen-s %B.s000.gen-s %B.s001.gen-s %B.s010.gen-s %B.s011.gen-s %B.s100.gen-s %B.s101.gen-s %B.s110.gen-s %B.s111.gen-s {gen-test}
 
 # Generate Test Runners
 : foreach test_*.s test_*.gen-s | ../../../utils/asm-format/asm-format |> ^o^ ./tests.sh %f > %o |> %B.suite

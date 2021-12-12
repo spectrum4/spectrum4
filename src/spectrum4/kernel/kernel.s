@@ -387,17 +387,21 @@ poke_address:
   stp     x21, x22, [sp, #-16]!                   // Backup x21 / x22 on stack
   stp     x23, x24, [sp, #-16]!                   // Backup x23 / x24 on stack
   strb    w1, [x0]                                // Poke address
-  adr     x9, display_file                        // Check if address is in display file
-  adr     x24, attributes_file
+  adrp    x9, display_file                        // Check if address is in display file
+  add     x9, x9, :lo12:display_file
+  adrp    x24, attributes_file
+  add     x24, x24, :lo12:attributes_file
   subs    x11, x0, x9                             // x11 = display file offset
   b.lo    2f                                      // if x0 < x9, jump ahead since before display file
-  adr     x10, display_file_end                   // Now compare address to upper limit of display file
+  adrp    x10, display_file_end                   // Now compare address to upper limit of display file
+  add     x10, x10, :lo12:display_file_end
   cmp     x0, x10
   b.hs    2f                                      // if x0 >= x10 (display file end) jump ahead since after display file
 // x0 in display file
   // framebuffer addresses = pitch*(BORDER_TOP + 16*((x11/216)%20) + (x11/(216*20))%16 + 320*(x11/(216*20*16))) + address of framebuffer + 4 * (BORDER_LEFT + 8*(x11%216) + [0-7])
   // attribute address = attributes_file+((x11/2)%108)+108*(((x11/216)%20)+20*(x11/(216*20*16)))
-  adr     x9, mbreq                               // x9 = address of mailbox request.
+  adrp    x9, mbreq                               // x9 = address of mailbox request.
+  add     x9, x9, :lo12:mbreq
   ldr     w10, [x9, framebuffer-mbreq]            // w10 = address of framebuffer
   ldr     w12, [x9, pitch-mbreq]                  // w12 = pitch
   mov     x13, #0x425f
@@ -471,7 +475,8 @@ poke_address:
 2:
   subs    x11, x0, x24                            // x11 = attributes file offset
   b.lo    4f                                      // if x0 < x24, jump ahead since before attributes file
-  adr     x10, attributes_file_end                // Now compare address to upper limit of attributes file
+  adrp    x10, attributes_file_end                // Now compare address to upper limit of attributes file
+  add     x10, x10, :lo12:attributes_file_end
   cmp     x0, x10
   b.hs    4f                                      // if x0 >= x10 (attributes file end), jump ahead since after attributes file
 // x0 in attributes file

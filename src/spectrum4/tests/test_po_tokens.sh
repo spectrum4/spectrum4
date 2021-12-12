@@ -204,16 +204,20 @@ for fake_or_fake_reg_update in f s; do
               echo "  mov     x0, ' '"
             else
               echo '  mov     x0, #0x0a00'
+              echo "  nzcv    #0b0101"
             fi
-            echo '  nzcv    0b0110'
+            if [ "${fake_or_fake_reg_update}" == "f" ]; then
+              echo '  nzcv    0b0110'
+            fi
             ;;
           *)
             if [ "${fake_or_fake_reg_update}" == "f" ]; then
               echo "  mov     x0, ' '"
+              echo '  nzcv    0b0010'
             else
               echo '  mov     x0, #0x0a00'
+              echo "  nzcv    #0b0101"
             fi
-            echo '  nzcv    0b0010'
             ;;
         esac
         if [ "${fake_or_fake_reg_update}" == "f" ]; then

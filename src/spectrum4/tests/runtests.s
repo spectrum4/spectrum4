@@ -977,35 +977,35 @@ fake_printout_touch_regs:
   mov     x29, sp                                 // Update frame pointer to new stack location.
   bl      fake_printout
 # TODO: update this method to touch all the registers, and get tests passing
-# mov     x0, #0x0
-# mov     x1, #0x1
-# mov     x2, #0x2
-# mov     x3, #0x3
-# mov     x4, #0x4
-# mov     x5, #0x5
-# mov     x6, #0x6
-# mov     x7, #0x7
-# mov     x8, #0x8
-# mov     x9, #0x9
-# mov     x10, #0x0a
-# mov     x11, #0x0b
-# mov     x12, #0x0c
-# mov     x13, #0x0d
-# mov     x14, #0x0e
-# mov     x15, #0x0f
-# mov     x16, #0x10
-# mov     x17, #0x11
-# mov     x18, #0x12
-# mov     x19, #0x13
-# mov     x20, #0x14
-# mov     x21, #0x15
-# mov     x22, #0x16
-# mov     x23, #0x17
-# mov     x24, #0x18
-# mov     x25, #0x19
-# mov     x26, #0x1a
-# mov     x27, #0x1b
-# mov     x28, #0x1c
+# mov     x0, #0x0a00
+# mov     x1, #0x0a01
+# mov     x2, #0x0a02
+# mov     x3, #0x0a03
+# mov     x4, #0x0a04
+# mov     x5, #0x0a05
+# mov     x6, #0x0a06
+# mov     x7, #0x0a07
+# mov     x8, #0x0a08
+# mov     x9, #0x0a09
+# mov     x10, #0x0a0a
+# mov     x11, #0x0a0b
+# mov     x12, #0x0a0c
+# mov     x13, #0x0a0d
+# mov     x14, #0x0a0e
+# mov     x15, #0x0a0f
+# mov     x16, #0x0a10
+# mov     x17, #0x0a11
+# mov     x18, #0x0a12
+# mov     x19, #0x0a13
+# mov     x20, #0x0a14
+# mov     x21, #0x0a15
+# mov     x22, #0x0a16
+# mov     x23, #0x0a17
+# mov     x24, #0x0a18
+# mov     x25, #0x0a19
+# mov     x26, #0x0a1a
+# mov     x27, #0x0a1b
+# nzcv    #0b0101
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

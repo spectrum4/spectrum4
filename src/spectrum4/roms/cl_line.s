@@ -55,7 +55,8 @@ cl_line:                                 // L0E44
   add     x26, x26, #0x0e0                        // = previous base address + 4320 bytes = previous + 0x10e0 bytes
   subs    w23, w23, #1                            // Decrease text line pixel counter.
   b.ne    2b                                      // Repeat if not all screen lines of text have been cleared.
-  adr     x21, attributes_file_end                // x21 = first byte after end of attributes file.
+  adrp    x21, attributes_file_end                // x21 = first byte after end of attributes file.
+  add     x21, x21, :lo12:attributes_file_end
   sub     x22, x21, x20, lsr #1                   // x22 = start address in attributes file to clear
   ldrb    w19, [x28, TV_FLAG-sysvars]             // w19[0-7] = [TV_FLAG]
   tbz     w19, #0, 4f                             // If bit 0 is clear, lower screen is in use; jump ahead to 4:.

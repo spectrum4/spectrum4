@@ -38,8 +38,10 @@
 po_attr:                                 // L0BDB
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
-  adr     x9, display_file                        // x9 = start display file address
-  adr     x24, attributes_file                    // x24 = start attributes file address
+  adrp    x9, display_file                        // x9 = start display file address
+  add     x9, x9, :lo12:display_file
+  adrp    x24, attributes_file                    // x24 = start attributes file address
+  add     x24, x24, :lo12:attributes_file
   sub     x11, x0, x9                             // x11 = display file offset
   // attribute address = attributes_file + ((x11/2) % 108) + 108 * (((x11/216) % 20) + 20 * (x11/(216*20*16)))
   mov     x13, #0x0000684c00000000

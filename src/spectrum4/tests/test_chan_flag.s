@@ -89,7 +89,8 @@ chan_flag_01_setup:
   b       test_chan_flag_init
 
 chan_flag_01_setup_regs:
-  adr     x0, heap + 0x18*2
+  adrp    x0, (heap + 0x18*2)
+  add     x0, x0, #:lo12:(heap + 0x18*2)
   ret
 
 chan_flag_01_effects:

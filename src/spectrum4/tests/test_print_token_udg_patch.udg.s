@@ -152,8 +152,17 @@ print_token_udg_patch_01_effects:
   _strhbe 0b0010101110110110, print_token_udg_patch_01_dfaddr+20*216*14
   _strhbe 0b0011110011000000, print_token_udg_patch_01_dfaddr+20*216*15
 
-  ldr     x0, =print_token_udg_patch_01_dfaddr
-  bl      po_attr
+                                                  //  Attributes file
+                                                  //    MASK_T=0b00110001
+                                                  //    ATTR_T=0b01--010-
+                                                  //    screen=0b--10---0
+                                                  //  =>       0b01100100
+                                                  //    BRIGHT 1; PAPER 4; INK 4
+                                                  //  (temp) PAPER 9 => PAPER 0
+
+  ldr     x0, =print_token_udg_patch_01_afaddr
+  mov     w1, 0b01000100                          // BRIGHT 1; PAPER 0; INK 4
+  bl      poke_address                            // Sync framebuffer with display file and attributes file
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -303,8 +312,9 @@ print_token_udg_patch_02_effects:
   _strhbe 0b0010101110110110, print_token_udg_patch_02_dfaddr+20*216*14
   _strhbe 0b0011110011000000, print_token_udg_patch_02_dfaddr+20*216*15
 
-  ldr     x0, =print_token_udg_patch_02_dfaddr
-  bl      po_attr
+  ldr     x0, =print_token_udg_patch_02_afaddr
+  mov     w1, 0b01000100                          // BRIGHT 1; PAPER 0; INK 4
+  bl      poke_address                            // Sync framebuffer with display file and attributes file
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -450,12 +460,13 @@ print_token_udg_patch_03_effects:
   _strhbe 0b1011011001110000, print_token_udg_patch_03_dfaddr+20*216*13
   _strhbe 0b0010101110110110, print_token_udg_patch_03_dfaddr+20*216*14
   _strhbe 0b0011110011000000, print_token_udg_patch_03_dfaddr+20*216*15
+  ldr     x0, =print_token_udg_patch_03_afaddr
+  mov     w1, 0b01000100                          // BRIGHT 1; PAPER 0; INK 4
+  bl      poke_address                            // Sync framebuffer with display file and attributes file
   _strb   109, S_POSN_X
   _strb   (60-20*print_token_udg_patch_03_screenthird-print_token_udg_patch_03_yoffset), S_POSN_Y
   _str    print_token_udg_patch_03_dfaddr, DF_CC
 
-  ldr     x0, =print_token_udg_patch_03_dfaddr
-  bl      po_attr
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

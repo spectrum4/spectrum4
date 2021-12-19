@@ -155,7 +155,7 @@ rejoin_po_t_udg_1_effects_regs:
   ldr     x24, [sp], #0x10
   mov     w0, (60-20*rejoin_po_t_udg_1_screenthird-rejoin_po_t_udg_1_yoffset)
   mov     w1, (109-rejoin_po_t_udg_1_x)-1
-  ldr     x2, =rejoin_po_t_udg_1_dfaddr+1
+  ldr     x2, =rejoin_po_t_udg_1_dfaddr+2
   adr     x4, char_set+('k'-' ')*32
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret

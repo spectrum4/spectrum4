@@ -169,7 +169,7 @@ print_token_udg_patch_01_effects:
 print_token_udg_patch_01_effects_regs:
   mov     x0, (60-20*print_token_udg_patch_01_screenthird-print_token_udg_patch_01_yoffset)
   mov     x1, (109-print_token_udg_patch_01_x)-1
-  add     x2, x2, 1
+  add     x2, x2, 2
   mov     x3, 0x0000000000000000
   adr     x4, char_set+('k'-' ')*32
   mov     x5, 0x0000000000000000
@@ -321,7 +321,7 @@ print_token_udg_patch_02_effects:
 print_token_udg_patch_02_effects_regs:
   mov     w0, (60-20*print_token_udg_patch_02_screenthird-print_token_udg_patch_02_yoffset)
   mov     w1, (109-print_token_udg_patch_02_x)-1
-  add     x2, x2, 1
+  add     x2, x2, 2
 
   mov     x3, 0x0000000000000000
   mov     x5, 0x0000000000000000
@@ -473,7 +473,7 @@ print_token_udg_patch_03_effects:
 print_token_udg_patch_03_effects_regs:
   mov     x0, (60-20*print_token_udg_patch_03_screenthird-print_token_udg_patch_03_yoffset)
   mov     x1, (109-print_token_udg_patch_03_x)-1
-  add     x2, x2, 1
+  add     x2, x2, 2
   mov     x3, 0x0000000000000000
   mov     x4, print_token_udg_patch_03_yoffset
   mov     x5, 0x0000000000000000

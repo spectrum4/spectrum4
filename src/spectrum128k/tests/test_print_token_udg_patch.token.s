@@ -8,6 +8,10 @@
 .text
 
 
+# These tests are very similar to the po_t_udg tests, with one major difference:
+# IY is a non-standard value in these tests (0x5000 instead of 0x5c3a).
+
+
 
 # This test prints char 0xfd (BASIC keyword "CLEAR") to printer with bit 0 of
 # [FLAGS] set to 0 (leading space _not_ suppressed) using a mock print-out

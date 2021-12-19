@@ -149,7 +149,7 @@ pr_all_upperscreen_paper9_over1_effects_regs:
   bl      po_attr
   mov     w0, (60-20*pr_all1_screenthird-pr_all1_yoffset)
   mov     w1, (109-pr_all1_x)-1
-  ldr     x2, =pr_all1_dfaddr+1
+  ldr     x2, =pr_all1_dfaddr+2
   ldr     x24, [sp], #0x10
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
@@ -250,7 +250,7 @@ pr_all_lowerscreen_ink9_inverse1_effects_regs:
   ldr     x24, [sp], #0x10
   mov     w0, (120-8-20*pr_all2_screenthird-pr_all2_yoffset)
   mov     w1, (109-pr_all2_x)-1
-  ldr     x2, =pr_all2_dfaddr+1
+  ldr     x2, =pr_all2_dfaddr+2
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -476,7 +476,7 @@ pr_all_lowerscreen_inverse1_over1_endofline_effects:
 pr_all_lowerscreen_inverse1_over1_endofline_effects_regs:
   sub x0, x0, #1
   mov x1, #108
-  add x2, x2, #1
+  add x2, x2, #2
   mov x3, #0
   mov x4, #19
   mov x5, #0x00

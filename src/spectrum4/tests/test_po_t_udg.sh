@@ -146,6 +146,7 @@ for printer_in_use in 0 1; do
           echo '  .include "rejoin_po_t_udg.s"'
           echo '  .include "po_tokens.s"'
           echo '  .include "po_fetch.s"'
+          echo '  .include "print_token_udg_patch.s"'
           echo '  .include "new_tokens.s"'
           echo '  .include "tkn_table.s"'
           echo '.endif'
@@ -162,7 +163,7 @@ for printer_in_use in 0 1; do
             j=$((a-163))
             keyword=${keywords[$j]}
             tkntableoffset=$((tkntableoffset+${#keyword}+1))
-            testname="print_token_udg_patch_${hexa}_${fake_or_fake_reg_update}${flagsbit0}${printer_in_use}${lower_screen_in_use}"
+            testname="po_t_udg_${hexa}_${fake_or_fake_reg_update}${flagsbit0}${printer_in_use}${lower_screen_in_use}"
             msgname="msg_${testname}"
             trailingspace=' '
             if [ "${fake_or_fake_reg_update}" == "f" ]; then
@@ -191,7 +192,7 @@ for printer_in_use in 0 1; do
             expectedtext="${leadingspace}${keyword}${trailingspace}"
             echo
             echo
-            echo "# Test ${testname} tests print_token_udg_patch when passed w3=0x${hexa} (BASIC keyword \"${keyword}\")"
+            echo "# Test ${testname} tests po_t_udg when passed w3=0x${hexa} (BASIC keyword \"${keyword}\")"
             echo "# with bit 0 of FLAGS set to ${flagsbit0} (${leadingspace_description}) using a mock print-out"
             echo "# routine that ${mock_description}."
             echo "# Expected output is \"${leadingspace}${keyword}${trailingspace}\"."
@@ -324,7 +325,7 @@ for printer_in_use in 0 1; do
             echo '.align 0'
             echo "${msgname}: .asciz \"${expectedtext}\""
           done
-        } | ../../../utils/asm-format/asm-format > "test_print_token_udg_patch.${fake_or_fake_reg_update}${flagsbit0}${printer_in_use}${lower_screen_in_use}.gen-s"
+        } | ../../../utils/asm-format/asm-format > "test_po_t_udg.${fake_or_fake_reg_update}${flagsbit0}${printer_in_use}${lower_screen_in_use}.gen-s"
       done
     done
   done

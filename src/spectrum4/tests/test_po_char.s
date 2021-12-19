@@ -153,7 +153,7 @@ po_char_1_effects_regs:
   bl      po_attr
   mov     w0, (60-20*po_char1_screenthird-po_char1_yoffset)
   mov     w1, (109-po_char1_x)-1
-  ldr     x2, =po_char1_dfaddr+1
+  ldr     x2, =po_char1_dfaddr+2
   ldr     x24, [sp], #0x10
   adr     x4, char_set+('k'-' ')*32
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
@@ -214,7 +214,7 @@ po_char_space_end_of_line_effects_regs:
   bl      po_attr
   mov     w0, (60-20*po_char2_screenthird-po_char2_yoffset)-1
   mov     w1, #108
-  ldr     x2, =po_char2_dfaddr+1
+  ldr     x2, =po_char2_dfaddr+2
   ldr     x24, [sp], #0x10
   mov     x4, #4                                  // TODO: Why?
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.

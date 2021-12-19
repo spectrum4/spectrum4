@@ -26,7 +26,7 @@
 #     display file and attributes file updated
 #     x0 = 60 - new line offset into section
 #     x1 = 109 - new column, or 1 for end-of-line
-#     x2 += 1 (correct new cursor memory location, unless at first char of screen third)
+#     x2 += 2 (correct new cursor memory location, unless at first char of screen third)
 #     Plus po_attr register changes (excluding x24):
 #       x3
 #       x5
@@ -147,7 +147,7 @@ pr_all:                                  // L0B7F
   ldr     x2, [sp], #0x10                         // Restore screen/printer position.
   ldp     x0, x1, [sp], #0x10                     // Restore line/column.
   sub     w1, w1, #1                              // Move column to the right.
-  add     x2, x2, #1                              // Increase screen/printer position
+  add     x2, x2, #2                              // Increase screen/printer position
                                                   // Note: at end of screen thirds this will be the wrong address,
                                                   // but cl_set presumably fixes it, before subsequent pr_all call.
                                                   // Instead of calling cl_set everywhere, probably the above

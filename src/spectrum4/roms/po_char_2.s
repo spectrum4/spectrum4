@@ -3,8 +3,8 @@
 
 # This routine is used to print ASCII characters  32d - 127d.
 #
-# Bit 0 of [FLAGS] updated to 1 if w3=' ' (=> no leading space), otherwise 0 (=>
-# leading space).
+# Bit 0 of [FLAGS] updated to 1 if w3=' ' (=> suppress leading space), otherwise 0 (=>
+# allow leading space).
 #
 # On entry:
 #   w1 = (109 - column), or 1 for end-of-line
@@ -28,7 +28,7 @@
 #     display file and attributes file updated
 #     x0 = 60 - new line offset into section
 #     x1 = 109 - new column, or 1 for end-of-line
-#     x2 += 1 (correct new cursor memory location, unless at first char of screen third)
+#     x2 += 2 (correct new cursor memory location, unless at first char of screen third)
 #     Plus po_attr register changes (excluding x24):
 #       x3
 #       x5

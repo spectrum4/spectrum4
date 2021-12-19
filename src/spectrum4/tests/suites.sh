@@ -56,10 +56,6 @@ function generate_test_suites {
   echo
   echo ".if TESTS_INCLUDE"
   echo "  .include \"runtests.s\""
-  for file in "${files[@]}"; do
-    filename="${file##*/}"
-    echo "  .include \"${filename}\""
-  done
   echo "  .text"
   echo -n "  ${ptralignstr}"
   echo "  all_suites:"
@@ -72,6 +68,10 @@ function generate_test_suites {
   for file in "${files[@]}"; do
     suite="$(echo "${file}" | sed -n 's/test_\(.*\)\.suite/suite_\1/p' | sed 's/\./_/g')"
     echo "    ${ptrunit} ${suite}"
+  done
+  for file in "${files[@]}"; do
+    filename="${file##*/}"
+    echo "  .include \"${filename}\""
   done
   echo ".endif"
   echo

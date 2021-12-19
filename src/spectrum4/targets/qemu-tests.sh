@@ -61,7 +61,7 @@ function run_tests {
   fi
 }
 
-function fuse-tests {
+function qemu-tests {
   echo -n > "${test_log}"
   qemu-system-aarch64 -nographic -monitor none -M raspi3b -kernel "${test}.elf" -serial null -serial stdio >"${test_log}" 2>&1 &
 }
@@ -69,4 +69,4 @@ function fuse-tests {
 cd "$(dirname "${0}")"
 test="${1}"
 test_log="${test}.log"
-run_tests fuse-tests "${test_log}" 69 70 300
+run_tests qemu-tests "${test_log}" 69 70 300

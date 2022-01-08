@@ -50,7 +50,8 @@ demo:
 paint_copyright:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
-  adr     x0, msg_copyright                       // x0 = location of system copyright message.
+  adrp    x0, msg_copyright
+  add     x0, x0, :lo12:msg_copyright             // x0 = location of system copyright message.
   mov     w1, 38                                  // Print at x=38.
   mov     w2, 40                                  // Print at y=40.
   movl    w3, INK_COLOUR                          // Ink colour is default system ink colour.

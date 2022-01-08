@@ -5,6 +5,8 @@
 
 .bss
 
+bss_start:
+
 .align 4                                          // Make sure sysvars at least start at a reasonable boundary (16 byte)
                                                   // to aid caching, simplify copying memory block, etc.
 

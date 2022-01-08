@@ -70,7 +70,7 @@ cl_set:                                  // L0DD9
   ldp     x19, x20, [sp], #16                     // Restore old x19, x20.
   b       3f
 2:
-  adr     x2, printer_buffer+109
+  add     x2, x28, printer_buffer+109-sysvars
   sub     x2, x2, x1                              // x2 = address inside printer buffer to write char
 3:
   bl      po_store

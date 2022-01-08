@@ -14,59 +14,63 @@ function run_tests {
   local output_file="${2}"
   local timeoutexitcode="${3}"
   local failuresexitcode="${4}"
-  local max_attempts="${5}"
+  local max_seconds_per_run="${5}"
+  local max_runs="${6}"
 
-  local attempts=0
+  local seconds=0
+  local runs=0
+  local completed='false'
 
-  "${func}"
-  local pid=$!
-  disown
+  while [ "${runs}" -lt "${max_runs}" ] && ! "${completed}"; do
+    "${func}"
+    local pid=$!
+    disown
 
-  until [ "$(cat "${output_file}" | sed -n '/All tests completed./p' | wc -l)" -gt 0 ] \
-    || [ "$(cat "${output_file}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] \
-    || [ "$(cat "${output_file}" | sed -n '/No tests to run./p' | wc -l)" -gt 0 ] \
-    || [ "$(cat "${output_file}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ] \
-    || [ "${attempts}" -eq "${max_attempts}" ]; do
-    attempts=$((attempts+1))
-    sleep 1
+    runs=$((runs+1))
+    passed='false'
+
+    until "${completed}" || [ "${seconds}" -eq "${max_seconds_per_run}" ]; do
+      if [ "$(cat "${output_file}" | sed -n '/All tests completed./p' | wc -l)" -gt 0 ] \
+      || [ "$(cat "${output_file}" | sed -n '/No tests to run./p' | wc -l)" -gt 0 ]; then
+        completed='true'
+        if [ "$(cat "${output_file}" | sed -n '/^FAIL:/p' | wc -l)" -eq 0 ]; then
+          passed='true'
+        fi
+      elif [ "$(cat "${output_file}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] \
+      || [ "$(cat "${output_file}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ]; then
+        completed='true'
+      else
+        sleep 1
+        seconds=$((seconds+1))
+      fi
+    done
+
+    kill -9 "${pid}" >/dev/null 2>&1 || true
+
+    if ! "${passed}"; then
+      cat "${output_file}" | sed 's///g'
+    fi
+
+    if ! "${completed}"; then
+      echo 'Timed out!' >&2
+    fi
   done
 
-  kill -9 "${pid}" >/dev/null 2>&1 || true
-
-  failure_count="$(cat "${output_file}" | sed -n '/^FAIL:/p' | wc -l)"
-  local failed='false'
-  if [ "${attempts}" -eq "${max_attempts}" ] || \
-     [ "${failure_count}" -gt 0 ] || \
-     [ "$(cat "${output_file}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ] || \
-     [ "$(cat "${output_file}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] || \
-     ( \
-       [ "$(cat "${output_file}" | sed -n '/All tests completed./p' | wc -l)" -eq 0 ] && \
-       [ "$(cat "${output_file}" | sed -n '/No tests to run./p' | wc -l)" -eq 0 ] \
-     ); then
-    failed='true'
-  fi
-
-  if "${failed}"; then
-    cat "${output_file}"
-  fi
-
-  if [ "${attempts}" -eq "${max_attempts}" ]; then
-    echo 'Timed out!' >&2
+  if ! "${completed}"; then
     exit "${timeoutexitcode}"
   fi
 
-  if "${failed}"; then
-    echo "Test failures" >&2
+  if ! "${passed}"; then
     exit "${failuresexitcode}"
   fi
 }
 
 function qemu-tests {
-  echo -n > "${test_log}"
-  qemu-system-aarch64 -nographic -monitor none -M raspi3b -kernel "${test}.elf" -serial null -serial stdio >"${test_log}" 2>&1 &
+  echo -n > "${suite_log}"
+  qemu-system-aarch64 -nographic -monitor none -M raspi3b -kernel "${suite}.elf" -serial null -serial stdio >"${suite_log}" 2>&1 &
 }
 
 cd "$(dirname "${0}")"
-test="${1}"
-test_log="${test}.log"
-run_tests qemu-tests "${test_log}" 69 70 300
+suite="${1}"
+suite_log="${suite}.log"
+run_tests qemu-tests "${suite_log}" 69 70 300 1

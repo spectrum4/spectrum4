@@ -19,10 +19,10 @@ po_any:                                  // L0B24
   cmp     w3, #0x90                               // Test if a UDG or keyword token.
   b.hs    2f                                      // If so, jump forward to 2:.
   // Mosaic character 128-143.
-  adr     x6, MEMBOT                              // x6 = temporary location to write bit pattern to
+  add     x6, x28, MEMBOT-sysvars                 // x6 = temporary location to write bit pattern to
   bl      po_mosaic_half                          // Generate top half (first 8 pixel rows) of mosaic character.
   bl      po_mosaic_half                          // Generate bottom half (last 8 pixel rows) of mosaic character.
-  adr     x4, MEMBOT                              // x4 = address of character bit pattern
+  add     x4, x28, MEMBOT-sysvars                 // x4 = address of character bit pattern
   // TODO: check registers are set correctly for this call
   bl      pr_all                                  // Print mosaic character 128-143.
   b       3f                                      // Exit routine.

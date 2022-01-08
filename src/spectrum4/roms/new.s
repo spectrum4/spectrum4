@@ -2,7 +2,8 @@
 .align 2
 # Entry point for NEW (with interrupts disabled when running in bare metal since this routine will enable interrupts)
 new:                                     // L019D
-  adr     x0, char_set - (0x20 * 0x20)            // x0 = where, in theory character zero would be.
+  adrp    x0, char_set - 0x20 * 0x20
+  add     x0, x0, :lo12:(char_set - 0x20 * 0x20)  // x0 = where, in theory character zero would be.
   str     x0, [x28, CHARS-sysvars]                // [CHARS] = theoretical address of char zero.
   ldr     x1, [x28, RAMTOP-sysvars]               // x1 = [RAMTOP].
   add     x1, x1, 1                               // x1 = [RAMTOP] + 1.
@@ -27,7 +28,8 @@ new:                                     // L019D
   str     x5, [x28, CHANS-sysvars]                // [CHANS] = start of heap
   mov     x6, (initial_channel_info_END - initial_channel_info)/8
                                                   // x6 = number of double words (8 bytes) in initial_channel_info block
-  adr     x7, initial_channel_info
+  adrp    x7, initial_channel_info
+  add     x7, x7, :lo12:initial_channel_info
 
   // Loop to copy initial_channel_info block to [CHANS] = start of heap = heap
   3:
@@ -63,7 +65,7 @@ new:                                     // L019D
 //         DEC  (IY-0x36)     // Set KSTATE+4 to 0xFF.
 //
 //
-  adr     x5, STRMS
+  add     x5, x28, STRMS - sysvars
   mov     x6, (initial_stream_data_END - initial_stream_data)/2
                                                   // x6 = number of half words (2 bytes) in initial_stream_data block
   adr     x7, initial_stream_data

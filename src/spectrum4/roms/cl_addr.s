@@ -18,7 +18,7 @@
 cl_addr:                                 // L0E9B
   mov     x1, #60
   sub     x1, x1, x0
-  adr     x2, display_file
+  add     x2, x28, display_file-sysvars
   mov     x3, #0xcccccccccccccccc
   add     x3, x3, #1                              // x3 = 0x0xcccccccccccccccd
   umulh   x3, x3, x1                              // x3 = 14757395258967641293 * x1 / 2^64 = int(0.8*x1)

@@ -257,7 +257,8 @@ _start:
   mrs     x0, mpidr_el1                           // x0 = Multiprocessor Affinity Register.
   ands    x0, x0, #0x3                            // x0 = core number.
   b.ne    sleep                                   // Put all cores except core 0 to sleep.
-  adr     x28, sysvars                            // x28 will remain at this constant value to make all sys vars available via an immediate offset.
+  adrp    x28, sysvars
+  add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
   bl      uart_init                               // Initialise UART interface.
   bl      init_framebuffer                        // Allocate a frame buffer with chosen screen settings.
   mrs     x0, currentel

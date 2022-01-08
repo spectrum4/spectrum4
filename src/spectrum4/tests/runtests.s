@@ -114,7 +114,8 @@ run_tests:
       ldp     x22, x23, [sp, #8 * 22]
       ldp     x24, x25, [sp, #8 * 24]
       ldp     x26, x27, [sp, #8 * 26]
-      adr     x28, sysvars
+      adrp    x28, sysvars
+      add     x28, x28, :lo12:sysvars
       str     x28, [sp, #8 * 28]
 
       cbz     x30, 4f
@@ -795,7 +796,7 @@ fill_memory_with_junk:
   mov     x4, x1                                  // Preserve sequence byte length in x4
   bl      rand_block
 // First random block: __bss_start -> bss_debug_start
-  adr     x8, __bss_start
+  add     x8, x28, bss_start-sysvars
   adrp    x6, bss_debug_start
   add     x6, x6, :lo12:bss_debug_start
   bl      fill_region_with_junk
@@ -1017,8 +1018,17 @@ fake_printout_touch_regs:
 fake_print_buffer_location:
   .quad fake_print_buffer
 
-.data
 
+##############################################################
+#
+# The following is intentionally in .text not .data so that
+# adr instructions can be used rather than adrp/add to reduce
+# code size. It may be that performance is better with a .data
+# section in terms of cache utilisation due to the colocation
+# of data, but I haven't tested. Could also be that it makes
+# no difference if the caches are big enough
+#
+##############################################################
 
 .align 0
 msg_done:                      .asciz "DONE.\r\n"

@@ -55,6 +55,8 @@
 .global LASTK
 .global MASK_P
 .global MASK_T
+.global MEMBOT
+.global MEMBOT_01                         ; not actually needed, but without we hit a z80-unknown-elf-as bug
 .global MODE
 .global NEWPPC
 .global NSPPC
@@ -165,6 +167,7 @@
 .global pixel_addr
 .global plot
 .global plot_sub
+.global po_any
 .global po_attr
 .global po_change
 .global po_char

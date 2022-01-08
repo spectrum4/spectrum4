@@ -402,8 +402,7 @@ log_ram_address:
 test_fail:
   push    af
   ld      a, 0
-# uncomment this line in order to exit test suite after first failure
-# ld      (test_failure), a
+  ld      (test_failure), a
   push    de
   ld      de, msg_fail
   call    print_msg_de                    ; Log "FAIL: "

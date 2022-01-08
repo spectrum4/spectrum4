@@ -1,21 +1,27 @@
-Session 1:
+# Debugging Spectrum +4 tests
+
+If a spectrum4 test fails and you would like to interactively debug it, you can
+do so using gnu gdb (cross compiled for `aarch64-none-elf`).  You will need it
+installed on your host (it isn't included in the docker container).
+
+Run the following command, to see which commands you will need to debug the
+test:
 
 ```
-qemu-system-aarch64 -s -S -M raspi3b -kernel build/spectrum4/kernel8-qemu-debug.elf -serial null -serial stdio
+$ src/spectrum4/tests/debug.sh <test_name>
 ```
 
-Session 2:
+This command will output the commands you will need to debug test `<test_name>`. 
+You will need two sessions for performing the debugging:
 
-```
-aarch64-none-elf-gdb build/spectrum4/kernel8-qemu-debug.elf
-# (gdb) target remote localhost:1234
-(gdb) target extended-remote localhost:1234
-(gdb) disassemble
-(gdb) si
-```
+*) In the first session, you will run a command to start QEMU in debug mode,
+   awaiting instructions over port 1234
+*) In the second session, you will run a command to start the debugger on your
+   host environment and connect to port 1234 to provide instructions to the qemu
+   environment
 
 
-Links
+## Links
 
 * https://www.raspberrypi.org/forums/viewtopic.php?t=296084
 * https://wiki.osdev.org/Kernel_Debugging#Use_GDB_with_QEMU

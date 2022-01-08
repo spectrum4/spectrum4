@@ -32,14 +32,14 @@ function test_po_mosaic_half {
   echo '  ret'
   echo
   echo "${testname}_effects:"
-  echo "  _str    0x${b1}${b0}${b1}${b0}${b1}${b0}${b1}${b0}, display_file"
-  echo "  _str    0x${b1}${b0}${b1}${b0}${b1}${b0}${b1}${b0}, display_file+8"
+  echo "  _str    0x${b0}${b1}${b0}${b1}${b0}${b1}${b0}${b1}, display_file"
+  echo "  _str    0x${b0}${b1}${b0}${b1}${b0}${b1}${b0}${b1}, display_file+8"
   echo '  ret'
   echo
   echo "${testname}_effects_regs:"
   echo "  mov     w3, #${hexw3_shifted}"
-  echo "  mov     x4, #0x${b1}${b0}${b1}${b0}${b1}${b0}${b1}${b0}"
-  echo "  mov     x5, #0x${b1}00${b1}00${b1}00${b1}00"
+  echo "  mov     x4, #0x${b0}${b1}${b0}${b1}${b0}${b1}${b0}${b1}"
+  echo "  mov     x5, #0x00${b1}00${b1}00${b1}00${b1}"
   echo "  adr     x6, display_file+0x10"
   echo "  nzcv    #0b0${z_flag}00"
   echo '  ret'

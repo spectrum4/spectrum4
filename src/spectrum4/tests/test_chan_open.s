@@ -73,7 +73,7 @@
 
 # Copy default STRMS and CHANS to heap
 test_chan_open_init:
-  adr     x5, STRMS
+  add     x5, x28, STRMS-sysvars
   mov     x6, (initial_stream_data_END - initial_stream_data)/2
                                                   // x6 = number of half words (2 bytes) in initial_stream_data block
   adr     x7, initial_stream_data

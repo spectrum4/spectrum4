@@ -44,10 +44,10 @@
 #     if entry w3 bit 1 clear:
 #       0b0100
 po_mosaic_half:                          // L0B3E
-  mov     x4, 0x00ff00ff00ff00ff                  // Pattern for first 4 pixel rows if bit 0 set.
+  mov     x4, 0xff00ff00ff00ff00                  // Pattern for first 4 pixel rows if bit 0 set.
   tst     w3, #1                                  // Is bit 0 of w3 set?
   csel    x4, x4, xzr, ne                         // If so, use prepared bit 0 pattern, otherwise clear bits.
-  mov     x5, 0xff00ff00ff00ff00                  // Pattern for first 4 pixel rows if bit 1 set.
+  mov     x5, 0x00ff00ff00ff00ff                  // Pattern for first 4 pixel rows if bit 1 set.
   tst     w3, #2                                  // Is bit 1 of w3 set?
   csel    x5, x5, xzr, ne                         // If so, use prepared bit 1 pattern, otherwise clear bits.
   orr     x4, x4, x5                              // Merge results for bit 0 and bit 1.

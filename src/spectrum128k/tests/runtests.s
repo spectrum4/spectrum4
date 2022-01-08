@@ -29,14 +29,13 @@ _start:
   # System setup
 
   call    cl_all                          ; Clear screen (CLS).
-channel_assign:                           ; This label is translated to an
-                                          ; address in all.sh, the value is
+channel_assign:                           ; This label is translated to an address
+                                          ; in create-tzx.sh, the value is
                                           ; incremented and passed to the go
-                                          ; program that creates the BASIC
-                                          ; loader program, in order to
-                                          ; generate a POKE statement to
-                                          ; allow an interactive user to
-                                          ; modify the output channel to e.g.
+                                          ; program that creates the BASIC loader
+                                          ; program, in order to generate a POKE
+                                          ; statement to allow an interactive user
+                                          ; to modify the output channel to e.g.
                                           ; channel 2 (upper screen).
   ld      a, 0                            ; The value loaded into A here is
                                           ; irrelevant since it is overwritten

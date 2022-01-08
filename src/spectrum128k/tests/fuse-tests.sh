@@ -19,65 +19,60 @@ function run_tests {
 
   local seconds=0
   local runs=0
-  local passed='false'
+  local completed='false'
 
-  while [ "${runs}" -lt "${max_runs}" ] && ! "${passed}"; do
+  while [ "${runs}" -lt "${max_runs}" ] && ! "${completed}"; do
     "${func}"
     local pid=$!
     disown
 
-    until [ "$(cat "${output_file}" | sed -n '/All tests completed./p' | wc -l)" -gt 0 ] \
-      || [ "$(cat "${output_file}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] \
-      || [ "$(cat "${output_file}" | sed -n '/No tests to run./p' | wc -l)" -gt 0 ] \
-      || [ "$(cat "${output_file}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ] \
-      || [ "${seconds}" -eq "${max_seconds_per_run}" ]; do
-      sleep 1
-      seconds=$((seconds+1))
+    runs=$((runs+1))
+    passed='false'
+
+    until "${completed}" || [ "${seconds}" -eq "${max_seconds_per_run}" ]; do
+      if [ "$(cat "${output_file}" | sed -n '/All tests completed./p' | wc -l)" -gt 0 ] \
+      || [ "$(cat "${output_file}" | sed -n '/No tests to run./p' | wc -l)" -gt 0 ]; then
+        completed='true'
+        if [ "$(cat "${output_file}" | sed -n '/^FAIL:/p' | wc -l)" -eq 0 ]; then
+          passed='true'
+        fi
+      elif [ "$(cat "${output_file}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] \
+      || [ "$(cat "${output_file}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ]; then
+        completed='true'
+      else
+        sleep 1
+        seconds=$((seconds+1))
+      fi
     done
 
     kill -9 "${pid}" >/dev/null 2>&1 || true
-    runs=$((runs+1))
-
-    failure_count="$(cat "${output_file}" | sed -n '/^FAIL:/p' | wc -l)"
-    passed='true'
-    if [ "${seconds}" -eq "${max_seconds_per_run}" ] || \
-       [ "${failure_count}" -gt 0 ] || \
-       [ "$(cat "${output_file}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ] || \
-       [ "$(cat "${output_file}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] || \
-       ( \
-         [ "$(cat "${output_file}" | sed -n '/All tests completed./p' | wc -l)" -eq 0 ] && \
-         [ "$(cat "${output_file}" | sed -n '/No tests to run./p' | wc -l)" -eq 0 ] \
-       ); then
-      passed='false'
-    fi
 
     if ! "${passed}"; then
-      cat "${output_file}" | sed 's/^/  /'
+      cat "${output_file}" | sed 's///g'
     fi
 
-    if [ "${seconds}" -eq "${max_seconds_per_run}" ]; then
+    if ! "${completed}"; then
       echo 'Timed out!' >&2
     fi
   done
 
-  if [ "${seconds}" -eq "${max_seconds_per_run}" ]; then
+  if ! "${completed}"; then
     exit "${timeoutexitcode}"
   fi
 
   if ! "${passed}"; then
-    echo "Test failures" >&2
     exit "${failuresexitcode}"
   fi
 }
 
 function fuse-tests {
-  echo -n > "${test_log}"
-  fuse --textfile "${test_log}" --speed 100000 --machine 128 --no-sound --zxprinter --printer --tape "${tzx_file}" --auto-load --no-autosave-settings > "${fuse_log}" 2>&1 &
+  echo -n > "${suite_log}"
+  fuse --textfile "${suite_log}" --speed 100000 --machine 128 --no-sound --zxprinter --printer --tape "${tzx_file}" --auto-load --no-autosave-settings > "${fuse_log}" 2>&1 &
 }
 
 cd "$(dirname "${0}")"
-test="${1}"
-tzx_file="${test}.tzx"
-test_log="${test}.log"
-fuse_log="${test}.fuselog"
-run_tests fuse-tests "${test_log}" 67 68 100 5
+suite="${1}"
+tzx_file="${suite}.tzx"
+suite_log="${suite}.log"
+fuse_log="${suite}.fuselog"
+run_tests fuse-tests "${suite_log}" 67 68 100 5

@@ -140,7 +140,7 @@ pr_all:                                  // L0B7F
   5:
     sub     w19, w19, #1                          // Decrement pixel row loop counter
     cbnz    w19, 3b                               // Repeat until all 16 pixel rows complete
-  tbnz    w20, #1, 6f                             // If printer in use, jump ahead to 7:.
+  tbnz    w20, #1, 6f                             // If printer in use, jump ahead to 6:.
 // Printer not in use
   ldr     x0, [sp]                                // x0 = original display file address
   bl      po_attr                                 // Call routine po_attr to update corresponding colour attribute.

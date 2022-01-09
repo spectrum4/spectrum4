@@ -63,7 +63,8 @@ poke_address_2_effects_regs:
   mov     x6, 0xcc
   movl    w7, 0x00cccccc
   mov     x8, 0x0
-  adr     x9, mbreq
+  adrp    x9, mbreq
+  add     x9, x9, :lo12:mbreq
   mov     x10, 0x0
   mov     x11, 0xd80
   mov     x12, 0x6c
@@ -265,7 +266,8 @@ poke_address_3_effects_regs:
   mov     w6, #0x0
   mov     w7, #0xff
   mov     w8, #0x0
-  adr     x9, mbreq
+  adrp    x9, mbreq
+  add     x9, x9, :lo12:mbreq
   mov     w10, #0x7
   movl    w11, 0x0003234f
   mov     w12, #0x6c

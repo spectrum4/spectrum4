@@ -22,7 +22,6 @@
 ; Paul Farrow     (www.fruitcake.plus.com)
 
 
-
 ; The Sinclair Interface1 ROM written by Dr. Ian Logan calls numerous
 ; routines in this ROM. Non-standard entry points have a label beginning
 ; with X.

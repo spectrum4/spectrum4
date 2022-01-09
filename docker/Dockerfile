@@ -37,7 +37,7 @@ RUN tar xvf gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf.tar.xz
 RUN mv /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/* /usr/local/bin
 
 # install z80 cross-compiler binutils
-RUN wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.36.1.tar.gz && tar zvfx binutils.tar.gz && cd binutils-2.36.1 && ./configure --target=z80-unknown-elf --disable-werror && make && make install && cd ..
+RUN wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.37.tar.gz && tar zvfx binutils.tar.gz && cd binutils-2.37 && ./configure --target=z80-unknown-elf --disable-werror && make && make install && cd ..
 
 RUN curl -L 'https://download.qemu-project.org/qemu-5.2.0.tar.xz' > qemu-5.2.0.tar.xz && tar xvf qemu-5.2.0.tar.xz && mkdir qemu-5.2.0/build && cd qemu-5.2.0/build && ../configure --target-list=aarch64-softmmu --disable-vnc && make -j4 && make install && cd ..
 

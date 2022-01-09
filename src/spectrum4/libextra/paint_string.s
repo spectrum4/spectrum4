@@ -24,10 +24,12 @@ paint_string:
   ldr     x4, [sp], #0x10
   ldp     x2, x3, [sp], #0x10
   ldp     x0, x1, [sp], #0x10
-  adr     x9, mbreq                               // x9 = address of mailbox request.
+  adrp    x9, mbreq
+  add     x9, x9, :lo12:mbreq                     // x9 = address of mailbox request.
   ldr     w10, [x9, framebuffer-mbreq]            // w10 = address of framebuffer
   ldr     w9, [x9, pitch-mbreq]                   // w9 = pitch
-  adr     x11, char_set-32*32                     // x11 = theoretical start of character table for char 0
+  adrp    x11, char_set-32*32
+  add     x11, x11, :lo12:(char_set-32*32)        // x11 = theoretical start of character table for char 0
   1:
     ldrb    w12, [x0], 1                          // w12 = char from string, and update x0 to next char
     cbz     w12, 4f                               // if found end marker, jump to end of function and return

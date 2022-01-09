@@ -273,7 +273,8 @@ for printer_in_use in 0 1; do
               ;;
               *)
               echo "  sub     x3, x3, #0xa5"
-              echo "  adr     x4, tkn_table+${tkntableoffset}"
+              echo "  adrp    x4, tkn_table+${tkntableoffset}"
+              echo "  add     x4, x4, :lo12:(tkn_table+${tkntableoffset})"
               echo "  mov     x5, x3"
               ;;
             esac

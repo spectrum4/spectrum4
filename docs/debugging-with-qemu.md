@@ -11,7 +11,7 @@ test:
 $ src/spectrum4/tests/debug.sh <test_name>
 ```
 
-This command will output the commands you will need to debug test `<test_name>`. 
+This command will output the commands you will need to debug test `<test_name>`.
 You will need two sessions for performing the debugging:
 
 *) In the first session, you will run a command to start QEMU in debug mode,

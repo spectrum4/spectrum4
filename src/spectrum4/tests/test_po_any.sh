@@ -58,7 +58,8 @@ function test_setup {
       echo "  adrp    x2, display_file + 216*20*16*${screenthird} + ${yoffset}*216 + ${x}*2"
       echo "  add     x2, x2, :lo12:(display_file + 216*20*16*${screenthird} + ${yoffset}*216 + ${x}*2)"
     else
-      echo "  adr     x2, printer_buffer + ${x}*2"
+      echo "  adrp    x2, printer_buffer + ${x}*2"
+      echo "  add     x2, x2, :lo12:(printer_buffer + ${x}*2)"
     fi
     echo "  mov     w1, 109-${x}"
   fi
@@ -115,7 +116,8 @@ function test_po_mosaic_half {
   done
 
   if [ "${printer_in_use}" == "0" ]; then
-    echo "  adr     x0, display_file + 216*20*16*${screenthird} + ${yoffset}*216 + ${x}*2"
+    echo "  adrp    x0, display_file + 216*20*16*${screenthird} + ${yoffset}*216 + ${x}*2"
+    echo "  add     x0, x0, :lo12:(display_file + 216*20*16*${screenthird} + ${yoffset}*216 + ${x}*2)"
     echo "  bl      po_attr"
     echo "  ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack."
   fi
@@ -129,7 +131,8 @@ function test_po_mosaic_half {
     echo "  mov     x29, sp                                 // Update frame pointer to new stack location."
     echo "  stp     x0, x1, [sp, #-16]!"
     echo "  str     x24, [sp, #-16]!"
-    echo "  adr     x0, display_file + 216*20*16*${screenthird} + ${yoffset}*216 + ${x}*2"
+    echo "  adrp    x0, display_file + 216*20*16*${screenthird} + ${yoffset}*216 + ${x}*2"
+    echo "  add     x0, x0, :lo12:(display_file + 216*20*16*${screenthird} + ${yoffset}*216 + ${x}*2)"
     echo "  bl      po_attr"
     echo "  mov     w0, 60-${yoffset}-${screenthird}*20"
     echo "  ldr     x24, [sp], #0x10"
@@ -138,7 +141,7 @@ function test_po_mosaic_half {
 
   echo "  sub     w1, w1, #1"
   echo "  add     x2, x2, #2"
-  echo "  adr     x4, MEMBOT"
+  echo "  add     x4, x28, MEMBOT-sysvars"
 
   if [ "${printer_in_use}" == "0" ]; then
     echo "  ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack."
@@ -147,9 +150,10 @@ function test_po_mosaic_half {
     echo "  mov     x5, #0x00${hexb3}00${hexb3}00${hexb3}00${hexb3}"
     echo "  mov     w6, #0xf"
     echo "  mov     w7, #0xffffffff"
-    echo "  adr     x9, printer_buffer_end"
+    echo "  adrp    x9, printer_buffer_end"
+    echo "  add     x9, x9, :lo12:printer_buffer_end"
     echo "  mov     x10, #0x${hexb2}${hexb3}"
-    echo "  adr     x11, printer_buffer_end"
+    echo "  mov     x11, x9"
     echo "  nzcv    0b0010"
   fi
   echo '  ret'
@@ -353,10 +357,6 @@ for printer_in_use in 0 1; do
             j=$((a-163))
             keyword=${keywords[$j]}
             tkntableoffset=$((tkntableoffset+${#keyword}+1))
-            if [ "$a" -ne 163 ] && [ "$a" -ne 164 ] && [ "$a" -ne 165 ] && [ "$a" -ne 200 ] && [ "$a" -ne 255 ]; then
-              continue
-            fi
-
             hexa=$(printf "%02x" $a)
             testname="po_any_${hexa}_${fake_or_fake_reg_update}${flagsbit0}${printer_in_use}${lower_screen_in_use}"
 
@@ -507,6 +507,8 @@ for printer_in_use in 0 1; do
             echo
             echo '.align 0'
             echo "${msgname}: .asciz \"${expectedtext}\""
+            echo
+            echo '.ltorg'
           done
         done
       done

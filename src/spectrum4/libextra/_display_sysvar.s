@@ -29,6 +29,7 @@
 #   NZCV =
 #     1/2/4/8 byte sysvar: 0b1000
 #               otherwise: 0b0110
+.align 2
 display_sysvar:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -105,6 +106,5 @@ display_sysvar:
   ret
 
 
-.data
 msg_title_sysvars:             .asciz "System Variables\r\n================\r\n"
 msg_colon0x:                   .asciz ": 0x"

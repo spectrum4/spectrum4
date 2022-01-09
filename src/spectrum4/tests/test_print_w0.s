@@ -22,7 +22,8 @@ print_w0_1_setup_regs:
 
 
 print_w0_1_effects:
-  adr     x0, fake_print_buffer_location
+  adrp    x0, fake_print_buffer_location
+  add     x0, x0, :lo12:fake_print_buffer_location
   adr     x1, fake_print_buffer
   mov     w2, 'x'
   strb    w2, [x1], #1
@@ -31,5 +32,6 @@ print_w0_1_effects:
 
 
 print_w0_1_effects_regs:
-  adr     x1, fake_printout
+  adrp    x1, fake_printout
+  add     x1, x1, :lo12:fake_printout
   ret

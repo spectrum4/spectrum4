@@ -19,7 +19,8 @@ display_sysvar_1_setup:
 
 
 display_sysvar_1_setup_regs:
-  adr     x20, sysvar_WIDTH
+  adrp    x20, sysvar_WIDTH
+  add     x20, x20, :lo12:sysvar_WIDTH
   ret
 
 
@@ -39,7 +40,8 @@ display_sysvar_2_setup:
 
 
 display_sysvar_2_setup_regs:
-  adr     x20, sysvar_TVDATA
+  adrp    x20, sysvar_TVDATA
+  add     x20, x20, :lo12:sysvar_TVDATA
   ret
 
 
@@ -59,7 +61,8 @@ display_sysvar_8_setup:
 
 
 display_sysvar_8_setup_regs:
-  adr     x20, sysvar_ERR_SP
+  adrp    x20, sysvar_ERR_SP
+  add     x20, x20, :lo12:sysvar_ERR_SP
   ret
 
 
@@ -74,7 +77,8 @@ display_sysvar_8_effects_regs:
 
 
 display_sysvar_other_setup_regs:
-  adr     x20, sysvar_MEMBOT
+  adrp    x20, sysvar_MEMBOT
+  add     x20, x20, :lo12:sysvar_MEMBOT
   ret
 
 

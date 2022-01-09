@@ -64,11 +64,14 @@ function output {
   echo '.align 2'
   echo "po_table_1_${id}_effects_regs:"
   echo "  mov     x0, ${x0}"
-  echo '  adr     x1, fake_printout'
+  echo '  adrp    x1, fake_printout'
+  echo '  add     x1, x1, :lo12:fake_printout'
   echo "  adr     x4, msg_po_table_1_${id}_out"
   echo "  mov     x6, '${lastchar}'"
   echo "  nzcv    ${nzcv}"
   echo '  ret'
+# echo
+# echo ".ltorg"
 }
 
 cd "$(dirname "${0}")"
@@ -91,7 +94,7 @@ cd "$(dirname "${0}")"
 
   for carry in 'set' 'clear'; do
     for flagsbit0 in 0 1; do
-      for w5 in 0 1 2 3 4 5; do
+      for w5 in {0..5}; do
         for lastchar in '4' '$' '<' '#' '@' 'A' 'V' '{'; do
           output
         done

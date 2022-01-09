@@ -221,11 +221,11 @@ for fake_or_fake_reg_update in f s; do
             ;;
         esac
         if [ "${fake_or_fake_reg_update}" == "f" ]; then
-          echo '  adr     x1, fake_printout'
+          echo '  ldr     x1, =fake_printout'
         else
           echo "  mov     x1, #0x0a01"
         fi
-        echo "  adr     x4, tkn_table+${tkntableoffset}"
+        echo "  ldr     x4, =tkn_table+${tkntableoffset}"
         echo "  mov     x5, 0x${hexi}"
         echo "  mov     x6, '${keyword: -1}'"
         if [ "${fake_or_fake_reg_update}" == "s" ]; then

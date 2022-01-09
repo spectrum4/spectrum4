@@ -66,7 +66,8 @@
 
 
 .macro _pixel val, x, y
-  adr     x2, framebuffer
+  adrp    x2, framebuffer
+  add     x2, x2, :lo12:framebuffer
   ldr     w0, [x2]
   ldr     w1, [x2, pitch-framebuffer]
   mov     w2, \y
@@ -302,7 +303,6 @@ init_framebuffer:
 
 
 # Memory block for GPU mailbox call to allocate framebuffer
-.data
 .align 4
 mbreq:
   .word (mbreq_end-mbreq)                         // Buffer size
@@ -359,7 +359,6 @@ mbreq_end:
 #   x0 = address of mailbox request
 # On exit:
 #   x0 unchanged
-.text
 .align 2
 mbox_call:
   movl     w9, MAILBOX_BASE                       // x9 = 0x3f00b880 (Mailbox Peripheral Address)
@@ -682,7 +681,6 @@ uart_send:
 
 
 # Memory block for GPU mailbox call to advise of incoming reboot
-.data
 .align 4
 mbox_reboot:
   .word (mbox_reboot_end-mbox_reboot)             // Buffer size = 24 = 0x18
@@ -696,7 +694,6 @@ mbox_reboot_end:
 
 # On entry:
 #   w0 = colour to paint border
-.text
 .align 2
 paint_border:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.

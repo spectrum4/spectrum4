@@ -20,11 +20,12 @@ demo:
   mov     x1, #1
   mov     x2, #0
   bl      display_memory
-  adr     x0, mbreq
+  adrp    x0, mbreq
+  add     x0, x0, :lo12:mbreq
   mov     x1, #5
   mov     x2, #3
   bl      display_memory
-  adr     x0, sysvars
+  mov     x0, x28                                 // x0 = sysvars
   mov     x1, #10
   mov     x2, #10
   bl      display_memory
@@ -34,7 +35,7 @@ demo:
   mov     x1, #8
   mov     x2, #22
   bl      display_memory
-  adr     x0, STRMS
+  add     x0, x28, STRMS-sysvars
   mov     x1, #2
   mov     x2, #32
   bl      display_memory

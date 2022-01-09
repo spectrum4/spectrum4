@@ -56,7 +56,6 @@
 .global MASK_P
 .global MASK_T
 .global MEMBOT
-.global MEMBOT_01                         ; not actually needed, but without we hit a z80-unknown-elf-as bug
 .global MODE
 .global NEWPPC
 .global NSPPC

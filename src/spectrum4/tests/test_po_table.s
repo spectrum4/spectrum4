@@ -47,7 +47,8 @@ po_table_01_effects:
 
 po_table_01_effects_regs:
   mov     x0, #0x00
-  adr     x1, fake_printout
+  adrp    x1, fake_printout
+  add     x1, x1, :lo12:fake_printout
   adr     x4, msg_po_table_door
   mov     x6, '0'
   nzcv    #0b1000

@@ -79,7 +79,8 @@ pr_all_upperscreen_paper9_over1_setup_regs:
   mov     w0, (60-20*pr_all1_screenthird-pr_all1_yoffset)
   mov     w1, (109-pr_all1_x)
   ldr     x2, =pr_all1_dfaddr
-  adr     x4, char_set+('k'-' ')*32               // char 'k'
+  adrp    x4, char_set+('k'-' ')*32
+  add     x4, x4, :lo12:(char_set+('k'-' ')*32)   // char 'k'
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
                                                   //   0b0000110000000000
@@ -195,7 +196,8 @@ pr_all_lowerscreen_ink9_inverse1_setup_regs:
   mov     w0, (120-8-20*pr_all2_screenthird-pr_all2_yoffset)
   mov     w1, (109-pr_all2_x)
   ldr     x2, =pr_all2_dfaddr
-  adr     x4, char_set+('k'-' ')*32               // char 'k'
+  adrp    x4, char_set+('k'-' ')*32
+  add     x4, x4, :lo12:(char_set+('k'-' ')*32)   // char 'k'
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
                                                   //   0b0000110000000000
@@ -297,7 +299,8 @@ pr_all_lowerscreen_inverse1_over1_endofline_setup_regs:
   mov     w0, (120-2-20*pr_all3_screenthird-pr_all3_yoffset)
   mov     w1, (109-pr_all3_x)
   ldr     x2, =pr_all3_dfaddr
-  adr     x4, char_set+('k'-' ')*32               // char 'k'
+  adrp    x4, char_set+('k'-' ')*32
+  add     x4, x4, :lo12:(char_set+('k'-' ')*32)   // char 'k'
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
                                                   //   0b0000110000000000
@@ -474,24 +477,25 @@ pr_all_lowerscreen_inverse1_over1_endofline_effects:
   ret
 
 pr_all_lowerscreen_inverse1_over1_endofline_effects_regs:
-  sub x0, x0, #1
-  mov x1, #108
-  add x2, x2, #2
-  mov x3, #0
-  mov x4, #19
-  mov x5, #0x00
-  mov x6, #0xcc
-  mov x7, #0xcc00
-  mov x8, #0x0
-  adr x9, mbreq
-  mov x10, #0x0                                   // x attribute coordinate?
-  ldr x11, =0x32929                               // display file offset ?
-  mov x12, #108
-  mov x13, #0xcc
-  mov x14, #0x0
-  mov x15, #0xcc0000
-  mov x16, #0x18e4                                // attribute file offset?
-  mov x17, #0x22                                  // [0-7] attribute value applied / [8-15] [MASK_T] ?
-  mov x18, #0x0a                                  // 5 * screen third (0x0 / 0x5 / 0xa) ?
-  nzcv 0b0110
+  sub     x0, x0, #1
+  mov     x1, #108
+  add     x2, x2, #2
+  mov     x3, #0
+  mov     x4, #19
+  mov     x5, #0x00
+  mov     x6, #0xcc
+  mov     x7, #0xcc00
+  mov     x8, #0x0
+  adrp    x9, mbreq
+  add     x9, x9, :lo12:mbreq
+  mov     x10, #0x0                               // x attribute coordinate?
+  ldr     x11, =0x32929                           // display file offset ?
+  mov     x12, #108
+  mov     x13, #0xcc
+  mov     x14, #0x0
+  mov     x15, #0xcc0000
+  mov     x16, #0x18e4                            // attribute file offset?
+  mov     x17, #0x22                              // [0-7] attribute value applied / [8-15] [MASK_T] ?
+  mov     x18, #0x0a                              // 5 * screen third (0x0 / 0x5 / 0xa) ?
+  nzcv    0b0110
   ret

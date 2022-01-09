@@ -171,7 +171,8 @@ print_token_udg_patch_01_effects_regs:
   mov     x1, (109-print_token_udg_patch_01_x)-1
   add     x2, x2, 2
   mov     x3, 0x0000000000000000
-  adr     x4, char_set+('k'-' ')*32
+  adrp    x4, char_set+('k'-' ')*32
+  add     x4, x4, :lo12:(char_set+('k'-' ')*32)
   mov     x5, 0x0000000000000000
   mov     x6, 0x0000000000000000
   mov     x7, 0x0000000000000000
@@ -340,7 +341,8 @@ print_token_udg_patch_02_effects_regs:
   mov     x18, 0x0000000000000000
   nzcv    0b0110
 
-  adr     x4, char_set+('k'-' ')*32
+  adrp    x4, char_set+('k'-' ')*32
+  add     x4, x4, :lo12:(char_set+('k'-' ')*32)
   ret
 
 

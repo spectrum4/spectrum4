@@ -6,10 +6,10 @@
 
 function test_po_mosaic_half {
 
-  w3_bit0=$((w3%2))
-  w3_bit1=$(((w3>>1)%2))
-  z_flag=$((1-w3_bit1))
-  w3_shifted=$((w3>>2))
+  w3_bit0=$((w3 % 2))
+  w3_bit1=$(((w3 >> 1) % 2))
+  z_flag=$((1 - w3_bit1))
+  w3_shifted=$((w3 >> 2))
   hexw3=$(printf "0x%02x" $w3)
   hexw3_shifted=$(printf "0x%02x" $w3_shifted)
 
@@ -45,7 +45,6 @@ function test_po_mosaic_half {
   echo '  ret'
 }
 
-
 cd "$(dirname "${0}")"
 
 {
@@ -63,7 +62,7 @@ cd "$(dirname "${0}")"
   echo
   echo '.text'
   echo '.align 2'
-  for ((w3=0; w3<256; w3++)); do
+  for ((w3 = 0; w3 < 256; w3++)); do
     test_po_mosaic_half
   done
 } | ../../../utils/asm-format/asm-format > "test_po_mosaic_half.gen-s"

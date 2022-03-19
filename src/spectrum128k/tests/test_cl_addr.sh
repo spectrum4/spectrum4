@@ -4,7 +4,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-
 set -eu
 set -o pipefail
 export SHELLOPTS
@@ -21,19 +20,19 @@ cd "$(dirname "${0}")"
   echo '.text'
 
   flags=(
-    "PV_FLAG"                    # top screen-third
-    "PV_FLAG | X3_FLAG"          # middle screen-third
-    "0x0"                        # bottom screen-third
+    "PV_FLAG"           # top screen-third
+    "PV_FLAG | X3_FLAG" # middle screen-third
+    "0x0"               # bottom screen-third
   )
 
-  for ((i=0; i<3; i++)); do
-    h=$((80-8*i))
+  for ((i = 0; i < 3; i++)); do
+    h=$((80 - 8 * i))
     a=$h
     f=${flags[i]}
-    for ((j=0; j<8; j++)); do
-      b=$((i*8+j+1))
-      l=$((224-32*j))
-      d=$((24-b))
+    for ((j = 0; j < 8; j++)); do
+      b=$((i * 8 + j + 1))
+      l=$((224 - 32 * j))
+      d=$((24 - b))
 
       hexa=$(printf "0x%02x" $a)
       hexb=$(printf "0x%02x" $b)

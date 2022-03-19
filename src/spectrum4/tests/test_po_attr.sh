@@ -4,7 +4,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-
 cd "$(dirname "${0}")"
 
 # This is identical input data to test_PO_ATTR.sh uses for Spectrum 128K tests.
@@ -94,9 +93,9 @@ input='0x02 0x05 0x1d 0x07 0x84 0x41 0xf9 0xce 0x45 0x5c
   i=0
   echo "${input}" | while read section yoffset x pixrow attr_t prevattr mask_t p_flag a f; do
     testname=$(printf "po_attr_%02x" $i)
-    i=$((i+1))
-    afoffset=$((section*108*20+yoffset*108+x))
-    dfoffset=$((section*216*16*20+yoffset*216+x*2+pixrow*20*216))
+    i=$((i + 1))
+    afoffset=$((section * 108 * 20 + yoffset * 108 + x))
+    dfoffset=$((section * 216 * 16 * 20 + yoffset * 216 + x * 2 + pixrow * 20 * 216))
     hexafo=$(printf "0x%08x" $afoffset)
     hexdfo=$(printf "0x%08x" $dfoffset)
 

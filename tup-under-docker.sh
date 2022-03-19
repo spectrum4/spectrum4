@@ -4,7 +4,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-
 #####################################################################################
 
 # This script builds everything under docker.

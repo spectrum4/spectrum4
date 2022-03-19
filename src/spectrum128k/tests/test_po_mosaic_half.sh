@@ -9,11 +9,11 @@ set -o pipefail
 export SHELLOPTS
 
 function test_po_mosaic_half {
-  newb=$(((256*carry + b)>>2))
+  newb=$(((256 * carry + b) >> 2))
 
-  b_bit0=$((b%2))
-  b_bit1=$(((b>>1)%2))
-  a=$((16*15*b_bit1 + 15*b_bit0))
+  b_bit0=$((b % 2))
+  b_bit1=$(((b >> 1) % 2))
+  a=$((16 * 15 * b_bit1 + 15 * b_bit0))
 
   hexa=$(printf "0x%02x" $a)
   hexb=$(printf "0x%02x" $b)
@@ -47,7 +47,6 @@ function test_po_mosaic_half {
   echo '  ret'
 }
 
-
 cd "$(dirname "${0}")"
 
 for chunk in 0 1 2 3; do
@@ -60,9 +59,9 @@ for chunk in 0 1 2 3; do
     echo
     echo
     echo '.text'
-    for ((i=0; i<128; i++)); do
-      b=$((i+128*(chunk%2)))
-      carry=$((chunk>>1))
+    for ((i = 0; i < 128; i++)); do
+      b=$((i + 128 * (chunk % 2)))
+      carry=$((chunk >> 1))
       test_po_mosaic_half
     done
   } | ../../../utils/asm-format/asm-format > "test_po_mosaic_half.${chunk}.gen-s"

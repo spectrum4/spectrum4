@@ -8,9 +8,7 @@ set -eu
 set -o pipefail
 export SHELLOPTS
 
-
 cd "$(dirname "${0}")"
-
 
 function generate_unit_tests {
   local srcdir="${1}"

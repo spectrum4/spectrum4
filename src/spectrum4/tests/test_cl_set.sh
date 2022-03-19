@@ -27,9 +27,9 @@ cd "$(dirname "${0}")"
 
 {
   header
-  for ((c=1; c<110; c++)); do
+  for ((c = 1; c < 110; c++)); do
     hexc=$(printf "%02x" $c)
-    proffset=$((109-c))
+    proffset=$((109 - c))
     hexproffset=$(printf "%04x" $proffset)
     echo
     echo
@@ -56,15 +56,15 @@ cd "$(dirname "${0}")"
 
 {
   header
-  for ((c=1; c<110; c+=3)); do
+  for ((c = 1; c < 110; c += 3)); do
     hexc=$(printf "%02x" $c)
-    x=$((109-c))
+    x=$((109 - c))
     for b in 1 2 32 50 60; do
-      y=$((60-b))
-      screenthird=$((y/20))
-      yoffset=$((y-20*screenthird))
+      y=$((60 - b))
+      screenthird=$((y / 20))
+      yoffset=$((y - 20 * screenthird))
       hexb=$(printf "%02x" $b)
-      dfoffset=$((2*x + screenthird*216*16*20 + 216*yoffset))
+      dfoffset=$((2 * x + screenthird * 216 * 16 * 20 + 216 * yoffset))
       hexdfoffset=$(printf "%04x" $dfoffset)
       echo
       echo
@@ -96,20 +96,19 @@ cd "$(dirname "${0}")"
   done
 } | ../../../utils/asm-format/asm-format > "test_cl_set.upperscreen.gen-s"
 
-
 {
   header
   for c in 1 5 23 40 75 108 109; do
     hexc=$(printf "%02x" $c)
-    x=$((109-c))
+    x=$((109 - c))
     for df_sz in 1 12 19 47 48 49 60; do
       hexdfsz=$(printf "%02x" $df_sz)
-      for ((b=61-df_sz; b<61; b+=5)); do
-        y=$((120-b-df_sz))
-        screenthird=$((y/20))
-        yoffset=$((y-20*screenthird))
+      for ((b = 61 - df_sz; b < 61; b += 5)); do
+        y=$((120 - b - df_sz))
+        screenthird=$((y / 20))
+        yoffset=$((y - 20 * screenthird))
         hexb=$(printf "%02x" $b)
-        dfoffset=$((2*x + screenthird*216*16*20 + 216*yoffset))
+        dfoffset=$((2 * x + screenthird * 216 * 16 * 20 + 216 * yoffset))
         hexdfoffset=$(printf "%04x" $dfoffset)
         echo
         echo

@@ -8,7 +8,6 @@ set -eu
 set -o pipefail
 export SHELLOPTS
 
-
 # X3_FLAG and X5_FLAG
 #   never
 #
@@ -27,15 +26,19 @@ export SHELLOPTS
 # H_FLAG
 #   "RND" / "INKEY$" / "PI" / "ASN" / "ACS" / "ATN" / "OR" / "AND" / "MERGE" / "VERIFY" / "BEEP" / "RESTORE" / "NEW" / "BORDER" / "PRINT" / "PLOT" / "RUN"
 
-function join_by { local IFS="$1"; shift; echo "$*"; }
+function join_by {
+  local IFS="$1"
+  shift
+  echo "$*"
+}
 
 function sub_flags {
   local a="${1}"
   local b="${2}"
   if [ "${b}" -gt "${a}" ]; then
-    local c=$((a+256-b))
+    local c=$((a + 256 - b))
   else
-    local c="$((a-b))"
+    local c="$((a - b))"
   fi
   local result=()
   hexa=$(printf "%02x" $a)
@@ -55,7 +58,7 @@ function sub_flags {
     result+=("H_FLAG")
   fi
   if [ "${c}" == "0" ]; then
-      result+=("Z_FLAG")
+    result+=("Z_FLAG")
   fi
   case "${hexc:0:1}" in
     8 | 9 | a | b | c | d | e | f)
@@ -175,7 +178,7 @@ for fake_or_fake_reg_update in f s; do
       echo
       echo
 
-      for ((i=0; i<91;i++)); do
+      for ((i = 0; i < 91; i++)); do
         hexi=$(printf "%02x" $i)
         keyword=${keywords[$i]}
         testname="po_tokens_${flagsbit0}${fake_or_fake_reg_update}${hexi}"
@@ -201,8 +204,8 @@ for fake_or_fake_reg_update in f s; do
         esac
         case "${keyword}" in
           "RND" | "INKEY$" | "PI" | "<=" | ">=" | "<>" | "OPEN #" | "CLOSE #")
-          trailingspace=''
-          ;;
+            trailingspace=''
+            ;;
         esac
         echo
         echo
@@ -246,7 +249,7 @@ for fake_or_fake_reg_update in f s; do
             ;;
           "<=" | ">=" | "<>" | "OPEN #" | "CLOSE #")
             lastchar="${keyword: -1}"
-            doublea=$((2*$(printf "%d" "'${lastchar}")))
+            doublea=$((2 * $(printf "%d" "'${lastchar}")))
             printf "  ld      a, 0x%x\n" "${doublea}"
             echo "  ldf     $(sub_flags "${doublea}" 130)"
             if [ "${fake_or_fake_reg_update}" == "s" ]; then

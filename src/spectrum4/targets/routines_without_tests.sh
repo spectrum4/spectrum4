@@ -4,16 +4,13 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-
 #############################################################################
 # Keep a record of which functions call other functions to ease writing tests
 #############################################################################
 
-
 set -eu
 set -o pipefail
 export SHELLOPTS
-
 
 cd "$(dirname "${0}")"
 

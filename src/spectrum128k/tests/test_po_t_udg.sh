@@ -8,16 +8,19 @@ set -eu
 set -o pipefail
 export SHELLOPTS
 
-
-function join_by { local IFS="$1"; shift; echo "$*"; }
+function join_by {
+  local IFS="$1"
+  shift
+  echo "$*"
+}
 
 function sub_flags {
   local a="${1}"
   local b="${2}"
   if [ "${b}" -gt "${a}" ]; then
-    local c=$((a+256-b))
+    local c=$((a + 256 - b))
   else
-    local c="$((a-b))"
+    local c="$((a - b))"
   fi
   local result=()
   hexa=$(printf "%02x" $a)
@@ -37,7 +40,7 @@ function sub_flags {
     result+=("H_FLAG")
   fi
   if [ "${c}" == "0" ]; then
-      result+=("Z_FLAG")
+    result+=("Z_FLAG")
   fi
   case "${hexc:0:1}" in
     8 | 9 | a | b | c | d | e | f)
@@ -174,8 +177,8 @@ for printer_in_use in 0 1; do
 
           for a in {163..255}; do
             hexa=$(printf "%02x" $a)
-            i=$((a-165))
-            j=$((a-163))
+            i=$((a - 165))
+            j=$((a - 163))
             hexi=$(printf "%02x" $i)
             keyword=${keywords[$j]}
             testname="po_t_udg_${hexa}_${fake_or_fake_reg_update}${flagsbit0}${printer_in_use}${lower_screen_in_use}"
@@ -201,8 +204,8 @@ for printer_in_use in 0 1; do
             esac
             case "${keyword}" in
               "RND" | "INKEY$" | "PI" | "<=" | ">=" | "<>" | "OPEN #" | "CLOSE #")
-              trailingspace=''
-              ;;
+                trailingspace=''
+                ;;
             esac
             echo
             echo
@@ -288,7 +291,7 @@ for printer_in_use in 0 1; do
                   echo '  call    touch_all_registers'
                 fi
                 lastchar="${keyword: -1}"
-                doublea=$((2*$(printf "%d" "'${lastchar}")))
+                doublea=$((2 * $(printf "%d" "'${lastchar}")))
                 printf "  ld      a, 0x%x\n" "${doublea}"
                 ;;
               *)

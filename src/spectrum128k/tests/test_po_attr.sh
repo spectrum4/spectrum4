@@ -8,7 +8,6 @@ set -eu
 set -o pipefail
 export SHELLOPTS
 
-
 cd "$(dirname "${0}")"
 
 # The first eight fields of this input data were generated randomly, and the
@@ -102,9 +101,9 @@ input='0x02 0x05 0x1d 0x07 0x84 0x41 0xf9 0xce 0x45 0x5c
   i=0
   echo "${input}" | while read section yoffset x pixrow attr_t prevattr mask_t p_flag a f; do
     testname=$(printf "po_attr_%02x" $i)
-    i=$((i+1))
-    afoffset=$((section*32*8+yoffset*32+x))
-    dfoffset=$((section*32*8*8+yoffset*32+x*1+pixrow*8*32))
+    i=$((i + 1))
+    afoffset=$((section * 32 * 8 + yoffset * 32 + x))
+    dfoffset=$((section * 32 * 8 * 8 + yoffset * 32 + x * 1 + pixrow * 8 * 32))
     hexafo=$(printf "0x%04x" $afoffset)
     hexdfo=$(printf "0x%04x" $dfoffset)
 

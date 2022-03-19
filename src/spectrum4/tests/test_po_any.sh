@@ -25,9 +25,9 @@ function test_setup {
     if [ "${a}" -lt 165 ]; then
       echo "  _strb   0b00111000, attributes_file + 108*20*${screenthird} + ${yoffset}*108 + ${x}"
       for p in {0..15}; do
-        q=$(((p+1)%16))
-        r=$(((p+2)%16))
-        s=$(((p+3)%16))
+        q=$(((p + 1) % 16))
+        r=$(((p + 2) % 16))
+        s=$(((p + 3) % 16))
         pqrs=$(printf "0x%01x%01x%01x%01x" $p $q $r $s)
         echo "  _strhbe ${pqrs}, display_file + 216*20*16*${screenthird} + ${yoffset}*216 + ${x}*2 + ${p}*216*20"
       done
@@ -36,9 +36,9 @@ function test_setup {
     echo "  _setbit 1, FLAGS                             // printer in use"
     if [ "${a}" -lt 165 ]; then
       for p in {0..15}; do
-        q=$(((p+1)%16))
-        r=$(((p+2)%16))
-        s=$(((p+3)%16))
+        q=$(((p + 1) % 16))
+        r=$(((p + 2) % 16))
+        s=$(((p + 3) % 16))
         pqrs=$(printf "0x%01x%01x%01x%01x" $p $q $r $s)
         echo "  _strhbe ${pqrs}, printer_buffer + ${x}*2 + ${p}*216"
       done
@@ -69,10 +69,10 @@ function test_setup {
 
 function test_po_mosaic_half {
 
-  b0=$(((a%2)*255))
-  b1=$((((a>>1)%2)*255))
-  b2=$((((a>>2)%2)*255))
-  b3=$((((a>>3)%2)*255))
+  b0=$(((a % 2) * 255))
+  b1=$((((a >> 1) % 2) * 255))
+  b2=$((((a >> 2) % 2) * 255))
+  b3=$((((a >> 3) % 2) * 255))
   hexb0=$(printf "%02x" $b0)
   hexb1=$(printf "%02x" $b1)
   hexb2=$(printf "%02x" $b2)
@@ -89,18 +89,18 @@ function test_po_mosaic_half {
   fi
 
   for p in {0..7}; do
-    echo "  _strb   0x${hexb1}, MEMBOT + $((p*2))"
-    echo "  _strb   0x${hexb0}, MEMBOT + $((p*2 + 1))"
+    echo "  _strb   0x${hexb1}, MEMBOT + $((p * 2))"
+    echo "  _strb   0x${hexb0}, MEMBOT + $((p * 2 + 1))"
   done
   for p in {8..15}; do
-    echo "  _strb   0x${hexb3}, MEMBOT + $((p*2))"
-    echo "  _strb   0x${hexb2}, MEMBOT + $((p*2 + 1))"
+    echo "  _strb   0x${hexb3}, MEMBOT + $((p * 2))"
+    echo "  _strb   0x${hexb2}, MEMBOT + $((p * 2 + 1))"
   done
 
   for p in {0..15}; do
-    q=$(((p+1)%16))
-    r=$(((p+2)%16))
-    s=$(((p+3)%16))
+    q=$(((p + 1) % 16))
+    r=$(((p + 2) % 16))
+    s=$(((p + 3) % 16))
     pqrs=$((s + 16 * r + 256 * q + 4096 * p))
     if [ "${p}" -lt 8 ]; then
       b=$((b1 * 256 + b0))
@@ -303,14 +303,12 @@ for printer_in_use in 0 1; do
       echo
       echo '.text'
 
-
       # Test ASCII characters
 
       for a in {32..127}; do
         # TODO !
         :
       done
-
 
       # Test mosaic characters
 
@@ -337,14 +335,12 @@ for printer_in_use in 0 1; do
         fi
       done
 
-
       # Test UDGs
 
       for a in {144..164}; do
         # TODO !
         :
       done
-
 
       # Test keyword characters
 
@@ -354,14 +350,13 @@ for printer_in_use in 0 1; do
             if [ "${a}" -le 165 ]; then
               tkntableoffset=2
             fi
-            j=$((a-163))
+            j=$((a - 163))
             keyword=${keywords[$j]}
-            tkntableoffset=$((tkntableoffset+${#keyword}+1))
+            tkntableoffset=$((tkntableoffset + ${#keyword} + 1))
             hexa=$(printf "%02x" $a)
             testname="po_any_${hexa}_${fake_or_fake_reg_update}${flagsbit0}${printer_in_use}${lower_screen_in_use}"
 
-
-            i=$((a-165))
+            i=$((a - 165))
             msgname="msg_${testname}"
             trailingspace=' '
             if [ "${fake_or_fake_reg_update}" == "f" ]; then
@@ -384,8 +379,8 @@ for printer_in_use in 0 1; do
             esac
             case "${keyword}" in
               "RND" | "INKEY$" | "PI" | "<=" | ">=" | "<>" | "OPEN #" | "CLOSE #")
-              trailingspace=''
-              ;;
+                trailingspace=''
+                ;;
             esac
             expectedtext="${leadingspace}${keyword}${trailingspace}"
             echo
@@ -425,19 +420,19 @@ for printer_in_use in 0 1; do
             if [ "${printer_in_use}" == "1" ]; then
               case "${keyword}" in
                 "SPECTRUM" | "PLAY")
-                if [ "${fake_or_fake_reg_update}" == "f" ]; then
-                  echo "  mov     x0, ' '"
-                  echo '  adr     x1, fake_printout'
-                else
-                  echo "  mov     x0, #0x0a00"
-                  echo "  mov     x1, #0x0a01"
-                fi
-                ;;
+                  if [ "${fake_or_fake_reg_update}" == "f" ]; then
+                    echo "  mov     x0, ' '"
+                    echo '  adr     x1, fake_printout'
+                  else
+                    echo "  mov     x0, #0x0a00"
+                    echo "  mov     x1, #0x0a01"
+                  fi
+                  ;;
                 *)
-                echo "  ldrb    w0, [x28, FLAGS-sysvars]"
-                echo "  ldrb    w1, [x28, P_POSN_X-sysvars]"
-                echo "  ldr     x2, [x28, PR_CC-sysvars]"
-                ;;
+                  echo "  ldrb    w0, [x28, FLAGS-sysvars]"
+                  echo "  ldrb    w1, [x28, P_POSN_X-sysvars]"
+                  echo "  ldr     x2, [x28, PR_CC-sysvars]"
+                  ;;
               esac
             elif [ "${lower_screen_in_use}" == "1" ]; then
               echo "  ldrb    w0, [x28, S_POSN_Y_L-sysvars]"
@@ -450,35 +445,35 @@ for printer_in_use in 0 1; do
             fi
             case "${keyword}" in
               "SPECTRUM" | "PLAY")
-              echo "  sub     x3, x3, #0xa3"
-              echo "  ldrb    w4, [x28, FLAGS-sysvars]"
-              echo "  mov     x5, #4"
-              ;;
+                echo "  sub     x3, x3, #0xa3"
+                echo "  ldrb    w4, [x28, FLAGS-sysvars]"
+                echo "  mov     x5, #4"
+                ;;
               *)
-              echo "  sub     x3, x3, #0xa5"
-              echo "  adr     x4, tkn_table+${tkntableoffset}"
-              echo "  mov     x5, x3"
-              ;;
+                echo "  sub     x3, x3, #0xa5"
+                echo "  adr     x4, tkn_table+${tkntableoffset}"
+                echo "  mov     x5, x3"
+                ;;
             esac
             echo "  mov     x6, '${keyword: -1}'"
             case "${keyword}" in
               "RND" | "INKEY$" | "PI" | "<=" | ">=" | "<>" | "OPEN #" | "CLOSE #")
-              echo "  nzcv    #0b1000"
-              ;;
+                echo "  nzcv    #0b1000"
+                ;;
               "FN")
-              if [ "${fake_or_fake_reg_update}" == "f" ]; then
-                echo "  nzcv    #0b0110"
-              else
-                echo "  nzcv    #0b0101"
-              fi
-              ;;
+                if [ "${fake_or_fake_reg_update}" == "f" ]; then
+                  echo "  nzcv    #0b0110"
+                else
+                  echo "  nzcv    #0b0101"
+                fi
+                ;;
               *)
-              if [ "${fake_or_fake_reg_update}" == "f" ]; then
-                echo "  nzcv    #0b0010"
-              else
-                echo "  nzcv    #0b0101"
-              fi
-              ;;
+                if [ "${fake_or_fake_reg_update}" == "f" ]; then
+                  echo "  nzcv    #0b0010"
+                else
+                  echo "  nzcv    #0b0101"
+                fi
+                ;;
             esac
             if [ "${fake_or_fake_reg_update}" == "s" ]; then
               echo "  mov     x7, #0x0a07"

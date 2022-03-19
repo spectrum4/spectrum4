@@ -4,12 +4,10 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-
 #########################################################################
 # This bash script checks that all required executables are installed for
 # building and testing spectrum4 on the host environment.
 #########################################################################
-
 
 # verify_and_show_tool checks that a given toolchain command is present on the
 # filesystem and reports its location.
@@ -29,11 +27,11 @@ function verify_and_show_tool {
       PREFIX="${AARCH64_TOOLCHAIN_PREFIX}"
       ;;
     *)
-    echo "${CHECK_ENV_SCRIPT}: Invalid architecture specified: '${1}'. Must be 'z80' or 'aarch64'. Exiting." >&2
-    exit 66
-    ;;
+      echo "${CHECK_ENV_SCRIPT}: Invalid architecture specified: '${1}'. Must be 'z80' or 'aarch64'. Exiting." >&2
+      exit 66
+      ;;
   esac
-  if ! which "${PREFIX}${3}" >/dev/null; then
+  if ! which "${PREFIX}${3}" > /dev/null; then
     echo "${CHECK_ENV_SCRIPT}: Cannot find '${PREFIX}${3}' in PATH. Have you set ${ENV_VAR} appropriately? Alternatively, to build under docker, run docker.sh script instead. Exiting." >&2
     exit 64
   fi
@@ -57,7 +55,7 @@ function check_dependencies {
   verbose "Checking system dependencies..."
   local failed=false
   for command in "${@}"; do
-    if ! which "${command}" >/dev/null; then
+    if ! which "${command}" > /dev/null; then
       echo -e "  \xE2\x9D\x8C ${command}"
       echo "${CHECK_ENV_SCRIPT}: ${command} must be installed and available in your PATH" >&2
       failed=true
@@ -81,7 +79,7 @@ set -o pipefail
 export SHELLOPTS
 
 # For consistent behaviour of `sort`, etc
-if which uname >/dev/null && test "$(uname -s)" == 'Darwin'; then
+if which uname > /dev/null && test "$(uname -s)" == 'Darwin'; then
   export LANG='C'
   export LC_CTYPE='UTF-8'
 else

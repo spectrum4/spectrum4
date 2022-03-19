@@ -4,16 +4,12 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-
-
 ########################################################################################################################
 # Run this script, passing in a test name, to see what commands you can use to debug the test using gdb / qemu.
 # This script doesn't execute the commands, it just tells you which commands to use, so you can e.g. copy/paste them.
 # Note, the commands it outputs won't run inside the docker container, since gdb isn't included in the docker container.
 # These are all things that could be improved at some point.
 ########################################################################################################################
-
-
 
 set -eu
 set -o pipefail

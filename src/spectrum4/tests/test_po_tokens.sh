@@ -4,7 +4,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-
 set -eu
 
 keywords=(
@@ -125,12 +124,11 @@ for fake_or_fake_reg_update in f s; do
       echo '.text'
       echo '.align 2'
 
-
       tkntableoffset=2
-      for ((i=0; i<91;i++)); do
+      for ((i = 0; i < 91; i++)); do
         hexi=$(printf "%02x" $i)
         keyword=${keywords[$i]}
-        tkntableoffset=$((tkntableoffset+${#keyword}+1))
+        tkntableoffset=$((tkntableoffset + ${#keyword} + 1))
         testname="po_tokens_${flagsbit0}${fake_or_fake_reg_update}${hexi}"
         msgname="msg_${testname}"
         trailingspace=' '
@@ -154,8 +152,8 @@ for fake_or_fake_reg_update in f s; do
         esac
         case "${keyword}" in
           "RND" | "INKEY$" | "PI" | "<=" | ">=" | "<>" | "OPEN #" | "CLOSE #")
-          trailingspace=''
-          ;;
+            trailingspace=''
+            ;;
         esac
         expectedtext="${leadingspace}${keyword}${trailingspace}"
         echo

@@ -8,7 +8,6 @@ set -eu
 set -o pipefail
 export SHELLOPTS
 
-
 cd "$(dirname "${0}")"
 
 testsuite="${1}"

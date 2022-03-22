@@ -25,7 +25,7 @@ cd "$(dirname "${0}")"
   header
   for df_sz in 1 12 19 24; do
     hexdfsz=$(printf "%02x" $df_sz)
-    for ((b=df_sz+1; b<25; b+=3)); do
+    for ((b = df_sz + 1; b < 25; b += 3)); do
       hexb=$(printf "%02x" $b)
       echo
       echo
@@ -57,7 +57,7 @@ cd "$(dirname "${0}")"
   header
   for df_sz in 1 12 19 24; do
     hexdfsz=$(printf "%02x" $df_sz)
-    for ((b=25-df_sz; b<25; b+=3)); do
+    for ((b = 25 - df_sz; b < 25; b += 3)); do
       [ "${b}" -lt 2 ] && continue
       hexb=$(printf "%02x" $b)
       echo
@@ -76,11 +76,11 @@ cd "$(dirname "${0}")"
       echo
       echo "po_scr_lower_screen_${hexb}_${hexdfsz}_effects:"
       echo "  ld      bc, 0x${hexb}13"
-      echo "  call    cl_set                          ; since B > 24-[DF_SZ] (${b}>$((24-df_sz))) this routine simply calls CL_SET (no scrolling, not out-of-screen)"
+      echo "  call    cl_set                          ; since B > 24-[DF_SZ] (${b}>$((24 - df_sz))) this routine simply calls CL_SET (no scrolling, not out-of-screen)"
       echo "  ret"
       echo
       echo "po_scr_lower_screen_${hexb}_${hexdfsz}_effects_regs:"
-      echo "  call    cl_set                          ; since B > 24-[DF_SZ] (${b}>$((24-df_sz))) this routine simply calls CL_SET (no scrolling, not out-of-screen)"
+      echo "  call    cl_set                          ; since B > 24-[DF_SZ] (${b}>$((24 - df_sz))) this routine simply calls CL_SET (no scrolling, not out-of-screen)"
       echo "  ret"
     done
   done

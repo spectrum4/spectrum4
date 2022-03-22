@@ -23,12 +23,12 @@ cd "$(dirname "${0}")"
 
 {
   header
-  for ((df_sz=1; df_sz < 25; df_sz++)); do
+  for ((df_sz = 1; df_sz < 25; df_sz++)); do
     hexdfsz=$(printf "%02x" $df_sz)
-    y=$((25-df_sz))
-    screenthird=$((y/8))
-    yoffset=$((y%8))
-    dfoffset=$((screenthird*32*8*8 + 32*yoffset))
+    y=$((25 - df_sz))
+    screenthird=$((y / 8))
+    yoffset=$((y % 8))
+    dfoffset=$((screenthird * 32 * 8 * 8 + 32 * yoffset))
     hexdfoffset=$(printf "%04x" $dfoffset)
     echo
     echo

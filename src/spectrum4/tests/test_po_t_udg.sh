@@ -8,7 +8,6 @@ set -eu
 set -o pipefail
 export SHELLOPTS
 
-
 keywords=(
   "SPECTRUM"
   "PLAY"
@@ -159,10 +158,10 @@ for printer_in_use in 0 1; do
               tkntableoffset=2
             fi
             hexa=$(printf "%02x" $a)
-            i=$((a-165))
-            j=$((a-163))
+            i=$((a - 165))
+            j=$((a - 163))
             keyword=${keywords[$j]}
-            tkntableoffset=$((tkntableoffset+${#keyword}+1))
+            tkntableoffset=$((tkntableoffset + ${#keyword} + 1))
             testname="po_t_udg_${hexa}_${fake_or_fake_reg_update}${flagsbit0}${printer_in_use}${lower_screen_in_use}"
             msgname="msg_${testname}"
             trailingspace=' '
@@ -186,8 +185,8 @@ for printer_in_use in 0 1; do
             esac
             case "${keyword}" in
               "RND" | "INKEY$" | "PI" | "<=" | ">=" | "<>" | "OPEN #" | "CLOSE #")
-              trailingspace=''
-              ;;
+                trailingspace=''
+                ;;
             esac
             expectedtext="${leadingspace}${keyword}${trailingspace}"
             echo
@@ -242,19 +241,19 @@ for printer_in_use in 0 1; do
             if [ "${printer_in_use}" == "1" ]; then
               case "${keyword}" in
                 "SPECTRUM" | "PLAY")
-                if [ "${fake_or_fake_reg_update}" == "f" ]; then
-                  echo "  mov     x0, ' '"
-                  echo '  adr     x1, fake_printout'
-                else
-                  echo "  mov     x0, #0x0a00"
-                  echo "  mov     x1, #0x0a01"
-                fi
-                ;;
+                  if [ "${fake_or_fake_reg_update}" == "f" ]; then
+                    echo "  mov     x0, ' '"
+                    echo '  adr     x1, fake_printout'
+                  else
+                    echo "  mov     x0, #0x0a00"
+                    echo "  mov     x1, #0x0a01"
+                  fi
+                  ;;
                 *)
-                echo "  ldrb    w0, [x28, FLAGS-sysvars]"
-                echo "  ldrb    w1, [x28, P_POSN_X-sysvars]"
-                echo "  ldr     x2, [x28, PR_CC-sysvars]"
-                ;;
+                  echo "  ldrb    w0, [x28, FLAGS-sysvars]"
+                  echo "  ldrb    w1, [x28, P_POSN_X-sysvars]"
+                  echo "  ldr     x2, [x28, PR_CC-sysvars]"
+                  ;;
               esac
             elif [ "${lower_screen_in_use}" == "1" ]; then
               echo "  ldrb    w0, [x28, S_POSN_Y_L-sysvars]"
@@ -267,36 +266,36 @@ for printer_in_use in 0 1; do
             fi
             case "${keyword}" in
               "SPECTRUM" | "PLAY")
-              echo "  sub     x3, x3, #0xa3"
-              echo "  ldrb    w4, [x28, FLAGS-sysvars]"
-              echo "  mov     x5, #4"
-              ;;
+                echo "  sub     x3, x3, #0xa3"
+                echo "  ldrb    w4, [x28, FLAGS-sysvars]"
+                echo "  mov     x5, #4"
+                ;;
               *)
-              echo "  sub     x3, x3, #0xa5"
-              echo "  adrp    x4, tkn_table+${tkntableoffset}"
-              echo "  add     x4, x4, :lo12:(tkn_table+${tkntableoffset})"
-              echo "  mov     x5, x3"
-              ;;
+                echo "  sub     x3, x3, #0xa5"
+                echo "  adrp    x4, tkn_table+${tkntableoffset}"
+                echo "  add     x4, x4, :lo12:(tkn_table+${tkntableoffset})"
+                echo "  mov     x5, x3"
+                ;;
             esac
             echo "  mov     x6, '${keyword: -1}'"
             case "${keyword}" in
               "RND" | "INKEY$" | "PI" | "<=" | ">=" | "<>" | "OPEN #" | "CLOSE #")
-              echo "  nzcv    #0b1000"
-              ;;
+                echo "  nzcv    #0b1000"
+                ;;
               "FN")
-              if [ "${fake_or_fake_reg_update}" == "f" ]; then
-                echo "  nzcv    #0b0110"
-              else
-                echo "  nzcv    #0b0101"
-              fi
-              ;;
+                if [ "${fake_or_fake_reg_update}" == "f" ]; then
+                  echo "  nzcv    #0b0110"
+                else
+                  echo "  nzcv    #0b0101"
+                fi
+                ;;
               *)
-              if [ "${fake_or_fake_reg_update}" == "f" ]; then
-                echo "  nzcv    #0b0010"
-              else
-                echo "  nzcv    #0b0101"
-              fi
-              ;;
+                if [ "${fake_or_fake_reg_update}" == "f" ]; then
+                  echo "  nzcv    #0b0010"
+                else
+                  echo "  nzcv    #0b0101"
+                fi
+                ;;
             esac
             if [ "${fake_or_fake_reg_update}" == "s" ]; then
               echo "  mov     x7, #0x0a07"

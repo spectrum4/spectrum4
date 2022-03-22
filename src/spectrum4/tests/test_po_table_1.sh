@@ -4,7 +4,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-
 set -eu
 
 function output {
@@ -70,8 +69,8 @@ function output {
   echo "  mov     x6, '${lastchar}'"
   echo "  nzcv    ${nzcv}"
   echo '  ret'
-# echo
-# echo ".ltorg"
+  # echo
+  # echo ".ltorg"
 }
 
 cd "$(dirname "${0}")"

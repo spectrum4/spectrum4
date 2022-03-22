@@ -42,7 +42,7 @@ cd "$(dirname "${0}")"
   header
   for df_sz in 1 12 19 24 47 55 59 60; do
     hex_dfsz=$(printf "%02x" $df_sz)
-    for ((w0=df_sz+1; w0<61; w0+=3)); do
+    for ((w0 = df_sz + 1; w0 < 61; w0 += 3)); do
       hex_w0=$(printf "%02x" $w0)
       echo
       echo
@@ -81,7 +81,7 @@ cd "$(dirname "${0}")"
   header
   for df_sz in 1 12 19 24 47 55 59 60; do
     hex_dfsz=$(printf "%02x" $df_sz)
-    for ((w0=61-df_sz; w0<61; w0+=3)); do
+    for ((w0 = 61 - df_sz; w0 < 61; w0 += 3)); do
       [ "${w0}" -lt 2 ] && continue
       hex_w0=$(printf "%02x" $w0)
       echo
@@ -102,15 +102,15 @@ cd "$(dirname "${0}")"
       echo "  mov     x29, sp                         // Update frame pointer to new stack location."
       echo "  mov     w0, #0x${hex_w0}"
       echo "  mov     w1, #0x13"
-      echo "  bl      cl_set                          // since w0 > 60-[DF_SZ] (${w0}>$((60-df_sz))) this routine simply calls CL_SET (no scrolling, not out-of-screen)"
+      echo "  bl      cl_set                          // since w0 > 60-[DF_SZ] (${w0}>$((60 - df_sz))) this routine simply calls CL_SET (no scrolling, not out-of-screen)"
       echo "  ldp     x29, x30, [sp], #0x10           // Pop frame pointer, procedure link register off stack."
       echo "  ret"
       echo
       echo "po_scr_lower_screen_${hex_w0}_${hex_dfsz}_effects_regs:"
       echo "  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack."
       echo "  mov     x29, sp                         // Update frame pointer to new stack location."
-      echo "  bl      cl_set                          // since w0 > 60-[DF_SZ] (${w0}>$((60-df_sz))) this routine simply calls CL_SET (no scrolling, not out-of-screen)"
-      if [ "$((w0+df_sz))" == 61 ]; then
+      echo "  bl      cl_set                          // since w0 > 60-[DF_SZ] (${w0}>$((60 - df_sz))) this routine simply calls CL_SET (no scrolling, not out-of-screen)"
+      if [ "$((w0 + df_sz))" == 61 ]; then
         echo "  nzcv    #0b0110"
       else
         echo "  nzcv    #0b0010"

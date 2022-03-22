@@ -8,9 +8,7 @@ set -eu
 set -o pipefail
 export SHELLOPTS
 
-
 cd "$(dirname "${0}")"
-
 
 function generate_test_suites {
   local ptrunit="${1}"
@@ -62,7 +60,7 @@ function generate_test_suites {
   total=0
   for file in "${files[@]}"; do
     t="$(cat "${file}" | sed -n '1,/\.quad/s/^  .quad //p' | sed -n 1p)"
-    total=$((total+t))
+    total=$((total + t))
   done
   echo "    ${ptrunit} ${total}"
   for file in "${files[@]}"; do

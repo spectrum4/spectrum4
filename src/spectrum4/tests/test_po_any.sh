@@ -9,7 +9,6 @@ set -o pipefail
 export SHELLOPTS
 
 function test_setup {
-
   if [ "${lower_screen_in_use}" == "0" ]; then
     echo "  _resbit 0, TV_FLAG                           // lower screen not in use (used by po_fetch)"
   else
@@ -68,7 +67,6 @@ function test_setup {
 }
 
 function test_po_mosaic_half {
-
   b0=$(((a % 2) * 255))
   b1=$((((a >> 1) % 2) * 255))
   b2=$((((a >> 2) % 2) * 255))
@@ -303,32 +301,47 @@ for printer_in_use in 0 1; do
       echo
       echo '.text'
 
+      x=9
+      if [ "${printer_in_use}" == "0" ]; then
+        DF_SZ=30
+        if [ "${lower_screen_in_use}" == "1" ]; then
+          screenthird=2
+          yoffset=7
+        else
+          screenthird=0
+          yoffset=11
+        fi
+      fi
+
       # Test ASCII characters
 
-      for a in {32..127}; do
-        # TODO !
-        :
-      done
+      # It is a lot of work to generate a full suite of tests here,
+      # so 2 tests have been manually created in test_po_any.po_char.s
+      # instead, and these are commented out (and they were never
+      # fully implemented anyway). The two tests are copies of the
+      # po_char tests, since po_any behaves the same as po_char when
+      # printing character in range 32-127.
+
+      #     for a in {32..127}; do
+      #       # TODO !
+      #       hexa=$(printf "%02x" $a)
+      #       testname="po_any_${hexa}_${printer_in_use}${lower_screen_in_use}"
+      #       echo
+      #       echo ".align 2"
+      #       echo "${testname}_setup:"
+      #       echo "  _str    char_set-32*32, CHARS"
+      #       test_setup
+      #     done
 
       # Test mosaic characters
 
       for a in {128..143}; do
         hexa=$(printf "%02x" $a)
         testname="po_any_${hexa}_${printer_in_use}${lower_screen_in_use}"
-        x=9
-        if [ "${printer_in_use}" == "0" ]; then
-          DF_SZ=30
-          if [ "${lower_screen_in_use}" == "1" ]; then
-            screenthird=2
-            yoffset=7
-          else
-            screenthird=0
-            yoffset=11
-          fi
-        fi
         echo
         echo ".align 2"
         echo "${testname}_setup:"
+        echo "  _str    char_set, UDG"
         test_setup
         if [ "${a}" -ge 128 ] && [ "${a}" -lt 144 ]; then
           test_po_mosaic_half
@@ -337,10 +350,15 @@ for printer_in_use in 0 1; do
 
       # Test UDGs
 
-      for a in {144..164}; do
-        # TODO !
-        :
-      done
+      #     for a in {144..164}; do
+      #       # TODO !
+      #       hexa=$(printf "%02x" $a)
+      #       testname="po_any_${hexa}_${printer_in_use}${lower_screen_in_use}"
+      #       echo
+      #       echo ".align 2"
+      #       echo "${testname}_setup:"
+      #       test_setup
+      #     done
 
       # Test keyword characters
 

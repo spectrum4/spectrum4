@@ -243,7 +243,8 @@ for printer_in_use in 0 1; do
                 "SPECTRUM" | "PLAY")
                   if [ "${fake_or_fake_reg_update}" == "f" ]; then
                     echo "  mov     x0, ' '"
-                    echo '  adr     x1, fake_printout'
+                    echo '  adrp    x1, fake_printout'
+                    echo '  add     x1, x1, :lo12:fake_printout'
                   else
                     echo "  mov     x0, #0x0a00"
                     echo "  mov     x1, #0x0a01"

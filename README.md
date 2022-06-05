@@ -109,18 +109,18 @@ programs, machine code routines, and RAM disk storage.
 
 # Code organisation
 
-* All code is written in aarch64 assembly.
-* All source codes is under the `/src` directory.
-* The build script is `/all.sh` in the top folder.
-* The majority of code is in `/src/spectrum4/rom0.s` and `/src/spectrum4/rom1.s`
-  which are a translation of the original Spectrum 128K ROM routines.
-* As much as possible, the naming of system variables and routines, and
-  the ordering of routines, match the disassembly documents cited in the
-  `romX.s` files.
-* The definition of each routine has a comment with the label of the associated
-  disassembly, to map back to the original routine. The label is an `L`
-  followed by the 64 bit address of the routine in hexadecimal, for convenient
-  mapping back to the original Spectrum 128K disassembly code.
+* All Spectrum +4 routines are written in aarch64 assembly (GNU assembler
+  syntax).
+* The Spectrum +4 source code is under the `/src/spectrum4` directory.
+* The build and test directives live in the various `Tup*` files scattered
+  throughout the repository (tup build system is used - see
+  [Building](#building))
+* As much as possible, the naming of system variables and routines, and the
+  ordering of routines, match the disassembly in the
+  `src/spectrum128k/roms/romX.s` files.
+* Each ported routine contains a comment giving the label of the associated
+  Spectrum 128K routine that it was ported from. The label is an `L` followed
+  by the 16 bit hexadecimal address of the original Spectrum 128K routine.
 
 
 ## Building

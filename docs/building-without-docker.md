@@ -5,13 +5,13 @@ run docker/amd64 containers for some reason (e.g. if building/testing directly
 on a Raspberry Pi).
 
 You will require an aarch64 toolchain in your PATH, including the following
-tools:
+tools from [binutils](https://www.gnu.org/software/binutils/):
 
-  * [`aarch64-none-elf-as`](https://www.gnu.org/software/binutils/) (from binutils)
-  * [`aarch64-none-elf-ld`](https://www.gnu.org/software/binutils/) (from binutils)
-  * [`aarch64-none-elf-readelf`](https://www.gnu.org/software/binutils/) (from binutils)
-  * [`aarch64-none-elf-objcopy`](https://www.gnu.org/software/binutils/) (from binutils)
-  * [`aarch64-none-elf-objdump`](https://www.gnu.org/software/binutils/) (from binutils)
+  * `aarch64-none-elf-as`
+  * `aarch64-none-elf-ld`
+  * `aarch64-none-elf-readelf`
+  * `aarch64-none-elf-objcopy`
+  * `aarch64-none-elf-objdump`
 
 If your toolchain has a different prefix to "aarch64-none-elf-" then export
 environment variable `AARCH64_TOOLCHAIN_PREFIX` containing the prefix you wish
@@ -23,15 +23,17 @@ explicitly set `AARCH64_TOOLCHAIN_PREFIX` to the empty string:
 $ export AARCH64_TOOLCHAIN_PREFIX=''
 ```
 
-You will also need a z80 toolchain in your PATH, and `fuse`, for running the
-Spectrum 128K unit tests against an emulated Spectrum 128K:
+You will also need a z80 toolchain in your PATH from
+[binutils](https://www.gnu.org/software/binutils/), and the Free Unix Spectrum
+Emulator (`fuse`), for running the Spectrum 128K unit tests against an emulated
+Spectrum 128K:
 
-  * [`fuse`](http://fuse-emulator.sourceforge.net/)
-  * [`z80-unknown-elf-as`](https://www.gnu.org/software/binutils/) (from binutils)
-  * [`z80-unknown-elf-ld`](https://www.gnu.org/software/binutils/) (from binutils)
-  * [`z80-unknown-elf-readelf`](https://www.gnu.org/software/binutils/) (from binutils)
-  * [`z80-unknown-elf-objcopy`](https://www.gnu.org/software/binutils/) (from binutils)
-  * [`z80-unknown-elf-objdump`](https://www.gnu.org/software/binutils/) (from binutils)
+  * `z80-unknown-elf-as`
+  * `z80-unknown-elf-ld`
+  * `z80-unknown-elf-readelf`
+  * `z80-unknown-elf-objcopy`
+  * `z80-unknown-elf-objdump`
+  * Free Unix Spectrum Emulator [`fuse`](http://fuse-emulator.sourceforge.net/)
 
 If using gnu binutils, you will require __version 2.36 or later__.
 
@@ -75,7 +77,7 @@ You will also require:
   * [`which`](https://carlowood.github.io/which/) (which likely in turn requires [`/bin/sh`](https://www.gnu.org/software/bash/))
 
 To check your environment is suitable for building, run `./check-env.sh` from
-the root folder to build everything.
+the root folder.
 
 Run `./check-env.sh -h` to see additional options.
 

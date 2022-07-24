@@ -1,4 +1,4 @@
-name: CI for spectrum4
+name: build/test Spectrum +4
 on: push
 jobs:
   build:

@@ -9,13 +9,13 @@ Machine](http://www.retrovirtualmachine.org/), and even some very good online
 emulators that you can run directly in your browser.
 
 For more information about the history and development of this project, see
-https://github.com/spectrum4/notes.
+<https://github.com/spectrum4/notes>.
 
 __Please note this project is very much in its infancy.__
 
 __Only a handful of routines have been ported/implemented so far.__
 
-# Variations from the Spectrum 128K
+## Variations from the Spectrum 128K
 
 The Spectrum +4 is intentionally incompatible with the original Spectrum. If
 you wish to run original ZX Spectrum software, there are some excellent
@@ -64,7 +64,8 @@ equivalent character cell counts:
   * Bottom border: 7 characters high
 
 This matches the original screen geometry (which had 8 pixels per character):
-  * http://www.zxdesign.info/vidparam.shtml
+
+  * <http://www.zxdesign.info/vidparam.shtml>
 
 In order to enforce the video restrictions, updates to the display file and
 attributes file are trapped by the `poke_address` routine which syncs the
@@ -84,7 +85,6 @@ dimensions no longer being powers of 2. However, sequencially updating bytes in
 the display and attributes file simulates the original screen loading
 mechanics, which is nice to have preserved.
 
-
 ## Memory
 
 The Raspberry Pi 3B has 1GB RAM, which is considerably more than the Spectrum
@@ -93,35 +93,32 @@ routines in the original Spectrum can be mostly ignored and don't require
 translation. It also means that there is much more space available for BASIC
 programs, machine code routines, and RAM disk storage.
 
-* Spectrum +4 is loaded at physical ARM address 0x00000000
-* The RAM Disk is initially set to 256MB
-* The HEAP is initially set to 256MB
-
+  * Spectrum +4 is loaded at physical ARM address 0x00000000
+  * The RAM Disk is initially set to 256MB
+  * The HEAP is initially set to 256MB
 
 ## Execution context
 
-* Spectrum +4 runs at EL3
-* MMU is not enabled
-* EL3 data cache is enabled
-* EL3 instruction cache is enabled
-* Currently interrupts are not enabled (keyboard routines not yet written)
+  * Spectrum +4 runs at EL3
+  * MMU is not enabled
+  * EL3 data cache is enabled
+  * EL3 instruction cache is enabled
+  * Currently interrupts are not enabled (keyboard routines not yet written)
 
+## Code organisation
 
-# Code organisation
-
-* All Spectrum +4 routines are written in aarch64 assembly (GNU assembler
+  * All Spectrum +4 routines are written in aarch64 assembly (GNU assembler
   syntax).
-* The Spectrum +4 source code is under the `/src/spectrum4` directory.
-* The build and test directives live in the various `Tup*` files scattered
+  * The Spectrum +4 source code is under the `/src/spectrum4` directory.
+  * The build and test directives live in the various `Tup*` files scattered
   throughout the repository (tup build system is used - see
   [Building](#building))
-* As much as possible, the naming of system variables and routines, and the
+  * As much as possible, the naming of system variables and routines, and the
   ordering of routines, match the disassembly in the
   `src/spectrum128k/roms/romX.s` files.
-* Each ported routine contains a comment giving the label of the associated
+  * Each ported routine contains a comment giving the label of the associated
   Spectrum 128K routine that it was ported from. The label is an `L` followed
   by the 16 bit hexadecimal address of the original Spectrum 128K routine.
-
 
 ## Building
 
@@ -134,7 +131,6 @@ contains [all required build/test dependencies](docker/Dockerfile). See
 If you prefer to use a native toolchain, or cannot run docker/amd64 containers
 on your host (e.g. if building/testing directly on a Raspberry Pi) then see
 [Building Without Docker](docs/building-without-docker.md).
-
 
 ## Running
 
@@ -164,8 +160,9 @@ project has some information about that type of setup, if you are interested.
 Alternatively, to run Spectrum +4 under QEMU instead of a real Raspberry Pi 3B,
 run something like:
 
-```
-$ qemu-system-aarch64 -M raspi3b -kernel src/spectrum4/targets/qemu-debug.elf -serial null -serial stdio
+```bash
+$ qemu-system-aarch64 -M raspi3b -kernel src/spectrum4/targets/qemu-debug.elf \
+-serial null -serial stdio
 ```
 
 Note, __you will likely need QEMU version 5.2.0 or later__. Also note that the `.elf`

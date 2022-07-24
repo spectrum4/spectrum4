@@ -7,7 +7,7 @@ installed on your host (it isn't included in the docker container).
 Run the following command, to see which commands you will need to debug the
 test:
 
-```
+```bash
 $ src/spectrum4/tests/debug.sh <test_name>
 ```
 
@@ -20,12 +20,11 @@ You will need two sessions for performing the debugging:
    host environment and connect to port 1234 to provide instructions to the qemu
    environment
 
-
 ## Links
 
-* https://www.raspberrypi.org/forums/viewtopic.php?t=296084
-* https://wiki.osdev.org/Kernel_Debugging#Use_GDB_with_QEMU
-* https://www.zeuthen.desy.de/dv/documentation/unixguide/infohtml/gdb/Continuing-and-Stepping.html
-* https://www.sourceware.org/gdb/current/onlinedocs/gdb.html
-* http://www.nodeadbeef.com/2018/07/bare-metal-aarch64-debugging-on.html
-* https://qemu.readthedocs.io/en/latest/system/gdb.html
+  * <https://www.raspberrypi.org/forums/viewtopic.php?t=296084>
+  * <https://wiki.osdev.org/Kernel_Debugging#Use_GDB_with_QEMU>
+  * <https://www.zeuthen.desy.de/dv/documentation/unixguide/infohtml/gdb/Continuing-and-Stepping.html>
+  * <https://www.sourceware.org/gdb/current/onlinedocs/gdb.html>
+  * <http://www.nodeadbeef.com/2018/07/bare-metal-aarch64-debugging-on.html>
+  * <https://qemu.readthedocs.io/en/latest/system/gdb.html>

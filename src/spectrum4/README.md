@@ -3,29 +3,28 @@
 The debug profile of Spectrum +4 contains the following features in addition to
 the release profile:
 
-* Debug messages are logged to the UART interface
-* On start up, unit tests are executed
-* Some features of the Spectrum +4 are demoed after the unit tests complete, to
+  * Debug messages are logged to the UART interface
+  * On start up, unit tests are executed
+  * Some features of the Spectrum +4 are demoed after the unit tests complete, to
   aid manual testing of audio and visual features
 
 On start up:
 
-* The Spectrum +4 standard initialisation occurs
-* The test harness runs each test case in sequence
-  - A message is written to UART logging the active test case
-  - Random data is written to registers and RAM
-  - The test case setup routines configure registers and RAM for the test
-  - The registers and are copied to the stack, and the RAM is snapshotted (1)
-  - The test case effects routines update registers and RAM
-  - The registers and are copied to the stack, and the RAM is snapshotted (2)
-  - The post-setup registers/RAM snapshots are reinstated (1)
-  - The routine under test is called
-  - The registers and are copied to the stack, and the RAM is snapshotted (3)
-  - The snapshots (2) and (3) are compared, and differences are logged to UART
+  * The Spectrum +4 standard initialisation occurs
+  * The test harness runs each test case in sequence
+    * A message is written to UART logging the active test case
+    * Random data is written to registers and RAM
+    * The test case setup routines configure registers and RAM for the test
+    * The registers and are copied to the stack, and the RAM is snapshotted (1)
+    * The test case effects routines update registers and RAM
+    * The registers and are copied to the stack, and the RAM is snapshotted (2)
+    * The post-setup registers/RAM snapshots are reinstated (1)
+    * The routine under test is called
+    * The registers and are copied to the stack, and the RAM is snapshotted (3)
+    * The snapshots (2) and (3) are compared, and differences are logged to UART
     as test failures with state recorded from snapshots (1), (2) and (3)
-* The RPi 3B performs a demonstration of audio and visual features
-* The RPi 3B continues running Spectrum 4+ as normal
-
+  * The RPi 3B performs a demonstration of audio and visual features
+  * The RPi 3B continues running Spectrum 4+ as normal
 
 ## Unit tests
 

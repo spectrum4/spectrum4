@@ -1,4 +1,4 @@
-### Building natively on your host
+# Building natively on your host
 
 For those who prefer to use a native toolchain rather than docker, or cannot
 run docker/amd64 containers for some reason (e.g. if building/testing directly
@@ -19,7 +19,7 @@ to use instead.  If you wish to use no prefix at all (`as`, `ld`, `readelf`,
 `objcopy`, `objdump`) because you are e.g. building on a Raspberry Pi directly,
 explicitly set `AARCH64_TOOLCHAIN_PREFIX` to the empty string:
 
-```
+```bash
 $ export AARCH64_TOOLCHAIN_PREFIX=''
 ```
 
@@ -52,6 +52,7 @@ keep the z80 and aarch64 assembly as closely aligned as possible.
 
 You will also require these tools from
 [coreutils](https://www.gnu.org/software/coreutils/):
+
   * `cat`
   * `cp`
   * `dirname`
@@ -67,17 +68,21 @@ You will also require these tools from
   * `wc`
 
 Plus these additional tools:
+
   * [`bash`](https://www.gnu.org/software/bash/)
   * [`cmp`](https://www.gnu.org/software/diffutils/) (from diffutils)
   * [`curl`](https://github.com/curl/curl/)
   * [`find`](https://www.gnu.org/software/findutils/) (from findutils)
   * [`go`](https://golang.org/)
-  * [`hexdump`](https://git.kernel.org/pub/scm/utils/util-linux/util-linux.git/) (from util-linux)
+  * [`hexdump`](https://git.kernel.org/pub/scm/utils/util-linux/util-linux.git/)
+  (from util-linux)
   * [`sed`](https://www.gnu.org/software/sed/)
   * [`shfmt`](https://github.com/mvdan/sh/tree/master/cmd/shfmt)
-  * [`tape2wav`](https://sourceforge.net/p/fuse-emulator/fuse-utils/ci/master/tree/) (from fuse-utils)
+  * [`tape2wav`](https://sourceforge.net/p/fuse-emulator/fuse-utils/ci/master/tree/)
+  (from fuse-utils)
   * [`tup`](http://gittup.org/tup/)
-  * [`which`](https://carlowood.github.io/which/) (which likely in turn requires [`/bin/sh`](https://www.gnu.org/software/bash/))
+  * [`which`](https://carlowood.github.io/which/) (which likely in turn requires
+  [`/bin/sh`](https://www.gnu.org/software/bash/))
 
 To check your environment is suitable for building, run `./check-env.sh` from
 the root folder.

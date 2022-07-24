@@ -141,9 +141,10 @@ on your host (e.g. if building/testing directly on a Raspberry Pi) then see
 After building using one of the methods above, the following distribution
 files/directories will be updated:
 
-  * Directory `src/spectrum4/dist/debug` contains a debug and release version of
-    Spectrum +4, which logs debug messages to Mini UART, and performs a short
-    demo on start up.
+  * Directory `src/spectrum4/dist` contains a debug and release version of
+    Spectrum +4. The debug version is the same as the release version, but
+    additionally logs debug messages to Mini UART, and performs a short demo on
+    start up.
   * Directory `src/spectrum128k/tests` contains Spectrum 128K casette tape images
     (*.tzx files) and casette tape audio samples (*.wav files) for running the
     Spectrum 128K unit tests under a Spectrum 128K emulator (such as FUSE or

@@ -1,4 +1,4 @@
-name: CI for spectrum4
+name: Docker images
 on:
   push:
     branches:    

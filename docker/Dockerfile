@@ -17,7 +17,7 @@ RUN apt-get upgrade -y
 # libaudiofile-dev is required by tape2wav in fuse-utils
 RUN apt-get install -y wget xz-utils build-essential libglib2.0 bsdmainutils libpixman-1-dev meson libaudiofile-dev fuse3 libfuse3-dev unzip
 
-RUN wget -O /usr/local/bin/curl https://github.com/moparisthebest/static-curl/releases/download/v7.78.0/curl-amd64 && chmod a+x /usr/local/bin/curl
+RUN case "$(uname -m)" in x86_64) ARCH=amd64;; *) ARCH=$(uname -m);; esac && wget -O /usr/local/bin/curl https://github.com/moparisthebest/static-curl/releases/download/v7.78.0/curl-${ARCH} && chmod a+x /usr/local/bin/curl
 
 # install libspectrum (needed by fuse)
 # RUN curl -L 'https://sourceforge.net/projects/fuse-emulator/files/libspectrum/1.4.4/libspectrum-1.4.4.tar.gz/download' > libspectrum-1.4.4.tar.gz && tar xvfz libspectrum-1.4.4.tar.gz && cd libspectrum-1.4.4 && ./configure && make && make install && cd ..
@@ -30,11 +30,11 @@ RUN curl -L 'https://sourceforge.net/projects/fuse-emulator/files/fuse/1.5.7/fus
 RUN curl -L 'https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download' > fuse-utils-1.4.3.tar.gz && tar xvfz fuse-utils-1.4.3.tar.gz && cd fuse-utils-1.4.3 && ./configure && make && make install && cd ..
 
 # install gcc cross-compiler toolchain
-RUN wget -nv -O gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf.tar.xz 'https://developer.arm.com/-/media/Files/downloads/gnu-a/9.2-2019.12/binrel/gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf.tar.xz?revision=ea238776-c7c7-43be-ba0d-40d7f594af1f&la=en&hash=2937ED76D3E6B85BA511BCBD46AE121DBA5268F3'
-RUN tar xvf gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf.tar.xz
+RUN wget -nv -O "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz" "https://developer.arm.com/-/media/Files/downloads/gnu/11.2-2022.02/binrel/gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz"
+RUN tar xvf "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz"
 
 # move gcc tools into /usr/local/bin
-RUN mv /gcc-arm-9.2-2019.12-x86_64-aarch64-none-elf/bin/* /usr/local/bin
+RUN mv "/gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf/bin"/* /usr/local/bin
 
 # install z80 cross-compiler binutils
 RUN wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.37.tar.gz && tar zvfx binutils.tar.gz && cd binutils-2.37 && ./configure --target=z80-unknown-elf --disable-werror && make && make install && cd ..
@@ -63,8 +63,8 @@ RUN mv /usr/local/share/qemu /dist/usr/local/share/qemu
 RUN mkdir -p /dist/usr/lib/locale/ && mv /usr/lib/locale/C.UTF-8 /dist/usr/lib/locale/C.UTF-8
 
 # install go 1.15.5
-RUN mkdir -p /dist/usr/lib && curl -L 'https://golang.org/dl/go1.15.5.linux-amd64.tar.gz' > /dist/usr/lib/go1.15.5.linux-amd64.tar.gz
-RUN cd /dist/usr/lib && tar xvfz go1.15.5.linux-amd64.tar.gz && rm go1.15.5.linux-amd64.tar.gz
+RUN uname -m
+RUN case "$(uname -m)" in x86_64) ARCH=amd64;; aarch64) ARCH=arm64;; esac && mkdir -p /dist/usr/lib && cd /dist/usr/lib && curl -L "https://golang.org/dl/go1.16.15.linux-${ARCH}.tar.gz" > "go1.16.15.linux-${ARCH}.tar.gz" && tar xvfz "go1.16.15.linux-${ARCH}.tar.gz" && rm "go1.16.15.linux-${ARCH}.tar.gz"
 RUN mkdir -p /dist/tmp
 
 # now build a fresh image, with just the files in /dist

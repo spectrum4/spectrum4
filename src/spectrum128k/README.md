@@ -2,8 +2,8 @@
 
 This directory contains:
 
-* The original ZX Spectrum 128K ROM routines
-* A test harness with unit tests for the original ROM routines
+  * The original ZX Spectrum 128K ROM routines
+  * A test harness with unit tests for the original ROM routines
 
 ## Unit tests
 
@@ -29,15 +29,15 @@ will fit into a single Spectrum 128K RAM page (which is 16KB).
 For each test of the ROM routine, choose a unique name, and create _one or
 more_ of the following assembly routines in the test file created:
 
-* The `<test_name>_setup` routine should preconfigure RAM, prepare the stack,
+  * The `<test_name>_setup` routine should preconfigure RAM, prepare the stack,
   initialise hardware, etc, that is needed for the test.
-* The `<test_name>_setup_regs` should prepare registers (including registers
+  * The `<test_name>_setup_regs` should prepare registers (including registers
   from the alternate register set if required) for the test.
-* The `<test_name>_effects` routine should apply the same changes to RAM that
+  * The `<test_name>_effects` routine should apply the same changes to RAM that
   the routine is expected to make.
-* The `<test_name>_effects_regs` routine should update the registers in line
+  * The `<test_name>_effects_regs` routine should update the registers in line
   with the changes the routine is expected to make.
-* An unimplemented routine is equivalent to an empty one - any of the above
+  * An unimplemented routine is equivalent to an empty one - any of the above
   routines can be skipped if not needed; only one routine is required in order
   for the test harness to include the test.
 
@@ -52,7 +52,6 @@ Note, each test file will be assembled into separate Spectrum 128K `.tzx` and
 `.wav` files in order that test suites can easily be run independently of each
 other, and also to avoid running out of memory on the Spectrum 128K to store
 all of the unit tests.
-
 
 ## Generated tests
 

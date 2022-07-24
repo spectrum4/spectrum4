@@ -44,12 +44,6 @@ RUN curl -L 'https://download.qemu-project.org/qemu-5.2.0.tar.xz' > qemu-5.2.0.t
 RUN curl -L 'https://github.com/gittup/tup/archive/43e19d62656a2c20fbdfb75989a9b681c5b6b216.zip' > tup.zip && unzip tup.zip && cd tup-* && CFLAGS="-g" ./build.sh && mv build/tup /usr/local/bin && cd ..
 # RUN apt-get install -y software-properties-common && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 486D3664 && apt-add-repository 'deb http://ppa.launchpad.net/anatol/tup/ubuntu precise main' && apt-get update --allow-insecure-repositories && apt-get install tup
 
-# for all executables required, find their library dependencies (using ldd),
-# and copy everything needed into /dist
-# LD_LIBRARY_PATH needed for ldd to find libspectrum.so.8
-# ENV LD_LIBRARY_PATH /usr/local/lib
-RUN for tool in /bin/sh aarch64-none-elf-as aarch64-none-elf-ld aarch64-none-elf-objcopy aarch64-none-elf-objdump aarch64-none-elf-readelf bash cat cmp cp curl dirname env find fuse fusermount3 head hexdump ln md5sum mkdir mv qemu-system-aarch64 rm sed sleep sort tape2wav tup wc which z80-unknown-elf-as z80-unknown-elf-ld z80-unknown-elf-objcopy z80-unknown-elf-objdump z80-unknown-elf-readelf; do file=$(which ${tool}); ldd $file 2>/dev/null || true; echo $file; done | sed 's/(.*//' | sed 's/^[^\/]*//' | grep '^/' | sort -u | while read line; do echo "${line}"; mkdir -p "$(dirname "/dist${line}")"; cp -vp "${line}" "/dist${line}"; done
-
 # add certificates needed by curl to /dist
 RUN mkdir -p /dist/etc/ssl/certs && cp -vp /etc/ssl/certs/ca-certificates.crt /dist/etc/ssl/certs/ca-certificates.crt
 
@@ -62,10 +56,18 @@ RUN mv /usr/local/share/qemu /dist/usr/local/share/qemu
 # add C.UTF-8 locale
 RUN mkdir -p /dist/usr/lib/locale/ && mv /usr/lib/locale/C.UTF-8 /dist/usr/lib/locale/C.UTF-8
 
-# install go 1.15.5
-RUN uname -m
+# install go 1.16.15
 RUN case "$(uname -m)" in x86_64) ARCH=amd64;; aarch64) ARCH=arm64;; esac && mkdir -p /dist/usr/lib && cd /dist/usr/lib && curl -L "https://golang.org/dl/go1.16.15.linux-${ARCH}.tar.gz" > "go1.16.15.linux-${ARCH}.tar.gz" && tar xvfz "go1.16.15.linux-${ARCH}.tar.gz" && rm "go1.16.15.linux-${ARCH}.tar.gz"
 RUN mkdir -p /dist/tmp
+
+# install shfmt
+RUN /dist/usr/lib/go/bin/go install mvdan.cc/sh/v3/cmd/shfmt@latest && mv ${HOME}/go/bin/shfmt /usr/local/bin/shfmt 
+
+# for all executables required, find their library dependencies (using ldd),
+# and copy everything needed into /dist
+# LD_LIBRARY_PATH needed for ldd to find libspectrum.so.8
+# ENV LD_LIBRARY_PATH /usr/local/lib
+RUN for tool in /bin/sh aarch64-none-elf-as aarch64-none-elf-ld aarch64-none-elf-objcopy aarch64-none-elf-objdump aarch64-none-elf-readelf bash cat cmp cp curl dirname env find fuse fusermount3 head hexdump ln md5sum mkdir mv qemu-system-aarch64 rm sed shfmt sleep sort tape2wav tup wc which z80-unknown-elf-as z80-unknown-elf-ld z80-unknown-elf-objcopy z80-unknown-elf-objdump z80-unknown-elf-readelf; do file=$(which ${tool}); ldd $file 2>/dev/null || true; echo $file; done | sed 's/(.*//' | sed 's/^[^\/]*//' | grep '^/' | sort -u | while read line; do echo "${line}"; mkdir -p "$(dirname "/dist${line}")"; cp -vp "${line}" "/dist${line}"; done
 
 # now build a fresh image, with just the files in /dist
 FROM scratch

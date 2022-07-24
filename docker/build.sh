@@ -21,4 +21,4 @@ TAG="$(cat TAG)"
 # To regenerate an existing tag on docker.hub.com, first delete the tag from
 # docker.hub.com, and the next push to main branch of github repo should cause
 # github actions CI to recreate it.
-docker pull "${TAG}" >/dev/null 2>&1 || docker buildx build --push --platform linux/arm64,linux/amd64 "-t=${TAG}" .
+docker pull "${TAG}" > /dev/null 2>&1 || docker buildx build --push --platform linux/arm64,linux/amd64 "-t=${TAG}" .

@@ -50,30 +50,33 @@ Note, GNU gas assembly syntax is assumed, so some z80 assemblers may use
 incompatible syntax. GNU gas assembly syntax was chosen for this project to
 keep the z80 and aarch64 assembly as closely aligned as possible.
 
-You will also require:
+You will also require these tools from
+[coreutils](https://www.gnu.org/software/coreutils/):
+  * `cat`
+  * `cp`
+  * `dirname`
+  * `env`
+  * `head`
+  * `ln`
+  * `md5sum`
+  * `mkdir`
+  * `mv`
+  * `rm`
+  * `sleep`
+  * `sort`
+  * `wc`
 
+Plus these additional tools:
   * [`bash`](https://www.gnu.org/software/bash/)
-  * [`cat`](https://www.gnu.org/software/coreutils/) (from coreutils)
   * [`cmp`](https://www.gnu.org/software/diffutils/) (from diffutils)
-  * [`cp`](https://www.gnu.org/software/coreutils/) (from coreutils)
   * [`curl`](https://github.com/curl/curl/)
-  * [`dirname`](https://www.gnu.org/software/coreutils/) (from coreutils)
-  * [`env`](https://www.gnu.org/software/coreutils/) (from coreutils)
   * [`find`](https://www.gnu.org/software/findutils/) (from findutils)
   * [`go`](https://golang.org/)
-  * [`head`](https://www.gnu.org/software/coreutils/) (from coreutils)
   * [`hexdump`](https://git.kernel.org/pub/scm/utils/util-linux/util-linux.git/) (from util-linux)
-  * [`ln`](https://www.gnu.org/software/coreutils/) (from coreutils)
-  * [`md5sum`](https://www.gnu.org/software/coreutils/) (from coreutils)
-  * [`mkdir`](https://www.gnu.org/software/coreutils/) (from coreutils)
-  * [`mv`](https://www.gnu.org/software/coreutils/) (from coreutils)
-  * [`rm`](https://www.gnu.org/software/coreutils/) (from coreutils)
   * [`sed`](https://www.gnu.org/software/sed/)
-  * [`sleep`](https://www.gnu.org/software/coreutils/) (from coreutils)
-  * [`sort`](https://www.gnu.org/software/coreutils/) (from coreutils)
+  * [`shfmt`](https://github.com/mvdan/sh/tree/master/cmd/shfmt)
   * [`tape2wav`](https://sourceforge.net/p/fuse-emulator/fuse-utils/ci/master/tree/) (from fuse-utils)
   * [`tup`](http://gittup.org/tup/)
-  * [`wc`](https://www.gnu.org/software/coreutils/) (from coreutils)
   * [`which`](https://carlowood.github.io/which/) (which likely in turn requires [`/bin/sh`](https://www.gnu.org/software/bash/))
 
 To check your environment is suitable for building, run `./check-env.sh` from

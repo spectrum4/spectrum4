@@ -1,7 +1,7 @@
 &utilsdir = utils
 !calls-asm-format = | &(utilsdir)/asm-format/asm-format |> ./%f |>
 !check-asm-formatted = | &(utilsdir)/asm-format/asm-format |> ^o^ cat %f | &(utilsdir)/asm-format/asm-format check |>
-!check-shell-formatted = | &(utilsdir)/shell-format/shell-format |> ^o^ cat %f | &(utilsdir)/shell-format/shell-format check |>
+!check-shell-formatted = |> shfmt -sr -ci -d -i 2 %f |>
 
 LDFLAGS_AARCH64 += --fix-cortex-a53-835769
 LDFLAGS_AARCH64 += --fix-cortex-a53-843419

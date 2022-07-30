@@ -5,6 +5,8 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 set -eu
+set -o pipefail
+export SHELLOPTS
 
 cd "$(dirname "${0}")"
 TAG="$(cat TAG)"

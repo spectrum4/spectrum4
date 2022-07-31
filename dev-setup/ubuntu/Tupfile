@@ -1,0 +1,5 @@
+.gitignore
+
+include_rules
+
+: foreach *.sh |> !check-shell-formatted |>

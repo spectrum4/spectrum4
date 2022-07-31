@@ -160,8 +160,8 @@ Alternatively, to run Spectrum +4 under QEMU instead of a real Raspberry Pi 3B,
 run something like:
 
 ```bash
-$ qemu-system-aarch64 -M raspi3b -kernel src/spectrum4/targets/qemu-debug.elf \
--serial null -serial stdio
+$ qemu-system-aarch64 -full-screen -M raspi3b -kernel \
+src/spectrum4/targets/qemu-debug.elf -serial null -serial stdio
 ```
 
 Note, __you will likely need QEMU version 5.2.0 or later__. Also note that the `.elf`

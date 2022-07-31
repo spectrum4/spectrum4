@@ -21,7 +21,8 @@ ported correctly.
 To write one or more tests for ROM routine _ROM_routine_, create the test file:
 
 `src/spectrum128k/test_<ROM_routine>[.<chunk>].s` where _ROM_routine_ is the
-name of the routine defined in [src/spectrum128k/lib.s](../spectrum128k/lib.s).
+name of the routine defined in
+[src/spectrum128k/tests/lib.s](../spectrum128k/tests/lib.s).
 
 If you are writing many tests, use `.<chunk>` to split them into chunks that
 will fit into a single Spectrum 128K RAM page (which is 16KB).

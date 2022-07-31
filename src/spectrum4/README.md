@@ -37,5 +37,5 @@ Spectrum +4 tests, you are encouraged to add equivalent Spectrum 128K tests
 
 The Spectrum +4 test framework and the Spectrum 128K test framework use the
 same format for defining test cases. See the [Spectrum 128K
-README](/src/spectrum128k/README.md) for details on writing tests, generating
+README](../spectrum128k/README.md) for details on writing tests, generating
 tests, and disabling passing tests.

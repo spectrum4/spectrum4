@@ -24,19 +24,36 @@ cd "${PREP_DIR}"
 # install homebrew
 which brew > /dev/null 2>&1 || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-# install bash 5 (or higher), fuse-emulator, libspectrum, libgcrypt (for
-# building tape2wav), go, qemu, macfuse (needed by tup), pcre (needed by tup)
-brew install bash fuse-emulator libgcrypt go qemu pcre
+# in case fuse is installed outside of brew, don't just brew install it
+if ! hash fuse 2>/dev/null; then
+  brew install fuse-emulator
+fi
 
-# macfuse is needed by tup
-brew install --cask macfuse
+# in case go is installed outside of brew, don't just brew install it
+if ! hash go 2>/dev/null; then
+  brew install go
+fi
+
+# in case qemu is installed outside of brew, don't just brew install it
+if ! hash qemu-system-aarch64 2>/dev/null; then
+  brew install qemu
+fi
+
+# This is a bash script, so bash must be installed otherwise this script wouldn't run.
+# However, there have been problems with bash 3.2.57(1)-release (arm64-apple-darwin21):
+#   * https://github.com/gittup/tup/issues/466#issuecomment-1195105183
+# so let's make sure bash 5 or later is installed.
+# Note, in case bash 5+ is installed outside of brew, don't just brew install it.
+if [ $(bash --version | sed -n 's/.*version //p' | head -1 | sed 's/\..*//') -lt 5 ]; then
+  brew install bash
+fi
 
 # install binutils for targets z80-unknown-elf and aarch64-none-elf
 z80_tools_absent=false
 aarch64_tools_absent=false
 for tool in as ld readelf objcopy objdump; do
-  hash "z80-unknown-elf-${tool}" || z80_tools_absent=true
-  hash "aarch64-none-elf-${tool}" || aarch64_tools_absent=true
+  hash "z80-unknown-elf-${tool}" 2>/dev/null || z80_tools_absent=true
+  hash "aarch64-none-elf-${tool}" 2>/dev/null || aarch64_tools_absent=true
 done
 
 if ${z80_tools_absent} || ${aarch64_tools_absent}; then
@@ -44,7 +61,7 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
   tar xfz binutils-2.38.tar.gz
 
   MAKE=gmake
-  hash gmake || MAKE=make
+  hash gmake 2>/dev/null || MAKE=make
   export AR=ar
   export AS=as
 fi
@@ -76,7 +93,8 @@ if ${aarch64_tools_absent}; then
 fi
 
 # install tape2wav
-if ! hash tape2wav; then
+if ! hash tape2wav 2>/dev/null; then
+  brew install libgcrypt
   curl -L https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download > fuse-utils-1.4.3.tar.gz
   tar xvfz fuse-utils-1.4.3.tar.gz
   cd fuse-utils-1.4.3
@@ -89,13 +107,13 @@ if ! hash tape2wav; then
 fi
 
 # install shfmt
-if ! hash shfmt; then
+if ! hash shfmt 2>/dev/null; then
   go install mvdan.cc/sh/v3/cmd/shfmt@latest
   sudo mv $(go env GOPATH)/bin/shfmt /usr/local/bin
 fi
 
 # install md5sum
-if ! hash md5sum; then
+if ! hash md5sum 2>/dev/null; then
   echo '#!/bin/bash
   md5 -r "${@}"' > md5sum
   chmod a+x md5sum
@@ -103,7 +121,10 @@ if ! hash md5sum; then
 fi
 
 # install tup
-if ! hash tup; then
+if ! hash tup 2>/dev/null; then
+  # macfuse is needed by tup
+  brew install --cask macfuse
+  brew install pcre
   curl -f -L 'https://github.com/gittup/tup/archive/b037d4b211de6025703b77c3287b76159656ef22.zip' > tup.zip
   unzip tup.zip
   cd tup-*

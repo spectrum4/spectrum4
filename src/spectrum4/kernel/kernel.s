@@ -252,9 +252,11 @@
 .text
 .align 2
 _start:
-# Should enable interrupts, set up vector jump tables, switch execution
+# TODO: enable interrupts, set up vector jump tables, switch execution
 # level etc, and all the kinds of things to initialise the processor system
 # registers, memory virtualisation, initialise sound chip, USB, etc.
+# There seems to be a pretty good guide on exactly this here:
+#   * https://developer.arm.com/documentation/dai0527/a/
   mrs     x0, mpidr_el1                           // x0 = Multiprocessor Affinity Register.
   ands    x0, x0, #0x3                            // x0 = core number.
   b.ne    sleep                                   // Put all cores except core 0 to sleep.

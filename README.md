@@ -125,8 +125,8 @@ programs, machine code routines, and RAM disk storage.
 To build/test everything, simply run `./tup-under-docker.sh`. This requires
 that [`docker`](https://www.docker.com/) is installed on your system. It simply
 calls [`tup`](http://gittup.org/tup/index.html) inside a docker container that
-contains [all required build/test dependencies](docker/Dockerfile). See
-`./tup-under-docker.sh -h` for more options.
+contains all required build/test dependencies. Run `./tup-under-docker.sh -h`
+to see additional options.
 
 If you prefer to use a native toolchain, or cannot run docker containers on
 your host then see [Building Without Docker](dev-setup/README.md).

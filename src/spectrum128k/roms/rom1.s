@@ -20514,7 +20514,7 @@ tv_tuner:
         LD      A,$FE
         IN      A,($FE)
         RRA
-        RET     C                         ; C=SPACE not pressed
+        RET     C                         ; C=SHIFT not pressed
 
         LD      A,$07
         OUT     ($FE),A                   ; Set the border to white

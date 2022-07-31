@@ -60,7 +60,7 @@ retry apt-get upgrade -y
 # bsdmainutils contains hexdump
 # libpixman-1-dev and meson needed for building qemu
 # libaudiofile-dev is required by tape2wav in fuse-utils
-retry apt-get install -y wget xz-utils build-essential libglib2.0 bsdmainutils libpixman-1-dev meson libaudiofile-dev fuse3 libfuse3-dev unzip
+retry apt-get install -y wget xz-utils build-essential libglib2.0 bsdmainutils libpixman-1-dev meson libaudiofile-dev fuse3 libfuse3-dev unzip texinfo
 
 retry wget -O /usr/local/bin/curl "https://github.com/moparisthebest/static-curl/releases/download/v7.84.0/curl-${ARCH2}"
 chmod a+x /usr/local/bin/curl
@@ -101,9 +101,9 @@ tar xvf "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz"
 mv "/gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf/bin"/* /usr/local/bin
 
 # install z80 cross-compiler binutils
-retry wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.37.tar.gz
+retry wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.38.tar.gz
 tar zvfx binutils.tar.gz
-cd binutils-2.37
+cd binutils-2.38
 ./configure --target=z80-unknown-elf --disable-werror
 make
 make install
@@ -130,43 +130,13 @@ cd ..
 # retry apt-get update --allow-insecure-repositories
 # apt-get install tup
 
-# add certificates needed by curl to /dist
-mkdir -p /dist/etc/ssl/certs
-cp -vp /etc/ssl/certs/ca-certificates.crt /dist/etc/ssl/certs/ca-certificates.crt
-
-# add fuse ROMs
-mkdir -p /dist/usr/local/share
-mv /usr/local/share/fuse /dist/usr/local/share/fuse
-
-# add qemu keymaps etc
-mv /usr/local/share/qemu /dist/usr/local/share/qemu
-
-# add C.UTF-8 locale
-mkdir -p /dist/usr/lib/locale/
-mv /usr/lib/locale/C.UTF-8 /dist/usr/lib/locale/C.UTF-8
-
 # install go 1.18.5
-mkdir -p /dist/usr/lib
-cd /dist/usr/lib
+mkdir -p /usr/lib
+cd /usr/lib
 retry curl -f -L "https://golang.org/dl/go1.18.5.linux-${ARCH}.tar.gz" > "go1.18.5.linux-${ARCH}.tar.gz"
 tar xvfz "go1.18.5.linux-${ARCH}.tar.gz"
 rm "go1.18.5.linux-${ARCH}.tar.gz"
-mkdir -p /dist/tmp
 
 # install shfmt
-/dist/usr/lib/go/bin/go install mvdan.cc/sh/v3/cmd/shfmt@latest
-mv ${HOME}/go/bin/shfmt /usr/local/bin/shfmt
-
-# for all executables required, find their library dependencies (using ldd),
-# and copy everything needed into /dist
-# LD_LIBRARY_PATH needed for ldd to find libspectrum.so.8
-# ENV LD_LIBRARY_PATH /usr/local/lib
-for tool in /bin/sh aarch64-none-elf-as aarch64-none-elf-ld aarch64-none-elf-objcopy aarch64-none-elf-objdump aarch64-none-elf-readelf bash cat cmp cp curl dirname env find fuse fusermount3 head hexdump ln md5sum mkdir mv qemu-system-aarch64 rm sed shfmt sleep sort tape2wav tup wc which z80-unknown-elf-as z80-unknown-elf-ld z80-unknown-elf-objcopy z80-unknown-elf-objdump z80-unknown-elf-readelf; do
-  file=$(which ${tool})
-  ldd $file 2> /dev/null || true
-  echo $file
-done | sed 's/(.*//' | sed 's/^[^\/]*//' | grep '^/' | sort -u | while read line; do
-  echo "${line}"
-  mkdir -p "$(dirname "/dist${line}")"
-  cp -vp "${line}" "/dist${line}"
-done
+/usr/lib/go/bin/go install mvdan.cc/sh/v3/cmd/shfmt@latest
+mv "${HOME}/go/bin/shfmt" /usr/local/bin/shfmt

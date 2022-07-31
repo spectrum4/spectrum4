@@ -25,17 +25,17 @@ cd "${PREP_DIR}"
 which brew > /dev/null 2>&1 || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 # in case fuse is installed outside of brew, don't just brew install it
-if ! hash fuse 2>/dev/null; then
+if ! hash fuse 2> /dev/null; then
   brew install fuse-emulator
 fi
 
 # in case go is installed outside of brew, don't just brew install it
-if ! hash go 2>/dev/null; then
+if ! hash go 2> /dev/null; then
   brew install go
 fi
 
 # in case qemu is installed outside of brew, don't just brew install it
-if ! hash qemu-system-aarch64 2>/dev/null; then
+if ! hash qemu-system-aarch64 2> /dev/null; then
   brew install qemu
 fi
 
@@ -52,8 +52,8 @@ fi
 z80_tools_absent=false
 aarch64_tools_absent=false
 for tool in as ld readelf objcopy objdump; do
-  hash "z80-unknown-elf-${tool}" 2>/dev/null || z80_tools_absent=true
-  hash "aarch64-none-elf-${tool}" 2>/dev/null || aarch64_tools_absent=true
+  hash "z80-unknown-elf-${tool}" 2> /dev/null || z80_tools_absent=true
+  hash "aarch64-none-elf-${tool}" 2> /dev/null || aarch64_tools_absent=true
 done
 
 if ${z80_tools_absent} || ${aarch64_tools_absent}; then
@@ -61,7 +61,7 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
   tar xfz binutils-2.38.tar.gz
 
   MAKE=gmake
-  hash gmake 2>/dev/null || MAKE=make
+  hash gmake 2> /dev/null || MAKE=make
   export AR=ar
   export AS=as
 fi
@@ -93,7 +93,7 @@ if ${aarch64_tools_absent}; then
 fi
 
 # install tape2wav
-if ! hash tape2wav 2>/dev/null; then
+if ! hash tape2wav 2> /dev/null; then
   brew install libgcrypt
   curl -L https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download > fuse-utils-1.4.3.tar.gz
   tar xvfz fuse-utils-1.4.3.tar.gz
@@ -107,13 +107,13 @@ if ! hash tape2wav 2>/dev/null; then
 fi
 
 # install shfmt
-if ! hash shfmt 2>/dev/null; then
+if ! hash shfmt 2> /dev/null; then
   go install mvdan.cc/sh/v3/cmd/shfmt@latest
   sudo mv $(go env GOPATH)/bin/shfmt /usr/local/bin
 fi
 
 # install md5sum
-if ! hash md5sum 2>/dev/null; then
+if ! hash md5sum 2> /dev/null; then
   echo '#!/bin/bash
   md5 -r "${@}"' > md5sum
   chmod a+x md5sum
@@ -121,7 +121,7 @@ if ! hash md5sum 2>/dev/null; then
 fi
 
 # install tup
-if ! hash tup 2>/dev/null; then
+if ! hash tup 2> /dev/null; then
   # macfuse is needed by tup
   brew install --cask macfuse
   brew install pcre

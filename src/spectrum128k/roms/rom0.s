@@ -1149,7 +1149,7 @@ L019D:  LD   HL,char_set-$0100            ; $3C00. Set HL to where, in theory ch
         LD   BC,$000E                     ;
         LDIR                              ; Initialise the streams system variables.
 
-        RES  1,(IY+$01)                   ; FLAGS. Signal printer not is use.
+        RES  1,(IY+$01)                   ; FLAGS. Signal printer not in use.
         LD   (IY+$00),$FF                 ; ERR_NR. Signal no error.
         LD   (IY+$31),$02                 ; DF_SZ. Set the lower screen size to two rows.
 

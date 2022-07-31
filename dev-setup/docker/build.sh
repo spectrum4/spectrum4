@@ -8,8 +8,8 @@ set -eu
 set -o pipefail
 export SHELLOPTS
 
-cd "$(dirname "${0}")"
-TAG="$(cat TAG)"
+cd "$(dirname "${0}")/.."
+TAG="$(cat docker/TAG)"
 
 # Build and push the multiarch docker images to docker.hub.com. Note, this
 # requires that `docker login` has run. It is intended that this script is
@@ -23,4 +23,4 @@ TAG="$(cat TAG)"
 # To regenerate an existing tag on docker.hub.com, first delete the tag from
 # docker.hub.com, and the next push to main branch of github repo should cause
 # github actions CI to recreate it.
-docker pull "${TAG}" > /dev/null 2>&1 || docker buildx build --push --platform linux/arm64,linux/amd64 "-t=${TAG}" .
+docker pull "${TAG}" > /dev/null 2>&1 || docker buildx build --push --platform linux/arm64,linux/amd64 "-t=${TAG}" -f docker/Dockerfile .

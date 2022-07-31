@@ -1,7 +1,9 @@
 FROM ubuntu:20.04 AS spectrum4_too_much
 MAINTAINER Pete Moore <petemoore@gmx.net>
-COPY bootstrap.sh /
-RUN ./bootstrap.sh
+COPY ./ubuntu/bootstrap-ubuntu.sh /
+RUN ./bootstrap-ubuntu.sh
+COPY ./docker/extract-dist.sh /
+RUN ./extract-dist.sh
 
 # now build a fresh image, with just the files in /dist
 FROM scratch

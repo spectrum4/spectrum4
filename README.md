@@ -128,9 +128,8 @@ calls [`tup`](http://gittup.org/tup/index.html) inside a docker container that
 contains [all required build/test dependencies](docker/Dockerfile). See
 `./tup-under-docker.sh -h` for more options.
 
-If you prefer to use a native toolchain, or cannot run docker/amd64 containers
-on your host (e.g. if building/testing directly on a Raspberry Pi) then see
-[Building Without Docker](docs/building-without-docker.md).
+If you prefer to use a native toolchain, or cannot run docker containers on
+your host then see [Building Without Docker](dev-setup/README.md).
 
 ## Running
 

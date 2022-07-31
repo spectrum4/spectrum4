@@ -6,9 +6,9 @@
 
 #####################################################################################
 
-# This script builds everything under docker.
+# This script runs tup under docker to build and test everything.
 # To see how the docker image was created, see the docker subdirectory.
 
 cd "$(dirname "${0}")"
-TAG="$(cat docker/TAG)"
+TAG="$(cat dev-setup/docker/TAG)"
 docker run -t --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm -v "$(pwd):/spectrum4" -w /spectrum4 "${TAG}" tup "${@}"

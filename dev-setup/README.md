@@ -1,8 +1,15 @@
-# Building natively on your host
+# Setting up a development environment for Spectrum +4
+
+## Recommended: build and test using docker
+
+In order to build and test Spectrum +4, all you need is docker. Then simply
+run `./tup-under-docker.sh` from the root directory of the repository.
+
+## Building/testing natively on your host
 
 For those who prefer to use a native toolchain rather than docker, or cannot
-run docker/amd64 containers for some reason (e.g. if building/testing directly
-on a Raspberry Pi).
+run docker arm64/amd64 containers for some reason, this section will guide you
+through the process of installing all of the required tools on your system.
 
 You will require an aarch64 toolchain in your PATH, including the following
 tools from [binutils](https://www.gnu.org/software/binutils/):
@@ -84,8 +91,8 @@ Plus these additional tools:
   * [`which`](https://carlowood.github.io/which/) (which likely in turn requires
   [`/bin/sh`](https://www.gnu.org/software/bash/))
 
-To check your environment is suitable for building, run `./check-env.sh` from
-the root folder.
+To check your environment is suitable for building, run
+[`./check-env.sh`](check-env.sh).
 
 Run `./check-env.sh -h` to see additional options.
 
@@ -96,3 +103,21 @@ repository.
 Note, if you switch between running `tup` and `./tup-under-docker.sh`,
 everything will be rebuilt, so you are usually better off sticking with one
 command or the other.
+
+## macOS
+
+Running the [`bootstrap-macOS.sh`](macOS/bootstrap-macOS.sh) script should get
+you most of the way.  Please raise an issue in github if you encounter any
+problems.
+
+## Ubuntu
+
+Running the [`bootstrap-ubuntu.sh`](ubuntu/bootstrap-ubuntu.sh) script should
+get you most of the way.  Please raise an issue in github if you encounter any
+problems.
+
+## Windows
+
+Probably the simplest solution for is to install [WSL
+2](https://docs.microsoft.com/en-us/windows/wsl/install) and run an Ubuntu
+distribution, and then follow the instructions above for Ubuntu.

@@ -32,7 +32,7 @@ function verify_and_show_tool {
       ;;
   esac
   if ! which "${PREFIX}${3}" > /dev/null; then
-    echo "${CHECK_ENV_SCRIPT}: Cannot find '${PREFIX}${3}' in PATH. Have you set ${ENV_VAR} appropriately? Alternatively, to build under docker, run docker.sh script instead. Exiting." >&2
+    echo "${CHECK_ENV_SCRIPT}: Cannot find '${PREFIX}${3}' in PATH. Have you set ${ENV_VAR} appropriately? Alternatively, to build under docker, run tup-under-docker.sh script instead. Exiting." >&2
     exit 64
   fi
   verbose "  ${2}  $(which ${PREFIX}${3})" >&2

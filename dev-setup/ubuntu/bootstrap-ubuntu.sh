@@ -4,11 +4,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-set -eu
-set -o pipefail
-
-cd "$(dirname "${0}")"
-
 function retry {
   set +e
   local n=0
@@ -30,6 +25,22 @@ function retry {
   done
   set -e
 }
+
+set -eu
+set -o pipefail
+
+if [ "$(uname)" != 'Linux' ]; then
+  echo "This script is designed to run on ubuntu. The uname utility reports that this host is running '$(uname)', but should be 'Linux'. Exiting." >&2
+  exit 66
+fi
+
+if [ "${EUID}" -ne 0 ]; then
+  echo "Please run as root (sudo ${0})" >&2
+  exit 65
+fi
+
+PREP_DIR="$(mktemp -t -d spectrum4-toolchains-install.XXXXXXXXXX)"
+cd "${PREP_DIR}"
 
 case "$(uname -m)" in
   x86_64)
@@ -66,6 +77,10 @@ retry wget -O /usr/local/bin/curl "https://github.com/moparisthebest/static-curl
 chmod a+x /usr/local/bin/curl
 
 # install libspectrum (needed by fuse)
+# export LD_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu
+# Note, libspectrum-dev places library files in /usr/lib/x86_64-linux-gnu:
+#   /usr/lib/x86_64-linux-gnu/libspectrum.a
+#   /usr/lib/x86_64-linux-gnu/libspectrum.so.8.8.14
 # retry curl -L 'https://sourceforge.net/projects/fuse-emulator/files/libspectrum/1.4.4/libspectrum-1.4.4.tar.gz/download' > libspectrum-1.4.4.tar.gz
 # tar xvfz libspectrum-1.4.4.tar.gz
 # cd libspectrum-1.4.4
@@ -85,20 +100,21 @@ make install
 cd ..
 
 # install fuse-utils to get tape2wav
-retry curl -f -L 'https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download' > fuse-utils-1.4.3.tar.gz
-tar xvfz fuse-utils-1.4.3.tar.gz
-cd fuse-utils-1.4.3
-./configure
-make
-make install
-cd ..
+retry apt-get install -y fuse-emulator-utils
+# retry curl -f -L 'https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download' > fuse-utils-1.4.3.tar.gz
+# tar xvfz fuse-utils-1.4.3.tar.gz
+# cd fuse-utils-1.4.3
+# ./configure
+# make
+# make install
+# cd ..
 
 # install gcc cross-compiler toolchain
 retry wget -nv -O "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz" "https://developer.arm.com/-/media/Files/downloads/gnu/11.2-2022.02/binrel/gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz"
 tar xvf "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz"
 
 # move gcc tools into /usr/local/bin
-mv "/gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf/bin"/* /usr/local/bin
+mv "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf/bin"/* /usr/local/bin
 
 # install z80 cross-compiler binutils
 retry wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.38.tar.gz
@@ -121,6 +137,12 @@ cd ../..
 retry curl -f -L 'https://github.com/gittup/tup/archive/b037d4b211de6025703b77c3287b76159656ef22.zip' > tup.zip
 unzip tup.zip
 cd tup-*
+# Note, we don't use ./bootstrap.sh here because it requires privileges which
+# are not available during `docker build`. Now I think about it though, maybe
+# we could build tup inside a docker container (using `docker run` with
+# appropriate privileges), and then copy it into the image that we build with a
+# COPY directive in the Dockerfile. For now though, this works and is
+# sufficient.
 CFLAGS="-g" ./build.sh
 mv build/tup /usr/local/bin
 cd ..
@@ -140,3 +162,7 @@ rm "go1.18.5.linux-${ARCH}.tar.gz"
 # install shfmt
 /usr/lib/go/bin/go install mvdan.cc/sh/v3/cmd/shfmt@latest
 mv "${HOME}/go/bin/shfmt" /usr/local/bin/shfmt
+
+cd
+echo "Deleting '${PREP_DIR}' ..."
+rm -rf "${PREP_DIR}"

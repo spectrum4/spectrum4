@@ -117,9 +117,9 @@ tar xvf "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz"
 mv "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf/bin"/* /usr/local/bin
 
 # install z80 cross-compiler binutils
-retry wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.38.tar.gz
+retry wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.39.tar.gz
 tar zvfx binutils.tar.gz
-cd binutils-2.38
+cd binutils-2.39
 ./configure --target=z80-unknown-elf --disable-werror
 make
 make install
@@ -152,12 +152,12 @@ cd ..
 # retry apt-get update --allow-insecure-repositories
 # apt-get install tup
 
-# install go 1.18.5
+# install go 1.19
 mkdir -p /usr/lib
 cd /usr/lib
-retry curl -f -L "https://golang.org/dl/go1.18.5.linux-${ARCH}.tar.gz" > "go1.18.5.linux-${ARCH}.tar.gz"
-tar xvfz "go1.18.5.linux-${ARCH}.tar.gz"
-rm "go1.18.5.linux-${ARCH}.tar.gz"
+retry curl -f -L "https://golang.org/dl/go1.19.linux-${ARCH}.tar.gz" > "go1.19.linux-${ARCH}.tar.gz"
+tar xvfz "go1.19.linux-${ARCH}.tar.gz"
+rm "go1.19.linux-${ARCH}.tar.gz"
 
 # install shfmt
 /usr/lib/go/bin/go install mvdan.cc/sh/v3/cmd/shfmt@latest

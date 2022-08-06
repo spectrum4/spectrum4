@@ -1,2 +1,2 @@
 .gitignore
-: |> go build -o %o main.go |> tzx-code-loader ^/\.gitignore ^/\.git/.*
+: |> go build -o %o main.go |> tzx-code-loader

@@ -1,2 +1,2 @@
 .gitignore
-: |> go build -o %o main.go |> asm-format ^/\.gitignore ^/\.git/.*
+: |> go build -o %o main.go |> asm-format

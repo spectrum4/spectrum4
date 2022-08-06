@@ -57,8 +57,8 @@ for tool in as ld readelf objcopy objdump; do
 done
 
 if ${z80_tools_absent} || ${aarch64_tools_absent}; then
-  curl -f -L https://ftp.gnu.org/gnu/binutils/binutils-2.38.tar.gz > binutils-2.38.tar.gz
-  tar xfz binutils-2.38.tar.gz
+  curl -f -L https://ftp.gnu.org/gnu/binutils/binutils-2.39.tar.gz > binutils-2.39.tar.gz
+  tar xfz binutils-2.39.tar.gz
 
   MAKE=gmake
   hash gmake 2> /dev/null || MAKE=make
@@ -69,7 +69,7 @@ fi
 if ${z80_tools_absent}; then
   mkdir binutils-z80-build
   cd binutils-z80-build
-  ../binutils-2.38/configure \
+  ../binutils-2.39/configure \
     --prefix=/usr/local \
     --target=z80-unknown-elf \
     --disable-static \
@@ -84,7 +84,7 @@ fi
 if ${aarch64_tools_absent}; then
   mkdir binutils-aarch64-build
   cd binutils-aarch64-build
-  ../binutils-2.38/configure \
+  ../binutils-2.39/configure \
     --prefix=/usr/local \
     --target=aarch64-none-elf
   $MAKE clean all

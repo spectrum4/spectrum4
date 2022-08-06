@@ -1,2 +1,5 @@
 .gitignore
+# Specify main.go explicitly so that go build doesn't call `git status
+# --porcelain` which would read all files in repository, so that if any file is
+# updated, the whole DAG underneath this `go build` would run again.
 : |> go build -o %o main.go |> asm-format

@@ -24,9 +24,20 @@ cd "${PREP_DIR}"
 # install homebrew
 which brew > /dev/null 2>&1 || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
+export CPATH=$(brew --prefix)/include
+export LDFLAGS=-L$(brew --prefix)/lib
+
 # in case fuse is installed outside of brew, don't just brew install it
 if ! hash fuse 2> /dev/null; then
-  brew install fuse-emulator
+  # brew install fuse-emulator
+  brew install libgcrypt
+  curl -f -L 'https://sourceforge.net/projects/fuse-emulator/files/fuse/1.5.7/fuse-1.5.7.tar.gz/download' > fuse-1.5.7.tar.gz
+  tar xvfz fuse-1.5.7.tar.gz
+  cd fuse-1.5.7
+  ./configure --with-null-ui
+  make
+  sudo make install
+  cd ..
 fi
 
 # in case go is installed outside of brew, don't just brew install it
@@ -98,8 +109,6 @@ if ! hash tape2wav 2> /dev/null; then
   curl -L https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download > fuse-utils-1.4.3.tar.gz
   tar xvfz fuse-utils-1.4.3.tar.gz
   cd fuse-utils-1.4.3
-  export CPATH=$(brew --prefix)/include
-  export LDFLAGS=-L$(brew --prefix)/lib
   ./configure
   make
   sudo make install

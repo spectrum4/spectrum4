@@ -12,6 +12,7 @@ import Z80_TOOLCHAIN_PREFIX=z80-unknown-elf-
 : rom0.elf-tmp rom1.o |> $(Z80_TOOLCHAIN_PREFIX)ld -N -Ttext=0x0 --allow-multiple-definition -R %1f -o %o %2f |> rom1.elf {rom-elf}
 : rom1.elf-tmp rom0.o |> $(Z80_TOOLCHAIN_PREFIX)ld -N -Ttext=0x0 --allow-multiple-definition -R %1f -o %o %2f |> rom0.elf {rom-elf}
 : foreach {rom-elf} |> $(Z80_TOOLCHAIN_PREFIX)objcopy --set-start=0x0 %f -O binary %o |> %B.img
+: foreach {rom-elf} |> $(Z80_TOOLCHAIN_PREFIX)objdump -d %f > %o |> %B.disassembly
 
 : foreach *.s *.gen-s |> !check-asm-formatted |>
 : rom0.img |> ^o^ ./check-md5.sh %f b4d2692115a9f2924df92a3cbfb358fb 72 |>

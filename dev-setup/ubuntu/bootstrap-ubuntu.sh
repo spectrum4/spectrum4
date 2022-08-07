@@ -180,3 +180,8 @@ mv "${HOME}/go/bin/shfmt" /usr/local/bin/shfmt
 cd
 echo "Deleting '${PREP_DIR}' ..."
 rm -rf "${PREP_DIR}"
+
+echo "Please note the following environment variables need to be set in order for the tools to be available:"
+echo "$ export PATH='/usr/lib/go/bin:/bin:/usr/bin:/usr/local/bin'"
+echo "$ export GOROOT='/usr/lib/go'"
+echo "You may wish to update e.g. ~/.profile or ~/.bash_profile or ~/.bashrc etc to do this for future login shells."

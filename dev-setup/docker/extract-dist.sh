@@ -39,7 +39,11 @@ cp -pr /usr/lib/go /dist/usr/lib/go
 # and copy everything needed into /dist
 # LD_LIBRARY_PATH needed for ldd to find libspectrum.so.8
 # ENV LD_LIBRARY_PATH /usr/local/lib
-for tool in /bin/sh aarch64-none-elf-as aarch64-none-elf-ld aarch64-none-elf-objcopy aarch64-none-elf-objdump aarch64-none-elf-readelf bash cat cmp cp curl dirname env find fuse fusermount3 head hexdump ln md5sum mkdir mv qemu-system-aarch64 rm sed shfmt sleep sort tape2wav tup wc which z80-unknown-elf-as z80-unknown-elf-ld z80-unknown-elf-objcopy z80-unknown-elf-objdump z80-unknown-elf-readelf; do
+#
+# Note, we also include aarch64-none-elf-gdb even though it isn't required
+# by tup, as it is useful if debugging is needed on a platform where a cross
+# gdb can't be installed natively (currently that includes macOS/ARM).
+for tool in /bin/sh aarch64-none-elf-as aarch64-none-elf-gdb aarch64-none-elf-ld aarch64-none-elf-objcopy aarch64-none-elf-objdump aarch64-none-elf-readelf bash cat cmp cp curl dirname env find fuse fusermount3 head hexdump ln md5sum mkdir mv qemu-system-aarch64 rm sed shfmt sleep sort tape2wav tup wc which z80-unknown-elf-as z80-unknown-elf-ld z80-unknown-elf-objcopy z80-unknown-elf-objdump z80-unknown-elf-readelf; do
   file=$(which ${tool})
   ldd $file 2> /dev/null || true
   echo $file

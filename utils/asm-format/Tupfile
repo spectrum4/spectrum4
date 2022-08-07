@@ -2,4 +2,8 @@
 # Specify main.go explicitly so that go build doesn't call `git status
 # --porcelain` which would read all files in repository, so that if any file is
 # updated, the whole DAG underneath this `go build` would run again.
+# Note, we could have alternatively called `go build` with `-buildvcs=false`
+# but then .gitignore file is read, and also this Tupfile, so changing a
+# comment here would cause a rebuild, so for now citing main.go is the better
+# solution to avoid the unnecessary file scanning of the go build system.
 : |> go build -o %o main.go |> asm-format

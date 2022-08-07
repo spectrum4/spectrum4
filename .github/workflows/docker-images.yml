@@ -18,3 +18,7 @@ jobs:
         run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
       - name: build/push docker images
         run: dev-setup/docker/build.sh
+		# for some unfathomable reason, the multiarch docker image building in
+		# github actions takes an age 3 hours wasn't enough, trying 12 hours.
+		# default timeout is 6 hours, but at some point we'll hit that.
+        timeout-minutes: 720

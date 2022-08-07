@@ -38,7 +38,9 @@ tv_tuner:                                // L3C10
 2:
   ldrb    w0, [x4], #1
   cbz     w0, 3f                                  // If 0, end of string; exit loop; jump forward to 2:.
+  stp     x3, x4, [sp, #-16]!
   bl      print_w0
+  ldp     x3, x4, [sp], #0x10
   b       2b
 3:
   subs    w3, w3, #8
@@ -51,12 +53,14 @@ tv_tuner:                                // L3C10
   mov     w0, #6
   bl      print_w0                                // screen character column 6
   bl      print_w0                                // ignored
+  b       1b
 4:
+  b       4b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
 tvt_data:
-  .byte   0x13, 0x00                              // Bright, off
+# .byte   0x13, 0x00                              // Bright, off
   .ascii  " 2022 "
-  .byte   0x13, 0x01                              // Bright, on
+# .byte   0x13, 0x01                              // Bright, on
   .asciz  " 2022 "

@@ -84,6 +84,7 @@ new:                                     // L019D
   strb    w5, [x28, DF_SZ-sysvars]                // Set the lower screen size to two rows.
 
   bl      cls
+  bl      tv_tuner
 .if       DEMO_AUTORUN
   bl      demo                                    // Demonstrate features for manual inspection.
 .endif

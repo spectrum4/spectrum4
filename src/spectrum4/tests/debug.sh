@@ -7,10 +7,7 @@
 ################################################################################
 # Run this script, passing in a test name, to see what commands you can use to
 # debug the test using gdb / qemu. This script doesn't execute the commands, it
-# just tells you which commands to use, so you can e.g. copy/paste them.  Note,
-# the commands it outputs won't run inside the docker container, since gdb isn't
-# included in the docker container. These are all things that could be improved
-# at some point.
+# just tells you which commands to use, so you can e.g. copy/paste them.
 ################################################################################
 
 set -eu
@@ -38,9 +35,16 @@ cd ..
 
 echo "Session 1:"
 echo "  $ qemu-system-aarch64 -s -S -M raspi3b -kernel $(pwd)/targets/test_${suite}.elf -serial null -serial stdio"
+echo
 echo "Session 2:"
 echo "  $ ${AARCH64_TOOLCHAIN_PREFIX}gdb $(pwd)/targets/test_${suite}.elf"
 echo "  (gdb) target extended-remote localhost:1234"
+echo "* OR *"
+TAG="$(cat $(git rev-parse --show-toplevel)/dev-setup/docker/TAG)"
+echo "  $ docker run -v '$(pwd):/spectrum4' -w /spectrum4 -ti --rm ${TAG} /usr/local/bin/aarch64-none-elf-gdb targets/test_${suite}.elf"
+echo "  (gdb) target extended-remote host.docker.internal:1234"
+echo
+echo "Followed by:"
 echo "  (gdb) ${first_break_command}"
 echo "  (gdb) c"
 echo "  (gdb) ${second_break_command}"
@@ -51,3 +55,5 @@ echo "  (gdb) si"
 echo "  (gdb) help"
 echo "  ..."
 echo "  ..."
+echo
+echo "Symbols can be found in file $(pwd)/targets/test_${suite}.symbols"

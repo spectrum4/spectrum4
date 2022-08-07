@@ -28,13 +28,30 @@ tv_tuner:                                // L3C10
   bl      print_w0
   mov     w0, #0                                  // screen character row 0
   bl      print_w0
-  mov     w0, #0                                  // screen character column 0
+  mov     w0, #6                                  // screen character column 6
   bl      print_w0
-  mov     w0, #16                                 // number of bytes in tvt_data to print
-  mov     w1, #7                                  // initial ink colour
-  mov     w2, #0                                  // initial paper colour
-  add     w3, w1, w2, lsl #3                      // w3 = attribute value
+  mov     w0, tvt_data                            // address of string to render to screen
+  mov     w3, #0x3f                               // initial attribute value
+1:
   strb    w3, [x28, ATTR_T-sysvars]               // update temp attribute sysvar
+  adr     x4, tvt_data
+2:
+  ldrb    w0, [x4], #1
+  cbz     w0, 3f                                  // If 0, end of string; exit loop; jump forward to 2:.
+  bl      print_w0
+  b       2b
+3:
+  subs    w3, w3, #8
+  b.hs    1b
+  add     w3, w3, #0x3f
+  cmp     w3, #0x37
+  b.eq    4f
+  mov     w0, #0x17                               // Print character 'TAB'
+  bl      print_w0
+  mov     w0, #6
+  bl      print_w0                                // screen character column 6
+  bl      print_w0                                // ignored
+4:
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -42,4 +59,4 @@ tvt_data:
   .byte   0x13, 0x00                              // Bright, off
   .ascii  " 2022 "
   .byte   0x13, 0x01                              // Bright, on
-  .ascii  " 2022 "
+  .asciz  " 2022 "

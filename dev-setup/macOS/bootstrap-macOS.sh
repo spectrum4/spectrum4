@@ -29,7 +29,11 @@ export LDFLAGS=-L$(brew --prefix)/lib
 
 # in case fuse is installed outside of brew, don't just brew install it
 if ! hash fuse 2> /dev/null; then
-  # brew install fuse-emulator
+  # The fuse-emulator brew package has a graphical UI, so when tup runs all the
+  # tests, lots of windows are opened. To avoid this, build a version of fuse
+  # with no user interface.
+  #
+  # brew install fuse-emulator <- what we don't want to do
   brew install libgcrypt
   curl -f -L 'https://sourceforge.net/projects/fuse-emulator/files/fuse/1.5.7/fuse-1.5.7.tar.gz/download' > fuse-1.5.7.tar.gz
   tar xvfz fuse-1.5.7.tar.gz

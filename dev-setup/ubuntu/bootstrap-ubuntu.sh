@@ -65,13 +65,15 @@ export PATH="${PATH}:/usr/local/bin"
 retry apt-get update
 retry apt-get upgrade -y
 
-# xz-utils is needed by tar command below
-# build-essential is needed for building z80 binutils and libspectrum/fuse
-# libglib2.0 is needed for building libspectrum
 # bsdmainutils contains hexdump
-# libpixman-1-dev and meson needed for building qemu
+# build-essential is needed for building z80 binutils and libspectrum/fuse
 # libaudiofile-dev is required by tape2wav in fuse-utils
-retry apt-get install -y wget xz-utils build-essential libglib2.0 bsdmainutils libpixman-1-dev meson libaudiofile-dev fuse3 libfuse3-dev unzip texinfo
+# libglib2.0 is needed for building libspectrum
+# libgmp-dev is required to build aarch64-none-elf-gdb
+# libncurses-dev might be useful for building aarch64-none-elf-gdb (not sure)
+# libpixman-1-dev and meson needed for building qemu
+# xz-utils is needed by tar commands below
+retry apt-get install -y bsdmainutils build-essential fuse3 libaudiofile-dev libfuse3-dev libglib2.0 libgmp-dev libncurses-dev libpixman-1-dev meson texinfo unzip wget xz-utils
 
 retry wget -O /usr/local/bin/curl "https://github.com/moparisthebest/static-curl/releases/download/v7.84.0/curl-${ARCH2}"
 chmod a+x /usr/local/bin/curl
@@ -110,14 +112,26 @@ retry apt-get install -y fuse-emulator-utils
 # cd ..
 
 # install gcc cross-compiler toolchain
-retry wget -nv -O "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz" "https://developer.arm.com/-/media/Files/downloads/gnu/11.2-2022.02/binrel/gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz"
+retry curl -f -L "https://developer.arm.com/-/media/Files/downloads/gnu/11.2-2022.02/binrel/gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz" > "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz"
 tar xvf "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf.tar.xz"
 
 # move gcc tools into /usr/local/bin
 mv "gcc-arm-11.2-2022.02-$(uname -m)-aarch64-none-elf/bin"/* /usr/local/bin
 
+# replace arm developer gdb with our own, since theirs seems to depend on
+# libpython3.6m.so.1.0 which isn't available, and is from python 3.6, so pretty
+# old too.
+rm /usr/local/bin/aarch64-none-elf-gdb*
+retry curl -f -L 'https://ftp.gnu.org/gnu/gdb/gdb-12.1.tar.gz' > gdb-12.1.tar.gz
+tar zvfx gdb-12.1.tar.gz
+cd gdb-12.1
+./configure --target=aarch64-none-elf # --disable-werror
+make
+make install
+cd ..
+
 # install z80 cross-compiler binutils
-retry wget -O binutils.tar.gz https://ftpmirror.gnu.org/binutils/binutils-2.39.tar.gz
+retry curl -f -L 'https://ftpmirror.gnu.org/binutils/binutils-2.39.tar.gz' > binutils.tar.gz
 tar zvfx binutils.tar.gz
 cd binutils-2.39
 ./configure --target=z80-unknown-elf --disable-werror

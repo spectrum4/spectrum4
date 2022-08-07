@@ -138,7 +138,8 @@
   stp     x0, x1, [sp, #-16]!
   stp     x2, x3, [sp, #-16]!
   stp     x4, x5, [sp, #-16]!
-  mrs     x5, nzcv                                // copy N, Z, C, and V flags into x5 (not disturbed by following uart_puts, uart_send, uart_x0, uart_newline, base10 calls)
+  mrs     x0, nzcv
+  str     x0, [sp, #-16]!                         // preserve N, Z, C, and V flags on the stack
   mov     x0, 'x'
   bl      uart_send
   mov     x2, #\index
@@ -151,13 +152,14 @@
   bl      uart_send
   mov     x0, ' '
   bl      uart_send
-  ldp     x4, x5, [sp]
-  ldp     x2, x3, [sp, #16]
-  ldp     x0, x1, [sp, #32]
+  ldp     x4, x5, [sp, #16]                       // restore these registers, in case they are being logged!
+  ldp     x2, x3, [sp, #32]
+  ldp     x0, x1, [sp, #48]
   mov     x0, x\index
   bl      uart_x0
   bl      uart_newline
-  msr     nzcv, x5                                // restore flags
+  ldr     x0, [sp], #16                           // fetch preserved nzcv from stack
+  msr     nzcv, x0                                // restore it
   ldp     x4, x5, [sp], #16
   ldp     x2, x3, [sp], #16
   ldp     x0, x1, [sp], #16

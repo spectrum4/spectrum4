@@ -3691,7 +3691,7 @@ po_cont:
                                           ; 0 - 22 becomes 22 - 0.
 
 po_at_err:
-        JP      C,report_bb               ; to REPORT-B if higher than 22 decimal
+        JP      C,report_bb               ; to REPORT-B if column or row out of range
                                           ; Integer out of range.
 
         INC     A                         ; adjust for system range $01-$17

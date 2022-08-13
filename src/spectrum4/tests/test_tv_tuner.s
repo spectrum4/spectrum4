@@ -73,6 +73,7 @@ tv_tuner_01_setup:
   _strh   0x01, (STRMS+0x0a)
   _str    tv_tuner_fake_chans, CHANS
   _strb   0x02, DF_SZ                             // lower screen is 2 lines
+  _str    char_set-32*32, CHARS
   ret
 
 tv_tuner_01_effects:

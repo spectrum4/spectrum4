@@ -49,15 +49,18 @@ tv_tuner:                                // L3C10
   add     w3, w3, #0x3f
   cmp     w3, #0x37
   b.eq    4f
+  mov     w0, #0x38                               // black text on white background
+  strb    w0, [x28, ATTR_T-sysvars]               // update temp attribute sysvar
   mov     w0, #0x17                               // Print character 'TAB'
   stp     x3, x4, [sp, #-16]!
   bl      print_w0
-  mov     w0, #6
-  bl      print_w0                                // screen character column 6
-  bl      print_w0                                // ignored
+  mov     w0, #6                                  // LSB for TAB position (6)
+  bl      print_w0                                // print LSB char
+  mov     w0, #0                                  // MSB for TAB position (6)
+  bl      print_w0                                // print MSB char
   ldp     x3, x4, [sp], #0x10
   b       1b
-  4:
+4:
 # b       4b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret

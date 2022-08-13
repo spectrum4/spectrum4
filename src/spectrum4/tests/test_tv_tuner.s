@@ -70,10 +70,9 @@
 
 
 tv_tuner_01_setup:
-  mov     w5, #0x1
-  strh    w5, [x28, STRMS+0x0a-sysvars]
-  adr     x5, tv_tuner_fake_chans
-  str     x5, [x28, CHANS-sysvars]
+  _strh   0x01, (STRMS+0x0a)
+  _str    tv_tuner_fake_chans, CHANS
+  _strb   0x02, DF_SZ                             // lower screen is 2 lines
   ret
 
 tv_tuner_01_effects:

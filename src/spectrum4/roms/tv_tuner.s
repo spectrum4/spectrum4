@@ -37,7 +37,8 @@ tv_tuner:                                // L3C10
   adr     x4, tvt_data
 2:
   ldrb    w0, [x4], #1
-  cbz     w0, 3f                                  // If 0, end of string; exit loop; jump forward to 2:.
+  cmp     w0, #0x03
+  b.eq    3f                                      // char 0x03 => end of string, so exit loop
   stp     x3, x4, [sp, #-16]!
   bl      print_w0
   ldp     x3, x4, [sp], #0x10
@@ -49,18 +50,21 @@ tv_tuner:                                // L3C10
   cmp     w3, #0x37
   b.eq    4f
   mov     w0, #0x17                               // Print character 'TAB'
+  stp     x3, x4, [sp, #-16]!
   bl      print_w0
   mov     w0, #6
   bl      print_w0                                // screen character column 6
   bl      print_w0                                // ignored
+  ldp     x3, x4, [sp], #0x10
   b       1b
-4:
-  b       4b
+  4:
+# b       4b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
 tvt_data:
-# .byte   0x13, 0x00                              // Bright, off
+  .byte   0x13, 0x00                              // Bright, off
   .ascii  " 2022 "
-# .byte   0x13, 0x01                              // Bright, on
-  .asciz  " 2022 "
+  .byte   0x13, 0x01                              // Bright, on
+  .ascii  " 2022 "
+  .byte   0x03                                    // Can't use 0x00 for termination byte since in string

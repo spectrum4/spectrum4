@@ -20,48 +20,36 @@ tv_tuner:                                // L3C10
   mov     x29, sp                                 // Update frame pointer to new stack location.
 // TODO: test for shift-space combo; if _not_ both pressed, return from routine
   movl    w0, BORDER_COLOUR
-  bl      paint_border                            // Paint white border
+  bl      paint_border                            // Paint border
   mov     w0, #2
   bl      chan_open                               // Main screen in use
   strb    wzr, [x28, TV_FLAG-sysvars]             // [TV_FLAG] = 0
-  mov     w0, #0x16                               // Print character 'AT'
-  bl      print_w0
-  mov     w0, #0                                  // screen character row 0
-  bl      print_w0
-  mov     w0, #6                                  // screen character column 6
-  bl      print_w0
-  mov     w0, tvt_data                            // address of string to render to screen
-  mov     w3, #0x3f                               // initial attribute value
+  mov     w7, #0x3f                               // initial attribute value
 1:
-  strb    w3, [x28, ATTR_T-sysvars]               // update temp attribute sysvar
-  adr     x4, tvt_data
+  and     w0, w7, #0x07
+  add     w0, w0, #0x35
+  mov     w1, #0x67
+  bl      cl_set
 2:
+  strb    w7, [x28, ATTR_T-sysvars]               // update temp attribute sysvar
+  adr     x4, tvt_data
+3:
   ldrb    w0, [x4], #1
   cmp     w0, #0x03
-  b.eq    3f                                      // char 0x03 => end of string, so exit loop
-  stp     x3, x4, [sp, #-16]!
+  b.eq    4f                                      // char 0x03 => end of string, so exit loop
+  stp     x7, x4, [sp, #-16]!
   bl      print_w0
-  ldp     x3, x4, [sp], #0x10
-  b       2b
-3:
-  subs    w3, w3, #8
-  b.hs    1b
-  add     w3, w3, #0x3f
-  cmp     w3, #0x37
-  b.eq    4f
-  mov     w0, #0x38                               // black text on white background
-  strb    w0, [x28, ATTR_T-sysvars]               // update temp attribute sysvar
-  mov     w0, #0x17                               // Print character 'TAB'
-  stp     x3, x4, [sp, #-16]!
-  bl      print_w0
-  mov     w0, #6                                  // LSB for TAB position (6)
-  bl      print_w0                                // print LSB char
-  mov     w0, #0                                  // MSB for TAB position (6)
-  bl      print_w0                                // print MSB char
-  ldp     x3, x4, [sp], #0x10
-  b       1b
+  ldp     x7, x4, [sp], #0x10
+  b       3b
 4:
-# b       4b
+  subs    w7, w7, #8
+  b.hs    2b
+  add     w7, w7, #0x3f
+  cmp     w7, #0x37
+  b.eq    5f
+  b       1b
+5:
+# b       5b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

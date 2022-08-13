@@ -7,7 +7,7 @@ po_cont:                                 // L0A87
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adr     x4, print_out
   bl      po_change                               // Set current channel output routine to print_out.
-  ldrb    w5, [x28, TVDATA-sysvars]               // w5[0-7] = control char
+  ldrh    w5, [x28, TVDATA-sysvars]               // w5[0-7] = control char
                                                   // w5[8-15] = first byte of 2 byte control code, if 2 byte
   lsr     w6, w5, #8                              // w6 = first byte of 2 byte control code, if 2 byte
   and     w5, w5, #0xff                           // w5 = control char
@@ -43,7 +43,7 @@ po_cont:                                 // L0A87
   bl      report_bb
   b       2b
 5:
-  add     w4, w0, w6, lsl #8                      // w4 = TAB value (uint16)
+  add     w4, w6, w0, lsl #8                      // w4 = TAB value (uint16)
   bl      po_fill
   b       2b
 6:

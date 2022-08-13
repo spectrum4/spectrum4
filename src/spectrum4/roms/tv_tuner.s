@@ -19,7 +19,7 @@ tv_tuner:                                // L3C10
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
 // TODO: test for shift-space combo; if _not_ both pressed, return from routine
-  movl    w0, 0x00cccccc
+  movl    w0, BORDER_COLOUR
   bl      paint_border                            // Paint white border
   mov     w0, #2
   bl      chan_open                               // Main screen in use

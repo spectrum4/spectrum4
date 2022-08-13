@@ -49,7 +49,20 @@ tv_tuner:                                // L3C10
   b.eq    5f
   b       1b
 5:
-# b       5b
+  adrp    x19, attributes_file
+  add     x19, x19, :lo12:attributes_file
+  add     x20, x19, 108*8
+  adrp    x21, attributes_file_end
+  add     x21, x21, :lo12:attributes_file_end
+6:
+  mov     x0, x20
+  ldrb    w1, [x19], #0x01
+  add     x20, x20, #0x01
+  bl      poke_address
+  cmp     x20, x21
+  b.ne 6b
+7:
+# b       7b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

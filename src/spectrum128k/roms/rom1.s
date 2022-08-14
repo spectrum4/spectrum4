@@ -116,6 +116,7 @@
 .global cls
 .global cls_lower
 .global co_temp_4
+.global co_temp_5
 .global comma_sp
 .global continue
 .global cout

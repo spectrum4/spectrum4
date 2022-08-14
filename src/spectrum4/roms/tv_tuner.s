@@ -60,7 +60,7 @@ tv_tuner:                                // L3C10
   add     x20, x20, #0x01
   bl      poke_address
   cmp     x20, x21
-  b.ne 6b
+  b.ne    6b
 7:
 # b       7b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.

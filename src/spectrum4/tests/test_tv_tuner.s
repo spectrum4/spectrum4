@@ -70,12 +70,31 @@
 
 
 tv_tuner_01_setup:
+  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                                 // Update frame pointer to new stack location.
   _strh   0x01, (STRMS+0x0a)
   _str    tv_tuner_fake_chans, CHANS
   _strb   0x02, DF_SZ                             // lower screen is 2 lines
   strb    wzr, [x28, MASK_P-sysvars]
   strb    wzr, [x28, P_FLAG-sysvars]
   _str    char_set-32*32, CHARS
+  adr     x0, display_file
+  adr     x1, display_file_end
+1:
+  str     xzr, [x0], #0x08
+  cmp     x0, x1
+  b.ne    1b
+  adr     x0, attributes_file
+  adr     x2, attributes_file_end
+2:
+  mov     w1, #0x38
+  stp     x0, x2, [sp, #-16]!
+  bl      poke_address
+  ldp     x0, x2, [sp], #16
+  add     x0, x0, #0x01
+  cmp     x0, x2
+  b.ne    2b
+  ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
 tv_tuner_01_effects:

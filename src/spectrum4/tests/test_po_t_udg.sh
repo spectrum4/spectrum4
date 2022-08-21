@@ -325,6 +325,8 @@ for printer_in_use in 0 1; do
             echo
             echo '.align 0'
             echo "${msgname}: .asciz \"${expectedtext}\""
+            echo
+            echo '.ltorg'
           done
         } | ../../../utils/asm-format/asm-format > "test_po_t_udg.${fake_or_fake_reg_update}${flagsbit0}${printer_in_use}${lower_screen_in_use}.gen-s"
       done

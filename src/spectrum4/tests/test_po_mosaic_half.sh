@@ -28,7 +28,8 @@ function test_po_mosaic_half {
   echo
   echo "${testname}_setup_regs:"
   echo "  mov     w3, ${hexw3}"
-  echo "  adr     x6, display_file"
+  echo "  adrp    x6, display_file"
+  echo "  add     x6, x6, :lo12:display_file"
   echo '  ret'
   echo
   echo "${testname}_effects:"
@@ -40,7 +41,8 @@ function test_po_mosaic_half {
   echo "  mov     w3, #${hexw3_shifted}"
   echo "  mov     x4, #0x${b0}${b1}${b0}${b1}${b0}${b1}${b0}${b1}"
   echo "  mov     x5, #0x00${b1}00${b1}00${b1}00${b1}"
-  echo "  adr     x6, display_file+0x10"
+  echo "  adrp    x6, display_file+0x10"
+  echo "  add     x6, x6, :lo12:(display_file+0x10)"
   echo "  nzcv    #0b0${z_flag}00"
   echo '  ret'
 }

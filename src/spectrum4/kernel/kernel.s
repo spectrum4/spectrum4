@@ -365,7 +365,7 @@ mbreq_end:
 #   x0 unchanged
 .align 2
 mbox_call:
-  movl     w9, MAILBOX_BASE                       // x9 = 0x3f00b880 (Mailbox Peripheral Address)
+  movl    w9, MAILBOX_BASE                        // x9 = 0x3f00b880 (Mailbox Peripheral Address)
 1:                                                // Wait for mailbox FULL flag to be clear.
   ldr     w10, [x9, MAILBOX_STATUS]               // w10 = mailbox status.
   tbnz    w10, MAILBOX_FULL_BIT, 1b               // If FULL flag set (bit 31), try again...

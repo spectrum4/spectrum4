@@ -657,7 +657,7 @@ restore_page:
     ld      (hl), b
     inc     hl
     dec     de
-    jr 2b
+    jr      2b
 3:
   ld      (hl), b
   inc     hl

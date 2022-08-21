@@ -181,24 +181,26 @@ run_tests:
       add     x3, x3, :lo12:memory_dumps_end
       bl      snapshot_all_ram                    // Snapshot post-test RAM
 
-# .if DUMP_DISPLAY
-#       ldr     x2, ...........
-#       adr     x3, memory_dumps_end
-#
-#
-#   mov     x0, #2                                  // Number of RAM regions to snapshot
-#   str     x0, [x2], #8                            // Store number of RAM regions to snapshot
-#   mov     x0, #0                                  // start address of region to snapshot
-#   adrp    x1, bss_debug_start
-#   add     x1, x1, :lo12:bss_debug_start           // first address not to snapshot
-#   bl      snapshot_memory                         // x2 = first address after end of snapshot
-#   adr     x0, framebuffer
-#   ldp     w0, w1, [x0]
-#   add     x1, x0, x1
-#   bl      snapshot_memory                         // x2 = first address after end of snapshot
-#
-#
-# .endif
+##########################################
+# x2/x3 should be suitable already, from return values of previous
+# snapshot_all_ram call, so that this new snapshot is placed immediately after
+# previous one
+      mov     x0, #2                              // Number of RAM regions to snapshot
+      str     x0, [x2], #8                        // Store number of RAM regions to snapshot
+      adrp    x0, display_file
+      add     x0, x0, :lo12:display_file
+      adrp    x1, attributes_file_end
+      add     x1, x1, :lo12:attributes_file_end   // first address not to snapshot
+      mov     w4, #0x20                           // w4 = random block length
+      adr     x11, random_block_zeros
+      bl      snapshot_memory                     // x2 = first address after end of snapshot
+      adr     x0, framebuffer
+      ldp     w0, w1, [x0]
+      add     x1, x0, x1
+      mov     w4, #0x20                           // w4 = random block length
+      adr     x11, random_block_zeros
+      bl      snapshot_memory                     // x2 = first address after end of snapshot
+##########################################
 
       ldr     x2, [sp, #0x200]                    // x2 = pre-test snapshot location
       bl      restore_all_ram                     // Restore pre-test state
@@ -369,6 +371,15 @@ run_tests:
   ret
 
 
+.align 3
+random_block_zeros:
+.quad 0x0000000000000000
+.quad 0x0000000000000000
+.quad 0x0000000000000000
+.quad 0x0000000000000000
+
+
+.align 2
 # On entry:
 #   x8 = Memory location
 log_ram:
@@ -510,10 +521,20 @@ snapshot_all_ram:
   mov     x0, #0                                  // start address of region to snapshot
   adrp    x1, bss_debug_start
   add     x1, x1, :lo12:bss_debug_start           // first address not to snapshot
+  adrp    x7, rand_seq_length
+  add     x7, x7, :lo12:rand_seq_length
+  ldrb    w4, [x7]                                // w4 = random block length
+  adrp    x11, rand_data
+  add     x11, x11, :lo12:rand_data               // x11 = address of random data
   bl      snapshot_memory                         // x2 = first address after end of snapshot
   adr     x0, framebuffer
   ldp     w0, w1, [x0]
   add     x1, x0, x1
+  adrp    x7, rand_seq_length
+  add     x7, x7, :lo12:rand_seq_length
+  ldrb    w4, [x7]                                // w4 = random block length
+  adrp    x11, rand_data
+  add     x11, x11, :lo12:rand_data               // x11 = address of random data
   bl      snapshot_memory                         // x2 = first address after end of snapshot
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
@@ -524,6 +545,8 @@ snapshot_all_ram:
 #   x1 = end address to compress (exclusive) -> 8 byte aligned, at least 16 more than x0
 #   x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
 #   x3 = end address of compressed data buffer (exclusive) -> 8 byte aligned
+#   w4 = random block length
+#   x11 = address of random data
 # On exit:
 #   x0 = x1
 #   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
@@ -531,7 +554,6 @@ snapshot_all_ram:
 #   x5 = [x1 - 8]
 #   x7 = first address after random block
 #   x8 = address in random block
-#   x11 = rand_data
 #   x26 = repeat count of last quad (excluding original entry, i.e. n-1 where n = length of repeated sequence)
 #   x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
 snapshot_memory:
@@ -540,11 +562,6 @@ snapshot_memory:
   b.hs    6f                                      // If not, throw buffer-overflow error
   stur    x0, [x2, #-16]                          // Store start address of data region to start of buffer
   stur    x1, [x2, #-8]                           // Store end address of data region to start of buffer
-  adrp    x7, rand_seq_length
-  add     x7, x7, :lo12:rand_seq_length
-  ldrb    w4, [x7]                                // w4 = random block length
-  adrp    x11, rand_data
-  add     x11, x11, :lo12:rand_data               // x11 = address of random data
   udiv    x8, x0, x4                              // x8 = int(start_address_decompressed/x4)
   umsubl  x8, w8, w4, x0                          // x8 = x0 - x4 * int(x0/x4) = start_address_decompressed % random_sequence_length
   add     x8, x8, x11                             // x8 = address inside random block that holds quad for masking start address

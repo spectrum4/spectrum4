@@ -104,7 +104,8 @@ tv_tuner_01_effects:
   adr     x1, attributes_file_end
   adr     x2, tv_tuner_01_screen
   mov     x4, #0x20
-  adr     x11, random_block_zeros
+  adrp    x11, random_block_zeros
+  add     x11, x11, :lo12:random_block_zeros
   bl      restore_snapshot
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
@@ -118,13 +119,6 @@ tv_tuner_fake_chans:
   .quad report_j                                  // REPORT_J  - S channel input routine.
   .byte 'S',0,0,0,0,0,0,0                         // 0x53      - Channel identifier 'S'.
 
-
-.align 3
-random_block_zeros:
-.quad 0x0000000000000000
-.quad 0x0000000000000000
-.quad 0x0000000000000000
-.quad 0x0000000000000000
 
 .align 3
 tv_tuner_01_screen:

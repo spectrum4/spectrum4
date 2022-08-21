@@ -7,11 +7,11 @@
 # least one space is printed, set system flag to suppress leading spaces.
 #
 # On entry:
-#   w1 = (109 - column), or 1 for end-of-line
 #   w4 = new x character position plus arbitrary multiple of 108 (0-65535)
 po_fill:                                 // L0AC3
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
+  bl      po_fetch
   add     w6, w4, w1                              // w6 = newx + 109 - oldx
   sub     w6, w6, #1                              // w6 = 108 + newx - oldx
   mov     w2, #0x00010000

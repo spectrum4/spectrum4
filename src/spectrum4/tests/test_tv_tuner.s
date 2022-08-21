@@ -94,6 +94,7 @@ tv_tuner_01_setup:
   add     x0, x0, #0x01
   cmp     x0, x2
   b.ne    2b
+  _strb   DUMP_DISPLAY, sp4_test_flags            // Dump display updates to test log
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

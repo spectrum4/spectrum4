@@ -2,6 +2,12 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
+# sp4_test_flags
+.set DUMP_DISPLAY,    0b00000001                  // Indicates that test runner should dump snapshot of display
+                                                  // memory after calling routine under test, in order that this
+                                                  // can be converted to a .png file for visual inspection and
+                                                  // validation, and if correct, included in test for restoring
+                                                  // in <test>_effects routine.
 
 .text
 .align 2
@@ -16,7 +22,7 @@ run_tests:
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adr     x20, all_suites                         // x20 = address of test list
   ldr     x10, [x20], #8                          // x10 = number of tests
-  cbz     x10, 11f                                // Return if no tests to run
+  cbz     x10, 12f                                // Return if no tests to run
 // Create an initial snapshot for restoring state between tests
   adrp    x2, memory_dumps
   add     x2, x2, :lo12:memory_dumps              // x2 = target address for snapshot
@@ -40,6 +46,9 @@ run_tests:
       adr     x0, msg_running_test_part_2
       bl      uart_puts                           // Log "...\r\n"
 
+      adrp    x1, sp4_test_flags
+      add     x1, x1, :lo12:sp4_test_flags
+      strb    wzr, [x1]                           // Clear sp4_test_flags (since tests set these explicitly in setup sections)
       mov     x0, #1
       adrp    x1, uart_disable
       add     x1, x1, :lo12:uart_disable
@@ -180,11 +189,15 @@ run_tests:
       adrp    x3, memory_dumps_end
       add     x3, x3, :lo12:memory_dumps_end
       bl      snapshot_all_ram                    // Snapshot post-test RAM
-
-##########################################
-# x2/x3 should be suitable already, from return values of previous
-# snapshot_all_ram call, so that this new snapshot is placed immediately after
-# previous one
+      adrp    x0, sp4_test_flags
+      add     x0, x0, :lo12:sp4_test_flags
+      ldrb    w0, [x0]
+      tbz     w0, #0, 5f                          // Skip this section of not dumping display memory
+    // Dump display memory
+    // x2/x3 should be suitable already, from return values of previous
+    // snapshot_all_ram call, so that this new snapshot is placed immediately
+    // after previous one
+      mov     x6, x2                              // Keep record of start address in x6
       mov     x0, #2                              // Number of RAM regions to snapshot
       str     x0, [x2], #8                        // Store number of RAM regions to snapshot
       adrp    x0, display_file
@@ -200,14 +213,15 @@ run_tests:
       mov     w4, #0x20                           // w4 = random block length
       adr     x11, random_block_zeros
       bl      snapshot_memory                     // x2 = first address after end of snapshot
-##########################################
-
+      mov     x7, x2
+      bl      uart_memory_dump
+    5:
       ldr     x2, [sp, #0x200]                    // x2 = pre-test snapshot location
       bl      restore_all_ram                     // Restore pre-test state
       ldr     x23, [sp, #0x228]                   // x23 = pointer in test block
       ldp     x9, x17, [x23], #0x10               // x9 = effects address
                                                   // x17 = effects_regs address
-      cbz     x9, 5f
+      cbz     x9, 6f
       sub     sp, sp, #0x100
       stp     x0, x1, [sp]
       stp     x2, x3, [sp, #8 * 2]
@@ -241,7 +255,7 @@ run_tests:
       ldp     x26, x27, [sp, #8 * 26]
       ldp     x28, x29, [sp, #8 * 28]
       add     sp, sp, #0x100
-    5:
+    6:
 
     // Set NZCV flags
       ldp     x28, x1, [sp, #0x100 + 8 * 28]
@@ -266,11 +280,11 @@ run_tests:
       ldp     x22, x23, [sp, #0x100 + 8 * 22]
       ldp     x24, x25, [sp, #0x100 + 8 * 24]
       ldp     x26, x27, [sp, #0x100 + 8 * 26]
-      cbz     x30, 6f
+      cbz     x30, 7f
       sub     sp, sp, #0x100                      // Stack pointer to match routine under test
       blr     x30                                 // Set expected registers
       add     sp, sp, #0x100
-    6:
+    7:
 
     // Store expected registers
       sub     sp, sp, #0x100
@@ -301,18 +315,18 @@ run_tests:
     // Compare registers
       mov     x8, sp
       mov     x9, #0                              // x9 = register index
-      7:
+      8:
         ldr     x12, [x8, #0x200]                 // x12 = pre-test register value
         ldr     x13, [x8, #0x100]                 // x13 = post-test register value
         ldr     x14, [x8], #0x08                  // x14 = expected register value
         cmp     x13, x14
-        b.eq    8f
+        b.eq    9f
         adr     x16, log_register                 // x16 = function to log "Register x<index>"
         bl      test_fail
-      8:
+      9:
         add     x9, x9, #1
         cmp     x9, #29
-        b.ne    7b
+        b.ne    8b
 
     // Compare flags
       adr     x6, flag_msg_offsets
@@ -321,9 +335,9 @@ run_tests:
       ldr     w13, [x8, #0x100]                   // w13 = post-test NZCV
       ldr     w14, [x8], #0x08                    // w14 = expected NZCV
       eor     w9, w13, w14                        // w9 bits 28-31 hold 0 if expected == actual for counterpart NZCV flag, or 1 if not
-      9:
+      10:
         tst     w9, w7                            // Mask individual flag bit under test
-        b.eq    10f                               // If flag was set correctly, jump ahead to 10:
+        b.eq    11f                               // If flag was set correctly, jump ahead to 11:
       // Test fail - flag set incorrectly
         adr     x0, msg_fail
         bl      uart_puts                         // Log "FAIL: "
@@ -341,10 +355,10 @@ run_tests:
         tst     w13, w7
         csel    x0, x15, x16, eq
         bl      uart_puts                         // Log " clear but should be set.\r\n" or "set but should be clear.\r\n"
-      10:
+      11:
         add     x6, x6, #1
         lsr     w7, w7, #1
-        tbz     w7, #27, 9b
+        tbz     w7, #27, 10b
 
       ldp     x6, x7, [x24]                       // Restore pre-test snapshot location, post-test snapshot location
       bl      compare_all_snapshots
@@ -364,7 +378,7 @@ run_tests:
     add     sp, sp, #0x10
     cbnz    x10, 1b                               // Loop if more tests to run
 
-11:
+12:
   adr     x0, msg_all_tests_completed
   bl      uart_puts                               // Log "All tests completed.\r\n"
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
@@ -377,6 +391,22 @@ random_block_zeros:
 .quad 0x0000000000000000
 .quad 0x0000000000000000
 .quad 0x0000000000000000
+
+
+.align 2
+uart_memory_dump:
+  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                                 // Update frame pointer to new stack location.
+  1:
+    adr     x0, msg_dot_quad
+    bl      uart_puts
+    ldr     x0, [x6], #0x08
+    bl      uart_x0
+    bl      uart_newline
+    cmp     x6, x7
+    b.ne    1b
+  ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
+  ret
 
 
 .align 2
@@ -1064,6 +1094,7 @@ msg_running_test_part_2:       .asciz "...\r\n"
 msg_should_be_set:             .asciz " should be set.\r\n"
 msg_should_not_be_set:         .asciz " should not be set.\r\n"
 msg_all_tests_completed:       .asciz "All tests completed.\r\n"
+msg_dot_quad:                  .asciz ".quad "
 
 flag_msg_offsets:
 .byte msg_flag_n - .
@@ -1110,6 +1141,7 @@ bss_debug_start:
 
 .align 0
 uart_disable: .space 1
+sp4_test_flags: .space 1
 
 .align 0
 rand_seq_length: .space 1

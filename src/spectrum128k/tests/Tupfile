@@ -13,8 +13,8 @@ import Z80_TOOLCHAIN_PREFIX=z80-unknown-elf-
 : test_po_attr.sh |> !calls-asm-format |> test_po_attr.gen-s {gen-test}
 : test_po_mosaic_half.sh |> !calls-asm-format |> test_po_mosaic_half.0.gen-s test_po_mosaic_half.1.gen-s test_po_mosaic_half.2.gen-s test_po_mosaic_half.3.gen-s {gen-test}
 : test_po_scr.sh |> !calls-asm-format |> test_po_scr.lowerscreen.gen-s test_po_scr.upperscreen.gen-s {gen-test}
-: test_po_tokens.sh |> !calls-asm-format |> %B.f0.gen-s %B.f1.gen-s %B.s0.gen-s %B.s1.gen-s {gen-test}
 : test_po_t_udg.sh |> !calls-asm-format |> %B.f000.gen-s %B.f001.gen-s %B.f010.gen-s %B.f011.gen-s %B.f100.gen-s %B.f101.gen-s %B.f110.gen-s %B.f111.gen-s %B.s000.gen-s %B.s001.gen-s %B.s010.gen-s %B.s011.gen-s %B.s100.gen-s %B.s101.gen-s %B.s110.gen-s %B.s111.gen-s {gen-test}
+: test_po_tokens.sh |> !calls-asm-format |> %B.f0.gen-s %B.f1.gen-s %B.s0.gen-s %B.s1.gen-s {gen-test}
 
 # Build Tests
 

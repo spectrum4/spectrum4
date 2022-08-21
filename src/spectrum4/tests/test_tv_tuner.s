@@ -105,6 +105,17 @@ tv_tuner_01_setup:
 tv_tuner_01_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
+  _setbit 0, FLAGS
+  _resbit 1, FLAGS
+  _resbit 4, FLAGS2
+  _strb   0, TV_FLAG
+  _strb   0x07, S_POSN_X
+  _strb   0x35, S_POSN_Y
+  _strb   0x40, ATTR_T
+  _strb   0x00, MASK_T
+  _strb   0x13, TVDATA
+  _str    tv_tuner_fake_chans, CURCHL
+  _str    display_file + 8 * 216 - 6*2, DF_CC
   adrp    x0, display_file
   add     x0, x0, :lo12:display_file
   adrp    x1, attributes_file_end
@@ -127,6 +138,34 @@ tv_tuner_01_effects:
   ret
 
 tv_tuner_01_effects_regs:
+  adrp    x0, attributes_file_end - 20*108 - 2
+  add     x0, x0, :lo12:(attributes_file_end - 20*108 - 2)
+  mov     w1, wzr
+  mov     w2, 0x40
+  mov     w3, wzr
+  adrp    x4, tvt_data_end
+  add     x4, x4, :lo12:tvt_data_end
+  mov     w5, 0xcc
+  mov     w6, 0xcc
+  movl    w7, 0xcccccc
+  mov     w8, wzr
+  mov     w9, 0x80
+  mov     w10, 0x6b
+  movl    w11, 0x0329ff
+  mov     w12, 0x6c
+  mov     w13, wzr
+  mov     w14, wzr
+  mov     w15, wzr
+  mov     w16, 0x194f
+  mov     w17, 0x38
+  mov     w18, 0x0a
+  movl    w19, 0x0e8d40
+  adrp    x19, attributes_file_end - 8*108
+  add     x19, x19, :lo12:(attributes_file_end - 8*108)
+  adrp    x20, attributes_file_end
+  add     x20, x20, :lo12:attributes_file_end
+  mov     x21, x20
+  nzcv    0b0110
   ret
 
 .align 3

@@ -72,3 +72,4 @@ tvt_data:
   .byte   0x13, 0x01                              // Bright, on
   .ascii  " 2022 "
   .byte   0x03                                    // Can't use 0x00 for termination byte since in string
+tvt_data_end:

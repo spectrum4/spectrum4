@@ -21,7 +21,8 @@ print_out:                               // L09F4
   cmp     x3, #0x18                               // Is character in range 24 - 31?
   b.hs    2f                                      // If so, to 2: to print '?'.
   adr     x4, ctlchrtab-(6*8)                     // x4 = theorectical address of control character table char 0
-  add     x4, x4, x3, lsl #3                      // x4 = address of control character routine for char passed in w0
+  add     x4, x4, x3, lsl #3                      // x4 = address in table of control character routine pointer
+  ldr     x4, [x4]                                // x4 = address of character routine
   blr     x4                                      // Call control character routine.
   b       3f                                      // Return from routine.
 1:

@@ -192,7 +192,8 @@ po_attr_cjs_effects:
 # TODO: comment all of this!!!
 po_attr_cjs_effects_regs:
 // section 1, line 5, character 4, plus 16 pixel row increments of 216*20
-  adr     x0, display_file + 1*216*16*20 + 5*216 + 4*2 + 16*216*20
+  adrp    x0, display_file + 1*216*16*20 + 5*216 + 4*2 + 16*216*20
+  add     x0, x0, :lo12:(display_file + 1*216*16*20 + 5*216 + 4*2 + 16*216*20)
   mov     x1, #0
   mov     x3, #0
   mov     x5, #0xff
@@ -209,6 +210,7 @@ po_attr_cjs_effects_regs:
   mov     x16, #0xa90
   mov     x17, #0xd7
   mov     x18, #0x5
-  adr     x24, attributes_file
+  adrp    x24, attributes_file
+  add     x24, x24, :lo12:attributes_file
   nzcv    #0b0110
   ret

@@ -116,6 +116,7 @@
 .global cls
 .global cls_lower
 .global co_temp_4
+.global co_temp_5
 .global comma_sp
 .global continue
 .global cout
@@ -3691,7 +3692,7 @@ po_cont:
                                           ; 0 - 22 becomes 22 - 0.
 
 po_at_err:
-        JP      C,report_bb               ; to REPORT-B if higher than 22 decimal
+        JP      C,report_bb               ; to REPORT-B if column or row out of range
                                           ; Integer out of range.
 
         INC     A                         ; adjust for system range $01-$17
@@ -11642,6 +11643,10 @@ co_temp_b:
 ; -----------------------
 ; This routine addresses a system variable ATTR_T, MASK_T or P-FLAG in HL.
 ; colour value in A, mask in B.
+; (HL) bits are preserved where corresponding bit in B is clear
+; (HL) bits are taken from A where corresponding bit in B is set
+; HL incremented
+; A=entry B
 
 co_change:
         XOR     (HL)                      ; impress bits specified
@@ -11654,20 +11659,23 @@ co_change:
 
 ; ---
 
-; the branch was here with flash and bright
-
+; Handle FLASH / BRIGHT control characters
+; A = 0
+; carry set for FLASH; carry clear for BRIGHT
+; D holds bright / flash value (0, 1, 8 legal; otherwise illegal)
 co_temp_c:
-        SBC     A,A                       ; set zero flag for bright.
-        LD      A,D                       ; fetch original parameter 0,1 or 8
-        RRCA                              ; rotate bit 0 to bit 7
-        LD      B,$80                     ; mask for flash 10000000
+        SBC     A,A                       ; zero flag set for FLASH; clear for BRIGHT
+        LD      A,D                       ; A = bright value (0, 1, 8 legal, or non-legal value)
+        RRCA                              ; rotate bit 0 to bit 7, bit 4 to bit 3
+        LD      B,$80                     ; B = 128
         JR      NZ,co_temp_d              ; forward to CO-TEMP-D if flash
 
-        RRCA                              ; rotate bit 7 to bit 6
-        LD      B,$40                     ; mask for bright 01000000
+        RRCA                              ; rotate bit 7 to bit 6, bit 3 to bit 2
+        LD      B,$40                     ; B = 64
 
 co_temp_d:
-        LD      C,A                       ; store value in C
+                                          ; B = 128 (FLASH) / 64 (BRIGHT)
+        LD      C,A                       ; C = 128 (FLASH 1) / 64 (BRIGHT 1) / 8 (FLASH 8) / 4 (BRIGHT 8) / 0 (FLASH 0 and BRIGHT 0)
         LD      A,D                       ; fetch parameter
         CP      $08                       ; compare with 8
         JR      Z,co_temp_e               ; forward to CO-TEMP-E if 8
@@ -11677,13 +11685,13 @@ co_temp_d:
                                           ; 'Invalid colour'
 
 co_temp_e:
-        LD      A,C                       ; value to A
+        LD      A,C                       ; A = 128 (FLASH 1) / 64 (BRIGHT 1) / 8 (FLASH 8) / 4 (BRIGHT 8) / 0 (FLASH 0 and BRIGHT 0)
         LD      HL,ATTR_T                 ; address ATTR_T
         CALL    co_change                 ; routine CO-CHANGE addressing ATTR_T
         LD      A,C                       ; fetch value
-        RRCA                              ; for flash8/bright8 complete
-        RRCA                              ; rotations to put set bit in
-        RRCA                              ; bit 7 (flash) bit 6 (bright)
+        RRCA                              ; for flash8/bright8 complete (bit 6 to bit 5, bit 2 to bit 1)
+        RRCA                              ; rotations to put set bit in (bit 5 to bit 4, bit 1 to bit 0)
+        RRCA                              ; bit 7 (flash) bit 6 (bright) (bit 4 to bit 3, bit 0 to bit 7)
         JR      co_change                 ; back to CO-CHANGE addressing MASK_T
                                           ; and indirect return.
 

@@ -28,7 +28,6 @@
   .include "po_2_oper.s"
   .include "po_able.s"
   .include "po_any.s"
-  .include "po_at_set.s"
   .include "po_attr.s"
   .include "po_back.s"
   .include "po_change.s"
@@ -47,7 +46,6 @@
   .include "po_search.s"
   .include "po_store.s"
   .include "po_t_udg.s"
-  .include "po_tab.s"
   .include "po_table.s"
   .include "po_table_1.s"
   .include "po_tokens.s"
@@ -63,9 +61,6 @@
   .include "report_j.s"
   .include "temps.s"
   .include "tkn_table.s"
-  .include "to_co_temp_5.s"
-  .include "to_end.s"
-  .include "to_report_bb.s"
 .endif
 
 .text

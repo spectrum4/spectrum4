@@ -14,8 +14,8 @@ demo:
   bl      display_zx_screen
   mov     w0, 0x10000000
   bl      wait_cycles
-  mov     x0, #60
-  bl      cls
+  movl    w0, PAPER_COLOUR
+  bl      paint_window
   mov     x0, sp
   mov     x1, #1
   mov     x2, #0
@@ -51,8 +51,8 @@ demo:
 paint_copyright:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
-  adrp    x0, msg_copyright
-  add     x0, x0, :lo12:msg_copyright             // x0 = location of system copyright message.
+  adrp    x0, msg_demo_copyright
+  add     x0, x0, :lo12:msg_demo_copyright        // x0 = location of demo copyright message.
   mov     w1, 38                                  // Print at x=38.
   mov     w2, 40                                  // Print at y=40.
   movl    w3, INK_COLOUR                          // Ink colour is default system ink colour.
@@ -135,3 +135,6 @@ display_zx_screen:
 
 .data
 msg_hex_header:                .asciz "           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f  "
+msg_demo_copyright:                      // L0561
+  .byte 0x7f                                      // '(c)'.
+  .asciz " 2022 Spectrum +4 Demo Authors"

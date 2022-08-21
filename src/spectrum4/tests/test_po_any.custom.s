@@ -69,7 +69,8 @@ po_any_G_81_setup:
   _strhbe 0b0000111111110000, display_file + 216*20*16*0 + 11*216 + 9*2 + 13*216*20
   _strhbe 0b0000000000000000, display_file + 216*20*16*0 + 11*216 + 9*2 + 14*216*20
   _strhbe 0b0000000000000000, display_file + 216*20*16*0 + 11*216 + 9*2 + 15*216*20
-  adr     x0, display_file + 216*20*16*0 + 11*216 + 9*2 + 0*216*20
+  adrp    x0, display_file + 216*20*16*0 + 11*216 + 9*2 + 0*216*20
+  add     x0, x0, :lo12:(display_file + 216*20*16*0 + 11*216 + 9*2 + 0*216*20)
   bl      po_attr
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
@@ -77,7 +78,8 @@ po_any_G_81_setup:
 .align 2
 po_any_G_81_setup_regs:
   mov     w0, 60-11-0*20
-  adr     x2, display_file + 216*20*16*0 + 11*216 + 9*2
+  adrp    x2, display_file + 216*20*16*0 + 11*216 + 9*2
+  add     x2, x2, :lo12:(display_file + 216*20*16*0 + 11*216 + 9*2)
   mov     w1, 109-9
   mov     w3, 0x81
   ret
@@ -109,7 +111,8 @@ po_any_G_81_effects:
   _strhbe 0b1111111111111111, display_file + 216*20*16*0 + 11*216 + 9*2 + 14*216*20
   _strhbe 0b1111111111111111, display_file + 216*20*16*0 + 11*216 + 9*2 + 15*216*20
 
-  adr     x0, display_file + 216*20*16*0 + 11*216 + 9*2 + 0*216*20
+  adrp    x0, display_file + 216*20*16*0 + 11*216 + 9*2 + 0*216*20
+  add     x0, x0, :lo12:(display_file + 216*20*16*0 + 11*216 + 9*2 + 0*216*20)
   bl      po_attr
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
@@ -119,12 +122,14 @@ po_any_G_81_effects_regs:
   sub     w1, w1, #1
   add     w2, w2, #2
   mov     w3, wzr
-  adr     x4, MEMBOT
+  adrp    x4, MEMBOT
+  add     x4, x4, :lo12:MEMBOT
   mov     w5, #0xcc
   mov     w6, #0xcc
   ldr     w7, =0xcccc00
   mov     w8, wzr
-  adr     x9, mbreq
+  adrp    x9, mbreq
+  add     x9, x9, :lo12:mbreq
   mov     w10, #9
   ldr     x11, =0x1067b
   mov     w12, #0x6c

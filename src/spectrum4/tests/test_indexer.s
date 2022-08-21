@@ -18,14 +18,14 @@
 # scannings stops at the end of the table.
 
 indexer_1_setup_regs:
-  mov x0, #4
-  adr x1, indexer_test_table
+  mov     x0, #4
+  adr     x1, indexer_test_table
   ret
 
 indexer_1_effects_regs:
-  mov x1, #0                                      // 0 => record not found
-  mov x9, #0                                      // 0 => all records checks
-  ldr x10, =0x1324354657687980                    // value of last inspected key
+  mov     x1, #0                                  // 0 => record not found
+  mov     x9, #0                                  // 0 => all records checks
+  ldr     x10, =0x1324354657687980                // value of last inspected key
   nzcv    #0b1000
   ret
 
@@ -33,15 +33,15 @@ indexer_1_effects_regs:
 # indexer_2 looks up a key that is in the lookup table twice.
 
 indexer_2_setup_regs:
-  ldr x0, =0x0001020304050607
-  adr x1, indexer_test_table
+  ldr     x0, =0x0001020304050607
+  adr     x1, indexer_test_table
   ret
 
 indexer_2_effects_regs:
-  adr x1, indexer_test_table_rec_0                // address of record 0 key
-  ldr x2, =0x1232343454565676                     // value of record 0 value
-  mov x9, #3                                      // number of unscanned entries
-  mov x10, x0                                     // value of last inspected key
+  adr     x1, indexer_test_table_rec_0            // address of record 0 key
+  ldr     x2, =0x1232343454565676                 // value of record 0 value
+  mov     x9, #3                                  // number of unscanned entries
+  mov     x10, x0                                 // value of last inspected key
   nzcv    #0b0110                                 // 0b0110 => match found
   ret
 
@@ -50,15 +50,15 @@ indexer_2_effects_regs:
 # the complete table is scanned.
 
 indexer_3_setup_regs:
-  ldr x0, =0x1324354657687980
-  adr x1, indexer_test_table
+  ldr     x0, =0x1324354657687980
+  adr     x1, indexer_test_table
   ret
 
 indexer_3_effects_regs:
-  adr x1, indexer_test_table_rec_3                // address of record 3 key
-  ldr x2, =0x0123456789abcdef                     // value of record 2 value
-  mov x9, #0                                      // number of unscanned entries
-  mov x10, x0                                     // value of last inspected key
+  adr     x1, indexer_test_table_rec_3            // address of record 3 key
+  ldr     x2, =0x0123456789abcdef                 // value of record 2 value
+  mov     x9, #0                                  // number of unscanned entries
+  mov     x10, x0                                 // value of last inspected key
   nzcv    #0b0110                                 // 0b0110 => match found
   ret
 
@@ -66,15 +66,15 @@ indexer_3_effects_regs:
 # indexer_4 checks that 0 is a valid key
 
 indexer_4_setup_regs:
-  mov x0, #0
-  adr x1, indexer_test_table
+  mov     x0, #0
+  adr     x1, indexer_test_table
   ret
 
 indexer_4_effects_regs:
-  adr x1, indexer_test_table_rec_2                // address of record 2 key
-  mov x2, #1                                      // value of record 2 value
-  mov x9, #1                                      // number of unscanned entries
-  mov x10, #0                                     // value of last inspected key
+  adr     x1, indexer_test_table_rec_2            // address of record 2 key
+  mov     x2, #1                                  // value of record 2 value
+  mov     x9, #1                                  // number of unscanned entries
+  mov     x10, #0                                 // value of last inspected key
   nzcv    #0b0110                                 // 0b0110 => match found
   ret
 

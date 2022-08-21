@@ -16,6 +16,7 @@
 chan_k_01_setup:
   _strb   0x34, BORDCR
   _strb   0b10010110, P_FLAG
+  ret
 
 chan_k_01_effects:
   _resbit 1, FLAGS

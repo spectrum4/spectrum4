@@ -15,6 +15,7 @@ chan_s_01_setup:
   _strb   0x3c, ATTR_P
   _strb   0x2b, MASK_P
   _strb   0b00011100, P_FLAG
+  ret
 
 chan_s_01_effects:
   _resbit 0, TV_FLAG

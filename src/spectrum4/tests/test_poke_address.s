@@ -28,8 +28,10 @@ poke_address_1_effects:
 
 
 poke_address_1_effects_regs:
-  adr     x9, display_file
-  adr     x10, attributes_file_end
+  adrp    x9, display_file
+  add     x9, x9, :lo12:display_file
+  adrp    x10, attributes_file_end
+  add     x10, x10, :lo12:attributes_file_end
   movl    w11, (poke_address_test - attributes_file)
   nzcv    #0b0010
   ret
@@ -117,7 +119,8 @@ poke_address_3_setup:
 
 
 poke_address_3_setup_regs:
-  adr     x0, attributes_file + 2*20*108 + 12*108 + 7
+  adrp    x0, attributes_file + 2*20*108 + 12*108 + 7
+  add     x0, x0, :lo12:(attributes_file + 2*20*108 + 12*108 + 7)
   mov     x1, #78
   ret
 
@@ -259,7 +262,8 @@ poke_address_3_effects:
 
 poke_address_3_effects_regs:
 // section 2, line 12, character 7, plus 16 pixel row increments of 216*20
-  adr     x0, display_file + 2*216*16*20 + 12*216 + 7*2 + 16*216*20
+  adrp    x0, display_file + 2*216*16*20 + 12*216 + 7*2 + 16*216*20
+  add     x0, x0, :lo12:(display_file + 2*216*16*20 + 12*216 + 7*2 + 16*216*20)
   mov     w1, #0x2a00
   mov     w3, #0x0
   mov     w5, #0x0

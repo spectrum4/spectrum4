@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"unicode"
 )
 
 func main() {
@@ -30,6 +31,42 @@ func transform(file *os.File, check bool) (exitCode int) {
 		oldline := scanner.Text()
 		// if ';' or '//' in first 10 characters, or not in string at all, don't touch line
 		line := strings.TrimRight(strings.ReplaceAll(oldline, "\t", "    "), " ")
+		stage := "initial-spaces"
+		initialSpaces := ""
+		instruction := ""
+		lineRest := ""
+		matches := true
+		for _, j := range line {
+			switch stage {
+			case "initial-spaces":
+				if j == ' ' {
+					initialSpaces = initialSpaces + " "
+					continue
+				}
+				stage = "instruction"
+				instruction = string(j)
+			case "instruction":
+				if j == ' ' {
+					stage = "post-instruction-spaces"
+					continue
+				}
+				instruction = instruction + string(j)
+			case "post-instruction-spaces":
+				if j != ' ' {
+					stage = "linerest"
+					lineRest = string(j)
+				}
+			case "linerest":
+				lineRest = lineRest + string(j)
+			}
+		}
+		if stage != "linerest" || len(instruction) > 7 || strings.Contains(instruction, ":") || (instruction[0] != '_' && !unicode.IsLetter(rune(instruction[0])) && !unicode.IsNumber(rune(instruction[0]))) {
+			matches = false
+		}
+		if matches {
+			line = initialSpaces + instruction + strings.Repeat(" ", 8-len(instruction)) + lineRest
+		}
+		// remove leading space before first ';' or '//'
 		start := line
 		if len(start) > 10 {
 			start = start[:10]
@@ -42,7 +79,6 @@ func transform(file *os.File, check bool) (exitCode int) {
 			}
 			continue
 		}
-		// remove leading space before first ';' or '//'
 		loc1 := r1.FindStringIndex(line)
 		loc2 := r2.FindStringIndex(line)
 		var loc []int

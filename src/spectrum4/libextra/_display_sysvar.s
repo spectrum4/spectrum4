@@ -50,7 +50,6 @@ display_sysvar:
   bl      uart_send
   mov     x0, ' '
   bl      uart_send
-  ldrb    w21, [x20, #8]                          // w21 = size of sysvar data in bytes
   ldr     x24, [x20]                              // x24 = address offset of sys var
   add     x0, x24, x28
   bl      display_sysvar_value
@@ -63,6 +62,7 @@ display_sysvar_value:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   stp     x21, x24, [sp, #-16]!                   // callee-saved registers used later on.
+  ldrb    w21, [x20, #8]                          // w21 = size of sysvar data in bytes
   mov     x24, x0
   sub     sp, sp, #32                             // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
   cmp     w21, #1

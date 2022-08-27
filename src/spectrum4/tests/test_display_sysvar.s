@@ -25,7 +25,7 @@ display_sysvar_1_setup_regs:
 
 
 display_sysvar_1_effects_regs:
-  sub     x0, sp, #61
+  sub     x0, sp, #0x5d
   movl    w1, AUX_BASE
   mov     x2, #0
   mov     x3, AUX_MU_LSR_DATA_READY
@@ -46,7 +46,7 @@ display_sysvar_2_setup_regs:
 
 
 display_sysvar_2_effects_regs:
-  sub     x0, sp, #59
+  sub     x0, sp, #0x5b
   movl    w1, AUX_BASE
   mov     x2, #0
   mov     x3, AUX_MU_LSR_DATA_READY
@@ -67,7 +67,7 @@ display_sysvar_8_setup_regs:
 
 
 display_sysvar_8_effects_regs:
-  sub     x0, sp, #47
+  sub     x0, sp, #0x4f
   movl    w1, AUX_BASE
   mov     x2, #0
   mov     x3, AUX_MU_LSR_DATA_READY
@@ -83,7 +83,7 @@ display_sysvar_other_setup_regs:
 
 
 display_sysvar_other_effects_regs:
-  sub     x0, sp, #60
+  sub     x0, sp, #0x5c
   movl    w1, AUX_BASE
   mov     x2, #0
   mov     x3, AUX_MU_LSR_DATA_READY

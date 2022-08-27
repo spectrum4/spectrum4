@@ -30,12 +30,12 @@ run_tests:
   add     x3, x2, x3                              // first address after end of compressed data region
   bl      snapshot_all_ram                        // Snapshot RAM so we can roll back between tests
   mov     x6, x2                                  // x6 = first free address after end of snapshot
-  1:                                              // Loop executing tests
+  1:                                              // Loop executing test suites
     ldr     x19, [x20], #0x08                     // x19 = address of test block
     ldp     x21, x22, [x19], #0x10                // x21 = number of tests for test block
                                                   // x22 = address of routine to test
     stp     x22, x20, [sp, #-16]!                 // Stash address of routine to test, pointer into all_suites
-    2:
+    2:                                            // Loop executing tests
       ldr     x23, [x19], #0x08                   // x23 = address of test
       ldp     x9, x17, [x23], #0x10               // x9 = setup address
                                                   // x17 = setup_regs address
@@ -308,9 +308,7 @@ run_tests:
 
     // Restore stashed registers
       add     x24, sp, #0x300                     // x24 = address of this routine's stashed registers
-      ldp     x21, x10, [x24, #16]                // Restore test block remaining test count, total remaining test count
       ldp     x19, x23, [x24, #32]                // Restore pointer in tests block, pointer in test block
-      ldp     x22, x20, [x24, #48]                // Restore address of routine to test, pointer into all_suites
 
     // Compare registers
       mov     x8, sp
@@ -322,6 +320,8 @@ run_tests:
         cmp     x13, x14
         b.eq    9f
         adr     x16, log_register                 // x16 = function to log "Register x<index>"
+        adr     x22, compare_registers
+        adr     x27, uart_x0
         bl      test_fail
       9:
         add     x9, x9, #1
@@ -362,6 +362,8 @@ run_tests:
 
       ldp     x6, x7, [x24]                       // Restore pre-test snapshot location, post-test snapshot location
       bl      compare_all_snapshots
+      ldp     x21, x10, [x24, #16]                // Restore test block remaining test count, total remaining test count
+      ldp     x22, x20, [x24, #48]                // Restore address of routine to test, pointer into all_suites
 
     // Restore initial pristine snapshot
       adrp    x2, memory_dumps
@@ -425,12 +427,15 @@ log_ram:
   ret
 
 
+.align 2
+# On entry:
+#   x20 = Memory location of sysvar metadata record
 log_sysvar:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adr     x0, msg_fail_7
-  bl      uart_puts                               // Log "System Variable "
-  add     x0, x6, #9                              // x0 = address of system variable name
+  bl      uart_puts                               // Log "System variable "
+  add     x0, x20, #9                             // x0 = address of system variable name
   bl      uart_puts                               // Log "<sysvar>"
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
@@ -453,6 +458,39 @@ log_register:
   ret
 
 
+compare_registers:
+  cmp     x0, x1
+  ret
+
+
+# Compares two address regions, w21 bytes long. The first region starts at
+# address x0, the second at x1. If the regions hold identical bytes, on return
+# Z flag is set, otherwise clear. Regions may overlap.
+#
+# On entry:
+#   x0 = address of first memory location
+#   x1 = address of second memory location
+#   w21 = size in bytes of memory to compare
+# On exit:
+#   x0, x1 address first byte after first non-matching byte, or first address after memory region if matching.
+#   w21 = 0 if regions match, otherwise 1 => last byte mismatch, 2=> second last byte mismatch, etc
+#   w16 = value of first mismatched byte from first memory location, or last byte if match
+#   w17 = value of first mismatched byte from second memory location, or last byte if match
+#   Z flag clear => regions don't match
+#   Z flag set => regions match
+compare_ram:
+  cbz     w21, 2f
+  1:                                              // loop through bytes of sysvar to see if any value is different
+    ldrb    w16, [x0], #1
+    ldrb    w17, [x1], #1
+    cmp     w16, w17
+    b.ne    2f
+    subs    w21, w21, #1
+    b.ne    1b
+2:
+  ret
+
+
 # Log test failure message
 #
 # Report a failure message to UART if values are equal but should not be, or
@@ -461,17 +499,19 @@ log_register:
 # Report lines as follows:
 #
 # FAIL: po_change test case 1: Register x3 changed from 0x8ceb064787d0b39b to 0x0000000000001a68, but should not have changed.
-# FAIL: po_change test case 1: System Variable CURCHL changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
+# FAIL: po_change test case 1: System variable CURCHL changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
 # FAIL: po_change test case 1: Register x5 unchanged from 0xfe87f64783bc7a76 but should have changed to 0x00000f00f00f00f0.
 #
 # On entry:
 #   x8 = RAM test failure only: address that failed
 #   x9 = Register failure only: x register index
-#   x12 = pre-test value
-#   x13 = post-test value
-#   x14 = expected value
-#   x16 = function to log entity that has incorrect value
+#   x12 = pre-test value reference
+#   x13 = post-test value reference
+#   x14 = expected value reference
+#   x16 = function to log entity description
+#   x22 = function to compare two values
 #   x23 = address of test name minus 0x10
+#   x27 = function to log entity value
 # On exit:
 #   x0 / x1 / x2 / x3 corrupted (uart_puts / x16 / uart_x0 / hex_x0)
 test_fail:
@@ -486,24 +526,28 @@ test_fail:
   mov     x0, ' '
   bl      uart_send                               // Log " "
   blr     x16                                     // Log "<entity>"
-  cmp     x12, x13
+  mov     x0, x12
+  mov     x1, x13
+  blr     x22
   b.eq    2f                                      // x12 == x13 => value unchanged but should have
 // value changed
   adr     x0, msg_fail_1
   bl      uart_puts                               // Log " changed from "
   mov     x0, x12
-  bl      uart_x0                                 // Log "<pre-test register value>"
+  blr     x27                                     // Log "<pre-test register value>"
   adr     x0, msg_fail_3
   bl      uart_puts                               // Log " to "
   mov     x0, x13
-  bl      uart_x0                                 // Log "<post-test register value>"
-  cmp     x12, x14
+  blr     x27                                     // Log "<post-test register value>"
+  mov     x0, x12
+  mov     x1, x14
+  blr     x22
   b.eq    1f                                      // x12 == x14 => value shouldn't have changed but did
 // value meant to change, but to a different value
   adr     x0, msg_fail_4
   bl      uart_puts                               // Log ", but should have changed to "
   mov     x0, x14
-  bl      uart_x0                                 // Log "<expected register value>"
+  blr     x27                                     // Log "<expected register value>"
   adr     x0, msg_fail_6
   bl      uart_puts                               // Log ".\r\n"
   b       3f
@@ -517,11 +561,11 @@ test_fail:
   adr     x0, msg_fail_2
   bl      uart_puts                               // Log " unchanged from "
   mov     x0, x12
-  bl      uart_x0                                 // Log "<pre-test register value>"
+  blr     x27                                     // Log "<pre-test register value>"
   adr     x0, msg_fail_4
   bl      uart_puts                               // Log ", but should have changed to "
   mov     x0, x14
-  bl      uart_x0                                 // Log "<expected register value>"
+  blr     x27                                     // Log "<expected register value>"
   adr     x0, msg_fail_6
   bl      uart_puts                               // Log ".\r\n"
 3:
@@ -546,9 +590,28 @@ test_fail:
 snapshot_all_ram:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
-  mov     x0, #2                                  // Number of RAM regions to snapshot
+  adrp    x0, sysvars
+  add     x0, x0, :lo12:sysvars
+  adrp    x1, sysvars_end
+  add     x1, x1, :lo12:sysvars_end
+  1:                                              // Copy sysvars into buffer without compression
+    ldr     x4, [x0], #0x08
+    str     x4, [x2], #0x08
+    cmp     x0, x1
+    b.ne    1b
+  mov     x0, #3                                  // Number of RAM regions to snapshot
   str     x0, [x2], #8                            // Store number of RAM regions to snapshot
   mov     x0, #0                                  // start address of region to snapshot
+  adrp    x1, sysvars
+  add     x1, x1, :lo12:sysvars
+  adrp    x7, rand_seq_length
+  add     x7, x7, :lo12:rand_seq_length
+  ldrb    w4, [x7]                                // w4 = random block length
+  adrp    x11, rand_data
+  add     x11, x11, :lo12:rand_data               // x11 = address of random data
+  bl      snapshot_memory                         // x2 = first address after end of snapshot
+  adrp    x0, sysvars_end
+  add     x0, x0, :lo12:sysvars_end
   adrp    x1, bss_debug_start
   add     x1, x1, :lo12:bss_debug_start           // first address not to snapshot
   adrp    x7, rand_seq_length
@@ -654,6 +717,15 @@ snapshot_memory:
 restore_all_ram:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
+  adrp    x0, sysvars
+  add     x0, x0, :lo12:sysvars
+  adrp    x1, sysvars_end
+  add     x1, x1, :lo12:sysvars_end
+  1:                                              // Copy sysvars into buffer without compression
+    ldr     x4, [x2], #0x08
+    str     x4, [x0], #0x08
+    cmp     x0, x1
+    b.ne    1b
   ldr     x6, [x2], #8                            // x6 = number of continuous regions to restore
   1:
     cbz     x6, 2f
@@ -745,16 +817,42 @@ restore_snapshot:
 compare_all_snapshots:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
+  adrp    x8, sysvars_meta
+  add     x8, x8, :lo12:sysvars_meta              // x8 = address of sysvars metadata table
+  mov     w9, SYSVAR_COUNT                        // w9 = number of system variables to log
+  1:                                              // loop through sysvars
+    ldr     x20, [x8], #8                         // x20 = sysvar_meta entry
+    ldr     x0, [x20]                             // x0 = address offset of sys var
+    add     x1, x0, x28                           // x1 = expected value reference
+    add     x0, x0, x7                            // x0 = post-test value reference
+    ldrb    w21, [x20, #8]                        // w21 = size of sysvar data in bytes
+    bl      compare_ram                           // post-test value == expected value?
+    b.eq    4f                                    // if they match, skip ahead
+  3:
+    adr     x16, log_sysvar
+    adr     x22, compare_ram
+    adrp    x27, display_sysvar_value
+    add     x27, x27, :lo12:display_sysvar_value
+    ldr     x12, [x20]                            // x12 = address offset of sys var
+    add     x14, x12, x28                         // x14 = expected value reference
+    add     x13, x12, x7                          // x13 = post-test value reference
+    add     x12, x12, x6                          // x13 = post-test value reference
+    bl      test_fail                             // report mismatched sysvar values
+  4:
+    subs    w9, w9, #1
+    b.ne    1b                                    // next sysvar
+  add     x6, x6, sysvars_end - sysvars           // move x6 past the sysvar dump to the memory region count
+  add     x7, x7, sysvars_end - sysvars           // move x7 past the sysvar dump to the memory region count
   ldr     x27, [x6], #8
   add     x7, x7, #8
-  1:
-    cbz     x27, 2f
+  5:
+    cbz     x27, 6f
     ldp     x8, x9, [x6], #16
     add     x7, x7, #16
     bl      compare_snapshots
     sub     x27, x27, #1
-    b       1b
-2:
+    b       5b
+6:
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -837,6 +935,8 @@ compare_snapshots:
     cmp     x13, x14
     b.eq    6f
     adr     x16, log_ram                          // x16 = function to log "Memory location [0x<address>]"
+    adr     x22, compare_registers
+    adr     x27, uart_x0
     bl      test_fail
   6:
     add     x8, x8, #8
@@ -1083,7 +1183,7 @@ msg_fail_4:                    .asciz ", but should have changed to "
 # Intentionally .ascii not .asciz, in order to join with msg_fail_6.
 msg_fail_5:                    .ascii ", but should not have changed"
 msg_fail_6:                    .asciz ".\r\n"
-msg_fail_7:                    .asciz "System Variable "
+msg_fail_7:                    .asciz "System variable "
 msg_fail_8:                    .asciz "Memory location ["
 msg_filling_memory_with_junk:  .asciz "Filling memory with junk... "
 msg_init_rand:                 .asciz "Initialising random number generator unit... "

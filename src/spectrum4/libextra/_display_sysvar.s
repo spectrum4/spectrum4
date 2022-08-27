@@ -13,6 +13,7 @@
 #
 # On entry:
 #   x20: address of sysvar metadata (sysvar_XXXXXX label)
+#   x28: address of sysvars
 # On exit:
 #   x0 =
 #     1 byte sysvar: stack pointer - 61
@@ -34,7 +35,6 @@ display_sysvar:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   stp     x21, x24, [sp, #-16]!                   // callee-saved registers used later on.
-  sub     sp, sp, #32                             // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
   mov     x0, '['
   bl      uart_send                               // Log "["
   ldr     x0, [x20]                               // x0 = address offset of sys var
@@ -46,8 +46,25 @@ display_sysvar:
   bl      uart_send                               // Log " "
   add     x0, x20, #9
   bl      uart_puts                               // Log system variable name
+  mov     x0, ':'
+  bl      uart_send
+  mov     x0, ' '
+  bl      uart_send
   ldrb    w21, [x20, #8]                          // w21 = size of sysvar data in bytes
   ldr     x24, [x20]                              // x24 = address offset of sys var
+  add     x0, x24, x28
+  bl      display_sysvar_value
+  ldp     x21, x24, [sp], #16                     // Pop callee-saved registers.
+  ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+display_sysvar_value:
+  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                                 // Update frame pointer to new stack location.
+  stp     x21, x24, [sp, #-16]!                   // callee-saved registers used later on.
+  mov     x24, x0
+  sub     sp, sp, #32                             // 32 bytes buffer for storing hex representation of sysvar (maximum is 16 chars + trailing 0, so 17 bytes)
   cmp     w21, #1
   b.eq    3f
   cmp     w21, #2
@@ -57,11 +74,6 @@ display_sysvar:
   cmp     w21, #8
   b.eq    6f
   // not 1/2/4/8 bytes => print one byte at a time
-  mov     x0, ':'
-  bl      uart_send
-  mov     x0, ' '
-  bl      uart_send
-  add     x24, x24, x28
   2:
     ldrb    w0, [x24], #1
     mov     x1, sp
@@ -76,21 +88,21 @@ display_sysvar:
   b       8f
 3:
   // 1 byte
-  ldrb    w4, [x28, x24]
+  ldrb    w4, [x24]
   b       7f
 4:
   // 2 bytes
-  ldrh    w4, [x28, x24]
+  ldrh    w4, [x24]
   b       7f
 5:
   // 4 bytes
-  ldr     w4, [x28, x24]
+  ldr     w4, [x24]
   b       7f
 6:
   // 8 bytes
-  ldr     x4, [x28, x24]
+  ldr     x4, [x24]
 7:
-  adr     x0, msg_colon0x
+  adr     x0, msg_0x
   bl      uart_puts                               // Log ": 0x"
   mov     x0, x4
   mov     x1, sp
@@ -107,4 +119,4 @@ display_sysvar:
 
 
 msg_title_sysvars:             .asciz "System Variables\r\n================\r\n"
-msg_colon0x:                   .asciz ": 0x"
+msg_0x:                        .asciz "0x"

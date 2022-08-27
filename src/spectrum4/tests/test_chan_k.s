@@ -24,7 +24,7 @@ chan_k_01_effects:
   _setbit 4, FLAGS2
   _setbit 0, TV_FLAG
   _strb   0x34, ATTR_T
-  _strb   0, MASK_T
+  _strb   0x00, MASK_T
   _strb   0b10000010, P_FLAG
   ret
 

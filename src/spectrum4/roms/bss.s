@@ -88,7 +88,7 @@ STRMS:          .space 2*19                       // Address offsets of 19 chann
 TVDATA:         .space 2                          // Stores bytes of colour, AT and TAB controls going to TV.
 
 .align 2
-COORDS:         .space 2                          // X-coordinate of last point plotted.
+COORDS_X:       .space 2                          // X-coordinate of last point plotted.
 COORDS_Y:       .space 2                          // Y-coordinate of last point plotted.
 
 .align 3

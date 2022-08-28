@@ -1206,8 +1206,6 @@ msg_flag_n:                    .asciz "Negative flag (N)"
 msg_flag_v:                    .asciz "Overflow flag (V)"
 msg_flag_z:                    .asciz "Zero flag (Z)"
 
-msg_nzcv:                      .asciz "NZCV: "
-
 
 # Used by various unit tests....
 test_message_table:

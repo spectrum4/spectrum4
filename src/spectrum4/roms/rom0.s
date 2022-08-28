@@ -84,9 +84,11 @@ msg_copyright:                           // L0561
   .byte 0x7f                                      // '(c)'.
   .asciz " 1986 Sinclair Research Ltd"
 
-.include "print_message.s"
-.include "initial_channel_info.s"
-.include "initial_stream_data.s"
-.include "init_mode.s"
-.include "main_menu.s"
-.include "reset_cursor.s"
+.include "print_message.s"               // L057D
+.include "initial_channel_info.s"        // L0589
+.include "initial_stream_data.s"         // L059E
+.include "init_mode.s"                   // L2584
+.include "main_menu.s"                   // L259F
+.include "reset_cursor.s"                // L28BE
+.include "reset_indentation.s"           // L35BC
+.include "mode_l.s"                      // L365E

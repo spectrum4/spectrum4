@@ -275,6 +275,8 @@ FC9A:           .space 2                          // The line number at the top 
 REPDEL:         .space 1                          // Place REPDEL in .align 1 section since REPDEL+REPPER is read/written together as a halfword.
                                                   // Time (in 50ths of a second) that a key must be held down before it repeats. This starts off at 35.
 REPPER:         .space 1                          // Delay (in 50ths of a second) between successive repeats of a key held down - initially 5.
+E_PPC:          .space 1                          // Number of current line (with program cursor) (low).
+E_PPC_hi:       .space 1                          // Number of current line (with program cursor) (high).
 BAUD:           .space 2                          // Baud rate timing constant for RS232 socket. Default value of 11. [Name clash with ZX Interface 1 system variable at 0x5CC3]
 SERFL:          .space 2                          // Byte 0: Second character received flag:
                                                   //           Bit 0   : 1=Character in buffer.

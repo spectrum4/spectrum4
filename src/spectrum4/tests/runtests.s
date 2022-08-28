@@ -812,7 +812,6 @@ restore_snapshot:
 #   x18
 #   x22
 #   x25
-#   x26
 #   x27
 compare_all_snapshots:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -882,10 +881,10 @@ compare_all_snapshots:
 #   x18
 #   x22
 #   x25
-#   x26
 # TODO: Custom output for system vars
 compare_snapshots:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
+  stp     x26, x27, [sp, #-16]!
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adrp    x26, rand_seq_length
   add     x26, x26, :lo12:rand_seq_length
@@ -945,6 +944,7 @@ compare_snapshots:
     csel    x25, x25, x11, ne
     cmp     x8, x9
     b.ne    1b
+  ldp     x26, x27, [sp], #16
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 

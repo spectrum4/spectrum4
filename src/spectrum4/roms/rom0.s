@@ -42,6 +42,7 @@
 .include "pin.s"
 .include "pout.s"
 .include "new.s"
+.include "swap_stack.s"
 
 # -----------------------
 # New Error Message Table

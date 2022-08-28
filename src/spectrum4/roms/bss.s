@@ -72,6 +72,58 @@ MODE:           .space 1                          // Specifies cursor type:
                                                   //   $01='E'.
                                                   //   $02='G'.
                                                   //   $04='K'.
+EC00:           .space 3                          // Byte 0: Flags used when inserting a line into the BASIC program (first 4 bits are mutually exclusive).
+                                                  //   Bit 0: 1=First row of the BASIC line off top of screen.
+                                                  //   Bit 1: 1=On first row of the BASIC line.
+                                                  //   Bit 2: 1=Using lower screen and only first row of the BASIC line visible.
+                                                  //   Bit 3: 1=At the end of the last row of the BASIC line.
+                                                  //   Bit 4: Not used (always 0).
+                                                  //   Bit 5: Not used (always 0).
+                                                  //   Bit 6: Not used (always 0).
+                                                  //   Bit 7: 1=Column with cursor not yet found.
+                                                  // Byte 1: Column number of current position within the BASIC line being inserted. Used when fetching characters.
+                                                  // Byte 2: Row number of current position within the BASIC line is being inserted. Used when fetching characters.
+EC03:           .space 3                          // Byte 0: Flags used upon an error when inserting a line into the BASIC program (first 4 bits are mutually exclusive).
+                                                  //   Bit 0: 1=First row of the BASIC line off top of screen.
+                                                  //   Bit 1: 1=On first row of the BASIC line.
+                                                  //   Bit 2: 1=Using lower screen and only first row of the BASIC line visible.
+                                                  //   Bit 3: 1=At the end of the last row of the BASIC line.
+                                                  //   Bit 4: Not used (always 0).
+                                                  //   Bit 5: Not used (always 0).
+                                                  //   Bit 6: Not used (always 0).
+                                                  //   Bit 7: 1=Column with cursor not yet found.
+                                                  // Byte 1: Start column number where BASIC line is being entered. Always holds 0.
+                                                  // Byte 2: Start row number where BASIC line is being entered.
+EC0C:           .space 1                          // Current menu index.
+EC0D:           .space 1                          // Flags used by 128 BASIC Editor:
+                                                  //   Bit 0: 1=Screen Line Edit Buffer (including Below-Screen Line Edit Buffer) is full.
+                                                  //   Bit 1: 1=Menu is displayed.
+                                                  //   Bit 2: 1=Using RAM disk.
+                                                  //   Bit 3: 1=Current line has been altered.
+                                                  //   Bit 4: 1=Return to calculator, 0=Return to main menu.
+                                                  //   Bit 5: 1=Do not process the BASIC line (used by the Calculator).
+                                                  //   Bit 6: 1=Editing area is the lower screen, 0=Editing area is the main screen.
+                                                  //   Bit 7: 1=Waiting for key press, 0=Got key press.
+EC0E:           .space 1                          // Mode:
+                                                  //   $00 = Edit Menu mode.
+                                                  //   $04 = Calculator mode.
+                                                  //   $07 = Tape Loader mode. [Effectively not used as overwritten by $FF]
+                                                  //   $FF = Tape Loader mode.
+EC0F:           .space 1                          // Main screen colours used by the 128 BASIC Editor - alternate ATTR_P.
+EC10:           .space 1                          // Main screen colours used by the 128 BASIC Editor - alternate MASK_P.
+EC11:           .space 1                          // Temporary screen colours used by the 128 BASIC Editor - alternate ATTR_T.
+EC12:           .space 1                          // Temporary screen colours used by the 128 BASIC Editor - alternate MASK_T.
+EC13:           .space 1                          // Temporary store for P_FLAG:
+                                                  //   Bit 0: 1=OVER 1, 0=OVER 0.
+                                                  //   Bit 1: Not used (always 0).
+                                                  //   Bit 2: 1=INVERSE 1, INVERSE 0.
+                                                  //   Bit 3: Not used (always 0).
+                                                  //   Bit 4: 1=Using INK 9.
+                                                  //   Bit 5: Not used (always 0).
+                                                  //   Bit 6: 1=Using PAPER 9.
+                                                  //   Bit 7: Not used (always 0).
+EC14:           .space 1                          // Not used.
+EC15:           .space 1                          // Holds the number of editing lines: 20 for the main screen, 1 for the lower screen.
 
 .align 1
 REPDEL:         .space 1                          // Place REPDEL in .align 1 section since REPDEL+REPPER is read/written together as a halfword.
@@ -86,6 +138,8 @@ RNFIRST:        .space 2                          // Starting line number when r
 RNSTEP:         .space 2                          // Step size when renumbering. Default value of 10.
 STRMS:          .space 2*19                       // Address offsets of 19 channels attached to streams.
 TVDATA:         .space 2                          // Stores bytes of colour, AT and TAB controls going to TV.
+EC06:           .space 2                          // Count of the number of editable characters in the BASIC line up to the cursor within the Screen Line Edit Buffer.
+EC08:           .space 2                          // Version of E_PPC used by BASIC Editor to hold last line number entered.
 
 .align 2
 COORDS_X:       .space 2                          // X-coordinate of last point plotted.
@@ -99,14 +153,14 @@ LIST_SP:        .space 8                          // Address of return address f
 
 # Pointers to inside the HEAP
 VARS:           .space 8                          // Address of variables.
-# DEST:           .space 8                // Address of variable in assignment.
+# DEST:         .space 8                          // Address of variable in assignment.
 CHANS:          .space 8                          // Address of channel data.
 CURCHL:         .space 8                          // Address of information currently being used for input and output.
 PROG:           .space 8                          // Address of BASIC program.
-# NXTLIN:         .space 8                // Address of next line in program.
+# NXTLIN:       .space 8                          // Address of next line in program.
 DATADD:         .space 8                          // Address of terminator of last DATA item.
 E_LINE:         .space 8                          // Address of command being typed in.
-# K_CUR:          .space 8                // Address of cursor.
+# K_CUR:        .space 8                          // Address of cursor.
 CH_ADD:         .space 8                          // Address of the next character to be interpreted - the character after the argument of PEEK,
                                                   // or the NEWLINE at the end of a POKE statement.
 X_PTR:          .space 8                          // Address of the character after the '?' marker.
@@ -115,12 +169,14 @@ STKBOT:         .space 8                          // Address of bottom of calcul
 STKEND:         .space 8                          // Address of start of spare space.
 
 # Other pointers
+TARGET:         .space 8                          // Address of subroutine to call in ROM 1.
 RAMTOP:         .space 8                          // Address of last byte of BASIC system area.
 P_RAMT:         .space 8                          // Address of last byte of physical RAM.
 UDG:            .space 8                          // Address of first user-defined graphic. Can be changed to save space by having fewer.
 ERR_SP:         .space 8                          // Address of item on machine stack to be used as error return.
 
 # Editor
+OLDSP:          .space 8                          // Stores old stack pointer when TSTACK in use.
 DF_CC:          .space 8                          // Address in display file of PRINT position.
 DF_CC_L:        .space 8                          // Like DF CC for lower part of screen.
 PR_CC:          .space 8                          // Full address of next position for LPRINT to print at (in ZX Printer buffer).
@@ -128,6 +184,10 @@ K_CUR:          .space 8                          // Address of cursor.
                                                   // Legal values in printer_buffer range. [Not used in 128K mode]
 MEMBOT:         .space 32                         // Calculator's memory area - used to store numbers that cannot conveniently be put on the
                                                   // calculator stack.
+
+.align 4
+TSTACK:         .space 0x400
+TSTACK_end:
 
 .align 4                                          // Ensure sysvars_end is at a 16 byte boundary.
 sysvars_end:

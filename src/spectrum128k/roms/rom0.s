@@ -1168,7 +1168,7 @@ new:                                      ; was "L019D"
         LD   HL,TSTACK                    ; TSTACK.
         LD   (OLDSP),HL                   ; OLDSP. Use the temporary stack as the previous stack.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   A,$38                        ; Set colours to black ink on white paper.
         LD   ($EC11),A                    ; Temporary ATTR_T used by the 128 BASIC Editor.
@@ -1176,10 +1176,10 @@ new:                                      ; was "L019D"
 
 ; [Note this is where $EC13 (temporary P_FLAG) and $FF24 should be set]
 
-        CALL L2584                        ; Initialise mode and cursor settings. IX will point at editing settings information.
+        CALL init_mode                    ; Initialise mode and cursor settings. IX will point at editing settings information.
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
-        JP   L259F                        ; Jump to show the Main menu.
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
+        JP   main_menu                    ; Jump to show the Main menu.
 
 
 ; ===================================
@@ -1222,9 +1222,9 @@ L026B:  LD   HL,FLAGS3                    ; FLAGS3.
         CALL L22E0                        ; Is text just a number or a numerical expression?
         JP   Z,L21F8                      ; Jump if a numerical expression to evaluate it.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
         LD   A,($EC0E)                    ; Fetch mode.
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         CP   $04                          ; Calculator mode?
         JP   NZ,L17AF                     ; Jump if not to parse and execute the BASIC command line, returning to $02BA (ROM 0).
@@ -1277,7 +1277,7 @@ L02C1:  LD   HL,(E_LINE)                  ; ELINE. Point to start of editing are
 
 L02DF:  RES  6,(IY+$02)                   ; TV_FLAG. Signal to clear lower screen.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   HL,$EC0D                     ; Editor flags.
         BIT  6,(HL)                       ; Using lower screen area for editing?
@@ -1288,7 +1288,7 @@ L02DF:  RES  6,(IY+$02)                   ; TV_FLAG. Signal to clear lower scree
         CP   $00                          ; In Edit Menu mode?
         CALL Z,L3881                      ; If so then clear lower editing area display.
 
-L02F4:  CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+L02F4:  CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         LD   HL,TV_FLAG                   ; TV_FLAG.
         RES  3,(HL)                       ; Signal mode has not changed.
@@ -1350,14 +1350,14 @@ L0321:  LD   SP,(RAMTOP)                  ; RAMTOP.
         BIT  2,(HL)                       ; Editing RAM disk catalogue?
         JR   Z,L034A                      ; Jump if not.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   IX,(SFNEXT)                  ; SFNEXT.
         LD   BC,$0014                     ; Catalogue entry size.
         ADD  IX,BC                        ; Remove last entry.
         CALL L1D56                        ; Update catalogue entry (leaves logical RAM bank 4 paged in).
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
 ;Display error code held in ERR_NR
 
@@ -1501,7 +1501,7 @@ L03EF:  LD   A,$10                        ; Error code 'G - No room for line'.
 
 L03F7:  LD   (E_PPC),BC                   ; E_PPC. Store the line as the current line number with the program cursor.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   A,B                          ; [This test could have been performed before paging in bank 7 and hence could have benefited from a slight speed improvement.
         OR   C                            ; The test is redundant since BC holds a non-zero line number]
@@ -1510,7 +1510,7 @@ L03F7:  LD   (E_PPC),BC                   ; E_PPC. Store the line as the current
         LD   (E_PPC),BC                   ; E_PPC. Current edit line number. [Redundant instruction - Line number has already been stored]
         LD   ($EC08),BC                   ; Temporary E_PPC used by BASIC Editor.
 
-L040A:  CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+L040A:  CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         LD   HL,(CH_ADD)                  ; CH_ADD. Point to the next character in the BASIC line.
         EX   DE,HL                        ;
@@ -1544,7 +1544,7 @@ L0429:  POP  BC                           ; BC=Length of the BASIC line.
 
 ;Just a line number entered. The requested line has already been deleted so move the program cursor to the next line
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
         PUSH HL                           ; Save the address of the line.
 
         LD   HL,(E_PPC)                   ; E_PPC. Fetch current edit line number.
@@ -1552,7 +1552,7 @@ L0429:  POP  BC                           ; BC=Length of the BASIC line.
         LD   (E_PPC),HL                   ; E_PPC. Store current edit line number. Effectively refresh E_PPC.
 
         POP  HL                           ; HL=Address of the line.
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
         JR   L046A                        ; Jump ahead to exit.
 
 L0442:  PUSH BC                           ; BC=Length of the BASIC line. Stack it.
@@ -7212,7 +7212,7 @@ L1AF0:  RET                               ; Simply return.
 
 L1AF1:  LD   HL,$EC0E                     ; Fetch mode.
         LD   (HL),$FF                     ; Set Tape Loader mode.
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         RST  28H                          ;
         DEFW set_min                      ; $16B0. Clear out editing area.
@@ -7235,7 +7235,7 @@ L1AF1:  LD   HL,$EC0E                     ; Fetch mode.
 ; -----------------------
 ; Used by Edit Menu - Print option.
 
-L1B14:  CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+L1B14:  CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
         RST  28H                          ;
         DEFW set_min                      ; $16B0. Clear out editing area.
 
@@ -8135,7 +8135,8 @@ L1F04:  PUSH AF                           ; Save AF.
 ; Page in physical RAM bank 0, use normal stack and stack TARGET address.
 ; Entry: HL=TARGET address.
 
-L1F20:  EX   AF,AF'                       ; Save AF.
+swap_rom0:                                ; was "L259F"
+        EX   AF,AF'                       ; Save AF.
 
         LD   A,$00                        ; Physical RAM bank 0.
         DI                                ; Disable interrupts whilst paging.
@@ -8172,7 +8173,7 @@ L1F3A:  PUSH BC                           ; Save BC
 ; Page in physical RAM bank 7, use workspace stack and stack TARGET address.
 ; Entry: HL=TARGET address.
 
-swap_stack:                               ; was "L1F45"
+swap_ram7:                                ; was "L1F45"
         EX   AF,AF'                       ; Save A.
 
         DI                                ; Disable interrupts whilst paging.
@@ -8840,7 +8841,7 @@ L2264:  LD   A,(DE)                       ; Fetch the character and make it appe
 L226F:  PUSH HL                           ; Save registers.
         PUSH DE                           ;
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   HL,$EC0D                     ; Editor flags.
         RES  3,(HL)                       ; Reset 'line altered' flag
@@ -8856,7 +8857,7 @@ L226F:  PUSH HL                           ; Save registers.
         LD   HL,$EC0D                     ; Editor flags.
         RES  3,(HL)                       ; Reset 'line altered' flag
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         POP  DE                           ; Restore registers.
         POP  HL                           ;
@@ -9066,7 +9067,7 @@ L2330:  CALL L18A1                        ; Ensure end-of-statement or end-of-li
 L2336:  LD   HL,TSTACK                    ; TSTACK.
         LD   (OLDSP),HL                   ; OLDSP.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
         JP   L25CB                        ; Jump ahead to the Editor.
 
 ; ------------------------
@@ -9311,7 +9312,7 @@ L2411:  SUB  $90                          ; Reduce range to $00-$6D.
         CALL L2371                        ; HL=A*8.
 
         POP  DE                           ; Fetch display file address.
-        CALL L1F20                        ; Use Normal RAM Configuration (RAM bank 0) to allow access to character bit patterns.
+        CALL swap_rom0                    ; Use Normal RAM Configuration (RAM bank 0) to allow access to character bit patterns.
         PUSH DE                           ; Save display file address.
 
         LD   DE,(UDG)                     ; UDG. Fetch address of UDGs.
@@ -9390,7 +9391,7 @@ L242C:  LD   C,D                          ; Save D.
 ; When the above routine is used in ROM, it drops through to here.
 
 L244C:  EX   AF,AF'                       ; Need to switch back to RAM bank 7?
-        CALL C,swap_stack                 ; If so then switch to use Workspace RAM configuration (physical RAM bank 7).
+        CALL C,swap_ram7                  ; If so then switch to use Workspace RAM configuration (physical RAM bank 7).
 
 L2450:  POP  HL                           ; Fetch address of string data.
         INC  HL                           ; Move to next character.
@@ -9752,7 +9753,8 @@ L2577:  DEFB $04                          ; Number of entries.
 ; ------------------------
 ; Called before Main menu displayed.
 
-L2584:  CALL L28BE                        ; Reset Cursor Position.
+init_mode:                                ; was "L2584"
+        CALL reset_cursor                 ; Reset Cursor Position.
 
         LD   HL,$0000                     ; No top line.
         LD   ($FC9A),HL                   ; Line number at top of screen.
@@ -9763,18 +9765,19 @@ L2584:  CALL L28BE                        ; Reset Cursor Position.
         LD   HL,$0000                     ; No current line number.
         LD   (E_PPC),HL                   ; E_PPC. Current line number.
 
-        CALL L35BC                        ; Reset indentation settings.
-        CALL L365E                        ; Reset to 'L' Mode
+        CALL reset_indentation            ; Reset indentation settings.
+        CALL mode_l                       ; Reset to 'L' Mode
         RET                               ; [Could have saved one byte by using JP $365E (ROM 0)]
 
 ; --------------
 ; Show Main Menu
 ; --------------
 
-L259F:  LD   HL,TSTACK                    ; TSTACK.
+main_menu:                                ; was "L259F"
+        LD   HL,TSTACK                    ; TSTACK.
         LD   (OLDSP),HL                   ; OLDSP.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   A,$02                        ; Select main screen.
         RST  28H                          ;
@@ -9813,7 +9816,7 @@ L25CB:  LD   IX,$FD6C                     ; Point IX at editing settings informa
         LD   HL,TSTACK                    ; TSTACK.
         LD   (OLDSP),HL                   ; OLDSP.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   A,$02                        ;
         RST  28H                          ;
@@ -9886,14 +9889,14 @@ L2604:  CALL L30D6                        ; Reset Below-Screen Line Edit Buffer 
 
 L262A:  LD   HL,($EC08)                   ; Fetch line number of last edited line.
 
-L262D:  CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+L262D:  CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         RST  28H                          ; Find address of line number held in HL, or the next line if it does not exist.
         DEFW line_addr                    ; $196E. Return address in HL.
         RST  28H                          ; Find line number for specified address, and return in DE.
         DEFW line_no                      ; $1695. Fetch the line number for the line found.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   (E_PPC),DE                   ; E_PPC. Save the current line number.
 
@@ -10033,7 +10036,7 @@ L26BB:  CALL L3881                        ; Clear lower editing area display.
 L26CE:  LD   HL,$EC0D                     ; Editor flags.
         RES  6,(HL)                       ; Signal using main screen.
 
-        CALL L28BE                        ; Reset Cursor Position.
+        CALL reset_cursor                 ; Reset Cursor Position.
         CALL L3848                        ; Clear screen and print the "128 BASIC" banner line.
 
 L26D9:  LD   HL,($FC9A)                   ; Line number at top of screen.
@@ -10304,14 +10307,14 @@ L2816:  CALL L3857                        ; Clear screen and print the "Tape Tes
 
 L281C:  LD   HL,$EC0D                     ; Editor flags.
         RES  6,(HL)                       ; Indicate main screen editing.
-        CALL L28BE                        ; Reset Cursor Position.
+        CALL reset_cursor                 ; Reset Cursor Position.
 
         LD   B,$00                        ; Top row to clear.
         LD   D,$17                        ; Bottom row to clear.
         CALL L3B5E                        ; Clear specified display rows.
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
-        JP   L259F                        ; Jump back to show the menu.
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
+        JP   main_menu                    ; Jump back to show the menu.
 
 ; ------------------------------
 ; Main Menu - Tape Loader Option
@@ -10388,7 +10391,7 @@ L2885:  LD   HL,$EC0D                     ; Editor flags.
         SET  4,(HL)                       ; Signal return to calculator.
         RES  6,(HL)                       ; Signal editing are is the main screen.
 
-        CALL L28BE                        ; Reset cursor position.
+        CALL reset_cursor                 ; Reset cursor position.
 
         CALL L384D                        ; Clear screen and print "Calculator" in the banner line.
 
@@ -10424,8 +10427,9 @@ L28B1:  LD   ($EC0E),A                    ; Store mode.
 ; Reset Cursor Position
 ; ---------------------
 
-L28BE:  CALL L2E1F                        ; Reset to main screen.
-        CALL L3A7F                        ; Set default main screen editing cursor details.
+reset_cursor:                             ; was "L28BE"
+        CALL reset_main_screen            ; Reset to main screen.
+        CALL init_cursor                  ; Set default main screen editing cursor details.
         JP   L28E8                        ; Set default main screen editing settings.
 
 ; -------------------
@@ -10652,14 +10656,14 @@ L2983:  LD   A,($EC0E)                    ; Fetch mode.
 
         LD   HL,$0000                     ; The first possible line number.
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         RST  28H                          ; Find address of line number 0, or the next line if it does not exist.
         DEFW line_addr                    ; $196E. Return address in HL.
         RST  28H                          ; Find line number for specified address, and return in DE.
         DEFW line_no                      ; $1695. DE=Address of first line in the BASIC program.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   (E_PPC),DE                   ; E_PPC. Store the current line number.
 
@@ -10691,7 +10695,7 @@ L29AB:  LD   A,($EC0E)                    ; Fetch mode.
 
         LD   HL,$270F                     ; The last possible line number, 9999.
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         RST  28H                          ; Find address of line number 9999, or the previous line if it does not exist.
         DEFW line_addr                    ; $196E. Return address in HL.
@@ -10701,7 +10705,7 @@ L29AB:  LD   A,($EC0E)                    ; Fetch mode.
         RST  28H                          ; Find line number for specified address, and return in DE.
         DEFW line_no                      ; $1695. DE=Address of last line in the BASIC program.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   (E_PPC),DE                   ; E_PPC. Store the current line number.
 
@@ -11663,9 +11667,9 @@ L2CA3:  LD   HL,$EC00                     ; BASIC line insertion flags.
 
         PUSH IX                           ; IX=Address of cursor settings.
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
         CALL L026B                        ; Syntax check/execute the command line.
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         POP  IX                           ; IX=Address of cursor settings.
 
@@ -11676,7 +11680,7 @@ L2CA3:  LD   HL,$EC00                     ; BASIC line insertion flags.
         LD   HL,$EC0D                     ; Editor flags.
         RES  3,(HL)                       ; Signal line has not been altered.
 
-        CALL L365E                        ; Reset to 'L' Mode.
+        CALL mode_l                       ; Reset to 'L' Mode.
 
         LD   A,($EC0E)                    ; Fetch mode.
         CP   $04                          ; Calculator mode?
@@ -12054,7 +12058,8 @@ L2E1D:  DEFB $01                          ; Number of bytes to copy.
 ; Reset to Main Screen
 ; --------------------
 
-L2E1F:  LD   HL,TV_FLAG                   ; TV_FLAG.
+reset_main_screen:                        ; was "L2E1F"
+        LD   HL,TV_FLAG                   ; TV_FLAG.
         RES  0,(HL)                       ; Signal using main screen.
         LD   HL,L2E1B                     ; Upper screen lines table.
         LD   DE,$EC15                     ; Destination workspace variable. The number of editing rows on screen.
@@ -13884,7 +13889,7 @@ L3430:  CALL L34EA                        ; Clear BASIC line construction pointe
                                           ; However, most of the time the A register will enter the routine holding $00 and so the bug is probably harmless. Credit: Paul Farrow]
         LD   ($FC9E),A                    ; Print a leading space flag.
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         CALL L34F6                        ; Find address of the specified BASIC line, into HL.
         JR   NC,L3491                     ; Jump if suitable line number not found, i.e. end of program reached.
@@ -13909,7 +13914,7 @@ L344D:  LD   D,(HL)                       ; HL=Address of the BASIC line.
         INC  HL                           ;
         LD   E,(HL)                       ; DE=Line number.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         PUSH DE                           ; Save the line number.
         PUSH HL                           ; Save the address of the BASIC line+1.
@@ -13950,7 +13955,7 @@ L344D:  LD   D,(HL)                       ; HL=Address of the BASIC line.
 
 ;End of program reached, no line number available
 
-L3491:  CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+L3491:  CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
         RET                               ; Return with carry flag reset to signal line does not exist.
 
 ; ------------------------------
@@ -14012,7 +14017,7 @@ L34B6:  CALL L34EA                        ; Clear BASIC line construction pointe
                                           ; However, most of the time the A register will enter the routine holding $00 and so the bug is probably harmless. Credit: Paul Farrow]
         LD   ($FC9E),A                    ; Store 'print a leading space' flag.
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         CALL L34F6                        ; Find the address of the BASIC line with this line number, or the next line otherwise.
         JR   NC,L3491                     ; Jump if does not exist.
@@ -14182,7 +14187,7 @@ L353C:  LD   HL,($FC9F)                   ; Fetch the address of the next charac
         OR   H                            ; Is there a character defined, i.e. end of line not yet reached?
         JP   Z,L3591                      ; Jump ahead if not. [Could have saved 1 byte by using JR $3591 (ROM 0)]
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
 L3547:  LD   A,(HL)                       ; Fetch a character from the buffer.
         CP   $0E                          ; Is it the hidden number marker indicating a floating-point representation?
@@ -14196,7 +14201,7 @@ L3547:  LD   A,(HL)                       ; Fetch a character from the buffer.
         INC  HL                           ;
         JR   L3547                        ; Jump back to fetch the next character.
 
-L3554:  CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+L3554:  CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         INC  HL                           ; Point to the next character.
         LD   ($FC9F),HL                   ; Store the address of the next command within the BASIC line to fetch.
@@ -14327,7 +14332,8 @@ L35B9:  DEFB $02                          ; Number of bytes in table.
 ; Set Indentation Settings
 ; ------------------------
 
-L35BC:  LD   HL,L35B9                     ; HL=Address of the indentation settings data table.
+reset_indentation:                        ; was "L35BC"
+        LD   HL,L35B9                     ; HL=Address of the indentation settings data table.
         LD   DE,$FD6A                     ; Destination address.
         JP   L3FBA                        ; Copy two bytes from $35B9-$35BA (ROM 0) to $FD6A-$FD6B.
 
@@ -14551,7 +14557,8 @@ L364F:  PUSH AF                           ; Save registers
 ; Reset 'L' Mode
 ; --------------
 
-L365E:  LD   A,$00                        ; Select 'L' mode.
+mode_l:                                   ; was "L365E"
+        LD   A,$00                        ; Select 'L' mode.
         LD   (MODE),A                     ; MODE.
 
         LD   A,$02                        ; Reset repeat key duration.
@@ -15124,7 +15131,7 @@ L3881:  LD   B,$15                        ; Top row of editing area.
 ; ================
 ; Exit: Carry flag reset if required to produce an error beep.
 
-L3888:  CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+L3888:  CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         CALL L3A05                        ; DE=Count of the number of BASIC lines.
         LD   A,D                          ;
@@ -15221,7 +15228,7 @@ L38DD:  PUSH BC                           ; BC=Count of number of lines left to 
         OR   C                            ;
         JR   NZ,L38DD                     ; Jump back while more lines to update.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
         LD   (RNLINE),BC                  ; RNLINE. Clear the address of line length bytes of the 'current line being renumbered'.
                                           ; [No need to clear this]
         SCF                               ; Signal not to produce an error beep.
@@ -15421,7 +15428,7 @@ L39BE:  POP DE                            ; Discard stacked items.
 
 ;Exit if no BASIC program, renumbering would cause a line number overflow or renumbering would cause an out of memory condition
 
-L39C0:  CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+L39C0:  CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
         AND  A                            ; Reset the carry flag so that an error beep will be produced.
         RET                               ;
 
@@ -15647,10 +15654,11 @@ L3A76:  DEFB $08                          ; Number of bytes in table.
 ; Set initial cursor editing settings when using the main screen.
 ; Copies 8 bytes from $3A6E-$3A75 (ROM 0) to $FD6C-$FD73.
 
-L3A7F:  LD   IX,$FD6C                     ; Point IX at cursor settings in workspace.
+init_cursor:                              ; was "L3A7F"
+        LD   IX,$FD6C                     ; Point IX at cursor settings in workspace.
 
         LD   HL,L3A6D                     ; Initial values table for the lower screen cursor settings.
-        JR   L3A8B                        ; Jump ahead.
+        JR   set_cursor                   ; Jump ahead.
 
 ; ---------------------------------------
 ; Set Lower Screen Editing Cursor Details
@@ -15660,7 +15668,8 @@ L3A7F:  LD   IX,$FD6C                     ; Point IX at cursor settings in works
 
 L3A88:  LD   HL,L3A76                     ; Initial values table for the main screen cursor settings.
 
-L3A8B:  LD   DE,$FD6C                     ; DE=Cursor settings in workspace.
+set_cursor:                               ; was "L3A8B"
+        LD   DE,$FD6C                     ; DE=Cursor settings in workspace.
         JP   L3FBA                        ; Jump to copy the settings.
 
 
@@ -15915,9 +15924,9 @@ L3B49:  INC  HL                           ;
         SCF                               ; [Redundant since never subsequently checked]
         RET                               ;
 
-L3B55:  CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+L3B55:  CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
         RST  10H                          ; Print it (need to page in RAM bank 0 to allow access to UDGs).
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
         JR   L3B49                        ; Jump back for next character.
 
 ; ------------------
@@ -16320,10 +16329,10 @@ L3C69:  LD   ($FD8A),A                    ; Store the 'locate error marker' flag
         LD   HL,$FD74                     ; HL=Start address of the Keyword Conversion Buffer.
         LD   ($FD7D),HL                   ; Store as the next available location.
 
-        CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+        CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
         RST  28H                          ;
         DEFW set_min                      ; $16B0. Clear the editing areas.
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   A,$00                        ; [Could have saved 1 byte by using XOR A, or 2 bytes by clearing this above]
         LD   ($FD81),A                    ; Clear Keyword Conversion Buffer flags - not within REM, not with Quotes, no characters in the buffer.
@@ -17130,7 +17139,7 @@ L3F30:  SCF                               ; Set the carry flag to indicate error
 L3F33:  SCF                               ;
         CCF                               ; Reset carry flag to signal BASIC line tokenizing mode.
 
-L3F35:  CALL L1F20                        ; Use Normal RAM Configuration (physical RAM bank 0).
+L3F35:  CALL swap_rom0                    ; Use Normal RAM Configuration (physical RAM bank 0).
 
         JR   NC,L3F47                     ; Jump if tokenizing the BASIC line.
 
@@ -17180,7 +17189,7 @@ L3F47:  PUSH AF                           ; Save the character to insert and the
 
 L3F5D:  INC  DE                           ; Advance to the next character in the BASIC line.
 
-        CALL swap_stack                   ; Use Workspace RAM configuration (physical RAM bank 7).
+        CALL swap_ram7                    ; Use Workspace RAM configuration (physical RAM bank 7).
 
         LD   ($FD82),DE                   ; Store the address of the next insertion position within the BASIC line workspace.
         RET                               ;

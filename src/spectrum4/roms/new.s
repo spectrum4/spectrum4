@@ -30,14 +30,12 @@ new:                                     // L019D
                                                   // x6 = number of double words (8 bytes) in initial_channel_info block
   adrp    x7, initial_channel_info
   add     x7, x7, :lo12:initial_channel_info
-
   // Loop to copy initial_channel_info block to [CHANS] = start of heap = heap
   3:
     ldr     x8, [x7], #8
     str     x8, [x5], #8
     subs    x6, x6, #1
     b.ne    3b
-
   sub     x9, x5, 1
   str     x9, [x28, DATADD-sysvars]
   str     x5, [x28, PROG-sysvars]
@@ -59,32 +57,46 @@ new:                                     // L019D
   bl      paint_border
   mov     w13, 0x0523                             // The values five and thirty five.
   strh    w13, [x28, REPDEL-sysvars]              // REPDEL. Set the default values for key delay and key repeat.
-//
-//
-//         DEC  (IY-0x3A)     // Set KSTATE+0 to 0xFF.
-//         DEC  (IY-0x36)     // Set KSTATE+4 to 0xFF.
-//
-//
+// Not translated the following instructions, since they may well need to work differently.
+// TODO: check this after implementing keyboard reading routines
+//   DEC  (IY-0x3A)     // Set KSTATE+0 to 0xFF.
+//   DEC  (IY-0x36)     // Set KSTATE+4 to 0xFF.
   add     x5, x28, STRMS - sysvars
   mov     x6, (initial_stream_data_END - initial_stream_data)/2
                                                   // x6 = number of half words (2 bytes) in initial_stream_data block
   adr     x7, initial_stream_data
-
   // Loop to copy initial_stream_data block to [STRMS]
   4:
     ldrh    w8, [x7], #2
     strh    w8, [x5], #2
     subs    x6, x6, #1
     b.ne    4b
-
-//         RES  1,(IY+0x01)   // FLAGS. Signal printer not is use.
-  mov     w5, 255
+  ldrb    w0, [x28, FLAGS-sysvars]
+  and     w0, w0, #~0x02
+  strb    w0, [x28, FLAGS-sysvars]                // clear bit 1 of FLAGS (signal printer not in use)
+  mov     w5, #0xff
   strb    w5, [x28, ERR_NR-sysvars]               // Signal no error.
-  mov     w5, 2
+  mov     w5, #0x02
   strb    w5, [x28, DF_SZ-sysvars]                // Set the lower screen size to two rows.
-
   bl      cls
-  bl      tv_tuner
+// TODO: Commented out, since this method doesn't return unless a key is pressed, and we don't have keypress routines yet...
+# bl      tv_tuner
+  adr     x2, msg_copyright
+  bl      print_message
+  mov     w5, #0x02
+  strb    w5, [x28, DF_SZ-sysvars]                // Set the lower screen size to two rows.
+  ldrb    w1, [x28, TV_FLAG-sysvars]
+  orr     w1, w1, #0x20
+  strb    w1, [x28, TV_FLAG-sysvars]              // set bit 5 of TV_FLAG (signal lower screen will require clearing)
+  add     x0, x28, TSTACK-sysvars
+  str     x0, [x28, OLDSP-sysvars]
+  bl      swap_stack
+  mov     w0, #0x38
+  strb    w0, [x28, EC11-sysvars]
+  strb    w0, [x28, EC0F-sysvars]
+
+
+
 .if       DEMO_AUTORUN
   bl      demo                                    // Demonstrate features for manual inspection.
 .endif

@@ -128,7 +128,8 @@ pr_all:                                  // L0B7F
   // always flushed at start of new line.
   //
   //
-    add     x11, x28, printer_buffer_end-sysvars
+    adrp    x11, printer_buffer_end
+    add     x11, x11, :lo12:printer_buffer_end
     cmp     x21, x11                              // Is x21 now past end of printer buffer?
     b.lo    5f                                    // If not, jump ahead to 5:.
   // Overshot printer buffer

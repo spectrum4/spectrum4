@@ -176,7 +176,7 @@ UDG:            .space 8                          // Address of first user-defin
 ERR_SP:         .space 8                          // Address of item on machine stack to be used as error return.
 
 # Editor
-OLDSP:          .space 8                          // Stores old stack pointer when TSTACK in use.
+# OLDSP:        .space 8                          // Stores old stack pointer when TSTACK in use.
 DF_CC:          .space 8                          // Address in display file of PRINT position.
 DF_CC_L:        .space 8                          // Like DF CC for lower part of screen.
 PR_CC:          .space 8                          // Full address of next position for LPRINT to print at (in ZX Printer buffer).
@@ -186,8 +186,8 @@ MEMBOT:         .space 32                         // Calculator's memory area - 
                                                   // calculator stack.
 
 .align 4
-TSTACK:         .space 0x400
-TSTACK_end:
+# TSTACK:       .space 0x400
+# TSTACK_end:
 
 .align 4                                          // Ensure sysvars_end is at a 16 byte boundary.
 sysvars_end:

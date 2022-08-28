@@ -36,6 +36,7 @@
 .global CHARS
 .global CH_ADD
 .global COORDS_X
+.global COORDS_Y
 .global CURCHL
 .global DATADD
 .global DEFADD

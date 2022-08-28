@@ -42,7 +42,9 @@
 .include "pin.s"
 .include "pout.s"
 .include "new.s"
-.include "swap_stack.s"
+# Following aren't needed, I think!
+# .include "swap_ram0.s"
+# .include "swap_ram7.s"
 
 # -----------------------
 # New Error Message Table
@@ -85,3 +87,6 @@ msg_copyright:                           // L0561
 .include "print_message.s"
 .include "initial_channel_info.s"
 .include "initial_stream_data.s"
+.include "init_mode.s"
+.include "main_menu.s"
+.include "reset_cursor.s"

@@ -90,10 +90,16 @@ new:                                     // L019D
   strb    w1, [x28, TV_FLAG-sysvars]              // set bit 5 of TV_FLAG (signal lower screen will require clearing)
   add     x0, x28, TSTACK-sysvars
   str     x0, [x28, OLDSP-sysvars]
-  bl      swap_stack
+// TODO: Check this - but I think swap stack routines aren't needed at all. On
+// the 128K, I believe the stack is in the RAM page that gets paged out, and so
+// it is forced to use separate stacks per RAM bank that gets paged in.
+# bl      swap_stack
   mov     w0, #0x38
   strb    w0, [x28, EC11-sysvars]
   strb    w0, [x28, EC0F-sysvars]
+  bl      init_mode
+# bl      swap_stack
+  b       main_menu
 
 
 

@@ -9,7 +9,7 @@
 cl_all:                                  // L0DAF
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
-  str     wzr, [x28, COORDS-sysvars]              // set COORDS to 0,0.
+  str     wzr, [x28, COORDS_X-sysvars]            // set COORDS to 0,0.
   ldrb    w9, [x28, FLAGS2-sysvars]               // w9 = [FLAGS2]
   and     w9, w9, #0xfe                           // w9 = [FLAGS2] with bit 0 clear
   strb    w9, [x28, FLAGS2-sysvars]               // Update [FLAGS2] to have bit 0 clear (signal main screen is clear).

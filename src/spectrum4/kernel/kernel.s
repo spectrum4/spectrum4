@@ -211,7 +211,8 @@
   stp     x2, x3, [sp, #-16]!
   stp     x4, x5, [sp, #-16]!
   mrs     x4, nzcv                                // copy N, Z, C, and V flags into x4 (not disturbed by following uart_puts call)
-  adr     x0, msg_nzcv
+  adrp    x0, msg_nzcv
+  add     x0, x0, :lo12:msg_nzcv
   bl      uart_puts
   mov     x0, x4                                  // N, Z, C, and V flags into x0
   bl      uart_x0

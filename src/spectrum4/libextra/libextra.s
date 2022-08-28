@@ -8,3 +8,5 @@
 .include "paint_string.s"
 .include "_display_sysvars.s"
 .include "_display_sysvar.s"
+
+msg_nzcv:                      .asciz "NZCV: "

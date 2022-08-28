@@ -72,6 +72,12 @@ MODE:           .space 1                          // Specifies cursor type:
                                                   //   $01='E'.
                                                   //   $02='G'.
                                                   //   $04='K'.
+
+# --------------------------
+# Editor Workspace Variables
+# --------------------------
+# These occupy addresses $EC00-$FFFF in physical RAM bank 7, and form a workspace used by 128 BASIC Editor.
+#
 EC00:           .space 3                          // Byte 0: Flags used when inserting a line into the BASIC program (first 4 bits are mutually exclusive).
                                                   //   Bit 0: 1=First row of the BASIC line off top of screen.
                                                   //   Bit 1: 1=On first row of the BASIC line.
@@ -125,7 +131,147 @@ EC13:           .space 1                          // Temporary store for P_FLAG:
 EC14:           .space 1                          // Not used.
 EC15:           .space 1                          // Holds the number of editing lines: 20 for the main screen, 1 for the lower screen.
 
+# $EC16  735   Screen Line Edit Buffer. This represents the text on screen that can be edited. It holds 21 rows,
+#              with each row consisting of 32 characters followed by 3 data bytes. Areas of white
+#              space that do not contain any editable characters (e.g. the indent that starts subsequent
+#              rows of a BASIC line) contain the value $00.
+#                Data Byte 0:
+#                  Bit 0: 1=The first row of the BASIC line.
+#                  Bit 1: 1=Spans onto next row.
+#                  Bit 2: Not used (always 0).
+#                  Bit 3: 1=The last row of the BASIC line.
+#                  Bit 4: 1=Associated line number stored.
+#                  Bit 5: Not used (always 0).
+#                  Bit 6: Not used (always 0).
+#                  Bit 7: Not used (always 0).
+#                Data Bytes 1-2: Line number of corresponding BASIC line (stored for the first row of the BASIC line only, holds $0000).
+# $EEF5    1   Flags used when listing the BASIC program:
+#                Bit 0   : 0=Not on the current line, 1=On the current line.
+#                Bit 1   : 0=Previously found the current line, 1=Not yet found the current line.
+#                Bit 2   : 0=Enable display file updates, 1=Disable display file updates.
+#                Bits 3-7: Not used (always 0).
+# $EEF6    1   Store for temporarily saving the value of TV_FLAG.
+# $EEF7    1   Store for temporarily saving the value of COORDS.
+# $EEF9    1   Store for temporarily saving the value of P_POSN_X.
+# $EEFA    2   Store for temporarily saving the value of PR_CC.
+# $EEFC    1   Store for temporarily saving the value of ECHO_E_X.
+# $EEFD    1   Store for temporarily saving the value of ECHO_E_Y.
+# $EEFE    2   Store for temporarily saving the value of DF_CC.
+
+# something not quite right here - we need two bytes for DF_CC_L, but the comments claim that S_POSN_X is stored at $EF01
+# $EF00    2   Store for temporarily saving the value of DF_CC_L.
+
+# $EF01    1   Store for temporarily saving the value of S_POSN_X.
+# $EF02    1   Store for temporarily saving the value of S_POSN_Y.
+# $EF03    1   Store for temporarily saving the value of S_POSN_X_L.
+# $EF04    1   Store for temporarily saving the value of S_POSN_Y_L.
+# $EF05    1   Store for temporarily saving the value of SCR_CT.
+# $EF06    1   Store for temporarily saving the value of ATTR_P.
+# $EF07    1   Store for temporarily saving the value of MASK_P.
+# $EF08    1   Store for temporarily saving the value of ATTR_T.
+# $EF09 1512   Used to store screen area (12 rows of 14 columns) where menu will be shown.
+#              The rows are stored one after the other, with each row consisting of the following:
+#                - 8 lines of 14 display file bytes.
+#                - 14 attribute file bytes.
+# $F4F1-$F6E9  Not used. 505 bytes.
+# $F6EA    2   The jump table address for the current menu.
+# $F6EC    2   The text table address for the current menu.
+# $F6EE    1   Cursor position info - Current row number.
+# $F6EF    1   Cursor position info - Current column number.
+# $F6F0    1   Cursor position info - Preferred column number. Holds the last user selected column position. The Editor will attempt to
+#              place the cursor on this column when the user moves up or down to a new line.
+# $F6F1    1   Edit area info - Top row threshold for scrolling up.
+# $F6F2    1   Edit area info - Bottom row threshold for scrolling down.
+# $F6F3    1   Edit area info - Number of rows in the editing area.
+# $F6F4    1   Flags used when deleting:
+#                Bit 0   : 1=Deleting on last row of the BASIC line, 0=Deleting on row other than the last row of the BASIC line.
+#                Bits 1-7: Not used (always 0).
+# $F6F5    1   Number of rows held in the Below-Screen Line Edit Buffer.
+# $F6F6    2   Intended to point to the next location to access within the Below-Screen Line Edit Buffer, but incorrectly initialised to $0000 by the routine at $30D6 (ROM 0) and then never used.
+# $F6F8  735   Below-Screen Line Edit Buffer. Holds the remainder of a BASIC line that has overflowed off the bottom of the Screen Line Edit Buffer. It can hold 21 rows, with each row
+#              consisting of 32 characters followed by 3 data bytes. Areas of white space that do not contain any editable characters (e.g. the indent that starts subsequent rows of a BASIC line)
+#              contain the value $00.
+#                Data Byte 0:
+#                  Bit 0: 1=The first row of the BASIC line.
+#                  Bit 1: 1=Spans onto next row.
+#                  Bit 2: Not used (always 0).
+#                  Bit 3: 1=The last row of the BASIC line.
+#                  Bit 4: 1=Associated line number stored.
+#                  Bit 5: Not used (always 0).
+#                  Bit 6: Not used (always 0).
+#                  Bit 7: Not used (always 0).
+#                Data Bytes 1-2: Line number of corresponding BASIC line (stored for the first row of the BASIC line only, holds $0000).
+# $F9D7    2   Line number of the BASIC line in the program area being edited (or $0000 for no line).
+# $F9DB    1   Number of rows held in the Above-Screen Line Edit Buffer.
+# $F9DC    2   Points to the next location to access within the Above-Screen Line Edit Buffer.
+# $F9DE  700   Above-Screen Line Edit Buffer. Holds the rows of a BASIC line that has overflowed off the top of the Screen Line Edit Buffer.
+#              It can hold 20 rows, with each row consisting of 32 characters followed by 3 data bytes. Areas of white space that do not
+#              contain any editable characters (e.g. the indent that starts subsequent rows of a BASIC line) contain the value $00.
+#                Data Byte 0:
+#                  Bit 0: 1=The first row of the BASIC line.
+#                  Bit 1: 1=Spans onto next row.
+#                  Bit 2: Not used (always 0).
+#                  Bit 3: 1=The last row of the BASIC line.
+#                  Bit 4: 1=Associated line number stored.
+#                  Bit 5: Not used (always 0).
+#                  Bit 6: Not used (always 0).
+#                  Bit 7: Not used (always 0).
+#                Data Bytes 1-2: Line number of corresponding BASIC line (stored for the first row of the BASIC line only, holds $0000).
+# $FC9E    1   $00=Print a leading space when constructing keyword.
+# $FC9F    2   Address of the next character to fetch within the BASIC line in the program area, or $0000 for no next character.
+# $FCA1    2   Address of the next character to fetch from the Keyword Construction Buffer, or $0000 for no next character.
+# $FCA3   11   Keyword Construction Buffer. Holds either a line number or keyword string representation.
+# $FCAE-$FCFC  Construct a BASIC Line routine.                       <<< RAM routine - See end of file for description >>>
+# $FCFD-$FD2D  Copy String Into Keyword Construction Buffer routine. <<< RAM routine - See end of file for description >>>
+# $FD2E-$FD69  Identify Character Code of Token String routine.      <<< RAM routine - See end of file for description >>>
+# $FD6A    1   Flags used when shifting BASIC lines within edit buffer rows [Redundant]:
+#                Bit 0  : 1=Set to 1 but never reset or tested. Possibly intended to indicate the start of a new BASIC line and hence whether indentation required.
+#                Bit 1-7: Not used (always 0).
+# $FD6B    1   The number of characters to indent subsequent rows of a BASIC line by.
+# $FD6C    1   Cursor settings (indexed by IX+$00) - initialised to $00, but never used.
+# $FD6D    1   Cursor settings (indexed by IX+$01) - number of rows above the editing area.
+# $FD6E    1   Cursor settings (indexed by IX+$02) - initialised to $00 (when using lower screen) or $14 (when using main screen), but never subsequently used.
+# $FD6F    1   Cursor settings (indexed by IX+$03) - initialised to $00, but never subsequently used.
+# $FD70    1   Cursor settings (indexed by IX+$04) - initialised to $00, but never subsequently used.
+# $FD71    1   Cursor settings (indexed by IX+$05) - initialised to $00, but never subsequently used.
+# $FD72    1   Cursor settings (indexed by IX+$06) - attribute colour.
+# $FD73    1   Cursor settings (indexed by IX+$07) - screen attribute where cursor is displayed.
+# $FD74    9   The Keyword Conversion Buffer holding text to examine to see if it is a keyword.
+# $FD7D    2   Address of next available location within the Keyword Conversion Buffer.
+# $FD7F    2   Address of the space character between words in the Keyword Conversion Buffer.
+# $FD81    1   Keyword Conversion Buffer flags, used when tokenizing a BASIC line:
+#                Bit 0   : 1=Buffer contains characters.
+#                Bit 1   : 1=Indicates within quotes.
+#                Bit 2   : 1=Indicates within a REM.
+#                Bits 3-7: Not used (always reset to 0).
+# $FD82    2   Address of the position to insert the next character within the BASIC line workspace. The BASIC line
+#              is created at the spare space pointed to by E_LINE.
+# $FD84    1   BASIC line insertion flags, used when inserting a characters into the BASIC line workspace:
+#                Bit 0   : 1=The last character was a token.
+#                Bit 1   : 1=The last character was a space.
+#                Bits 2-7: Not used (always 0).
+# $FD85    2   Count of the number of characters in the typed BASIC line being inserted.
+# $FD87    2   Count of the number of characters in the tokenized version of the BASIC line being inserted.
+# $FD89    1   Holds '<' or '>' if this was the previously examined character during tokenization of a BASIC line, else $00.
+# $FD8A    1   Locate Error Marker flag, holding $01 is a syntax error was detected on the BASIC line being inserted and the equivalent position within
+#              the typed BASIC line needs to be found with, else it holds $00 when tokenizing a BASIC line.
+# $FD8B    2   Stores the stack pointer for restoration upon an insertion error into the BASIC line workspace.
+# $FD8C-$FF23  Not used. 408 bytes.
+# $FF24    2   Never used. An attempt is made to set it to $EC00. This is a remnant from the Spanish 128, which stored the address of the Screen Buffer here.
+#              The value is written to RAM bank 0 instead of RAM bank 7, and the value never subsequently accessed.
+# $FF26    2   Not used.
+# $FF28-$FF60  Not used. On the Spanish 128 this memory holds a routine that copies a character into the display file. The code to copy to routine into RAM,
+#              and the routine itself are present in ROM 0 but are never executed. <<< RAM routine - See end of file for description >>>
+# $FF61-$FFFF  Not used. 159 bytes.
+
+
+
+
 .align 1
+
+# Editor workspace variables
+FC9A:           .space 2                          // The line number at the top of the screen, or $0000 for the first line.
+
 REPDEL:         .space 1                          // Place REPDEL in .align 1 section since REPDEL+REPPER is read/written together as a halfword.
                                                   // Time (in 50ths of a second) that a key must be held down before it repeats. This starts off at 35.
 REPPER:         .space 1                          // Delay (in 50ths of a second) between successive repeats of a key held down - initially 5.

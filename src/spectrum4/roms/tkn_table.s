@@ -7,7 +7,7 @@
 
 tkn_table:                               // L0095
   .asciz    "?"                                   // Step over marker
-tkn_rnd:
+tkn_rnd:                                 // L0096
   .asciz    "RND"                                 // 165 = 0xa5   (0 = 0x00)
   .asciz    "INKEY$"                              // 166 = 0xa6   (1 = 0x01)
   .asciz    "PI"                                  // 167 = 0xa7   (2 = 0x02)
@@ -40,11 +40,11 @@ tkn_rnd:
   .asciz    "CHR$"                                // 194 = 0xc2  (29 = 0x1d)
   .asciz    "NOT"                                 // 195 = 0xc3  (30 = 0x1e)
   .asciz    "BIN"                                 // 196 = 0xc4  (31 = 0x1f)
-tkn_or:
+tkn_or:                                  // L0100
   .asciz    "OR"                                  // 197 = 0xc5  (32 = 0x20)
-tkn_and:
+tkn_and:                                 // L0102
   .asciz    "AND"                                 // 198 = 0xc6  (33 = 0x21)
-tkn_less_equal:
+tkn_less_equal:                          // L0105
   .asciz    "<="                                  // 199 = 0xc7  (34 = 0x22)
   .asciz    ">="                                  // 200 = 0xc8  (35 = 0x23)
   .asciz    "<>"                                  // 201 = 0xc9  (36 = 0x24)
@@ -101,5 +101,5 @@ tkn_less_equal:
   .asciz    "DRAW"                                // 252 = 0xfc  (87 = 0x57)
   .asciz    "CLEAR"                               // 253 = 0xfd  (88 = 0x58)
   .asciz    "RETURN"                              // 254 = 0xfe  (89 = 0x59)
-tkn_copy:
+tkn_copy:                                // L0201
   .asciz    "COPY"                                // 255 = 0xff  (90 = 0x5a)

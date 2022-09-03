@@ -130,6 +130,13 @@ EC13:           .space 1                          // Temporary store for P_FLAG:
                                                   //   Bit 7: Not used (always 0).
 EC14:           .space 1                          // Not used.
 EC15:           .space 1                          // Holds the number of editing lines: 20 for the main screen, 1 for the lower screen.
+F6EE:           .space 1                          // Cursor position info - Current row number.
+F6EF:           .space 1                          // Cursor position info - Current column number.
+F6F0:           .space 1                          // Cursor position info - Preferred column number. Holds the last user selected column position. The Editor will attempt to
+                                                  // place the cursor on this column when the user moves up or down to a new line.
+F6F1:           .space 1                          // Edit area info - Top row threshold for scrolling up.
+F6F2:           .space 1                          // Edit area info - Bottom row threshold for scrolling down.
+F6F3:           .space 1                          // Edit area info - Number of rows in the editing area.
 
 # $EC16  735   Screen Line Edit Buffer. This represents the text on screen that can be edited. It holds 21 rows,
 #              with each row consisting of 32 characters followed by 3 data bytes. Areas of white
@@ -176,13 +183,6 @@ EC15:           .space 1                          // Holds the number of editing
 # $F4F1-$F6E9  Not used. 505 bytes.
 # $F6EA    2   The jump table address for the current menu.
 # $F6EC    2   The text table address for the current menu.
-# $F6EE    1   Cursor position info - Current row number.
-# $F6EF    1   Cursor position info - Current column number.
-# $F6F0    1   Cursor position info - Preferred column number. Holds the last user selected column position. The Editor will attempt to
-#              place the cursor on this column when the user moves up or down to a new line.
-# $F6F1    1   Edit area info - Top row threshold for scrolling up.
-# $F6F2    1   Edit area info - Bottom row threshold for scrolling down.
-# $F6F3    1   Edit area info - Number of rows in the editing area.
 # $F6F4    1   Flags used when deleting:
 #                Bit 0   : 1=Deleting on last row of the BASIC line, 0=Deleting on row other than the last row of the BASIC line.
 #                Bits 1-7: Not used (always 0).

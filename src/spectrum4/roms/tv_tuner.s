@@ -66,7 +66,7 @@ tv_tuner:                                // L3C10
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
-tvt_data:
+tvt_data:                                // L3C8F
   .byte   0x13, 0x00                              // Bright, off
   .ascii  " 2022 "
   .byte   0x13, 0x01                              // Bright, on

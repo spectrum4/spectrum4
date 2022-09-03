@@ -1,5 +1,11 @@
 .text
 .align 2
+
+# ------------------------
+# Initialise Mode Settings
+# ------------------------
+# Called before Main menu displayed.
+#
 # On entry:
 # On exit:
 init_mode:                               // L2584

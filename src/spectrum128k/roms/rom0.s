@@ -10477,7 +10477,7 @@ L28D8:  DEFB $06                          ; Number of bytes in table.
 
 L28DF:  LD   HL,L28D8                     ; Default lower screen editing information.
         LD   DE,$F6EE                     ; Editing information stores.
-        JP   L3FBA                        ; Copy bytes.
+        JP   copy_data                    ; Copy bytes.
 
 ; ---------------------------------------
 ; Initialise Main Screen Editing Settings
@@ -10486,7 +10486,7 @@ L28DF:  LD   HL,L28D8                     ; Default lower screen editing informa
 
 L28E8:  LD   HL,L28D1                     ; Default main screen editing information.
         LD   DE,$F6EE                     ; Editing information stores.
-        JP   L3FBA                        ; Copy bytes.
+        JP   copy_data                    ; Copy bytes.
 
 ; -------------------------------
 ; Handle Key Press Character Code
@@ -12063,7 +12063,7 @@ reset_main_screen:                        ; was "L2E1F"
         RES  0,(HL)                       ; Signal using main screen.
         LD   HL,L2E1B                     ; Upper screen lines table.
         LD   DE,$EC15                     ; Destination workspace variable. The number of editing rows on screen.
-        JP   L3FBA                        ; Copy one byte from $2E1C (ROM 0) to $EC15
+        JP   copy_data                    ; Copy one byte from $2E1C (ROM 0) to $EC15
 
 ; ---------------------
 ; Reset to Lower Screen
@@ -12077,7 +12077,7 @@ L2E2D:  LD   HL,TV_FLAG                   ; TV_FLAG.
 
         LD   HL,L2E1D                     ; Lower screen lines table.
         LD   DE,$EC15                     ; Destination workspace variable. The number of editing rows on screen.
-        JP   L3FBA                        ; Copy one byte from $2E1E (ROM 0) to $EC15
+        JP   copy_data                    ; Copy one byte from $2E1E (ROM 0) to $EC15
 
 ; --------------------------------------------------------------------
 ; Find Edit Buffer Editable Position from Previous Column to the Right
@@ -12910,7 +12910,7 @@ L30D0:  DEFB $05                          ; Number of bytes in table.
 
 L30D6:  LD   HL,L30D0                     ; Default Below-Screen Line Edit Buffer settings.
         LD   DE,$F6F5                     ; Destination address.
-        JP   L3FBA                        ; Copy bytes.
+        JP   copy_data                    ; Copy bytes.
 
 ; ----------------------------------------------
 ; Shift Up Rows in Below-Screen Line Edit Buffer
@@ -13267,7 +13267,7 @@ L321E:  DEFB $03                          ; Number of bytes in table.
 
 L3222:  LD   HL,L321E                     ; Default Above-Screen Line Edit Buffer settings.
         LD   DE,$F9DB                     ; Destination address.
-        JP   L3FBA                        ; Copy bytes.
+        JP   copy_data                    ; Copy bytes.
 
 ; ----------------------------------------------------
 ; Shift Rows Down in the Above-Screen Line Edit Buffer
@@ -14335,7 +14335,7 @@ L35B9:  DEFB $02                          ; Number of bytes in table.
 reset_indentation:                        ; was "L35BC"
         LD   HL,L35B9                     ; HL=Address of the indentation settings data table.
         LD   DE,$FD6A                     ; Destination address.
-        JP   L3FBA                        ; Copy two bytes from $35B9-$35BA (ROM 0) to $FD6A-$FD6B.
+        JP   copy_data                    ; Copy two bytes from $35B9-$35BA (ROM 0) to $FD6A-$FD6B.
 
 ; --------------------------------------------
 ; Store Character in Column of Edit Buffer Row
@@ -15670,7 +15670,7 @@ L3A88:  LD   HL,L3A76                     ; Initial values table for the main sc
 
 set_cursor:                               ; was "L3A8B"
         LD   DE,$FD6C                     ; DE=Cursor settings in workspace.
-        JP   L3FBA                        ; Jump to copy the settings.
+        JP   copy_data                    ; Jump to copy the settings.
 
 
 ; ========================
@@ -17284,7 +17284,8 @@ L3FB8:  SCF                               ; Signal keyword identified.
 ;        HL=Address of source data table, which starts with the number of bytes to copy
 ;           followed by the bytes themselves.
 
-L3FBA:  LD   B,(HL)                       ; Get number of bytes to copy.
+copy_data:                                ; was "L3FBA"
+        LD   B,(HL)                       ; Get number of bytes to copy.
         INC  HL                           ; Point to the first byte to copy.
 
 L3FBC:  LD   A,(HL)                       ; Fetch the byte from the source

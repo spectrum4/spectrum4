@@ -24,9 +24,6 @@
 # the top level README.md document for more information.
 ################################################################################################
 
-.text
-.align 2
-
 .include "error_1.s"                     // L0008
 .include "print_w0.s"                    // L0010
 .include "tkn_table.s"                   // L0095

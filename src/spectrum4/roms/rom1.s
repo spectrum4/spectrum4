@@ -24,91 +24,67 @@
 # the top level README.md document for more information.
 ################################################################################################
 
-
 .text
 .align 2
 
-
-.include "error_1.s"
-.include "print_w0.s"
-.include "tkn_table.s"
-
-.align 2
-
-.include "print_out.s"
-.include "ctlchrtab.s"
-.include "po_back.s"
-.include "po_right.s"
-.include "po_enter.s"
-.include "po_comma.s"
-.include "po_quest.s"
-
-# --------------------------------
-# Control characters with operands
-# --------------------------------
-# Certain control characters are followed by 1 or 2 operands.
-# The entry points from control character table are po_1_oper and po_2_oper.
-# The routines alter the output address of the current channel so that
-# subsequent RST 10 instructions take the appropriate action
-# before finally resetting the output address back to PRINT-OUT.
-
-.include "po_tv_2.s"
-.include "po_2_oper.s"
-.include "po_1_oper.s"
-.include "po_tv_1.s"
-.include "po_change.s"
-.include "po_cont.s"
-.include "po_fill.s"
-.include "po_able.s"
-.include "po_store.s"
-.include "po_fetch.s"
-.include "po_any.s"
-.include "po_mosaic_half.s"
-.include "po_t_udg.s"
-.include "rejoin_po_t_udg.s"
-.include "po_char.s"
-.include "po_char_2.s"
-.include "pr_all.s"
-.include "po_attr.s"
-.include "po_msg.s"
-.include "po_tokens.s"
-.include "po_table.s"
-.include "po_table_1.s"
-
-# Nothing needed, since on Spectrum 128, PO-SAVE just calls RST 10H (print_w0),
-# but preserves DE, which would otherwise be corrupted. We have far more
-# registers available in aarch64, so no wrapper needed.
-# po_save:                         // L0C3B
-
-.include "po_search.s"
-.include "po_scr.s"
-
-.align 3
-
-.include "temps.s"
-.include "cls.s"
-.include "cls_lower.s"
-.include "cl_chan.s"
-.include "cl_all.s"
-.include "cl_set.s"
-.include "cl_line.s"
-.include "cl_addr.s"
-.include "copy_buff.s"
-.include "add_char.s"
-.include "add_ch_1.s"
-.include "key_input.s"
-.include "chan_open.s"
-.include "chan_flag.s"
-.include "chn_cd_lu.s"
-.include "chan_k.s"
-.include "chan_s.s"
-.include "chan_p.s"
-.include "one_space.s"
-.include "make_room.s"
-.include "indexer.s"
-.include "report_j.s"
-.include "report_bb.s"
-.include "co_temp_5.s"
-.include "print_token_udg_patch.s"
-.include "new_tokens.s"
-.include "tv_tuner.s"
+.include "error_1.s"                     // L0008
+.include "print_w0.s"                    // L0010
+.include "tkn_table.s"                   // L0095
+.include "print_out.s"                   // L09F4
+.include "ctlchrtab.s"                   // L0A11
+.include "po_back.s"                     // L0A23
+.include "po_right.s"                    // L0A3D
+.include "po_enter.s"                    // L0A4F
+.include "po_comma.s"                    // L0A5F
+.include "po_quest.s"                    // L0A69
+.include "po_tv_2.s"                     // L0A6D
+.include "po_2_oper.s"                   // L0A75
+.include "po_1_oper.s"                   // L0A7A
+.include "po_tv_1.s"                     // L0A7D
+.include "po_change.s"                   // L0A80
+.include "po_cont.s"                     // L0A87
+.include "po_fill.s"                     // L0AC3
+.include "po_able.s"                     // L0AD9
+.include "po_store.s"                    // L0ADC
+.include "po_fetch.s"                    // L0B03
+.include "po_any.s"                      // L0B24
+.include "po_mosaic_half.s"              // L0B3E
+.include "po_t_udg.s"                    // L0B52
+.include "rejoin_po_t_udg.s"             // L0B56
+.include "po_char.s"                     // L0B65
+.include "po_char_2.s"                   // L0B6A
+.include "pr_all.s"                      // L0B7F
+.include "po_attr.s"                     // L0BDB
+.include "po_msg.s"                      // L0C0A
+.include "po_tokens.s"                   // L0C10
+.include "po_table.s"                    // L0C14
+.include "po_table_1.s"                  // L0C17
+.include "po_search.s"                   // L0C41
+.include "po_scr.s"                      // L0C55
+.include "temps.s"                       // L0D4D
+.include "cls.s"                         // L0D6B
+.include "cls_lower.s"                   // L0D6E
+.include "cl_chan.s"                     // L0D94
+.include "cl_all.s"                      // L0DAF
+.include "cl_set.s"                      // L0DD9
+.include "cl_line.s"                     // L0E44
+.include "cl_addr.s"                     // L0E9B
+.include "copy_buff.s"                   // L0ECD
+.include "add_char.s"                    // L0F81
+.include "add_ch_1.s"                    // L0F8B
+.include "key_input.s"                   // L10A8
+.include "report_j.s"                    // L15C4
+.include "chan_open.s"                   // L1601
+.include "chan_flag.s"                   // L1615
+.include "chn_cd_lu.s"                   // L162D
+.include "chan_k.s"                      // L1634
+.include "chan_s.s"                      // L1642
+.include "chan_p.s"                      // L164D
+.include "one_space.s"                   // L1652
+.include "make_room.s"                   // L1655
+.include "indexer.s"                     // L16DC
+.include "report_bb.s"                   // L1E9F
+.include "co_temp_5.s"                   // L2211
+.include "print_token_udg_patch.s"       // L3B9F
+.include "new_tokens.s"                  // L3BD2
+.include "tv_tuner.s"                    // L3C10

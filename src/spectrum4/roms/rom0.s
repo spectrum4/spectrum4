@@ -90,5 +90,7 @@ msg_copyright:                           // L0561
 .include "init_mode.s"                   // L2584
 .include "main_menu.s"                   // L259F
 .include "reset_cursor.s"                // L28BE
+.include "reset_main_screen.s"           // L2E1F
 .include "reset_indentation.s"           // L35BC
 .include "mode_l.s"                      // L365E
+.include "init_cursor.s"                 // L3A7F

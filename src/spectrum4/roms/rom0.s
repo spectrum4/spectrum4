@@ -38,10 +38,10 @@
 .text
 .align 2
 
-.include "restart.s"
-.include "pin.s"
-.include "pout.s"
-.include "new.s"
+.include "restart.s"                     // L0000
+.include "pin.s"                         // L009A
+.include "pout.s"                        // L009F
+.include "new.s"                         // L019D
 # Following aren't needed, I think!
 # .include "swap_ram0.s"
 # .include "swap_ram7.s"

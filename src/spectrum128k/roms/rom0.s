@@ -780,7 +780,7 @@ L005C:  LD   (TARGET),HL                  ; TARGET. Save the address in ROM 0 to
 ;       POP AF            ; Restore AF.
 ;       RET               ;
 
-_SWAP:                                    ; was "L006B"
+_swap:                                    ; was "L006B"
         PUSH AF                           ; Save AF and BC.
         PUSH BC                           ;
         LD   BC,$7FFD                     ;
@@ -800,7 +800,7 @@ _SWAP:                                    ; was "L006B"
 ; Switch to the other ROM from that currently paged in
 ; and then return to the address held in RETADDR.
 
-_YOUNGER:                                 ; was "L007F"
+_younger:                                 ; was "L007F"
         CALL SWAP                         ; SWAP. Toggle to the other ROM.
         PUSH HL                           ;
         LD   HL,(RETADDR)                 ; RETADDR.
@@ -813,7 +813,7 @@ _YOUNGER:                                 ; was "L007F"
 ; This error handler routine switches back to ROM 0 and then
 ; executes the routine pointed to by system variable TARGET.
 
-_ONERR:                                   ; was "L0088"
+_onerr:                                   ; was "L0088"
         DI                                ; Ensure interrupts are disabled whilst paging.
         LD   A,(BANK_M)                   ; BANK_M. Fetch current paging configuration.
         AND  $EF                          ; Select ROM 0.
@@ -830,7 +830,7 @@ _ONERR:                                   ; was "L0088"
 ; It causes ROM 0 to be paged in so that the new RS232 routines
 ; can be accessed.
 
-_PIN:                                     ; was "L009A"
+_pin:                                     ; was "L009A"
         LD   HL,L06D8                     ; RS232 input routine within ROM 0.
         JR   L00A2                        ;
 
@@ -842,7 +842,7 @@ _PIN:                                     ; was "L009A"
 ; can be accessed.
 ; Entry: A=Byte to send.
 
-_POUT:                                    ; was "L009F"
+_pout:                                    ; was "L009F"
         LD   HL,L07CA                     ; RS232 output routine within ROM 0.
 
 L00A2:  EX   AF,AF'                       ; Save AF registers.
@@ -862,7 +862,7 @@ L00A2:  EX   AF,AF'                       ; Save AF registers.
 ; It causes the original ROM to be paged back in and returns back to
 ; the calling routine.
 
-_POUT2:                                   ; was "L00B5"
+_pout2:                                   ; was "L00B5"
         EX   AF,AF'                       ; Save AF registers. For a read, A holds the byte read and the flags the success status.
         POP  AF                           ; Retrieve original paging configuration.
         LD   BC,$7FFD                     ;
@@ -1005,7 +1005,7 @@ L0137:  LD   B,D                          ; Complete setting up the sound chip r
         OUT  (C),A                        ;
 
         LD   DE,SWAP                      ; SWAP. Copy the various paging routines to the old printer buffer.
-        LD   HL,_SWAP                     ; The source is in this ROM.
+        LD   HL,_swap                     ; The source is in this ROM.
         LD   BC,$0058                     ; There are eighty eight bytes to copy.
         LDIR                              ; Copy the block of bytes.
 

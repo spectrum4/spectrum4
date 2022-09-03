@@ -46,10 +46,10 @@ co_temp_5:                               // L2211
   b.ls    co_temp_c                               // handle 0x12 (FLASH) and 0x13 (BRIGHT)
   // TODO
   b       1f
-co_temp_7:
+co_temp_7:                               // L2234
   // TODO
   b       1f
-co_temp_c:
+co_temp_c:                               // L2273
   mov     w1, #0x40
   mov     x2, #0x80
   csel    w1, w1, w2, eq                          // w1 = 128 (FLASH) or 64 (BRIGHT)
@@ -84,5 +84,5 @@ co_temp_c:
   orr     w3, w3, w1
   b       1b
 
-report_k:
+report_k:                                // L2244
   ret

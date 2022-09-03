@@ -91,7 +91,7 @@ po_scr:                                  // L0C55
   and     w1, w1, #~0x10                          // Signal automatic program listing complete (since end of screen reached).
   strb    w1, [x28, TV_FLAG-sysvars]              // [TV_FLAG] = w1
   b       8f                                      // Exit routine.
-po_scr_2:
+po_scr_2:                                // L0C88
 // TODO - test code below
   ldrb    w9, [x28, SCR_CT-sysvars]               // w9 = [SCR_CT]
   subs    w9, w9, #1                              // Decrement SCR_CT.
@@ -116,9 +116,9 @@ po_scr_2:
   and     w9, w9, #~0x20                          // Clear bit 5 - signal no new key.
   strb    w9, [x28, FLAGS-sysvars]                // [FLAGS] = w9[0-7]
 // TODO
-po_scr_3:
+po_scr_3:                                // L0CD2
 // TODO
-po_scr_4:
+po_scr_4:                                // L0D02
   cmp     w0, #0x02
   b.lo    report_5                                // w0 < 2 => Out of screen
   add     w4, w0, w2                              // w4 = w0 + [DF_SZ]

@@ -6269,7 +6269,7 @@ remove_fp:
 ; store values or section common code. The alternate register set is the only
 ; place available to store 3 persistent 16-bit system variables.
 
-new:
+new_command:
         DI                                ; disable interrupts - machine stack will be
                                           ; cleared.
         LD      A,$FF                     ; flag coming from NEW.
@@ -8971,7 +8971,7 @@ p_rem:
 
 p_new:
         DEFB    $00                       ; Class-00 - No further operands.
-        DEFW    new                       ; Address: new; Address: NEW
+        DEFW    new_command               ; Address: new; Address: NEW
 
 p_run:
         DEFB    $03                       ; Class-03 - A numeric expression may follow

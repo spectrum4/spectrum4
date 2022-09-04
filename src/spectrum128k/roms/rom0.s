@@ -9822,7 +9822,7 @@ L25CB:  LD   IX,$FD6C                     ; Point IX at editing settings informa
         RST  28H                          ;
         DEFW chan_open                    ; $1601. Select main screen.
 
-        CALL L3668                        ; Reset 'L' mode.
+        CALL mode_l_2                     ; Reset 'L' mode.
         LD   HL,FLAGS                     ; FLAGS.
 
 L25E3:  BIT  5,(HL)                       ; Has a key been pressed?
@@ -9919,7 +9919,7 @@ L262D:  CALL swap_rom0                    ; Use Normal RAM Configuration (physic
 
 L2653:  LD   SP,TSTACK                    ; TSTACK. Use temporary stack.
 
-        CALL L3668                        ; Reset 'L' mode.
+        CALL mode_l_2                     ; Reset 'L' mode.
 
         CALL L367F                        ; Wait for a key. [Note that it is possible to change CAPS LOCK mode whilst on a menu]
         PUSH AF                           ; Save key code.
@@ -14564,7 +14564,8 @@ mode_l:                                   ; was "L365E"
         LD   A,$02                        ; Reset repeat key duration.
         LD   (REPPER),A                   ; REPPER
 
-L3668:  LD   HL,FLAGS                     ; FLAGS.
+mode_l_2:                                 ; was "L3668"
+        LD   HL,FLAGS                     ; FLAGS.
         LD   A,(HL)                       ;
         OR   $0C                          ; Select L-Mode and Print in L-Mode.
         LD   (HL),A                       ;

@@ -478,6 +478,7 @@
 .global ROW23
 .global ROW45
 .global _start
+.global init_mode
 .global routine_error
 .global routine_stat_next
 .global routine_stat_ret

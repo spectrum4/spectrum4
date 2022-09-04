@@ -47,7 +47,7 @@ for tool in /bin/sh aarch64-none-elf-as aarch64-none-elf-gdb aarch64-none-elf-ld
   file=$(which ${tool})
   ldd $file 2> /dev/null || true
   echo $file
-done | sed 's/(.*//' | sed 's/^[^\/]*//' | grep '^/' | sort -u | while read line; do
+done | sed 's/(.*//' | sed 's/^[^\/]*//' | sed -n '/^\//p' | sort -u | while read line; do
   echo "${line}"
   mkdir -p "$(dirname "/dist${line}")"
   cp -vp "${line}" "/dist${line}"

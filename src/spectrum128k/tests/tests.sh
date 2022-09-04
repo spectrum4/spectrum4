@@ -21,7 +21,7 @@ function generate_unit_tests {
   echo "# Licencing information can be found in the LICENCE file"
   echo "# (C) 2021 Spectrum +4 Authors. All rights reserved."
   echo
-  echo "# Extrapolated from /${srcdir}/ files."
+  echo '# This file is generated, do not edit!'
   echo
   echo '.global all_suites'
   echo '.include "lib.s"'
@@ -53,7 +53,12 @@ function generate_unit_tests {
     echo
     echo -n "${ptralignstr}"
     echo "suite_${routine//./_}:"
-    echo "  ${ptrunit}" $(echo "${tests}" | wc -l)
+    echo "  ${ptrunit}" $(echo "${tests}" | wc -l) "   ; number of tests in this suite"
+    for rom in 0 1; do
+      if [ "$(cat "../roms/rom${rom}.symbols" | sed -n "s/.* ${routine%%.*}\$//p" | wc -l)" -eq 1 ]; then
+        echo "  .byte $((16 * rom))     ; value to write to port 0x7ffd to page in rom ${rom} for routine ${routine%%.*}"
+      fi
+    done
     echo "  ${ptrunit} ${routine%%.*}"
     echo "${tests}" | while read t; do
       echo "  ${ptrunit} test_${t}"

@@ -19,15 +19,8 @@ main_menu:                               // L259F
   and     w3, w3, #0xefefefef                     // Signal return to main menu (bit 4 clear)
   strb    w3, [x28, EC0D-sysvars]                 // Store editor flags
   strb    wzr, [x28, EC0C-sysvars]                // Top menu item selected (menu index=0)
-
-
-
-.if       DEMO_AUTORUN
-  bl      demo                                    // Demonstrate features for manual inspection.
-.endif
-  b       sleep
-
-
+  bl      display_menu                            // Display menu and highlight first item.
+  b       wait_key_press                          // Jump ahead to enter the main key waiting and processing loop.
 
 # Main menu jump table
 .align 3

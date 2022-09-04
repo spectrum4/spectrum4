@@ -10134,7 +10134,7 @@ L2717:  LD   HL,$EC0D                     ; HL points to Editor flags.
         LD   HL,($F6EA)                   ; HL points to jump table for current menu.
         PUSH HL                           ;
         PUSH AF                           ;
-        CALL L373E                        ; Restore menu screen area.
+        CALL restore_menu_screen_area     ; Restore menu screen area.
         POP  AF                           ;
         POP  HL                           ;
 
@@ -14642,7 +14642,7 @@ L36A4:  RST  28H                          ;
 display_menu:                             ; was "L36A8"
         PUSH HL                           ; Save address of menu text.
 
-        CALL L373B                        ; Store copy of menu screen area and system variables.
+        CALL store_menu_screen_area       ; Store copy of menu screen area and system variables.
 
         LD   HL,TV_FLAG                   ; TV_FLAG.
         RES  0,(HL)                       ; Signal using main screen.
@@ -14786,7 +14786,8 @@ L3733:  LD   A,(HL)                       ; Fetch a character.
 ; ----------------------
 ; Store copy of menu screen area and system variables.
 
-L373B:  SCF                               ; Set carry flag to signal to save screen area.
+store_menu_screen_area:                   ; was "L373B"
+        SCF                               ; Set carry flag to signal to save screen area.
         JR   L373F                        ; Jump ahead to continue.
 
 ; ------------------------
@@ -14795,7 +14796,8 @@ L373B:  SCF                               ; Set carry flag to signal to save scr
 ; Restore menu screen area and system variables from copy.
 ; Entry: IX=Address of the cursor settings information.
 
-L373E:  AND  A                            ; Reset carry flag to signal restore screen area.
+restore_menu_screen_area:                 ; was "L373E"
+        AND  A                            ; Reset carry flag to signal restore screen area.
 
 L373F:  LD   DE,$EEF6                     ; Store for TV_FLAG.
         LD   HL,TV_FLAG                   ; TV_FLAG.

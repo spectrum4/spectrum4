@@ -9800,9 +9800,9 @@ L25AD:  LD   HL,main_menu_jump_table      ; Jump table for Main Menu.
 
         POP  HL                           ; Retrieve address of menu.
 
-        CALL L36A8                        ; Display menu and highlight first item.
+        CALL display_menu                 ; Display menu and highlight first item.
 
-        JP   L2653                        ; Jump ahead to enter the main key waiting and processing loop.
+        JP   wait_key_press               ; Jump ahead to enter the main key waiting and processing loop.
 
 
 ; ========================
@@ -9869,7 +9869,7 @@ L2604:  CALL L30D6                        ; Reset Below-Screen Line Edit Buffer 
 
         LD   A,($EC0E)                    ; Fetch the mode.
         CP   $04                          ; Calculator mode?
-        JR   Z,L2653                      ; Jump ahead if not to wait for a key press.
+        JR   Z,wait_key_press             ; Jump ahead if not to wait for a key press.
 
 ;Calculator mode
 
@@ -9904,7 +9904,7 @@ L262D:  CALL swap_ram0                    ; Use Normal RAM Configuration (physic
 
         LD   HL,$EC0D                     ; Editor flags.
         BIT  5,(HL)                       ; Process the BASIC line?
-        JR   NZ,L2653                     ; Jump ahead if calculator mode.
+        JR   NZ,wait_key_press            ; Jump ahead if calculator mode.
 
         LD   HL,$0000                     ;
         LD   ($EC06),HL                   ; Signal no editable characters in the line prior to the cursor.
@@ -9919,7 +9919,8 @@ L262D:  CALL swap_ram0                    ; Use Normal RAM Configuration (physic
 ; -----------------
 ; Enter a loop to wait for a key press. Handles key presses for menus, the Calculator and the Editor.
 
-L2653:  LD   SP,TSTACK                    ; TSTACK. Use temporary stack.
+wait_key_press:                           ; was "L2653"
+        LD   SP,TSTACK                    ; TSTACK. Use temporary stack.
 
         CALL mode_l_2                     ; Reset 'L' mode.
 
@@ -9932,7 +9933,7 @@ L2653:  LD   SP,TSTACK                    ; TSTACK. Use temporary stack.
         POP  AF                           ; Retrieve key code.
         CALL L2669                        ; Process the key press.
 
-        JR   L2653                        ; Wait for another key.
+        JR   wait_key_press               ; Wait for another key.
 
 ; -----------------
 ; Process Key Press
@@ -9981,7 +9982,7 @@ L2689:  LD   HL,$EC0D                     ; Editor flags.
         RET                               ; [Could have save a byte by using JP $26E7 (ROM 0)]
 
 L2694:  CP   $A3                          ; Was it a supported function key code?
-        JR   NC,L2653                     ; Ignore by jumping back to wait for another key.
+        JR   NC,wait_key_press            ; Ignore by jumping back to wait for another key.
                                           ; [*BUG* - This should be RET NC since it was called from the loop at $2653 (ROM 0). Repeatedly pressing an unsupported
                                           ; key will result in a stack memory leak and eventual overflow. Credit: John Steven (+3), Paul Farrow (128)]
         JP   L28F1                        ; Jump forward to handle the character key press.
@@ -10115,7 +10116,7 @@ L2704:  CALL L29EC                        ; Remove cursor, restoring old attribu
         LD   (HL),$00                     ; Set 'current menu item' as the top item.
 
 L270F:  LD   HL,($F6EC)                   ; Address of text for current menu.
-        CALL L36A8                        ; Display menu and highlight first item.
+        CALL display_menu                 ; Display menu and highlight first item.
 
         SCF                               ; Signal do not produce an error beep.
         RET                               ;
@@ -14638,7 +14639,8 @@ L36A4:  RST  28H                          ;
 ; ------------
 ; HL=Address of menu text.
 
-L36A8:  PUSH HL                           ; Save address of menu text.
+display_menu:                             ; was "L36A8"
+        PUSH HL                           ; Save address of menu text.
 
         CALL L373B                        ; Store copy of menu screen area and system variables.
 

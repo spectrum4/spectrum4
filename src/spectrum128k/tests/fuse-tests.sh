@@ -74,4 +74,4 @@ suite="${1}"
 tzx_file="${suite}.tzx"
 suite_log="${suite}.log"
 fuse_log="${suite}.fuselog"
-run_tests fuse-tests "${suite_log}" 67 68 600 3
+run_tests fuse-tests "${suite_log}" 67 68 300 3

@@ -69,6 +69,9 @@ channel_assign:                           ; This label is translated to an addre
     inc     hl
     ld      b, (hl)                       ; BC = number of tests in this test suite
     inc     hl
+    ld      a, (hl)                       ; A = value to write to port 0x7ffd (memory paging)
+    inc     hl
+    ld      (bank_m), a
     ex      de, hl                        ; DE = address inside test suite
                                           ; HL = number of remaining tests
     or      a                             ; Ensure carry is clear - not really needed as
@@ -203,6 +206,11 @@ channel_assign:                           ; This label is translated to an addre
       ld      de, restore_page
       call    all_pages_call
 
+      # Page in correct ROM
+      ld      bc, 0x7ffd
+      ld      a, (bank_m)
+      out     (c), a                      ; page in correct ROM and RAM bank 0
+
       # Restore pre-test registers from stack
 
       # Temporarily move SP to inside stack (since interuppts are disabled, this is ok)
@@ -251,6 +259,10 @@ channel_assign:                           ; This label is translated to an addre
       push    af
       push    ix
       push    iy
+
+      ld      bc, 0x7ffd
+      ld      a, 16
+      out     (c), a                      ; page in ROM 1 (48K) and RAM bank 0
 
       ld      ix, (post_test_snapshot)
       ld      de, snapshot_page
@@ -380,7 +392,7 @@ log_register:
 log_ram_address:
   ld      de, msg_fail_8
   call    print_msg_de
-  ld      a, (BANK_M)
+  ld      a, (bank_m)
   and     0x07
   or      0x30
   rst     0x10
@@ -676,29 +688,32 @@ all_pages_call:
   ld      (hl), e
   inc     hl
   ld      (hl), d
-  ld      a, (BANK_M)
+  ld      a, (bank_m)
   ld      h, a
   ld      bc, 0x7ffd
-  ld      l, 16
+  ld      l, 0x10
   1:
-    out     (c), l                        ; page in RAM bank 0/1/3/4/5/6/7 and 128K ROM
-    ld      a, l
-    ld      (BANK_M), a
+    out     (c), l                        ; page in RAM bank 0/1/3/4/5/6/7 and 48K ROM
+    ld      a, h
+    xor     l
+    xor     0x10
+    ld      (bank_m), a
     inc     l
     exx                                   ; preserve BC value
   all_pages_call_instruction:
     call    0x0000                        ; this value gets updated at start of routine
     exx
     ld      a, l
-    cp      18
+    cp      0x12                          ; skip bank 2 (also paged in at 0x8000-0xbffff) - since this is where snapshots are stored
     jr      nz, 2f
     inc     l
   2:
-    cp      24
+    cp      0x18
     jr      nz, 1b
+  ld      a, 0x10
+  out     (c), a                          ; page in ROM 1 and RAM 0
   ld      a, h
-  out     (c), a                          ; page in original RAM bank
-  ld      (BANK_M), a
+  ld      (bank_m), a
   ret
 
 
@@ -868,6 +883,7 @@ compare_page:
   pop     hl
   pop     bc
   exx
+; AF  BC  DE  HL
   ret
 
 
@@ -1061,5 +1077,6 @@ pre_test_snapshot:         .space 2
 expected_snapshot:         .space 2
 post_test_snapshot:        .space 2
 test_case_name:            .space 2
+bank_m:                    .space 1
 
 memory_dumps:                             ; size not defined here, code knows that RAM page ends at 0xbfff

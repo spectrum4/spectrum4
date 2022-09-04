@@ -33,6 +33,15 @@ FLAGS2:         .space 1                          // L5C6A: Flags:
                                                   //   Bit 3  : 1=CAPS LOCK on.
                                                   //   Bit 4  : 1=Using channel 'K'.
                                                   //   Bit 5-7: Not used (always 0).
+FLAGS3:         .space 1                          // L5B66: Flags: [Name clashes with the ZX Interface 1 system variable at $5CB6]
+                                                  //   Bit 0: 1=BASIC/Calculator mode, 0=Editor/Menu mode.
+                                                  //   Bit 1: 1=Auto-run loaded BASIC program. [Set but never tested by the ROM]
+                                                  //   Bit 2: 1=Editing RAM disk catalogue.
+                                                  //   Bit 3: 1=Using RAM disk commands, 0=Using cassette commands.
+                                                  //   Bit 4: 1=Indicate LOAD.
+                                                  //   Bit 5: 1=Indicate SAVE.
+                                                  //   Bit 6; 1=Indicate MERGE.
+                                                  //   Bit 7: 1=Indicate VERIFY.
 TV_FLAG:        .space 1                          // L5C3C: Flags associated with the TV:
                                                   //   Bit 0  : 1=Using lower editing area, 0=Using main screen.
                                                   //   Bit 1-2: Not used (always 0).

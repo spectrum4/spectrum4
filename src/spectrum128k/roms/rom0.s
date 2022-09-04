@@ -7300,7 +7300,8 @@ L1B2B:  CALL L1B53                        ; Overwrite 'P' channel data to use th
 ; Main Menu - 48 BASIC Option
 ; ---------------------------
 
-L1B47:  LD   HL,$0000                     ; Stack a $0000 address to return to.
+basic_48k:                                ; was "L1B47"
+        LD   HL,$0000                     ; Stack a $0000 address to return to.
         PUSH HL                           ;
 
         LD   A,$20                        ; Force 48 mode.
@@ -9784,9 +9785,9 @@ main_menu:                                ; was "L259F"
         RST  28H                          ;
         DEFW chan_open                    ; $1601.
 
-L25AD:  LD   HL,L2744                     ; Jump table for Main Menu.
+L25AD:  LD   HL,main_menu_jump_table      ; Jump table for Main Menu.
         LD   ($F6EA),HL                   ; Store current menu jump table address.
-        LD   HL,L2754                     ; The Main Menu text.
+        LD   HL,main_menu_text            ; The Main Menu text.
         LD   ($F6EC),HL                   ; Store current menu text table address.
 
         PUSH HL                           ; Store address of menu on stack.
@@ -10182,21 +10183,23 @@ L2742:  SCF                               ;
 
 ; Jump table for the main 128K menu, referenced at $25AD (ROM 0).
 
-L2744:  DEFB $05                          ; Number of entries.
+main_menu_jump_table:                     ; was "L2744"
+        DEFB $05                          ; Number of entries.
         DEFB $00
-        DEFW L2831                        ; Tape Loader option handler.
+        DEFW tape_loader                  ; Tape Loader option handler.
         DEFB $01
-        DEFW L286C                        ; 128 BASIC option handler.
+        DEFW basic_128k                   ; 128 BASIC option handler.
         DEFB $02
-        DEFW L2885                        ; Calculator option handler.
+        DEFW calculator                   ; Calculator option handler.
         DEFB $03
-        DEFW L1B47                        ; 48 BASIC option handler.
+        DEFW basic_48k                    ; 48 BASIC option handler.
         DEFB $04
-        DEFW L2816                        ; Tape Tester option handler.
+        DEFW tape_tester                  ; Tape Tester option handler.
 
 ; Text for the main 128K menu
 
-L2754:  DEFB $06                          ; Number of entries.
+main_menu_text:                           ; was "L2754"
+        DEFB $06                          ; Number of entries.
         DEFM "128     "                   ; Menu title.
         DEFB $FF
 L275E:  DEFM "Tape Loade"
@@ -10279,7 +10282,7 @@ L27D2:  DEFB 03                           ; Number of entries.
 L27EB:  DEFB $16, $01, $00                ; AT 1,0;
         DEFB $10, $00                     ; INK 0;
         DEFB $11, $07                     ; PAPER 7;
-        DEFB $13, $00                     ; BRIGHT 1;
+        DEFB $13, $00                     ; BRIGHT 0;
         DEFM "To cancel - press BREAK twic"
         DEFB 'e'+$80
 
@@ -10299,7 +10302,8 @@ L2811:  CALL L269B                        ; Toggle between editing in the lower 
 ; Main Menu - Tape Tester Option
 ; ------------------------------
 
-L2816:  CALL L3857                        ; Clear screen and print the "Tape Tester" in the banner.
+tape_tester:                              ; was "L2816"
+        CALL L3857                        ; Clear screen and print the "Tape Tester" in the banner.
         CALL L3BE9                        ; Run the tape tester, exiting via the 'Exit' option menu handler.
 
 ; -----------------------------------------
@@ -10321,7 +10325,8 @@ L281C:  LD   HL,$EC0D                     ; Editor flags.
 ; Main Menu - Tape Loader Option
 ; ------------------------------
 
-L2831:  CALL L3852                        ; Clear screen and print "Tape Loader" in the banner line.
+tape_loader:                              ; was "L2831"
+        CALL L3852                        ; Clear screen and print "Tape Loader" in the banner line.
 
         LD   HL,TV_FLAG                   ; TV_FLAG.
         SET  0,(HL)                       ; Signal using lower screen area.
@@ -10368,7 +10373,8 @@ L2865:  LD   HL,$EC0D                     ; Editor flags.
         BIT  6,(HL)                       ; Using lower editing screen?
         JR   NZ,L2874                     ; Jump ahead if so.
 
-L286C:  LD   HL,TV_FLAG                   ; TV_FLAG.
+basic_128k:                               ; was "L286C"
+        LD   HL,TV_FLAG                   ; TV_FLAG.
         RES  0,(HL)                       ; Allow leading space.
         CALL L3848                        ; Clear screen and print the "128 BASIC" banner line.
 
@@ -10387,7 +10393,8 @@ L2874:  LD   HL,$EC0D                     ; Editor flags.
 ; Main Menu - Calculator Option
 ; -----------------------------
 
-L2885:  LD   HL,$EC0D                     ; Editor flags.
+calculator:                               ; was "L2885"
+        LD   HL,$EC0D                     ; Editor flags.
         SET  5,(HL)                       ; Signal to process the BASIC line.
         SET  4,(HL)                       ; Signal return to calculator.
         RES  6,(HL)                       ; Signal editing are is the main screen.

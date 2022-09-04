@@ -100,10 +100,3 @@ new:                                     // L019D
   bl      init_mode
 # bl      swap_stack
   b       main_menu
-
-
-
-.if       DEMO_AUTORUN
-  bl      demo                                    // Demonstrate features for manual inspection.
-.endif
-  b       sleep

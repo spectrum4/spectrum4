@@ -183,8 +183,6 @@ EC15:           .space 1                          // Holds the number of editing
 #                - 8 lines of 14 display file bytes.
 #                - 14 attribute file bytes.
 # $F4F1-$F6E9  Not used. 505 bytes.
-# $F6EA    2   The jump table address for the current menu.
-# $F6EC    2   The text table address for the current menu.
 # $F6F4    1   Flags used when deleting:
 #                Bit 0   : 1=Deleting on last row of the BASIC line, 0=Deleting on row other than the last row of the BASIC line.
 #                Bits 1-7: Not used (always 0).
@@ -345,6 +343,10 @@ DF_CC_L:        .space 8                          // L5C86: Like DF CC for lower
 PR_CC:          .space 8                          // L5C80: Full address of next position for LPRINT to print at (in ZX Printer buffer).
 K_CUR:          .space 8                          // L5C5B: Address of cursor.
                                                   // Legal values in printer_buffer range. [Not used in 128K mode]
+
+F6EA:           .space 8                          // The jump table address for the current menu.
+F6EC:           .space 8                          // The text table address for the current menu.
+
 MEMBOT:         .space 32                         // L5C92: Calculator's memory area - used to store numbers that cannot conveniently be put on the
                                                   // calculator stack.
 
@@ -359,11 +361,15 @@ printer_buffer: .space 0xd80                      // Printer buffer used by 48K 
 printer_buffer_end:
 
 # Memory regions
-display_file:   .space (SCREEN_HEIGHT-BORDER_TOP-BORDER_BOTTOM)*(SCREEN_WIDTH-BORDER_LEFT-BORDER_RIGHT)/8
+display_file:                            // L4000
+  .space (SCREEN_HEIGHT-BORDER_TOP-BORDER_BOTTOM)*(SCREEN_WIDTH-BORDER_LEFT-BORDER_RIGHT)/8
                                                   // One pixel per bit => 8 pixels per byte
 display_file_end:
-attributes_file:.space (SCREEN_HEIGHT-BORDER_TOP-BORDER_BOTTOM)*(SCREEN_WIDTH-BORDER_LEFT-BORDER_RIGHT)/256
+
+attributes_file:                         // L5800
+  .space (SCREEN_HEIGHT-BORDER_TOP-BORDER_BOTTOM)*(SCREEN_WIDTH-BORDER_LEFT-BORDER_RIGHT)/256
                                                   // 16*16 pixels per attribute record => 256 pixles per byte
 attributes_file_end:
+
 ram_disk:       .space RAM_DISK_SIZE
 heap:           .space HEAP_SIZE

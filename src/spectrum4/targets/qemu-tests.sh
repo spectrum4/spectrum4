@@ -72,4 +72,4 @@ function qemu-tests {
 cd "$(dirname "${0}")"
 suite="${1}"
 suite_log="${suite}.log"
-run_tests qemu-tests "${suite_log}" 69 70 600 1
+run_tests qemu-tests "${suite_log}" 69 70 300 1

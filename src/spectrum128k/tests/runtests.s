@@ -1062,4 +1062,4 @@ expected_snapshot:         .space 2
 post_test_snapshot:        .space 2
 test_case_name:            .space 2
 
-memory_dumps:              .space 0x3000  ; 12KB
+memory_dumps:                             ; size not defined here, code knows that RAM page ends at 0xbfff

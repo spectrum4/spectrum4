@@ -13,14 +13,14 @@ reset_cursor:                            // L28BE
   bl      reset_main_screen
   bl      init_cursor
   mov     w0, 0x04000000
-  str     w0, [x28, F6EE-sysvars]
                                                   // [F6EE] = Cursor position = row 0
                                                   // [F6EF] = Cursor position = column 0
                                                   // [F6F0] = Preferred cursor position = column 0
                                                   // [F6F1] = Top row before scrolling up = 4
+  str     w0, [x28, F6EE-sysvars]
   mov     w1, 0x00001410
-  strh    w1, [x28, F6F2-sysvars]
                                                   // [F6F2] = Bottom row before scrolling down = 0x10
                                                   // [F6F3] = Number of rows in the editing area = 0x14
+  strh    w1, [x28, F6F2-sysvars]
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret

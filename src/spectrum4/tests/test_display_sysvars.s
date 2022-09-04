@@ -14,7 +14,7 @@
 
 
 display_sysvars_1_setup:
-  _str    0x0716253443526170, K_CUR
+  _str    0x0716253443526170, F6EC
   ret
 
 

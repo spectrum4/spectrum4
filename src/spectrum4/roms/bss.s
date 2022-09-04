@@ -130,13 +130,6 @@ EC13:           .space 1                          // Temporary store for P_FLAG:
                                                   //   Bit 7: Not used (always 0).
 EC14:           .space 1                          // Not used.
 EC15:           .space 1                          // Holds the number of editing lines: 20 for the main screen, 1 for the lower screen.
-F6EE:           .space 1                          // Cursor position info - Current row number.
-F6EF:           .space 1                          // Cursor position info - Current column number.
-F6F0:           .space 1                          // Cursor position info - Preferred column number. Holds the last user selected column position. The Editor will attempt to
-                                                  // place the cursor on this column when the user moves up or down to a new line.
-F6F1:           .space 1                          // Edit area info - Top row threshold for scrolling up.
-F6F2:           .space 1                          // Edit area info - Bottom row threshold for scrolling down.
-F6F3:           .space 1                          // Edit area info - Number of rows in the editing area.
 
 # $EC16  735   Screen Line Edit Buffer. This represents the text on screen that can be edited. It holds 21 rows,
 #              with each row consisting of 32 characters followed by 3 data bytes. Areas of white
@@ -224,18 +217,6 @@ F6F3:           .space 1                          // Edit area info - Number of 
 # $FCAE-$FCFC  Construct a BASIC Line routine.                       <<< RAM routine - See end of file for description >>>
 # $FCFD-$FD2D  Copy String Into Keyword Construction Buffer routine. <<< RAM routine - See end of file for description >>>
 # $FD2E-$FD69  Identify Character Code of Token String routine.      <<< RAM routine - See end of file for description >>>
-# $FD6A    1   Flags used when shifting BASIC lines within edit buffer rows [Redundant]:
-#                Bit 0  : 1=Set to 1 but never reset or tested. Possibly intended to indicate the start of a new BASIC line and hence whether indentation required.
-#                Bit 1-7: Not used (always 0).
-# $FD6B    1   The number of characters to indent subsequent rows of a BASIC line by.
-# $FD6C    1   Cursor settings (indexed by IX+$00) - initialised to $00, but never used.
-# $FD6D    1   Cursor settings (indexed by IX+$01) - number of rows above the editing area.
-# $FD6E    1   Cursor settings (indexed by IX+$02) - initialised to $00 (when using lower screen) or $14 (when using main screen), but never subsequently used.
-# $FD6F    1   Cursor settings (indexed by IX+$03) - initialised to $00, but never subsequently used.
-# $FD70    1   Cursor settings (indexed by IX+$04) - initialised to $00, but never subsequently used.
-# $FD71    1   Cursor settings (indexed by IX+$05) - initialised to $00, but never subsequently used.
-# $FD72    1   Cursor settings (indexed by IX+$06) - attribute colour.
-# $FD73    1   Cursor settings (indexed by IX+$07) - screen attribute where cursor is displayed.
 # $FD74    9   The Keyword Conversion Buffer holding text to examine to see if it is a keyword.
 # $FD7D    2   Address of next available location within the Keyword Conversion Buffer.
 # $FD7F    2   Address of the space character between words in the Keyword Conversion Buffer.
@@ -288,12 +269,37 @@ STRMS:          .space 2*19                       // L5C10: Address offsets of 1
 TVDATA:         .space 2                          // L5C0E: Stores bytes of colour, AT and TAB controls going to TV.
 EC06:           .space 2                          // Count of the number of editable characters in the BASIC line up to the cursor within the Screen Line Edit Buffer.
 EC08:           .space 2                          // Version of E_PPC used by BASIC Editor to hold last line number entered.
+# F6F2/F6F3 accessed together
+F6F2:           .space 1                          // Edit area info - Bottom row threshold for scrolling down.
+F6F3:           .space 1                          // Edit area info - Number of rows in the editing area.
+# FD6A/FD6B accessed together
+FD6A:           .space 1                          // Flags used when shifting BASIC lines within edit buffer rows [Redundant]:
+                                                  //   Bit 0  : 1=Set to 1 but never reset or tested. Possibly intended to indicate the start of a new BASIC line and hence whether indentation required.
+                                                  //   Bit 1-7: Not used (always 0).
+FD6B:           .space 1                          // The number of characters to indent subsequent rows of a BASIC line by.
 
 .align 2
+# F6EE/F6EF/F6F0/F6F1 accessed together
+F6EE:           .space 1                          // Cursor position info - Current row number.
+F6EF:           .space 1                          // Cursor position info - Current column number.
+F6F0:           .space 1                          // Cursor position info - Preferred column number. Holds the last user selected column position. The Editor will attempt to
+                                                  // place the cursor on this column when the user moves up or down to a new line.
+F6F1:           .space 1                          // Edit area info - Top row threshold for scrolling up.
 COORDS_X:       .space 2                          // L5C7D: X-coordinate of last point plotted.
 COORDS_Y:       .space 2                          // L5C7E: Y-coordinate of last point plotted.
 
 .align 3
+
+# All 8 bytes updated together in one str instruction, so align 3 here
+FD6C:           .space 1                          // Cursor settings (indexed by IX+$00) - initialised to $00, but never used.
+FD6D:           .space 1                          // Cursor settings (indexed by IX+$01) - number of rows above the editing area.
+FD6E:           .space 1                          // Cursor settings (indexed by IX+$02) - initialised to $00 (when using lower screen) or $14 (when using main screen), but never subsequently used.
+FD6F:           .space 1                          // Cursor settings (indexed by IX+$03) - initialised to $00, but never subsequently used.
+FD70:           .space 1                          // Cursor settings (indexed by IX+$04) - initialised to $00, but never subsequently used.
+FD71:           .space 1                          // Cursor settings (indexed by IX+$05) - initialised to $00, but never subsequently used.
+FD72:           .space 1                          // Cursor settings (indexed by IX+$06) - attribute colour.
+FD73:           .space 1                          // Cursor settings (indexed by IX+$07) - screen attribute where cursor is displayed.
+
 SFNEXT:         .space 8                          // L5B83: End of RAM disk catalogue marker. Pointer to first empty catalogue entry.
 SFSPACE:        .space 8                          // L5B85: Number of bytes free in RAM disk.
 CHARS:          .space 8                          // L5C36: 256 less than address of character set, which starts with ' ' and carries on to '©'.

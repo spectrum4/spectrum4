@@ -9,6 +9,7 @@ temps_chan_k_setup:
   _strb   0x34, BORDCR
   _strb   0b10010110, P_FLAG
   _setbit 0, TV_FLAG
+  ret
 
 temps_chan_k_effects:
   _strb   0x34, ATTR_T
@@ -28,6 +29,7 @@ temps_chan_s_setup:
   _strb   0x2b, MASK_P
   _strb   0b00011100, P_FLAG
   _resbit 0, TV_FLAG
+  ret
 
 temps_chan_s_effects:
   _strb   0x3c, ATTR_T

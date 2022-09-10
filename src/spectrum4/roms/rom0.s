@@ -56,4 +56,6 @@
 .include "reset_indentation.s"           // L35BC
 .include "mode_l.s"                      // L365E
 .include "display_menu.s"                // L36A8
+.include "store_menu_screen_area.s"      // L373B
+.include "restore_menu_screen_area.s"    // L373E
 .include "init_cursor.s"                 // L3A7F

@@ -11541,7 +11541,7 @@ co_temp_4:
 co_temp_5:
         SUB     $11                       ; reduce range $FF-$04
         ADC     A,$00                     ; add in carry if INK
-        JR      Z,co_temp_7               ; forward to CO-TEMP-7 with INK and PAPER.
+        JR      Z,2f                      ; forward to CO-TEMP-7 with INK and PAPER.
 
         SUB     $02                       ; reduce range $FF-$02
         ADC     A,$00                     ; add carry if FLASH
@@ -11550,13 +11550,13 @@ co_temp_5:
         CP      $01                       ; is it 'INVERSE' ?
         LD      A,D                       ; fetch parameter for INVERSE/OVER
         LD      B,$01                     ; prepare OVER mask setting bit 0.
-        JR      NZ,co_temp_6              ; forward to CO-TEMP-6 if OVER
+        JR      NZ,1f                     ; forward to CO-TEMP-6 if OVER
 
         RLCA                              ; shift bit 0
         RLCA                              ; to bit 2
         LD      B,$04                     ; set bit 2 of mask for inverse.
 
-co_temp_6:
+1:
         LD      C,A                       ; save the A
         LD      A,D                       ; re-fetch parameter
         CP      $02                       ; is it less than 2
@@ -11571,10 +11571,10 @@ co_temp_6:
 
 ; the branch was here with INK/PAPER and carry set for INK.
 
-co_temp_7:
+2:          
         LD      A,D                       ; fetch parameter
         LD      B,$07                     ; set ink mask 00000111
-        JR      C,co_temp_8               ; forward to CO-TEMP-8 with INK
+        JR      C,3f                      ; forward to CO-TEMP-8 with INK
 
         RLCA                              ; shift bits 0-2
         RLCA                              ; to
@@ -11583,11 +11583,11 @@ co_temp_7:
 
 ; both paper and ink rejoin here
 
-co_temp_8:
+3:              
         LD      C,A                       ; value to C
         LD      A,D                       ; fetch parameter
         CP      $0A                       ; is it less than 10d ?
-        JR      C,co_temp_9               ; forward to CO-TEMP-9 if so.
+        JR      C,4f                      ; forward to CO-TEMP-9 if so.
 
 ; ink 10 etc. is not allowed.
 
@@ -11595,28 +11595,28 @@ report_k:
         RST     08H                       ; ERROR-1
         DEFB    $13                       ; Error Report: Invalid colour
 
-co_temp_9:
+4:           
         LD      HL,ATTR_T                 ; address system variable ATTR_T initially.
         CP      $08                       ; compare with 8
-        JR      C,co_temp_b               ; forward to CO-TEMP-B with 0-7.
+        JR      C,6f                      ; forward to CO-TEMP-B with 0-7.
 
         LD      A,(HL)                    ; fetch temporary attribute as no change.
-        JR      Z,co_temp_a               ; forward to CO-TEMP-A with INK/PAPER 8
+        JR      Z,5f                      ; forward to CO-TEMP-A with INK/PAPER 8
 
 ; it is either ink 9 or paper 9 (contrasting)
 
         OR      B                         ; or with mask to make white
         CPL                               ; make black and change other to dark
         AND     $24                       ; 00100100
-        JR      Z,co_temp_a               ; forward to CO-TEMP-A if black and
+        JR      Z,5f                      ; forward to CO-TEMP-A if black and
                                           ; originally light.
 
         LD      A,B                       ; else just use the mask (white)
 
-co_temp_a:
+5:          
         LD      C,A                       ; save A in C
 
-co_temp_b:
+6:           
         LD      A,C                       ; load colour to A
         CALL    co_change                 ; routine CO-CHANGE addressing ATTR-T
 

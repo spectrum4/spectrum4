@@ -14789,7 +14789,7 @@ print_str_ff:                             ; was "L3733"
 
 store_menu_screen_area:                   ; was "L373B"
         SCF                               ; Set carry flag to signal to save screen area.
-        JR   L373F                        ; Jump ahead to continue.
+        JR   screen_area                  ; Jump ahead to continue.
 
 ; ------------------------
 ; Restore Menu Screen Area
@@ -14800,39 +14800,40 @@ store_menu_screen_area:                   ; was "L373B"
 restore_menu_screen_area:                 ; was "L373E"
         AND  A                            ; Reset carry flag to signal restore screen area.
 
-L373F:  LD   DE,$EEF6                     ; Store for TV_FLAG.
+screen_area:                              ; was "L373F"
+        LD   DE,$EEF6                     ; Store for TV_FLAG.
         LD   HL,TV_FLAG                   ; TV_FLAG.
-        JR   C,L3748                      ; Jump if storing copies.
+        JR   C,1f                         ; Jump if storing copies.
 
         EX   DE,HL                        ; Exchange source and destination pointers.
 
-L3748:  LDI                               ; Transfer the byte.
-        JR   C,L374D                      ; Jump if storing copies.
+1:      LDI                               ; Transfer the byte.
+        JR   C,2f                         ; Jump if storing copies.
 
         EX   DE,HL                        ; Restore source and destination pointers.
 
-L374D:  LD   HL,COORDS_X                  ; COORDS. DE=$EEF7 by now.
-        JR   C,L3753                      ; Jump if storing copies.
+2:      LD   HL,COORDS_X                  ; COORDS. DE=$EEF7 by now.
+        JR   C,3f                         ; Jump if storing copies.
 
         EX   DE,HL                        ; Exchange source and destination pointers.
 
-L3753:  LD   BC,$0014                     ; Copy 20 bytes.
+3:      LD   BC,$0014                     ; Copy 20 bytes.
         LDIR                              ; Copy COORDS until ATTR_T.
-        JR   C,L375B                      ; Jump if storing copies.
+        JR   C,4f                         ; Jump if storing copies.
 
         EX   DE,HL                        ; Restore source and destination pointers.
 
-L375B:  EX   AF,AF'                       ; Save copy direction flag.
+4:      EX   AF,AF'                       ; Save copy direction flag.
 
         LD   BC,$0707                     ; Menu will be at row 7, column 7.
-        CALL L3B94                        ; B=Number of rows to end row of screen. C=Number of columns to the end column of the screen.
+        CALL rows_cols_to_end_screen      ; B=Number of rows to end row of screen. C=Number of columns to the end column of the screen.
 
         LD   A,(IX+$01)                   ; A=Rows above the editing area ($16 when using the lower screen, $00 when using the main screen).
         ADD  A,B                          ; B=Row number within editing area.
         LD   B,A                          ; B=Bottom screen row to store.
         LD   A,$0C                        ; A=Number of rows to store. [Could have been just $07 freeing up 630 bytes of workspace]
 
-L3769:  PUSH BC                           ; B holds number of row to store.
+5:      PUSH BC                           ; B holds number of row to store.
         PUSH AF                           ; A holds number of rows left to store.
         PUSH DE                           ; DE=End of destination address.
 
@@ -14842,13 +14843,13 @@ L3769:  PUSH BC                           ; B holds number of row to store.
         ADD  HL,BC                        ; HL=Address of attribute byte at column 7.
         POP  DE                           ;
 
-        CALL L377E                        ; Store / restore menu screen row.
+        CALL screen_row                   ; Store / restore menu screen row.
 
         POP  AF                           ;
         POP  BC                           ;
         DEC  B                            ; Next row.
         DEC  A                            ; More rows to store / restore?
-        JR   NZ,L3769                     ; Repeat for next row
+        JR   NZ,5b                        ; Repeat for next row
 
         RET                               ;
 
@@ -14862,30 +14863,31 @@ L3769:  PUSH BC                           ; B holds number of row to store.
 
 ;Save the display file bytes
 
-L377E:  LD   BC,$080E                     ; B=Menu row is 8 lines deep. C=Menu is 14 columns wide.
+screen_row:                               ; was "L377E"
+        LD   BC,$080E                     ; B=Menu row is 8 lines deep. C=Menu is 14 columns wide.
 
-L3781:  PUSH BC                           ; Save number of row lines.
+1:      PUSH BC                           ; Save number of row lines.
         LD   B,$00                        ; Just keep the column count in BC.
 
         PUSH HL                           ; Save display file starting address.
 
         EX   AF,AF'                       ; Retrieve copy direction flag.
-        JR   C,L3789                      ; Jump if storing copies of display file bytes.
+        JR   C,2f                         ; Jump if storing copies of display file bytes.
 
         EX   DE,HL                        ; Exchange source and destination pointers.
 
-L3789:  LDIR                              ; Copy the row of menu display file bytes.
-        JR   C,L378E                      ; Jump if storing copies of display file bytes.
+2:      LDIR                              ; Copy the row of menu display file bytes.
+        JR   C,3f                         ; Jump if storing copies of display file bytes.
 
         EX   DE,HL                        ; Restore source and destination pointers.
 
-L378E:  EX   AF,AF'                       ; Save copy direction flag.
+3:      EX   AF,AF'                       ; Save copy direction flag.
 
         POP  HL                           ; Fetch display file starting address.
         INC  H                            ; Advance to next line
 
         POP  BC                           ; Fetch number of lines.
-        DJNZ L3781                        ; Repeat for next line.
+        DJNZ 1b                           ; Repeat for next line.
 
 ;Now save the attributes
 
@@ -14898,16 +14900,16 @@ L378E:  EX   AF,AF'                       ; Save copy direction flag.
         POP  BC                           ;
 
         EX   AF,AF'                       ; Retrieve copy direction flag.
-        JR   C,L37A0                      ; Jump if storing copies of attribute bytes.
+        JR   C,4f                         ; Jump if storing copies of attribute bytes.
 
         EX   DE,HL                        ; Restore source and destination pointers.
 
-L37A0:  LDIR                              ; Copy the row of menu attribute bytes.
-        JR   C,L37A5                      ; Jump if storing copies of attribute bytes.
+4:      LDIR                              ; Copy the row of menu attribute bytes.
+        JR   C,5f                         ; Jump if storing copies of attribute bytes.
 
         EX   DE,HL                        ; Restore source and destination pointers.
 
-L37A5:  EX   AF,AF'                       ; Save copy direction flag.
+5:      EX   AF,AF'                       ; Save copy direction flag.
         RET                               ;
 
 ; ------------
@@ -14996,7 +14998,7 @@ menu_title_colours:                       ; was "L37EC"
         DEFB $15, $00                     ; OVER 0;
         DEFB $14, $00                     ; INVERSE 0;
         DEFB $10, $07                     ; INK 7;
-        DEFB $11, 00                      ; PAPER 0;
+        DEFB $11, $00                     ; PAPER 0;
         DEFB $13, $01                     ; BRIGHT 1;
         DEFB $FF                          ;
 
@@ -16018,7 +16020,8 @@ L3B86:  LD   (HL),A                       ; Set display file position attribute.
 ; Exit : B=Number of rows to end row of screen.
 ;        C=Number of columns to the end column of the screen.
 
-L3B94:  LD   A,$21                        ; Reverse column number.
+rows_cols_to_end_screen:                  ; was "L3B94"
+        LD   A,$21                        ; Reverse column number.
         SUB  C                            ;
         LD   C,A                          ; C=33-C. Columns to end of screen.
 

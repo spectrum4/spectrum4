@@ -12,8 +12,8 @@ main_menu:                               // L259F
   bl      chan_open                               // Printing to main screen
   adr     x1, main_menu_jump_table                // Main menu jump table
   str     x1, [x28, F6EA-sysvars]                 // Store as current jump table
-  adr     x2, main_menu_text                      // Main menu text
-  str     x2, [x28, F6EC-sysvars]                 // Store as current menu text
+  adr     x7, main_menu_text                      // Main menu text
+  str     x7, [x28, F6EC-sysvars]                 // Store as current menu text
   ldrb    w3, [x28, EC0D-sysvars]                 // Fetch editor flags
   orr     w3, w3, #0x02                           // Indicate 'menu displayed' (bit 1 set)
   and     w3, w3, #0xefefefef                     // Signal return to main menu (bit 4 clear)

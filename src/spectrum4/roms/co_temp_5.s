@@ -32,7 +32,7 @@
 #  The colour system variable handler.
 # ------------------------------------
 # This is an exit branch from PO-1-OPER, PO-2-OPER
-# w5 holds control character 0x10 (INK) to 0x$15 (OVER)
+# w5 holds control character 0x10 (INK) to 0x15 (OVER)
 # w0 holds legal/illegal parameter. Legal values are:
 #   0-9 for ink/paper
 #   0,1 or 8 for bright/flash,

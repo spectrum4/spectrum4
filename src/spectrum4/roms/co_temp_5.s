@@ -41,48 +41,68 @@ co_temp_5:                               // L2211
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   cmp     w5, #0x11
-  b.ls    co_temp_7                               // handle 0x10 (INK) and 0x11 (PAPER)
+  b.ls    1f                                      // handle 0x10 (INK) and 0x11 (PAPER)
   cmp     w5, #0x13
-  b.ls    co_temp_c                               // handle 0x12 (FLASH) and 0x13 (BRIGHT)
+  b.ls    3f                                      // handle 0x12 (FLASH) and 0x13 (BRIGHT)
   // TODO
-  b       1f
-co_temp_7:                               // L2234
-  // TODO
-  b       1f
-co_temp_c:                               // L2273
+  b       5f
+// Handle INK and PAPER
+1:                                       // L2234
+  mov     w1, #0x38
+  mov     w2, #0x07
+  lsl     w3, w0, #3
+  csel    w1, w1, w2, eq                          // w1 = 0x07 (INK) or 0x38 (PAPER)
+  csel    w3, w3, w0, eq                          // w3 = colour in bits 0-2 if INK, bits 3-5 if PAPER
+  cmp     w0, #0x09
+  b.ls    2f
+  bl      report_k
+  b       5f
+2:                                       // L2246
+// PAPER 0-9 / INK 0-9
+  ldrb    w2, [x28, ATTR_T-sysvars]               // w2 = current ATTR_T
+  cmp     w0, #0x08                               // INK 8 / PAPER 8 ?
+  csel    w2, w2, w3, eq                          // w2 = [ATTR_T] if INK 8 / PAPER 8 else colour in bits 0-2 for INK 0-7 or bits 3-5 for PAPER 0-7
+  b.ls    xxx                                     // Skip ahead if INK / PAPER 0-8 (already handled)
+// INK 9 / PAPER 9
+
+
+xxx:
+  b       4f
+// Handle FLASH and BRIGHT
+3:                                       // L2273
   mov     w1, #0x40
   mov     x2, #0x80
   csel    w1, w1, w2, eq                          // w1 = 128 (FLASH) or 64 (BRIGHT)
   ldrb    w2, [x28, ATTR_T-sysvars]
   ldrb    w3, [x28, MASK_T-sysvars]
   cmp     w0, #0x01
-  b.lo    3f
-  b.eq    4f
+  b.lo    6f
+  b.eq    7f
   cmp     w0, #0x08
-  b.eq    5f
+  b.eq    8f
   bl      report_k
-  b       2f
-1:
+  b       5f
+4:
   strb    w2, [x28, ATTR_T-sysvars]
   strb    w3, [x28, MASK_T-sysvars]
-2:
+5:
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 // BRIGHT 0 / FLASH 0
-3:
+6:
   bic     w2, w2, w1
   bic     w3, w3, w1
-  b       1b
-// BRIGHT 0 / FLASH 0
-4:
+  b       4b
+// BRIGHT 1 / FLASH 1
+7:
   orr     w2, w2, w1
   bic     w3, w3, w1
-  b       1b
+  b       4b
 // BRIGHT 8 / FLASH 8
-5:
+8:
   bic     w2, w2, w1                              // not needed, but consistent with 128K
   orr     w3, w3, w1
-  b       1b
+  b       4b
 
 report_k:                                // L2244
   ret

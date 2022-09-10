@@ -21,9 +21,9 @@ cd "$(dirname "${0}")"
 # values.
 #
 # This was done in order to have a set of test data for the Spectrum +4
-# co_temp_5 routine, taking a random set of input values for (ATTR_T, P_FLAG,
-# MASK_T) and determining the values that the registers and system variables
-# are updated to on the Spectrum 128K, to make sure the Spectrum +4 routine
+# co_temp_5 routine, taking a random set of input values for (ATTR_T, MASK_T)
+# and determining the values that the registers and system variables are
+# updated to on the Spectrum 128K, to make sure the Spectrum +4 routine
 # performs the same updates, for the random set of test cases.
 
 input='0x06 0x38 0x12 0x01 0x34 0x86 0x38 0x28 0x80

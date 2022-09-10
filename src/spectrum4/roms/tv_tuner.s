@@ -33,15 +33,7 @@ tv_tuner:                                // L3C10
 2:
   strb    w7, [x28, ATTR_T-sysvars]               // update temp attribute sysvar
   adr     x4, tvt_data
-3:
-  ldrb    w0, [x4], #1
-  cmp     w0, #0x03
-  b.eq    4f                                      // char 0x03 => end of string, so exit loop
-  stp     x7, x4, [sp, #-16]!
-  bl      print_w0
-  ldp     x7, x4, [sp], #0x10
-  b       3b
-4:
+  bl      print_str_ff
   subs    w7, w7, #8
   b.hs    2b
   add     w7, w7, #0x3f
@@ -71,5 +63,5 @@ tvt_data:                                // L3C8F
   .ascii  " 2022 "
   .byte   0x13, 0x01                              // Bright, on
   .ascii  " 2022 "
-  .byte   0x03                                    // Can't use 0x00 for termination byte since in string
+  .byte   0xff                                    // Can't use 0x00 for termination byte since in string
 tvt_data_end:

@@ -168,7 +168,6 @@ input='0x06 0x38 0x12 0x01 0x86 0x38
     echo "${testname}_setup:"
     echo "  _strb   ${attr_t}, ATTR_T"
     echo "  _strb   ${mask_t}, MASK_T"
-    #   echo "  _strb   ${p_flag}, P_FLAG"
     echo "  ret"
     echo
     echo "${testname}_setup_regs:"
@@ -183,9 +182,6 @@ input='0x06 0x38 0x12 0x01 0x86 0x38
     if [ "${mask_t_upd}" != "${mask_t}" ]; then
       echo "  _strb   ${mask_t_upd}, MASK_T"
     fi
-    #   if [ "${p_flag_upd}" != "${p_flag}" ]; then
-    #     echo "  _strb   ${p_flag_upd}, P_FLAG"
-    #   fi
     echo "  ret"
     echo
     echo "${testname}_effects_regs:"

@@ -14653,16 +14653,16 @@ display_menu:                             ; was "L36A8"
         INC  HL                           ; Point to first entry.
 
         PUSH HL                           ;
-        LD   HL,L37EC                     ; Set title colours.
-        CALL L3733                        ; Print them.
+        LD   HL,menu_title_colours        ; Set title colours.
+        CALL print_str_ff                 ; Print them.
         POP  HL                           ;
 
-        CALL L3733                        ; Print menu title pointed to by HL.
+        CALL print_str_ff                 ; Print menu title pointed to by HL.
 
         PUSH HL                           ;
         CALL L3822                        ; Print Sinclair stripes.
         LD   HL,L37FA                     ; Black ' '.
-        CALL L3733                        ; Print it.
+        CALL print_str_ff                 ; Print it.
         POP  HL                           ; HL=Address of first menu item text.
 
         PUSH DE                           ; Save number of menu items left to print.
@@ -14773,13 +14773,14 @@ L372B:  LD   A,$16                        ; 'AT'.
 ; ------------
 ; Print characters pointed to by HL until $FF found.
 
-L3733:  LD   A,(HL)                       ; Fetch a character.
+print_str_ff:                             ; was "L3733"
+        LD   A,(HL)                       ; Fetch a character.
         INC  HL                           ; Advance to next character.
         CP   $FF                          ; Reach end of string?
         RET  Z                            ; Return if so.
 
         RST  10H                          ; Print the character.
-        JR   L3733                        ; Back for the next character.
+        JR   print_str_ff                 ; Back for the next character.
 
 ; ----------------------
 ; Store Menu Screen Area
@@ -14990,7 +14991,8 @@ L37E3:  LD   (HL),A                       ; Set the attributes for all columns.
 ; Menu Title Colours Table
 ; ------------------------
 
-L37EC:  DEFB $16, $07, $07                ; AT 7,7;
+menu_title_colours:                       ; was "L37EC"
+        DEFB $16, $07, $07                ; AT 7,7;
         DEFB $15, $00                     ; OVER 0;
         DEFB $14, $00                     ; INVERSE 0;
         DEFB $10, $07                     ; INK 7;
@@ -15064,7 +15066,7 @@ L3822:  PUSH BC                           ; Save registers.
         LD   (CHARS),HL                   ; Set CHARS to point to new graphics.
 
         LD   HL,L3812                     ; Point to the strip string.
-        CALL L3733                        ; Print it.
+        CALL print_str_ff                 ; Print it.
 
         POP  HL                           ; Restore CHARS.
         LD   (CHARS),HL                   ;
@@ -15117,8 +15119,8 @@ L3865:  LD   (HL),A                       ; Set a black row.
         INC  HL                           ;
         DJNZ L3865                        ;
 
-        LD   HL,L37EC                     ; Menu title colours table.
-        CALL L3733                        ; Print the colours as a string.
+        LD   HL,menu_title_colours        ; Menu title colours table.
+        CALL print_str_ff                 ; Print the colours as a string.
 
         LD   BC,$1500                     ;
         CALL L372B                        ; Perform 'Print AT 21,0;'.

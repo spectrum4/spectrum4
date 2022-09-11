@@ -11574,7 +11574,7 @@ co_temp_5:
 2:          
         LD      A,D                       ; fetch parameter
         LD      B,$07                     ; set ink mask 00000111
-        JR      C,3f                      ; forward to CO-TEMP-8 with INK
+        JR      C,3f                      ; forward to 3: with INK
 
         RLCA                              ; shift bits 0-2
         RLCA                              ; to
@@ -11598,20 +11598,20 @@ report_k:
 4:           
         LD      HL,ATTR_T                 ; address system variable ATTR_T initially.
         CP      $08                       ; compare with 8
-        JR      C,6f                      ; forward to CO-TEMP-B with 0-7.
+        JR      C,6f                      ; forward to 6: with 0-7.
 
         LD      A,(HL)                    ; fetch temporary attribute as no change.
-        JR      Z,5f                      ; forward to CO-TEMP-A with INK/PAPER 8
+        JR      Z,5f                      ; forward to 5: with INK/PAPER 8
 
 ; it is either ink 9 or paper 9 (contrasting)
 
-        OR      B                         ; or with mask to make white
-        CPL                               ; make black and change other to dark
-        AND     $24                       ; 00100100
-        JR      Z,5f                      ; forward to CO-TEMP-A if black and
-                                          ; originally light.
+        OR      B                         ; or with mask to make INK or PAPER white
+        CPL                               ; make INK or PAPER black and invert all other attribute bits
+        AND     $24                       ; 00100100; if INK 9, A now has INK 0, BRIGHT 0, FLASH 0, PAPER 4 if PAPER was <4, or PAPER 0 if PAPER was >=4
+                                          ; likewise if PAPER 9, A now has PAPER 0, BRIGHT 0, FLASH 0, INK 4 if INK was <4, or INK 0 if INK was >=4
+        JR      Z,5f                      ; forward to 5: if INK 9 and PAPER was >= 4 in [ATTR_T] or PAPER 9 and INK was >=4 in [ATTR_T] - A is 0 so black ink or paper will be used
 
-        LD      A,B                       ; else just use the mask (white)
+        LD      A,B                       ; INK 9 and PAPER was < 4, or PAPER 9 and INK was < 4 => use the mask (white ink or white paper)
 
 5:          
         LD      C,A                       ; save A in C
@@ -11622,7 +11622,7 @@ report_k:
 
         LD      A,$07                     ; put 7 in accumulator
         CP      D                         ; compare with parameter
-        SBC     A,A                       ; $00 if 0-7, $FF if 8
+        SBC     A,A                       ; $00 if 0-7, $FF if 8 or 9
         CALL    co_change                 ; routine CO-CHANGE addressing MASK-T
                                           ; mask returned in A.
 

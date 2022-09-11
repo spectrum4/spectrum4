@@ -513,23 +513,24 @@ e_div_10:
 
 
 print_hl_as_hex:
-  ld      c,h
+  ld      c, h
   call    print_c_as_hex
-  ld      c,l
+  ld      c, l
 print_c_as_hex:
-  ld      a,c
+  ld      a, c
   rra
   rra
   rra
   rra
-  call    conv
-  ld      a,c
-conv:
+  call    1f
+  ld      a, c
+1:
   and     0x0f
-  add     a, 0x90
-  daa
-  adc     a, 0x40
-  daa
+  cp      10
+  jr      c, 2f
+  add     a, 0x27
+2:
+  add     a, 0x30
   rst     0x10
   ret
 

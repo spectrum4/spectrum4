@@ -44,7 +44,12 @@ function run_tests {
       fi
     done
 
-    kill -9 "${pid}" > /dev/null 2>&1 || true
+    # TODO: this while loop is intended to reduce intermittent failures, remove
+    # it if it doesn't help.
+    # Loop until kill fails, to ensure process has terminated
+    while kill -9 "${pid}" > /dev/null 2>&1; do
+      :
+    done
 
     if ! "${passed}"; then
       cat "${output_file}" | sed 's///g'

@@ -388,7 +388,10 @@ input='0x84 0x49 0xa0 0x11 0x09 0x98 0x00 0xa0
     elif [ "${d}" == "0x09" ]; then
       if [ "${a}" == "0x10" ]; then
         # => INK 9
-        # ATTR_T has bits 0-2 (INK colour) set to the inverse of bit 5 (leading PAPER bit)
+        # ATTR_T has bits 0-2 (INK colour) set to the inverse of bit 5 (leading PAPER bit).
+        # Note this is only relevant if PAPER 9 is also used, and then only bit
+        # 2 is significant (bits 0 and 1 are not used) since bit 2 of ATTR_T
+        # will determine PAPER colour in po_attr routine.
         printf "  _strb   0x%02x, ATTR_T\n" $((attr_t & 0xf8 | 0x07 * (1 - ((attr_t & 0x20) >> 5))))
         # MASK_T has no effect when P_FLAG bit 4 (INK 9) is set, so this update is not meaningful
         # The update is the same as for INK 8 (suggesting INK comes from attribute file)

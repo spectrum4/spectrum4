@@ -24,8 +24,6 @@ cls_1_setup:
   ld      bc, 0x000e                      ; copy the 14 bytes of initial 7 streams data
   ldir                                    ; from ROM to RAM.
 
-
-
   ret
 
 cls_1_setup_regs:
@@ -70,6 +68,6 @@ cls_1_effects_regs:
   ld      c, 0x21
   ld      d, 0x00
   ld      e, 0x00
-  ld      hl, display_file+2*32*8*8+32*7
+  ld      hl, display_file + 2*8*8*32 + 7*32
   ldf     0x18
   ret

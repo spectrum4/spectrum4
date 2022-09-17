@@ -4563,13 +4563,13 @@ po_search:
         EX      DE,HL                     ; transfer DE to HL
         INC     A                         ; adjust for initial step-over byte
 
-po_step:
+1:
         BIT     7,(HL)                    ; is character inverted ?
         INC     HL                        ; address next
-        JR      Z,po_step                 ; back to PO-STEP if not inverted.
+        JR      Z, 1b                     ; back to PO-STEP if not inverted.
 
         DEC     A                         ; decrease counter
-        JR      NZ,po_step                ; back to PO-STEP if not zero
+        JR      NZ, 1b                    ; back to PO-STEP if not zero
 
         EX      DE,HL                     ; transfer address to DE
         POP     AF                        ; restore message/token number

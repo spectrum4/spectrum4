@@ -7,11 +7,8 @@
 
 cls_1_setup:
   _strb   0x02, DF_SZ
-  _strb   0x00, MASK_P
-  _strb   0x00, P_FLAG
   _strb   0x38, ATTR_P
   _strb   0x38, BORDCR
-  _strh   char_set-32*32, CHARS
   _strh   sysvars_48k_end, CHANS
 
   ld      hl, init_chan                   ; address: init-chan in ROM.
@@ -46,6 +43,10 @@ cls_1_effects:
   _setbit 4, FLAGS2
   _resbit 5, TV_FLAG
   _setbit 0, TV_FLAG
+  _resbit 0, P_FLAG
+  _resbit 2, P_FLAG
+  _resbit 4, P_FLAG
+  _resbit 6, P_FLAG
   _strb   0x21, S_POSN_X
   _strb   0x18, S_POSN_Y
   _strb   0x21, S_POSN_X_L

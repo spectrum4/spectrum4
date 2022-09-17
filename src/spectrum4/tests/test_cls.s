@@ -75,11 +75,8 @@
 
 cls_1_setup:
   _strb   0x02, DF_SZ
-  _strb   0x00, MASK_P
-  _strb   0x00, P_FLAG
   _strb   0x38, ATTR_P
   _strb   0x38, BORDCR
-  _str    char_set-32*32, CHARS
   _str    heap, CHANS
 
   adrp    x5, heap
@@ -136,6 +133,10 @@ cls_1_effects:
   _setbit 4, FLAGS2
   _resbit 5, TV_FLAG
   _setbit 0, TV_FLAG
+  _resbit 0, P_FLAG
+  _resbit 2, P_FLAG
+  _resbit 4, P_FLAG
+  _resbit 6, P_FLAG
   _strb   0x6d, S_POSN_X
   _strb   0x3c, S_POSN_Y
   _strb   0x6d, S_POSN_X_L

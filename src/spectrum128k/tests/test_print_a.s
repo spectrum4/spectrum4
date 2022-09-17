@@ -8,9 +8,6 @@
 # Test PRINT-A routine (RST 0x10) using a fake print routine that just
 # buffers what is printed.
 
-#########################################################################################################################
-# test named "print_a_t1" rather than "print_a_1" in order that subsequent test does not clash with rom routine print_a_2
-#########################################################################################################################
 print_a_1_setup:
   ld      hl, fake_channel_block
   jp      fake_channel_init

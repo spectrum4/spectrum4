@@ -14,9 +14,9 @@ cls_1_setup:
   _strh   char_set-32*32, CHARS
   _strh   sysvars_48k_end, CHANS
 
-  ld      de, init_chan                   ; address: init-chan in ROM.
+  ld      hl, init_chan                   ; address: init-chan in ROM.
+  ld      de, sysvars_48k_end
   ld      bc, 0x0015                      ; there are 21 bytes of initial data in ROM.
-  ex      de, hl                          ; swap the pointers.
   ldir                                    ; copy the bytes to RAM.
 
   ld      hl, init_strm                   ; set source to ROM Address: init-strm

@@ -349,11 +349,6 @@ input='0x84 0x49 0xa0 0x11 0x09 0x98 0x00 0xa0
   echo "${input}" | while read attr_t mask_t p_flag a d f c_upd f_upd; do
     testname=$(printf "co_temp_5_ink_paper_%02x" $i)
     i=$((i + 1))
-    if [ "${a}" == "0x10" ]; then
-      mask=0x07
-    else
-      mask=0x38
-    fi
     echo
     echo
     echo "${testname}_setup:"

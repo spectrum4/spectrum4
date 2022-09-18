@@ -7,7 +7,7 @@
 #          ___ ___ ___ ___ ___ ___ ___ ___    system variable.
 # ATTR_T  |   |   |   |   |   |   |   |   |
 #         |   |   |   |   |   |   |   |   |
-# 23695   |___|___|___|___|___|___|___|___|
+#         |___|___|___|___|___|___|___|___|
 #           7   6   5   4   3   2   1   0
 #
 #
@@ -15,7 +15,7 @@
 #          ___ ___ ___ ___ ___ ___ ___ ___    transparent colours. Any bit
 # MASK_T  |   |   |   |   |   |   |   |   |   that is 1 shows that the
 #         |   |   |   |   |   |   |   |   |   corresponding attribute is
-# 23696   |___|___|___|___|___|___|___|___|   taken not from ATTR-T but from
+#         |___|___|___|___|___|___|___|___|   taken not from ATTR-T but from
 #           7   6   5   4   3   2   1   0     what is already on the screen.
 #
 #
@@ -23,7 +23,7 @@
 #          ___ ___ ___ ___ ___ ___ ___ ___    temporary flags. The odd bits
 # P_FLAG  |   |   |   |   |   |   |   |   |   are the permanent flags.
 #         | p | t | p | t | p | t | p | t |
-# 23697   |___|___|___|___|___|___|___|___|
+#         |___|___|___|___|___|___|___|___|
 #           7   6   5   4   3   2   1   0
 #
 # -----------------------------------------------------------------------
@@ -43,66 +43,105 @@ co_temp_5:                               // L2211
   cmp     w5, #0x11
   b.ls    1f                                      // handle 0x10 (INK) and 0x11 (PAPER)
   cmp     w5, #0x13
-  b.ls    3f                                      // handle 0x12 (FLASH) and 0x13 (BRIGHT)
+  b.ls    7f                                      // handle 0x12 (FLASH) and 0x13 (BRIGHT)
   // TODO
-  b       5f
-// Handle INK and PAPER
+  // 0x14 (INVERSE)
+  // 0x15 (OVER)
+  b       9f
+// Handle INK (0x10) and PAPER (0x11)
+// Zero flag clear for INK, set for PAPER
 1:                                       // L2234
+  stp     x0, x1, [sp, #-16]!
+  stp     x2, x3, [sp, #-16]!
+  stp     x4, x5, [sp, #-16]!
+  stp     x6, x7, [sp, #-16]!
   mov     w1, #0x38
   mov     w2, #0x07
-  lsl     w3, w0, #3
+  lsl     w3, w0, #3                              // w3 holds colour in paper bits (3-5)
   csel    w1, w1, w2, eq                          // w1 = 0x07 (INK) or 0x38 (PAPER)
   csel    w3, w3, w0, eq                          // w3 = colour in bits 0-2 if INK, bits 3-5 if PAPER
   cmp     w0, #0x09
   b.ls    2f
   bl      report_k
-  b       5f
+  b       9f
 2:                                       // L2246
 // PAPER 0-9 / INK 0-9
-  ldrb    w2, [x28, ATTR_T-sysvars]               // w2 = current ATTR_T
+  ldrb    w6, [x28, MASK_T-sysvars]               // w6 = current MASK_T
+  ldrb    w4, [x28, P_FLAG-sysvars]               // w4 = current P_FLAG
+  add     w7, w1, #0x09                           // w7 = 0x10 (INK) or 0x41 (PAPER)
+  bic     w7, w7, #1                              // w7 = 0x10 (INK) or 0x40 (PAPER)
   cmp     w0, #0x08                               // INK 8 / PAPER 8 ?
-  csel    w2, w2, w3, eq                          // w2 = [ATTR_T] if INK 8 / PAPER 8 else colour in bits 0-2 for INK 0-7 or bits 3-5 for PAPER 0-7
-  b.ls    xxx                                     // Skip ahead if INK / PAPER 0-8 (already handled)
+  b.eq    3f
+  ldrb    w2, [x28, ATTR_T-sysvars]
+  bic     w2, w2, w1                              // clear bits in ATTR_T for ink or paper
+  b.hi    4f                                      // jump ahead if INK 9 / PAPER 9
+// INK 0-7 / PAPER 0-7
+  orr     w2, w2, w3                              // colour in w2 bits 0-2 (ink) or 3-5 (paper)
+  bic     w6, w6, w1                              // clear bits in MASK_T for ink or paper
+  bic     w4, w4, w7                              // clear P_FLAG bit 4/6 for INK or PAPER 9
+  b       5f
+// INK 8 / PAPER 8
+3:
+  orr     w6, w6, w1                              // set bits in MASK_T for ink or paper
+  bic     w4, w4, w7                              // clear P_FLAG bit 4/6 for INK or PAPER 9
+  b       6f
 // INK 9 / PAPER 9
-
-
-xxx:
-  b       4f
-// Handle FLASH and BRIGHT
-3:                                       // L2273
+4:
+  orr     w6, w6, w1                              // set bits in MASK_T for ink or paper
+  orr     w4, w4, w7                              // set P_FLAG bit 4/6 for INK or PAPER 9
+  mvn     w3, w1                                  // invert w1 (0xfffffff8 for INK 9 or 0xffffffc7 for PAPER 9)
+  mov     w5, #0x24
+  and     w3, w3, w5                              // 0x20 for INK 9 or 0x04 for PAPER 9
+  and     w3, w3, w2                              // Leading PAPER bit of ATTR_T in bit 5 if INK 9 or leading INK bit of ATTR_T in bit 2 if PAPER 9
+  cmp     w3, wzr
+  csel    w3, w1, wzr, eq                         // if leading INK/PAPER bit
+  orr     w2, w2, w3
+5:
+  strb    w2, [x28, ATTR_T-sysvars]
+6:
+  strb    w6, [x28, MASK_T-sysvars]
+  strb    w4, [x28, P_FLAG-sysvars]
+  ldp     x6, x7, [sp], #16
+  ldp     x4, x5, [sp], #16
+  ldp     x2, x3, [sp], #16
+  ldp     x0, x1, [sp], #16
+  b       9f
+// Handle FLASH (0x12) and BRIGHT (0x13)
+// Zero flag clear for FLASH, set for BRIGHT
+7:                                       // L2273
   mov     w1, #0x40
   mov     x2, #0x80
   csel    w1, w1, w2, eq                          // w1 = 128 (FLASH) or 64 (BRIGHT)
   ldrb    w2, [x28, ATTR_T-sysvars]
   ldrb    w3, [x28, MASK_T-sysvars]
   cmp     w0, #0x01
-  b.lo    6f
-  b.eq    7f
+  b.lo    10f
+  b.eq    11f
   cmp     w0, #0x08
-  b.eq    8f
+  b.eq    12f
   bl      report_k
-  b       5f
-4:
+  b       9f
+8:
   strb    w2, [x28, ATTR_T-sysvars]
   strb    w3, [x28, MASK_T-sysvars]
-5:
+9:
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 // BRIGHT 0 / FLASH 0
-6:
+10:
   bic     w2, w2, w1
   bic     w3, w3, w1
-  b       4b
+  b       8b
 // BRIGHT 1 / FLASH 1
-7:
+11:
   orr     w2, w2, w1
   bic     w3, w3, w1
-  b       4b
+  b       8b
 // BRIGHT 8 / FLASH 8
-8:
+12:
   bic     w2, w2, w1                              // not needed, but consistent with 128K
   orr     w3, w3, w1
-  b       4b
+  b       8b
 
 report_k:                                // L2244
   ret

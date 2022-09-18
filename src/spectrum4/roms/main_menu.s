@@ -33,6 +33,7 @@ main_menu_jump_table:                    // L2744
   .quad tape_tester                               // Tape Tester option handler.
 
 # Text for the main 128K menu
+.align 0
 main_menu_text:                          // L2754
   .asciz "128     "                               // Menu title.
   .asciz "Tape Loader"

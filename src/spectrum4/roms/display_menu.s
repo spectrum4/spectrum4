@@ -29,8 +29,8 @@ display_menu:                            // L36A8
 
 menu_title_colours:                      // L37EC
   .byte 0x16, 0x19, 0x2d                          // AT 25, 45;
-# .byte 0x15, 0x00                                // OVER 0;
-# .byte 0x14, 0x00                                // INVERSE 0;
+  .byte 0x15, 0x00                                // OVER 0;
+  .byte 0x14, 0x00                                // INVERSE 0;
   .byte 0x10, 0x07                                // INK 7;
   .byte 0x11, 0x00                                // PAPER 0;
   .byte 0x13, 0x01                                // BRIGHT 1;

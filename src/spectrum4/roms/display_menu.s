@@ -21,8 +21,9 @@ display_menu:                            // L36A8
   bl      print_str_ff                            // Print title colours and position
   mov     x2, x7
   bl      print_message
-# 1:
-# b       1b
+  bl      print_sinclair_stripes
+  1:
+  b       1b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

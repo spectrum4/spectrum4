@@ -59,4 +59,5 @@
 .include "print_str_ff.s"                // L3733
 .include "store_menu_screen_area.s"      // L373B
 .include "restore_menu_screen_area.s"    // L373E
+.include "sinclair_stripes.s"            // L3802
 .include "init_cursor.s"                 // L3A7F

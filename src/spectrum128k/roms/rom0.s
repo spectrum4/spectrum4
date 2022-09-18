@@ -10345,7 +10345,7 @@ tape_loader:                              ; was "L2831"
         LD   ($EC0E),A                    ; [Redundant since call to $1AF1 (ROM 0) will set it to $FF]
 
         LD   BC,$0000                     ;
-        CALL L372B                        ; Perform 'Print AT 0,0;'.
+        CALL print_at                     ; Perform 'Print AT 0,0;'.
 
         JP   L1AF1                        ; Run the tape loader.
 
@@ -12082,7 +12082,7 @@ L2E2D:  LD   HL,TV_FLAG                   ; TV_FLAG.
         SET  0,(HL)                       ; Signal using lower screen.
 
         LD   BC,$0000                     ;
-        CALL L372B                        ; Perform 'PRINT AT 0,0;'.
+        CALL print_at                     ; Perform 'PRINT AT 0,0;'.
 
         LD   HL,L2E1D                     ; Lower screen lines table.
         LD   DE,$EC15                     ; Destination workspace variable. The number of editing rows on screen.
@@ -14661,43 +14661,43 @@ display_menu:                             ; was "L36A8"
 
         PUSH HL                           ;
         CALL print_sinclair_stripes       ; Print Sinclair stripes.
-        LD   HL,L37FA                     ; Black ' '.
+        LD   HL,menu_title_space          ; Black ' '.
         CALL print_str_ff                 ; Print it.
         POP  HL                           ; HL=Address of first menu item text.
 
         PUSH DE                           ; Save number of menu items left to print.
 
         LD   BC,$0807                     ;
-        CALL L372B                        ; Perform 'Print AT 8,7;' (this is the top left position of the menu).
+        CALL print_at                     ; Perform 'Print AT 8,7;' (this is the top left position of the menu).
 
-L36D1:  PUSH BC                           ; Save row print coordinates.
+1:      PUSH BC                           ; Save row print coordinates.
 
         LD   B,$0C                        ; Number of columns in a row of the menu.
 
         LD   A,$20                        ; Print ' '.
         RST  10H                          ;
 
-L36D7:  LD   A,(HL)                       ; Fetch menu item character.
+2:      LD   A,(HL)                       ; Fetch menu item character.
         INC  HL                           ;
         CP   $80                          ; End marker found?
-        JR   NC,L36E0                     ; Jump if end of text found.
+        JR   NC,3f                        ; Jump if end of text found.
 
         RST  10H                          ; Print menu item character
-        DJNZ L36D7                        ; Repeat for all characters in menu item text.
+        DJNZ 2b                           ; Repeat for all characters in menu item text.
 
-L36E0:  AND  $7F                          ; Clear bit 7 to yield a final text character.
+3:      AND  $7F                          ; Clear bit 7 to yield a final text character.
         RST  10H                          ; Print it.
 
-L36E3:  LD   A,$20                        ;
+4:      LD   A,$20                        ;
         RST  10H                          ; Print trailing spaces
-        DJNZ L36E3                        ; Until all columns filled.
+        DJNZ 4b                           ; Until all columns filled.
 
         POP  BC                           ; Fetch row print coordinates.
         INC  B                            ; Next row.
-        CALL L372B                        ; Print AT.
+        CALL print_at                     ; Print AT.
 
         DEC  E                            ;
-        JR   NZ,L36D1                     ; Repeat for all menu items.
+        JR   NZ,1b                        ; Repeat for all menu items.
 
         LD   HL,$6F38                     ; Coordinates, pixel (111, 56) = end row 13, column 7.
 
@@ -14711,19 +14711,19 @@ L36E3:  LD   A,$20                        ;
         LD   E,$6F                        ; Number of pixels in width of menu.
         LD   BC,$FF00                     ; B=-1, C=0. Plot a vertical line going up.
         LD   A,D                          ; A=Number of vertical pixels to plot.
-        CALL L3719                        ; Plot line.
+        CALL plot_line                    ; Plot line.
 
         LD   BC,$0001                     ; B=0, C=1. Plot a horizontal line going to the right.
         LD   A,E                          ; A=Number of horizontal pixels to plot.
-        CALL L3719                        ; Plot line.
+        CALL plot_line                    ; Plot line.
 
         LD   BC,$0100                     ; B=1, C=0. Plot a vertical line going down.
         LD   A,D                          ; A=Number of vertical pixels to plot.
         INC  A                            ; Include end pixel.
-        CALL L3719                        ; Plot line.
+        CALL plot_line                    ; Plot line.
 
         XOR  A                            ; A=Index of menu option to highlight.
-        CALL L37CA                        ; Toggle menu option selection so that it is highlight.
+        CALL toggle_menu_highlight        ; Toggle menu option selection so that it is highlight.
         RET                               ; [Could have saved one byte by using JP $37CA (ROM 0)]
 
 ; -----------
@@ -14735,7 +14735,8 @@ L36E3:  LD   A,$20                        ;
 ;        C=Offset to column pixel coordinate ($FF, $00 or $01).
 ;        A=number of pixels to plot.
 
-L3719:  PUSH AF                           ; Save registers.
+plot_line:                                ; was "L3719"
+        PUSH AF                           ; Save registers.
         PUSH HL                           ;
         PUSH DE                           ;
         PUSH BC                           ;
@@ -14752,7 +14753,7 @@ L3719:  PUSH AF                           ; Save registers.
 
         ADD  HL,BC                        ; Determine coordinates of next pixel.
         DEC  A                            ;
-        JR   NZ,L3719                     ; Repeat for all pixels.
+        JR   NZ,plot_line                 ; Repeat for all pixels.
 
         RET                               ;
 
@@ -14760,7 +14761,8 @@ L3719:  PUSH AF                           ; Save registers.
 ; Print "AT B,C" Characters
 ; -------------------------
 
-L372B:  LD   A,$16                        ; 'AT'.
+print_at:                                 ; was "L372B"
+        LD   A,$16                        ; 'AT'.
         RST  10H                          ; Print.
         LD   A,B                          ; B=Row number.
         RST  10H                          ; Print.
@@ -14916,7 +14918,7 @@ screen_row:                               ; was "L377E"
 ; Move Up Menu
 ; ------------
 
-L37A7:  CALL L37CA                        ; Toggle old menu item selection to de-highlight it.
+L37A7:  CALL toggle_menu_highlight        ; Toggle old menu item selection to de-highlight it.
         DEC  A                            ; Decrement menu index.
         JP   P,L37B1                      ; Jump if not exceeded top of menu.
 
@@ -14924,7 +14926,7 @@ L37A7:  CALL L37CA                        ; Toggle old menu item selection to de
         DEC  A                            ; Ignore the title.
         DEC  A                            ; Make it indexed from 0.
 
-L37B1:  CALL L37CA                        ; Toggle new menu item selection to highlight it.
+L37B1:  CALL toggle_menu_highlight        ; Toggle new menu item selection to highlight it.
         SCF                               ; Ensure carry flag is set to prevent immediately
         RET                               ; calling menu down routine upon return.
 
@@ -14934,7 +14936,7 @@ L37B1:  CALL L37CA                        ; Toggle new menu item selection to hi
 
 L37B6:  PUSH DE                           ; Save DE.
 
-        CALL L37CA                        ; Toggle old menu item selection to de-highlight it.
+        CALL toggle_menu_highlight        ; Toggle old menu item selection to de-highlight it.
 
         INC  A                            ; Increment menu index.
         LD   D,A                          ; Save menu index.
@@ -14948,7 +14950,7 @@ L37B6:  PUSH DE                           ; Save DE.
 
         XOR  A                            ; Select top menu item.
 
-L37C5:  CALL L37CA                        ; Toggle new menu item selection to highlight it.
+L37C5:  CALL toggle_menu_highlight        ; Toggle new menu item selection to highlight it.
 
         POP  DE                           ; Restore DE.
         RET                               ;
@@ -14958,7 +14960,8 @@ L37C5:  CALL L37CA                        ; Toggle new menu item selection to hi
 ; --------------------------------------
 ; Entry: A=Menu option index to highlight.
 
-L37CA:  PUSH AF                           ; Save registers.
+toggle_menu_highlight:                    ; was "L37CA"
+        PUSH AF                           ; Save registers.
         PUSH HL                           ;
         PUSH DE                           ;
 
@@ -15006,7 +15009,8 @@ menu_title_colours:                       ; was "L37EC"
 ; Menu Title Space Table
 ; ----------------------
 
-L37FA:  DEFB $11, $00                     ; PAPER 0;
+menu_title_space:                         ; was "L37FA"
+        DEFB $11, $00                     ; PAPER 0;
         DEFB ' '                          ;
         DEFB $11, $07                     ; PAPER 7;
         DEFB $10, $00                     ; INK 0;
@@ -15036,9 +15040,9 @@ sinclair_stripes:                         ; was "L3802"
         DEFB $80                          ; 1 0 0 0 0 0 0 0    X
         DEFB $00                          ; 0 0 0 0 0 0 0 0
 
-; ---------------------
-; Sinclair Strip 'Text'
-; ---------------------
+; -----------------------
+; Sinclair Stripes 'Text'
+; -----------------------
 ; CHARS points to RAM at $5A98, and characters ' ' and '!' redefined
 ; as the Sinclair strips using the bit patterns above.
 
@@ -15128,13 +15132,13 @@ L3865:  LD   (HL),A                       ; Set a black row.
         CALL print_str_ff                 ; Print the colours as a string.
 
         LD   BC,$1500                     ;
-        CALL L372B                        ; Perform 'Print AT 21,0;'.
+        CALL print_at                     ; Perform 'Print AT 21,0;'.
 
         POP  DE                           ; Address in memory of the text of the selected menu item.
         CALL print_message                ; Print the text.
 
         LD   C,$1A                        ; B has not changed and still holds 21.
-        CALL L372B                        ; Perform 'Print AT 21,26;'.
+        CALL print_at                     ; Perform 'Print AT 21,26;'.
         JP   print_sinclair_stripes       ; Print Sinclair stripes and return to calling routine.
 
 ; ---------------------------
@@ -15917,7 +15921,7 @@ L3B1E:  CALL L3BB8                        ; Exchange colour items.
 L3B31:  LD   (TV_FLAG),A                  ; TV_FLAG.
 
         LD   C,$00                        ; The first column position of the edit row.
-        CALL L372B                        ; Print AT.
+        CALL print_at                     ; Print AT.
 
         EX   DE,HL                        ; HL=Address of edit buffer row.
         LD   B,$20                        ; 32 columns.

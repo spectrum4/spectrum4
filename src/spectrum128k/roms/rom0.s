@@ -14660,7 +14660,7 @@ display_menu:                             ; was "L36A8"
         CALL print_str_ff                 ; Print menu title pointed to by HL.
 
         PUSH HL                           ;
-        CALL L3822                        ; Print Sinclair stripes.
+        CALL print_sinclair_stripes       ; Print Sinclair stripes.
         LD   HL,L37FA                     ; Black ' '.
         CALL print_str_ff                 ; Print it.
         POP  HL                           ; HL=Address of first menu item text.
@@ -15017,7 +15017,8 @@ L37FA:  DEFB $11, $00                     ; PAPER 0;
 ; -----------------------------
 ; Bit-patterns for the Sinclair stripes used on the menus.
 
-L3802:  DEFB $01                          ; 0 0 0 0 0 0 0 1           X
+sinclair_stripes:                         ; was "L3802"
+        DEFB $01                          ; 0 0 0 0 0 0 0 1           X
         DEFB $03                          ; 0 0 0 0 0 0 1 1          XX
         DEFB $07                          ; 0 0 0 0 0 1 1 1         XXX
         DEFB $0F                          ; 0 0 0 0 1 1 1 1        XXXX
@@ -15041,7 +15042,8 @@ L3802:  DEFB $01                          ; 0 0 0 0 0 0 0 1           X
 ; CHARS points to RAM at $5A98, and characters ' ' and '!' redefined
 ; as the Sinclair strips using the bit patterns above.
 
-L3812:  DEFB $10, $02, ' '                ; INK 2;
+sinclair_stripes_text:                    ; was "L3812"
+        DEFB $10, $02, ' '                ; INK 2;
         DEFB $11, $06, '!'                ; PAPER 6;
         DEFB $10, $04, ' '                ; INK 4;
         DEFB $11, $05, '!'                ; PAPER 5;
@@ -15052,11 +15054,12 @@ L3812:  DEFB $10, $02, ' '                ; INK 2;
 ; Print the Sinclair stripes on the menu
 ; --------------------------------------
 
-L3822:  PUSH BC                           ; Save registers.
+print_sinclair_stripes:                   ; was "L3822"
+        PUSH BC                           ; Save registers.
         PUSH DE                           ;
         PUSH HL                           ;
 
-        LD   HL,L3802                     ; Graphics bit-patterns
+        LD   HL,sinclair_stripes          ; Graphics bit-patterns
         LD   DE,STRIP1                    ; STRIP1.
         LD   BC,$0010                     ; Copy two characters.
         LDIR                              ;
@@ -15067,7 +15070,7 @@ L3822:  PUSH BC                           ; Save registers.
         LD   HL,STRIP1-$0100              ; $5A98.
         LD   (CHARS),HL                   ; Set CHARS to point to new graphics.
 
-        LD   HL,L3812                     ; Point to the strip string.
+        LD   HL,sinclair_stripes_text     ; Point to the strip string.
         CALL print_str_ff                 ; Print it.
 
         POP  HL                           ; Restore CHARS.
@@ -15132,7 +15135,7 @@ L3865:  LD   (HL),A                       ; Set a black row.
 
         LD   C,$1A                        ; B has not changed and still holds 21.
         CALL L372B                        ; Perform 'Print AT 21,26;'.
-        JP   L3822                        ; Print Sinclair stripes and return to calling routine.
+        JP   print_sinclair_stripes       ; Print Sinclair stripes and return to calling routine.
 
 ; ---------------------------
 ; Clear Lower Editing Display

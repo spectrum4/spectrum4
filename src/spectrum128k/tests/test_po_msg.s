@@ -176,14 +176,8 @@ msg_po_msg_03_out:
 po_msg_paper_ink_9_1_setup:
   _strh   sysvars_48k_end, CHANS          ; channel information table stored after sysvars
   _strh   sysvars_48k_end, CURCHL         ; current stream is -3 (channel 'K')
-  ld      hl, init_strm
-  ld      de, STRMS
-  ld      bc, 0x000e
-  ldir                                    ; default stream information table
-  ld      hl, init_chan
-  ld      de, sysvars_48k_end
-  ld      bc, 0x0015
-  ldir                                    ; default channel information table
+  _strh   print_out, sysvars_48k_end
+  _strh   0x01, STRMS
   ret
 
 po_msg_paper_ink_9_1_setup_regs:
@@ -242,14 +236,8 @@ po_msg_paper_ink_9_1_text:
 po_msg_paper_ink_9_2_setup:
   _strh   sysvars_48k_end, CHANS          ; channel information table stored after sysvars
   _strh   sysvars_48k_end, CURCHL         ; current stream is -3 (channel 'K')
-  ld      hl, init_strm
-  ld      de, STRMS
-  ld      bc, 0x000e
-  ldir                                    ; default stream information table
-  ld      hl, init_chan
-  ld      de, sysvars_48k_end
-  ld      bc, 0x0015
-  ldir                                    ; default channel information table
+  _strh   print_out, sysvars_48k_end
+  _strh   0x01, STRMS
   ret
 
 po_msg_paper_ink_9_2_setup_regs:

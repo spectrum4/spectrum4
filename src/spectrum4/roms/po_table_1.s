@@ -35,6 +35,7 @@
 po_table_1:                              // L0C17
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
+  str     x5, [sp, #-16]!
   b.lo    1f                                      // If carry is clear, jump forward to 1:.
   ldrb    w6, [x28, FLAGS-sysvars]                // w6 = [FLAGS]
   tbnz    w6, #0, 1f                              // If suppress space, jump forward to 1:.
@@ -43,10 +44,12 @@ po_table_1:                              // L0C17
   1:
     ldrb    w0, [x4], #1                          // Fetch ASCII char from token table entry into w0.
     cbz     w0, 2f                                // If 0, end of string; exit loop; jump forward to 2:.
-    mov     w6, w0                                // Stash "previous" char in w6.
+    stp     x4, x0, [sp, #-16]!                   // Stash address and "previous" char on stack
     bl      print_w0                              // Print it, preserving registers.
+    ldp     x4, x6, [sp], #16                     // Restore address and previous char
     b       1b                                    // Repeat loop
 2:
+  ldr     x5, [sp], #16
   cmp     w6, '$'                                 // Was last character '$'?
   b.eq    3f                                      // If so, jump forward to 3: to consider trailing space.
   cmp     w6, 'A'                                 // Was it < 'A' i.e. '#', '>', '=' from tokens or ' ', '.'

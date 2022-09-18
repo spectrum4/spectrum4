@@ -81,6 +81,13 @@ new:                                     // L019D
   bl      cls
 // TODO: Commented out, since this method doesn't return unless a key is pressed, and we don't have keypress routines yet...
 # bl      tv_tuner
+  ldrb    w2, [x28, S_POSN_X_L-sysvars]
+  sub     w2, w2, #0x28
+  strb    w2, [x28, S_POSN_X_L-sysvars]
+  ldr     x2, [x28, DF_CC_L-sysvars]
+  add     x2, x2, #0x50
+  str     x2, [x28, DF_CC_L-sysvars]
+
   adr     x2, msg_copyright
   bl      print_message
   mov     w5, #0x02

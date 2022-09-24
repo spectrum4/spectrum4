@@ -1,7 +1,7 @@
 .text
 
 # ----------------------------
-# Print "AT w7, w8" characters
+# Print "AT w8, w9" characters
 # ----------------------------
 #
 # On entry:
@@ -12,9 +12,9 @@ print_at:                                // L372B
   mov     x29, sp                                 // Update frame pointer to new stack location.
   mov     w0, #0x16
   bl      print_w0
-  mov     w0, w7
-  bl      print_w0
   mov     w0, w8
+  bl      print_w0
+  mov     w0, w9
   bl      print_w0
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret

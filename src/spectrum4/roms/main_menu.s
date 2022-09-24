@@ -41,3 +41,4 @@ main_menu_text:                          // L2754
   .asciz "Calculator"
   .asciz "48 BASIC"
   .asciz "Tape Tester"
+  .asciz ""

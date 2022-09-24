@@ -47,7 +47,7 @@ display_menu:                            // L36A8
       b.ne    4b
     add     w8, w22, #1
     subs    w23, w23, #1
-    b.ne    1b
+    b.hs    1b
 5:
   b       5b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.

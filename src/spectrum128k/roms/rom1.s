@@ -166,7 +166,7 @@
 .global pause
 .global pixel_addr
 .global plot
-.global plot_sub
+.global plot_sub_1
 .global po_any
 .global po_attr
 .global po_change
@@ -11819,6 +11819,7 @@ plot:
 
 plot_sub:
         LD      (COORDS_X),BC             ; store new x/y values in COORDS
+plot_sub_1:
         CALL    pixel_addr                ; routine PIXEL-ADD gets address in HL,
                                           ; count from left 0-7 in B.
         LD      B,A                       ; transfer count to B.

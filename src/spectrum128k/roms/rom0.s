@@ -14744,7 +14744,7 @@ plot_line:                                ; was "L3719"
         LD   B,H                          ; Coordinates to BC.
         LD   C,L                          ;
         RST  28H                          ;
-        DEFW plot_sub+4                   ; $22E9. Plot pixel
+        DEFW plot_sub_1                   ; $22E9. Plot pixel
 
         POP  BC                           ; Restore registers.
         POP  DE                           ;

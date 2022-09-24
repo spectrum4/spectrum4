@@ -70,8 +70,8 @@ print_at_01_setup:
   ret
 
 print_at_01_setup_regs:
-  mov     w7, #0x2b
-  mov     w8, #0x3c
+  mov     w8, #0x2b
+  mov     w9, #0x3c
   ret
 
 print_at_01_effects:

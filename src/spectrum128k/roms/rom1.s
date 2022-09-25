@@ -11728,8 +11728,16 @@ border_1:
 ; Get pixel address
 ; -----------------
 ;
+; Convert PLOT/DRAW x/y coordinates to the display file address that contains
+; the pixel, and value 0-7 representing bit 7-0 inside byte at that address.
 ;
-
+; On entry:
+;   B = y (0 to 175, 175 => top pixel row of screen, 0 => 16 pixel rows above bottom of screen)
+;   C = x (0 to 255)
+; On exit:
+;   A = x%8
+;   B = 175-y
+;   HL = display_file+32*(8*(8*((175-y)/64)+((175-y)&0x07))+((175-y)%64>>3))+x/8
 pixel_addr:
         LD      A,$AF                     ; load with 175 decimal.
         SUB     B                         ; subtract the y value.
@@ -11826,29 +11834,29 @@ plot_sub_1:
         INC     B                         ; increase 1-8.
         LD      A,$FE                     ; 11111110 in A.
 
-plot_loop:
+1:
         RRCA                              ; rotate mask.
-        DJNZ    plot_loop                 ; to PLOT-LOOP until B circular rotations.
+        DJNZ    1b                        ; to PLOT-LOOP until B circular rotations.
 
         LD      B,A                       ; load mask to B
         LD      A,(HL)                    ; fetch screen byte to A
 
         LD      C,(IY+(P_FLAG-C_IY))      ; P_FLAG to C
         BIT     0,C                       ; is it to be OVER 1 ?
-        JR      NZ,pl_tst_in              ; forward to PL-TST-IN if so.
+        JR      NZ,2f                     ; forward to 2: if so.
 
 ; was over 0
 
         AND     B                         ; combine with mask to blank pixel.
 
-pl_tst_in:
+2:
         BIT     2,C                       ; is it inverse 1 ?
-        JR      NZ,plot_end               ; to PLOT-END if so.
+        JR      NZ,3f                     ; to 3: if so.
 
         XOR     B                         ; switch the pixel
         CPL                               ; restore other 7 bits
 
-plot_end:
+3:
         LD      (HL),A                    ; load byte to the screen.
         JP      po_attr                   ; exit to PO-ATTR to set colours for cell.
 

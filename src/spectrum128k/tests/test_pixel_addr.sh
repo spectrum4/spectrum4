@@ -31,6 +31,7 @@ cd "$(dirname "${0}")"
     fi
   done | while read i x y; do
     testname="pixel_addr_${i}"
+    df_offset="$(printf '0x%04x\n' $((32 * (8 * (8 * ((175 - y) / 64) + ((175 - y) & 0x07)) + ((175 - y) % 64 >> 3)) + x / 8)))"
     echo
     echo
     echo "${testname}_setup_regs:"
@@ -40,7 +41,6 @@ cd "$(dirname "${0}")"
     echo
     echo "${testname}_effects_regs:"
     b="$(printf '0x%02x\n' $((175 - y)))"
-    df_offset="$(printf '0x%04x\n' $((32 * (8 * (8 * ((175 - y) / 64) + ((175 - y) & 0x07)) + ((175 - y) % 64 >> 3)) + x / 8)))"
     echo "  ###########################################"
     echo "  # These two lines set A and F appropriately"
     echo "  ld    a, c"

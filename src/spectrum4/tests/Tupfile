@@ -6,6 +6,7 @@ include_rules
 : test_cl_chan.sh |> !calls-asm-format |> test_cl_chan.gen-s {gen-test}
 : test_cl_set.sh |> !calls-asm-format |> test_cl_set.lowerscreen.gen-s test_cl_set.printer.gen-s test_cl_set.upperscreen.gen-s {gen-test}
 : test_co_temp_5.sh |> !calls-asm-format |> test_co_temp_5.flash_bright.gen-s test_co_temp_5.ink_paper.gen-s test_co_temp_5.inverse_over.gen-s {gen-test}
+: test_pixel_addr.sh |> !calls-asm-format |> test_pixel_addr.gen-s {gen-test}
 : test_po_any.sh |> !calls-asm-format |> %B.00.gen-s %B.01.gen-s %B.10.gen-s %B.11.gen-s {gen-test}
 : test_po_attr.sh |> !calls-asm-format |> test_po_attr.gen-s {gen-test}
 : test_po_mosaic_half.sh |> !calls-asm-format |> test_po_mosaic_half.gen-s {gen-test}

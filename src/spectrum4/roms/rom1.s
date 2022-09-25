@@ -82,6 +82,7 @@
 .include "indexer.s"                     // L16DC
 .include "report_bb.s"                   // L1E9F
 .include "co_temp_5.s"                   // L2211
+.include "pixel_addr.s"                  // L22AA
 .include "print_token_udg_patch.s"       // L3B9F
 .include "new_tokens.s"                  // L3BD2
 .include "tv_tuner.s"                    // L3C10

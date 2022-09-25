@@ -4227,29 +4227,29 @@ po_attr:
         LD      H,A                       ; HL is now correct
         LD      DE,(ATTR_T)               ; make E hold ATTR_T, D hold MASK-T
         LD      A,(HL)                    ; fetch existing attribute
-        XOR     E                         ; apply masks
-        AND     D                         ;
-        XOR     E                         ;
+        XOR     E                         ; apply masks: when a bit in D is 1, the bit in A
+        AND     D                         ; is unchanged; when 0, the bit in A is set to the
+        XOR     E                         ; same bit in E.
         BIT     6,(IY+(P_FLAG-C_IY))      ; test P_FLAG  - is this PAPER 9 ??
-        JR      Z,po_attr_1               ; skip to PO-ATTR-1 if not.
+        JR      Z,1f                      ; skip to 1: if not.
 
         AND     $C7                       ; set paper
         BIT     2,A                       ; to contrast with ink
-        JR      NZ,po_attr_1              ; skip to PO-ATTR-1
+        JR      NZ,1f                     ; skip to 1:
 
         XOR     $38                       ;
 
-po_attr_1:
+1:
         BIT     4,(IY+(P_FLAG-C_IY))      ; test P_FLAG  - Is this INK 9 ??
-        JR      Z,po_attr_2               ; skip to PO-ATTR-2 if not
+        JR      Z,2f                      ; skip to 2: if not
 
         AND     $F8                       ; make ink
         BIT     5,A                       ; contrast with paper.
-        JR      NZ,po_attr_2              ; to PO-ATTR-2
+        JR      NZ,2f                     ; to 2:
 
         XOR     $07                       ;
 
-po_attr_2:
+2:
         LD      (HL),A                    ; save the new attribute.
         RET                               ; return.
 

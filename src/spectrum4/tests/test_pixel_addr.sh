@@ -37,6 +37,8 @@ cd "$(dirname "${0}")"
     fi
   done | while read i x y; do
     testname="pixel_addr_${i}"
+    x14="$(printf '0x%02x\n' $((x % 8)))"
+    df_offset="$(printf '%05x\n' $((216 * (20 * (16 * ((927 - y) / 320) + ((927 - y) & 0x0f)) + ((927 - y) % 320 >> 4)) + x / 8)))"
     echo
     echo
     echo "${testname}_setup_regs:"
@@ -47,11 +49,9 @@ cd "$(dirname "${0}")"
     echo "${testname}_effects_regs:"
     echo "  adrp    x12, display_file"
     echo "  add     x12, x12, :lo12:display_file"
-    x14="$(printf '0x%02x\n' $((x % 8)))"
-    x11offset="$(printf '%05x\n' $((216 * (20 * (16 * ((927 - y) / 320) + ((927 - y) & 0x0f)) + ((927 - y) % 320 >> 4)) + x / 8)))"
-    echo "  add     x11, x12, 0x0${x11offset:2:3}"
-    if [ "${x11offset:0:2}" != "00" ]; then
-      echo "  add     x11, x11, #0x${x11offset:0:2}000"
+    echo "  add     x11, x12, #0x0${df_offset:2:3}"
+    if [ "${df_offset:0:2}" != "00" ]; then
+      echo "  add     x11, x11, #0x${df_offset:0:2}000"
     fi
     echo "  mov     x14, #${x14}"
     echo "  ret"

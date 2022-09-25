@@ -14736,6 +14736,7 @@ display_menu:                             ; was "L36A8"
 ;        A=number of pixels to plot.
 
 plot_line:                                ; was "L3719"
+1:
         PUSH AF                           ; Save registers.
         PUSH HL                           ;
         PUSH DE                           ;
@@ -14753,7 +14754,7 @@ plot_line:                                ; was "L3719"
 
         ADD  HL,BC                        ; Determine coordinates of next pixel.
         DEC  A                            ;
-        JR   NZ,plot_line                 ; Repeat for all pixels.
+        JR   NZ,1b                        ; Repeat for all pixels.
 
         RET                               ;
 

@@ -4,6 +4,10 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
+set -eu
+set -o pipefail
+export SHELLOPTS
+
 cd "$(dirname "${0}")"
 
 # This is identical input data to test_PO_ATTR.sh uses for Spectrum 128K tests.

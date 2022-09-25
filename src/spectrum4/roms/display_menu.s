@@ -17,6 +17,7 @@ display_menu:                            // L36A8
   and     w0, w0, #0xfe
   strb    w0, [x28, TV_FLAG-sysvars]              // Clear bit 0 of TV_FLAG: main screen in use
   ldrb    w23, [x19], #8                          // w23 = number of entries
+  lsl     w25, w23, #4                            // w25 = number of entries * 16
   adr     x4, menu_title_colours
   bl      print_str_ff                            // Print title colours and position
   mov     x2, x20
@@ -48,6 +49,20 @@ display_menu:                            // L36A8
     add     w8, w22, #1
     subs    w23, w23, #1
     b.hs    1b
+  mov     w19, #0x01ff
+  mov     w20, #0x02f0
+  mov     w21, #0xffffffff
+  mov     w22, #0x00
+  add     w23, w25, #15                           // 16 * (number of menu entries + 1) - 1
+  bl      plot_line
+  mov     w21, #0x00
+  mov     w22, #0x01
+  mov     w23, #0xdf
+  bl      plot_line
+  mov     w21, #0x01
+  mov     w22, #0x00
+  mov     w23, #0x60
+  bl      plot_line
 5:
   b       5b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.

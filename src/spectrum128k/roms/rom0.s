@@ -14699,7 +14699,7 @@ display_menu:                             ; was "L36A8"
         DEC  E                            ;
         JR   NZ,1b                        ; Repeat for all menu items.
 
-        LD   HL,$6F38                     ; Coordinates, pixel (111, 56) = end row 13, column 7.
+        LD   HL,$6F38                     ; Coordinates, pixel (111, 56) = top left pixel of row 8, column 7.
 
         POP  DE                           ; Fetch number of menu items to E.
         SLA  E                            ;
@@ -14709,7 +14709,7 @@ display_menu:                             ; was "L36A8"
         DEC  D                            ; D=8*Number of menu items - 1.
 
         LD   E,$6F                        ; Number of pixels in width of menu.
-        LD   BC,$FF00                     ; B=-1, C=0. Plot a vertical line going up.
+        LD   BC,$FF00                     ; B=-1, C=0. Plot a vertical line going down.
         LD   A,D                          ; A=Number of vertical pixels to plot.
         CALL plot_line                    ; Plot line.
 
@@ -14717,7 +14717,7 @@ display_menu:                             ; was "L36A8"
         LD   A,E                          ; A=Number of horizontal pixels to plot.
         CALL plot_line                    ; Plot line.
 
-        LD   BC,$0100                     ; B=1, C=0. Plot a vertical line going down.
+        LD   BC,$0100                     ; B=1, C=0. Plot a vertical line going up.
         LD   A,D                          ; A=Number of vertical pixels to plot.
         INC  A                            ; Include end pixel.
         CALL plot_line                    ; Plot line.
@@ -14966,27 +14966,27 @@ toggle_menu_highlight:                    ; was "L37CA"
         PUSH HL                           ;
         PUSH DE                           ;
 
-        LD   HL,$5907                     ; First attribute byte at position (9,7).
+        LD   HL,$5907                     ; First attribute byte at position (8,7).
         LD   DE,$0020                     ; The increment for each row.
         AND  A                            ;
-        JR   Z,L37DA                      ; Jump ahead if highlighting the first entry.
+        JR   Z,2f                         ; Jump ahead if highlighting the first entry.
 
-L37D6:  ADD  HL,DE                        ; Otherwise increase HL
+1:      ADD  HL,DE                        ; Otherwise increase HL
         DEC  A                            ; for each row.
-        JR   NZ,L37D6                     ;
+        JR   NZ,1b                        ;
 
-L37DA:  LD   A,$78                        ; Flash 0, Bright 1, Paper 7, Ink 0 = Bright white.
+2:      LD   A,$78                        ; Flash 0, Bright 1, Paper 7, Ink 0 = Bright white.
         CP   (HL)                         ; Is the entry already highlighted?
-        JR   NZ,L37E1                     ; Jump ahead if not.
+        JR   NZ,3f                        ; Jump ahead if not.
 
         LD   A,$68                        ; Flash 0, Bright 1, Paper 5, Ink 0 = Bright cyan.
 
-L37E1:  LD   D,$0E                        ; There are 14 columns to set.
+3:      LD   D,$0E                        ; There are 14 columns to set.
 
-L37E3:  LD   (HL),A                       ; Set the attributes for all columns.
+4:      LD   (HL),A                       ; Set the attributes for all columns.
         INC  HL                           ;
         DEC  D                            ;
-        JR   NZ,L37E3                     ;
+        JR   NZ,4b                        ;
 
         POP  DE                           ; Restore registers.
         POP  HL                           ;

@@ -1012,74 +1012,6 @@ fill_region_with_junk:
   ret
 
 
-# These hardware random number generator routines are inspired by:
-#   https://github.com/torvalds/linux/blob/d4f6d923238dbdb69b8525e043fedef2670d4f2c/drivers/char/hw_random/bcm2835-rng.c
-rand_init:
-  mov     x5, x30
-  adr     x0, msg_init_rand
-  bl      uart_puts
-  mov     x1, #0x4000
-  movk    x1, #0x3f10, lsl #16
-# mov     w0, #0x00040000                 // "warmup count": the initial numbers generated are "less random" so will be discarded
-  mov     w0, #0x00100000                         // "warmup count": the initial numbers generated are "less random" so will be discarded
-  str     w0, [x1, #0x04]                         // [0x3f104004] = 0x00040000
-  ldr     w0, [x1, #0x10]
-  orr     w0, w0, #0x01
-  str     w0, [x1, #0x10]                         // Set bit 0 of [0x3f104010]  (mask the interrupt)
-  ldr     w0, [x1]
-  orr     w0, w0, #0x01
-  str     w0, [x1]                                // Set bit 0 of [0x3f104000]  (enable the hardware generator)
-  adr     x0, msg_done
-  bl      uart_puts
-  mov     x30, x5
-  ret
-
-
-rand_x0:
-  mov     x1, #0x4000
-  movk    x1, #0x3f10, lsl #16                    // x1 = 0x3f104000
-  1:                                              // Wait until ([0x3f104004] >> 24) >= 2
-    ldr     w0, [x1, #0x04]                       // Bits 24-31 tell us how many words
-    lsr     w0, w0, RNG_BIT_SHIFT                 // are available, which needs to be at
-    cbz     w0, 1b                                // least two, since we are going to
-                                                  // read two words. However under qemu
-                                                  // bits 24-31 are always 0b00000001 so
-                                                  // we use a symbol for the the shift
-                                                  // size; it is 25, unless building for
-                                                  // QEMU, when it is 24.
-  ldr     w0, [x1, #0x08]                         // w0 = [0x3f104008] (random data)
-  ldr     w2, [x1, #0x08]                         // w2 = [0x3f104008] (random data)
-  bfi     x0, x2, #32, #32                        // Copy bits from w2 into high bits of x0.
-  ret
-
-
-# Write random data to a buffer.
-#
-# On entry:
-#   x0 = address of buffer (4 byte aligned)
-#   x1 = size of buffer (multiple of 4 bytes)
-# On exit:
-#   x0 = first address after buffer
-#   x1 = 0
-#   x2 = 0x3f104000
-#   x3 = last random word written to buffer
-rand_block:
-  and     x0, x0, #~0b11
-  and     x1, x1, #~0b11
-  mov     x2, #0x4000
-  movk    x2, #0x3f10, lsl #16                    // x2 = 0x3f104000
-  1:                                              // Loop until buffer filled
-    2:                                            // Wait until ([0x3f104004] >> 24) >= 1
-      ldr     w3, [x2, #0x04]                     // Since bits 24-31 tell us how many words
-      lsr     w3, w3, #24                         // are available, this must be at least one.
-      cbz     w3, 2b
-    ldr     w3, [x2, #0x08]                       // w3 = [0x3f104008] (random data)
-    str     w3, [x0], #0x04                       // Write to buffer.
-    subs    x1, x1, #0x04
-    cbnz    x1, 1b
-  ret
-
-
 print_string:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -1173,7 +1105,6 @@ fake_print_buffer_location:
 ##############################################################
 
 .align 0
-msg_done:                      .asciz "DONE.\r\n"
 msg_fail:                      .asciz "FAIL: "
 msg_fail_0:                    .asciz "Register x"
 msg_fail_1:                    .asciz " changed from "
@@ -1186,7 +1117,6 @@ msg_fail_6:                    .asciz ".\r\n"
 msg_fail_7:                    .asciz "System variable "
 msg_fail_8:                    .asciz "Memory location ["
 msg_filling_memory_with_junk:  .asciz "Filling memory with junk... "
-msg_init_rand:                 .asciz "Initialising random number generator unit... "
 msg_out_of_memory:             .asciz "Out of memory!\r\n"
 # msg_rebooting:                 .asciz "Rebooting..."
 msg_running_test_part_1:       .asciz "Running test "

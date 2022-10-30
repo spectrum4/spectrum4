@@ -19,7 +19,7 @@ display_sysvars_1_setup:
 
 
 # x0: 0x0a
-# x1: AUX_BASE
+# x1: [aux_base]
 # x2: [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals) when waiting to send final newline
 # x3: [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals) when waiting to write final sysvar value
 # x4: value of last logged 1/2/4/8 byte sysvar (currently [K_CUR])
@@ -28,7 +28,8 @@ display_sysvars_1_setup:
 #   otherwise: 0b0110
 display_sysvars_1_effects_regs:
   mov     x0, #0x0a
-  movl    w1, AUX_BASE
+  adr     x1, aux_base
+  ldr     x1, [x1]
   mov     x2, AUX_MU_LSR_DATA_READY
   mov     x3, AUX_MU_LSR_DATA_READY
   ldr     x4, =0x0716253443526170

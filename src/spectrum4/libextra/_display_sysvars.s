@@ -9,7 +9,7 @@
 #   <nothing>
 # On exit:
 #   x0 = 0x0a
-#   x1 = AUX_BASE
+#   x1 = [aux_base]
 #   x2 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals) when waiting to send final newline
 #   x3 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals) when waiting to write final sysvar value
 #   x4 = value of last logged 1/2/4/8 byte sysvar (currently [PR_CC])

@@ -128,8 +128,8 @@ po_any_G_81_effects_regs:
   mov     w6, #0xcc
   ldr     w7, =0xcccc00
   mov     w8, wzr
-  adrp    x9, mbreq
-  add     x9, x9, :lo12:mbreq
+  adrp    x9, fb_req
+  add     x9, x9, :lo12:fb_req
   mov     w10, #9
   ldr     x11, =0x1067b
   mov     w12, #0x6c

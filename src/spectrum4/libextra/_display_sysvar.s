@@ -21,7 +21,7 @@
 #     4 byte sysvar: stack pointer - 55
 #     8 byte sysvar: stack pointer - 47
 #         otherwise: stack pointer - 60
-#   x1 = AUX_BASE
+#   x1 = [aux_base]
 #   x2 = 0
 #   x3 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals)
 #   x4 =

@@ -486,8 +486,8 @@ pr_all_lowerscreen_inverse1_over1_endofline_effects_regs:
   mov     x6, #0xcc
   mov     x7, #0xcc00
   mov     x8, #0x0
-  adrp    x9, mbreq
-  add     x9, x9, :lo12:mbreq
+  adrp    x9, fb_req
+  add     x9, x9, :lo12:fb_req
   mov     x10, #0x0                               // x attribute coordinate?
   ldr     x11, =0x32929                           // display file offset ?
   mov     x12, #108

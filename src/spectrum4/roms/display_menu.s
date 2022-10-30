@@ -65,8 +65,6 @@ display_menu:                            // L36A8
   bl      plot_line
   mov     w1, #0
   bl      toggle_menu_highlight
-5:
-  b       5b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

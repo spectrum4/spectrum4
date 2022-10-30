@@ -5,6 +5,9 @@
 .arch armv8-a
 .cpu cortex-a53
 
+# Note, if we target just rpi4 / rpi400 later, we can change this as follows:
+# .cpu cortex-a72
+
 .global _start
 
 
@@ -15,7 +18,6 @@
 .set BORDER_TOP,       128
 .set BORDER_BOTTOM,    112
 
-.set MAILBOX_BASE,     0x3f00b880
 .set MAILBOX_REQ_ADDR, 0x0
 .set MAILBOX_WRITE,    0x20
 .set MAILBOX_STATUS,   0x18
@@ -205,24 +207,7 @@
 
 
 .macro lognzcv
-.if       UART_DEBUG
-  stp     x29, x30, [sp, #-16]!
-  stp     x0, x1, [sp, #-16]!
-  stp     x2, x3, [sp, #-16]!
-  stp     x4, x5, [sp, #-16]!
-  mrs     x4, nzcv                                // copy N, Z, C, and V flags into x4 (not disturbed by following uart_puts call)
-  adrp    x0, msg_nzcv
-  add     x0, x0, :lo12:msg_nzcv
-  bl      uart_puts
-  mov     x0, x4                                  // N, Z, C, and V flags into x0
-  bl      uart_x0
-  bl      uart_newline
-  msr     nzcv, x4                                // restore flags
-  ldp     x4, x5, [sp], #16
-  ldp     x2, x3, [sp], #16
-  ldp     x0, x1, [sp], #16
-  ldp     x29, x30, [sp], #16
-.endif
+  logarm  NZCV
 .endm
 
 
@@ -260,25 +245,27 @@ _start:
 # registers, memory virtualisation, initialise sound chip, USB, etc.
 # There seems to be a pretty good guide on exactly this here:
 #   * https://developer.arm.com/documentation/dai0527/a/
-  mrs     x0, mpidr_el1                           // x0 = Multiprocessor Affinity Register.
+  mrs     x0, mpidr_el1                           // x0 = Multiprocessor Affinity Register value.
   ands    x0, x0, #0x3                            // x0 = core number.
   b.ne    sleep                                   // Put all cores except core 0 to sleep.
   adrp    x28, sysvars
   add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
+  bl      set_peripherals_addresses
   bl      uart_init                               // Initialise UART interface.
+  bl      init_rpi_model                          // Fetch raspberry pi model identifier into system variable rpi_model.
   bl      init_framebuffer                        // Allocate a frame buffer with chosen screen settings.
   mrs     x0, currentel
   lsr     x0, x0, #2
   cmp     x0, 3
   b.ne    1f
 # Start L1 Caches if in EL3...
-  mrs     x0, sctlr_el3                           // x0 = System Control Register
+  mrs     x0, sctlr_el3                           // x0 = System Control Register value
   orr     x0, x0, 0x0004                          // Data Cache (Bit 2)
   orr     x0, x0, 0x1000                          // Instruction Caches (Bit 12)
   msr     sctlr_el3, x0                           // System Control Register = x0
 1:
-.if       TESTS_AUTORUN
   bl      rand_init
+.if       TESTS_AUTORUN
   bl      fill_memory_with_junk
   ldr     w0, arm_size
   and     sp, x0, #~0x0f                          // Set stack pointer at top of ARM memory
@@ -290,27 +277,58 @@ _start:
                                                   // is the converted ZX Spectrum 128k code.
 .endif
 
-
 sleep:
   wfi                                             // Sleep until woken.
   b       sleep                                   // Go to sleep; it has been a long day.
 
 
+init_rpi_model:
+  adr     x0, rpi_model_req                       // x0 = memory block pointer for mailbox call to get rpi model identifier
+  mov     x27, x30                                // preserve link register in x27
+  bl      mbox_call
+  mov     x30, x27                                // restore link register
+  ret
+
+
 init_framebuffer:
-  adr     x0, mbreq                               // x0 = memory block pointer for mailbox call.
+  adr     x0, fb_req                              // x0 = memory block pointer for mailbox call.
   mov     x27, x30
   bl      mbox_call
   mov     x30, x27
-  ldr     w11, [x0, framebuffer-mbreq]            // w11 = allocated framebuffer address
+  ldr     w11, [x0, framebuffer-fb_req]           // w11 = allocated framebuffer address
   and     w11, w11, #0x3fffffff                   // Translate bus address to physical ARM address.
-  str     w11, [x0, framebuffer-mbreq]            // Store framebuffer address in framebuffer system variable.
+  str     w11, [x0, framebuffer-fb_req]           // Store framebuffer address in framebuffer system variable.
   ret
+
+
+# Memory block for Raspberry Pi model identifier mailbox call
+.align 4
+rpi_model_req:
+  .word (rpi_model_req_end-rpi_model_req)         // Buffer size
+  .word 0                                         // Request/response code
+  .word 0x00010001                                // Tag 0 - Get board model
+  .word 4                                         //   value buffer size (response > request, so use response size)
+  .word 0                                         //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+// On my rpi 3b, rpi_model = 0x0
+rpi_model:
+  .word 0                                         //   request: padding              response: model identifier
+  .word 0x00010002                                // Tag 1 - Get board revision
+  .word 4                                         //   value buffer size (response > request, so use response size)
+  .word 0                                         //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+// Possible values documented at:
+//   * https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#new-style-revision-codes-in-use
+// On my rpi 3b, rpi_revision = 0x00a02082
+// On my rpi 400, rpi_revision = 0x00c03130
+rpi_revision:
+  .word 0                                         //   request: padding              response: revision identifier
+  .word 0                                         // End Tags
+rpi_model_req_end:
 
 
 # Memory block for GPU mailbox call to allocate framebuffer
 .align 4
-mbreq:
-  .word (mbreq_end-mbreq)                         // Buffer size
+fb_req:
+  .word (fb_req_end-fb_req)                       // Buffer size
   .word 0                                         // Request/response code
   .word 0x00048003                                // Tag 0 - Set Screen Size
   .word 8                                         //   value buffer size
@@ -356,7 +374,7 @@ arm_base:
 arm_size:
   .word 0                                         //   request: padding              response: size in bytes
   .word 0                                         // End Tags
-mbreq_end:
+fb_req_end:
 
 
 
@@ -364,9 +382,14 @@ mbreq_end:
 #   x0 = address of mailbox request
 # On exit:
 #   x0 unchanged
+#   x9 corrupted
+#   x10 corrupted
+#   x11 corrupted
+#   x12 corrupted
 .align 2
 mbox_call:
-  movl    w9, MAILBOX_BASE                        // x9 = 0x3f00b880 (Mailbox Peripheral Address)
+  adr     x9, mailbox_base                        // x9 = mailbox_base
+  ldr     x9, [x9]                                // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0x000000003f00b880 (rpi3) or 0x00000000fe00b880 (rpi4)
 1:                                                // Wait for mailbox FULL flag to be clear.
   ldr     w10, [x9, MAILBOX_STATUS]               // w10 = mailbox status.
   tbnz    w10, MAILBOX_FULL_BIT, 1b               // If FULL flag set (bit 31), try again...
@@ -405,10 +428,10 @@ poke_address:
 // x0 in display file
   // framebuffer addresses = pitch*(BORDER_TOP + 16*((x11/216)%20) + (x11/(216*20))%16 + 320*(x11/(216*20*16))) + address of framebuffer + 4 * (BORDER_LEFT + 8*(x11%216) + [0-7])
   // attribute address = attributes_file+((x11/2)%108)+108*(((x11/216)%20)+20*(x11/(216*20*16)))
-  adrp    x9, mbreq                               // x9 = address of mailbox request.
-  add     x9, x9, :lo12:mbreq
-  ldr     w10, [x9, framebuffer-mbreq]            // w10 = address of framebuffer
-  ldr     w12, [x9, pitch-mbreq]                  // w12 = pitch
+  adrp    x9, fb_req                              // x9 = address of mailbox request.
+  add     x9, x9, :lo12:fb_req
+  ldr     w10, [x9, framebuffer-fb_req]           // w10 = address of framebuffer
+  ldr     w12, [x9, pitch-fb_req]                 // w12 = pitch
   mov     x13, #0x425f
   movk    x13, #0x97b, lsl #16
   movk    x13, #0x25ed, lsl #32
@@ -530,8 +553,6 @@ wait_cycles:
 # See "BCM2837 ARM Peripherals" datasheet pages 8-19:
 #   https://cs140e.sergio.bz/docs/BCM2837-ARM-Peripherals.pdf
 # ------------------------------------------------------------------------------
-.set AUX_BASE,       0x3f215000
-
 .set AUX_IRQ,        0x0000                       // Auxiliary Interrupt Status
 .set AUX_ENABLES,    0x0004                       // Auxiliary Enables
 .set AUX_MU_IO_REG,  0x0040                       // Mini Uart I/O Data
@@ -551,21 +572,18 @@ wait_cycles:
 # See "BCM2837 ARM Peripherals" datasheet pages 90-104:
 #   https://cs140e.sergio.bz/docs/BCM2837-ARM-Peripherals.pdf
 # ------------------------------------------------------------------------------
-.set GPIO_BASE,      0x3f200000
-
 .set GPFSEL1,        0x0004                       // GPIO Function Select 1
 .set GPPUD,          0x0094                       // GPIO Pin Pull-up/down Enable
 .set GPPUDCLK0,      0x0098                       // GPIO Pin Pull-up/down Enable Clock 0
-
 
 # ------------------------------------------------------------------------------
 # Initialise the Mini UART interface for logging over serial port.
 # Note, this is Broadcomm's own UART, not the ARM licenced UART interface.
 # ------------------------------------------------------------------------------
 uart_init:
-  mov     x1, AUX_BASE & 0xffff0000
-  movk    x1, AUX_BASE & 0x0000ffff               // x1 = 0x3f215000 = AUX_BASE
-  ldr     w2, [x1, AUX_ENABLES]                   // w2 = [0x3f215004] = [AUX_ENABLES] (Auxiliary enables)
+  adr     x4, mailbox_base                        // x4 = mailbox_base
+  ldr     x1, [x4, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+  ldr     w2, [x1, AUX_ENABLES]                   // w2 = [AUX_ENABLES] (Auxiliary enables)
   orr     w2, w2, #1
   str     w2, [x1, AUX_ENABLES]                   //   [AUX_ENABLES] |= 0x00000001 => Enable Mini UART.
   str     wzr, [x1, AUX_MU_IER]                   //   [AUX_MU_IER_REG] = 0x00000000 => Disable Mini UART interrupts.
@@ -575,12 +593,12 @@ uart_init:
   mov     w3, #0x3                                // w3 = 3
   str     w3, [x1, AUX_MU_LCR]                    //   [AUX_MU_LCR_REG] = 0x00000003 => Mini UART in 8-bit mode.
   str     wzr, [x1, AUX_MU_MCR]                   //   [AUX_MU_MCR_REG] = 0x00000000 => Set UART1_RTS line high.
-  mov     w2, #0x10e                              // w2 = 270
-  str     w2, [x1, AUX_MU_BAUD]                   //   [AUX_MU_BAUD_REG] = 0x0000010e
-                                                  //         => baudrate = system_clock_freq/(8*(270+1))
-                                                  //                     = 250MHz/(8*271) ~= 115314
+  adr     x2, aux_mu_baud_reg
+  ldr     w2, [x2]
+  str     w2, [x1, AUX_MU_BAUD]                   //   [AUX_MU_BAUD_REG] = 0x0000010e (rpi3) or 0x0000021d (rpi4)
+                                                  //         => baudrate = system_clock_freq/(8*([AUX_MU_BAUD_REG]+1))
                                                   //                       (as close to 115200 as possible)
-  mov     x4, GPIO_BASE                           // x4 = 0x3f200000 = GPIO_BASE
+  ldr     x4, [x4, gpio_base-mailbox_base]        // x4 = [gpio_base] = 0x000000003f200000 (rpi3) or 0x00000000fe200000 (rpi4)
   ldr     w2, [x4, GPFSEL1]                       // w2 = [GPFSEL1]
   and     w2, w2, #0xfffc0fff                     // Unset bits 12, 13, 14 (FSEL14 => GPIO Pin 14 is an input).
                                                   // Unset bits 15, 16, 17 (FSEL15 => GPIO Pin 15 is an input).
@@ -614,11 +632,11 @@ uart_init:
 # On entry:
 #   x0: char to send
 # On exit:
-#   x1: AUX_BASE
+#   x1: [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
 #   x2: Last read of [AUX_MU_LSR_REG] when waiting for bit 5 to be set
 uart_send:
-  mov     x1, AUX_BASE & 0xffff0000
-  movk    x1, AUX_BASE & 0x0000ffff               // x1 = 0x3f215000 = AUX_BASE
+  adr     x1, mailbox_base                        // x1 = mailbox_base
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
 1:
   ldr     w2, [x1, AUX_MU_LSR]                    // w2 = [AUX_MU_LSR_REG]
   tbz     x2, #5, 1b                              // Repeat last statement until bit 5 is set.
@@ -632,12 +650,12 @@ uart_send:
   add     x1, x1, :lo12:uart_disable
   ldrb    w1, [x1]
   cbnz    w1, 2f
-  mov     x1, AUX_BASE & 0xffff0000
-  movk    x1, AUX_BASE & 0x0000ffff               // x1 = 0x3f215000 = AUX_BASE
+  adr     x1, mailbox_base                        // x1 = mailbox_base
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
   b       3f
 2:
-  mov     x1, AUX_BASE & 0xffff0000
-  movk    x1, AUX_BASE & 0x0000ffff               // x1 = 0x3f215000 = AUX_BASE
+  adr     x1, mailbox_base                        // x1 = mailbox_base
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
   ret
 3:
 .endif
@@ -741,9 +759,9 @@ paint_border:
 #   w3 = height (pixels)
 #   w4 = colour
 paint_rectangle:
-  adr     x9, mbreq                               // x9 = address of mailbox request.
-  ldr     w10, [x9, framebuffer-mbreq]            // w10 = address of framebuffer
-  ldr     w11, [x9, pitch-mbreq]                  // w11 = pitch
+  adr     x9, fb_req                              // x9 = address of mailbox request.
+  ldr     w10, [x9, framebuffer-fb_req]           // w10 = address of framebuffer
+  ldr     w11, [x9, pitch-fb_req]                 // w11 = pitch
   umaddl  x10, w1, w11, x10                       // x10 = address of framebuffer + y*pitch
   add     w10, w10, w0, lsl #2                    // w10 = address of framebuffer + y*pitch + x*4
   fill_rectangle:                                 // Fills entire rectangle
@@ -783,7 +801,7 @@ paint_window:
 #   <nothing>
 # On exit:
 #   x0: 0x0a
-#   x1: AUX_BASE
+#   x1: [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
 #   x2: Last read of [AUX_MU_LSR_REG] when waiting for bit 5 to be set
 uart_newline:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -804,12 +822,12 @@ uart_newline:
 #   x0 = address of null terminated string
 # On exit:
 #   x0 = address of null terminator
-#   x1 = AUX_BASE
+#   x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
 #   x2 = 0
 #   x3 = [AUX_MU_LSR]
 uart_puts:
-  mov     x1, AUX_BASE & 0xffff0000
-  movk    x1, AUX_BASE & 0x0000ffff               // x1 = 0x3f215000 = AUX_BASE
+  adr     x1, mailbox_base                        // x1 = mailbox_base
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
 1:
   ldrb    w2, [x0], #1
   cbz     w2, 5f
@@ -829,8 +847,8 @@ uart_puts:
   add     x1, x1, :lo12:uart_disable
   ldrb    w1, [x1]
   cbnz    x1, uart_puts
-  mov     x1, AUX_BASE & 0xffff0000
-  movk    x1, AUX_BASE & 0x0000ffff               // x1 = 0x3f215000 = AUX_BASE
+  adr     x1, mailbox_base                        // x1 = mailbox_base
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
 .endif
 /////////////////////
 
@@ -854,8 +872,8 @@ uart_puts:
   add     x1, x1, :lo12:uart_disable
   ldrb    w1, [x1]
   cbnz    x1, uart_puts
-  mov     x1, AUX_BASE & 0xffff0000
-  movk    x1, AUX_BASE & 0x0000ffff               // x1 = 0x3f215000 = AUX_BASE
+  adr     x1, mailbox_base                        // x1 = mailbox_base
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
 .endif
 /////////////////////
 
@@ -925,4 +943,186 @@ base10:
 3:
   ret
 
+
+.if       UART_DEBUG
+msg_init_rand:                 .asciz "Initialising random number generator unit... "
+msg_done:                      .asciz "DONE.\r\n"
+.endif
+
+
+# These hardware random number generator routines are inspired by:
+#   https://github.com/torvalds/linux/blob/d4f6d923238dbdb69b8525e043fedef2670d4f2c/drivers/char/hw_random/bcm2835-rng.c
+.align 2
+rand_init:
+  mov     x5, x30
+.if       UART_DEBUG
+  adr     x0, msg_init_rand
+  bl      uart_puts
+.endif
+  adr     x1, rand_base
+  ldr     x1, [x1]
+# mov     w0, #0x00040000                 // "warmup count": the initial numbers generated are "less random" so will be discarded
+  mov     w0, #0x00100000                         // "warmup count": the initial numbers generated are "less random" so will be discarded
+  str     w0, [x1, #0x04]                         // [[rand_base]+4] = 0x00040000
+  ldr     w0, [x1, #0x10]
+  orr     w0, w0, #0x01
+  str     w0, [x1, #0x10]                         // Set bit 0 of [[rand_base]+0x10]  (mask the interrupt)
+  ldr     w0, [x1]
+  orr     w0, w0, #0x01
+  str     w0, [x1]                                // Set bit 0 of [[rand_base]]  (enable the hardware generator)
+.if       UART_DEBUG
+  adr     x0, msg_done
+  bl      uart_puts
+.endif
+  mov     x30, x5
+  ret
+
+
+rand_x0:
+  adr     x1, rand_base
+  ldr     x1, [x1]
+  1:                                              // Wait until ([[rand_base]+4] >> 24) >= 2
+    ldr     w0, [x1, #0x04]                       // Bits 24-31 tell us how many words
+    lsr     w0, w0, RNG_BIT_SHIFT                 // are available, which needs to be at
+    cbz     w0, 1b                                // least two, since we are going to
+                                                  // read two words. However under qemu
+                                                  // bits 24-31 are always 0b00000001 so
+                                                  // we use a symbol for the the shift
+                                                  // size; it is 25, unless building for
+                                                  // QEMU, when it is 24.
+  ldr     w0, [x1, #0x08]                         // w0 = [[rand_base]+8] (random data)
+  ldr     w2, [x1, #0x08]                         // w2 = [[rand_base]+8] (random data)
+  bfi     x0, x2, #32, #32                        // Copy bits from w2 into high bits of x0.
+  ret
+
+
+# Write random data to a buffer.
+#
+# On entry:
+#   x0 = address of buffer (4 byte aligned)
+#   x1 = size of buffer (multiple of 4 bytes)
+# On exit:
+#   x0 = first address after buffer
+#   x1 = 0
+#   x2 = [rand_base]
+#   x3 = last random word written to buffer
+rand_block:
+  and     x0, x0, #~0b11
+  and     x1, x1, #~0b11
+  adr     x2, rand_base
+  ldr     x2, [x2]
+  1:                                              // Loop until buffer filled
+    2:                                            // Wait until ([[rand_base]+4] >> 24) >= 1
+      ldr     w3, [x2, #0x04]                     // Since bits 24-31 tell us how many words
+      lsr     w3, w3, #24                         // are available, this must be at least one.
+      cbz     w3, 2b
+    ldr     w3, [x2, #0x08]                       // w3 = [[rand_base]+8] (random data)
+    str     w3, [x0], #0x04                       // Write to buffer.
+    subs    x1, x1, #0x04
+    cbnz    x1, 1b
+  ret
+
+
+# Set initial values to rpi4 values, and replace at runtime if different machine
+.align 3
+mailbox_base:
+  .quad     0x00000000fe00b880                    // default is for rpi4
+rand_base:
+  .quad     0x00000000fe104000                    // default is for rpi4
+gpio_base:
+  .quad     0x00000000fe200000                    // default is for rpi4
+aux_base:
+  .quad     0x00000000fe215000                    // default is for rpi4
+.align 2
+aux_mu_baud_reg:
+  .word     0x0000021d                            // default is for rpi4
+
+
+.align 3
+base_rpi3:
+# rpi3 mailbox_base
+  .quad     0x000000003f00b880
+# rpi3 rand_base
+  .quad     0x000000003f104000
+# rpi3 gpio_base
+  .quad     0x000000003f200000
+# rpi3 aux_base
+  .quad     0x000000003f215000
+.align 2
+# rpi3 aux_mu_baud_reg
+  .word     0x0000010e
+
+
+.align 2
+set_peripherals_addresses:
+  mrs     x0, midr_el1                            // See https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
+                                                  // x0 = Main ID Register value 0xNNNNNNNNIIVAPPPR, where:
+                                                  //
+                                                  // NNNNNNNN = N/A (reserved)
+                                                  // II = Implementer
+                                                  //   0x00: Reserved for software use
+                                                  //   0xc0: Ampere Computing
+                                                  //   0x41: Arm Limited
+                                                  //   0x42: Broadcom Corporation
+                                                  //   0x43: Cavium Inc.
+                                                  //   0x44: Digital Equipment Corporation
+                                                  //   0x46: Fujitsu Ltd.
+                                                  //   0x49: Infineon Technologies AG
+                                                  //   0x4d: Motorola or Freescale Semiconductor Inc.
+                                                  //   0x4e: NVIDIA Corporation
+                                                  //   0x50: Applied Micro Circuits Corporation
+                                                  //   0x51: Qualcomm Inc.
+                                                  //   0x56: Marvell International Ltd.
+                                                  //   0x69: Intel Corporation
+                                                  //   0xc0: Ampere Computing
+                                                  // V = Variant
+                                                  // A = Architecture
+                                                  //   0x1: Armv4
+                                                  //   0x2: Armv4T
+                                                  //   0x3: Armv5(obsolete)
+                                                  //   0x4: Armv5T
+                                                  //   0x5: Armv5TE
+                                                  //   0x6: Armv5TEJ
+                                                  //   0x7: Armv6
+                                                  //   0xf: Architectural features are individually identified in the ID_* registers, see 'ID registers'
+                                                  // PPP = Part Number
+                                                  //   0xd03: Raspberry Pi 3B (potentially also 3A+, 3B+, CM 3+, ...)
+                                                  // R = Revision
+                                                  //
+                                                  // e.g.
+                                                  //   0x00000000410fd034 (value on my rpi 3b)
+                                                  //   => Implementer = 0x41 = Arm Limited
+                                                  //   => Variant = 0x0
+                                                  //   => Architecture = 0xf = "features are identified in the ID_* registers"
+                                                  //   => Part Number = 0xd03 (presumably, Raspberry Pi 3)
+                                                  //   => Revision = 0x4
+                                                  //   0x00000000410fd083 (value on my rpi 400)
+                                                  //   => Implementer = 0x41 = Arm Limited
+                                                  //   => Variant = 0x0
+                                                  //   => Architecture = 0xf = "features are identified in the ID_* registers"
+                                                  //   => Part Number = 0xd08 (presumably, Raspberry Pi 4)
+                                                  //   => Revision = 0x3
+
+# mrs     x1, revidr_el1                          // e.g. x1 = 0x80 (value on my rpi 3b)
+                                                  //           0x00 (value on my rpi 400)
+  and     x0, x0, #0xfff0
+  mov     x1, #0xd030
+  cmp     x0, x1
+  b.ne    1f
+  adr     x0, base_rpi3
+  adr     x1, mailbox_base
+  ldp     x2, x3, [x0]                            // x2 = [rpi3 mailbox_base]
+                                                  // x3 = [rpi3 rand_base]
+  ldp     x4, x5, [x0, #16]                       // x4 = [rpi3 gpio_base]
+                                                  // x5 = [rpi3 aux_base]
+  ldr     w6, [x0, #32]                           // w6 = [rpi3 aux_mu_baud_reg]
+  stp     x2, x3, [x1]                            // [mailbox_base]    = [rpi3 mailbox_base]
+                                                  // [rand_base]       = [rpi3 rand_base]
+  stp     x4, x5, [x1, #16]                       // [gpio_base]       = [rpi3 gpio_base]
+                                                  // [aux_base]        = [rpi3 aux_base]
+  str     w6, [x1, #32]                           // [aux_mu_baud_reg] = [rpi3 aux_mu_baud_reg]
+1:
+  ret
+
+.include "armregs.s"
 .include "font.s"

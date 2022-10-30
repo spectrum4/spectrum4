@@ -24,27 +24,12 @@ release_version="${1}"
 
 cd "$(dirname "${0}")"
 TAG="$(cat dev-setup/docker/TAG)"
-rm -rf dist
-lint.sh
 tup -k
-cp -Lr src/spectrum4/dist .
-# docker run --privileged=true -e "release_version=${release_version}" --rm -v "$(pwd)/dist:/dist" -w /dist -ti ubuntu /bin/bash -c '
-docker run --privileged=true -e "release_version=${release_version}" --rm -v "$(pwd)/dist:/dist" -w /dist -ti "${TAG}" /bin/bash -c '
-apt-get update -y
-apt-get install -y dosfstools
-for build in debug release; do
-  file="spectrum4-${release_version}-${build}.img"
-  dd if=/dev/zero of="${file}" bs=1M count=512
-  /usr/sbin/mkfs.vfat -n "SPECTRUM 4" "${file}"
-  mkdir "/sp4-${build}"
-  mount -o loop "${file}" "/sp4-${build}"
-  cp "${build}"/* "/sp4-${build}"
-  umount "/sp4-${build}"
-  rm -r "/sp4-${build}"
-  tar -cJf "${file}.xz" "${file}"
-  rm "${file}"
-done'
-for file in "spectrum4-${release_version}"-{debug,release}.img.xz; do
-  mv "dist/${file}" .
+
+find src/spectrum4/dist -maxdepth 1 -mindepth 1 -type d | sed 's/.*\///' | while read build; do
+  zipfile="spectrum4-${release_version}-${build}.zip"
+  (
+    cd "src/spectrum4/dist/${build}"
+    zip -9 -r "../../../../${zipfile}" .
+  )
 done
-rm -rf dist

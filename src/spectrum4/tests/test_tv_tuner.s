@@ -150,7 +150,8 @@ tv_tuner_01_effects_regs:
   mov     w6, 0xcc
   movl    w7, 0xcccccc
   mov     w8, wzr
-  mov     w9, 0x80
+  adrp    x9, fb_req
+  add     x9, x9, :lo12:fb_req
   mov     w10, 0x6b
   movl    w11, 0x0329ff
   mov     w12, 0x6c

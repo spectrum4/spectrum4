@@ -177,7 +177,7 @@ print_token_udg_patch_01_effects_regs:
   mov     x6, 0x0000000000000000
   mov     x7, 0x0000000000000000
   mov     x8, 0x0000000000000000
-  ldr     x9, =mbreq
+  ldr     x9, =fb_req
   mov     x10, 0x000000000000000b
   ldr     x11, =0x000000000001016f
   mov     x12, 0x000000000000006c
@@ -329,7 +329,7 @@ print_token_udg_patch_02_effects_regs:
   mov     x6, 0x0000000000000000
   mov     x7, 0x0000000000000000
   mov     x8, 0x0000000000000000
-  ldr     x9, =mbreq
+  ldr     x9, =fb_req
   mov     x10, 0x000000000000000b
   ldr     x11, =0x000000000001016f
   mov     x12, 0x000000000000006c
@@ -482,7 +482,7 @@ print_token_udg_patch_03_effects_regs:
   mov     x6, 0x0000000000000000
   mov     x7, 0x0000000000000000
   mov     x8, 0x0000000000000000
-  ldr     x9, =mbreq
+  ldr     x9, =fb_req
   mov     x10, 0x0000000000000000
   ldr     x11, =0x0000000000010159
   mov     x12, 0x000000000000006c

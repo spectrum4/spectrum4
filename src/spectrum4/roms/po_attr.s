@@ -20,7 +20,7 @@
 #   x6 = ??
 #   x7 = ??
 #   x8 = ??
-#   x9 = mbreq
+#   x9 = fb_req
 # #   x10 = x attribute coordinate (0-107)
 # #   x11 = display file offset
 #   x12 = 108

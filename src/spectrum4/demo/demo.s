@@ -20,8 +20,8 @@ demo:
   mov     x1, #1
   mov     x2, #0
   bl      display_memory
-  adrp    x0, mbreq
-  add     x0, x0, :lo12:mbreq
+  adrp    x0, fb_req
+  add     x0, x0, :lo12:fb_req
   mov     x1, #5
   mov     x2, #3
   bl      display_memory

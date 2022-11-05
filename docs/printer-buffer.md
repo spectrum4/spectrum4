@@ -19,14 +19,14 @@ designed to be able to buffer a single character row from the screen.
 
 ## New Memory Layout in Spectrum +4
 
-In the Spectrum +4, the screen is 108 characters wide, and there isn't a
-native printer interface planned, certainly not initially. Therefore I've
-decided instead to write the printer output to one of the UART interfaces of
-the RPi 3B, and plan to write a virtual printer emulator for macOS/Linux and
+In the Spectrum +4, the screen is 108 characters wide, and there isn't a native
+printer interface planned, certainly not initially. Therefore I've decided
+instead to write the printer output to one of the UART interfaces of the
+Raspberry Pi, and plan to write a virtual printer emulator for macOS/Linux and
 possibly Windows, so that the Spectrum +4 can still virtually print over a
-serial interface to a virtual printer running on a different computer.
-Perhaps it might even be possible for the virtual printer to write directly
-to a PDF file.
+serial interface to a virtual printer running on a different computer.  Perhaps
+it might even be possible for the virtual printer to write directly to a PDF
+file.
 
 The Spectrum +4 Printer Buffer will therefore be 16 pixel rows high, and 108
 characters wide, stored in 216 bytes per row, i.e. 3456 bytes in size (exactly

@@ -1,12 +1,13 @@
-# Spectrum 4 debug profile
+# Spectrum +4 debug profile
 
 The debug profile of Spectrum +4 contains the following features in addition to
 the release profile:
 
   * Debug messages are logged to the UART interface
-  * On start up, unit tests are executed
-  * Some features of the Spectrum +4 are demoed after the unit tests complete, to
-  aid manual testing of audio and visual features
+  * Some features of the Spectrum +4 are demoed on startup, to aid manual
+    testing of audio and visual features
+
+# Spectrum +4 tests profile
 
 On start up:
 
@@ -23,8 +24,8 @@ On start up:
     * The registers and are copied to the stack, and the RAM is snapshotted (3)
     * The snapshots (2) and (3) are compared, and differences are logged to UART
     as test failures with state recorded from snapshots (1), (2) and (3)
-  * The RPi 3B performs a demonstration of audio and visual features
-  * The RPi 3B continues running Spectrum 4+ as normal
+  * The Raspberry Pi performs a demonstration of audio and visual features
+  * The Raspberry Pi continues running Spectrum +4 as normal
 
 ## Unit tests
 

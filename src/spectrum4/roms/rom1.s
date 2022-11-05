@@ -2,27 +2,42 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-################################################################################################
-# These routines are a translation of the original Z80 ROM 1 routines on the 128K Spectrum.
+###############################################################################
+# These routines are a translation of the original Z80 ROM 1 routines on the
+# 128K Spectrum.
 #
-# The translation has been performed using Paul Farrow's 128K ROM 1 disassembly as principal reference:
+# The translation has been performed using Paul Farrow's 128K ROM 1 disassembly
+# as principal reference:
+#
 #   * http://www.fruitcake.plus.com/Sinclair/Spectrum128/ROMDisassembly/Files/Disassemblies/Spectrum128_ROM1.zip
-# which in turn is based on Geoff Wearmouth's 48K ROM disassembly (almost identical to 128K ROM 1):
+#
+# which in turn is based on Geoff Wearmouth's 48K ROM disassembly (almost
+# identical to 128K ROM 1):
+#
 #   * https://web.archive.org/web/20150618024638/http://www.wearmouth.demon.co.uk/zx82.htm
-# together with Dr Ian Logan and Dr Frank O'Hara's original 48K ROM disassembly from January 1983:
+#
+# together with Dr Ian Logan and Dr Frank O'Hara's original 48K ROM disassembly
+# from January 1983:
+#
 #   * https://archive.org/details/CompleteSpectrumROMDisassemblyThe/mode/2up
+#
 # and Richard Dymond's additions:
+#
 #   * https://skoolkit.ca/disassemblies/rom/hex/maps/all.html
 #
-# In addition, using the fantastic Retro Virtual Machine v2.0 BETA-1 r7 from Juan Carlos Gonzalez Amestoy:
-#   * http://www.retrovirtualmachine.org/en/downloads
-# it has been possible to run the ROM routines through a debugger, to validate assumptions
-# about the behaviour and fine-tine the descriptions.
+# In addition, using the fantastic Retro Virtual Machine v2.0 BETA-1 r7 from
+# Juan Carlos Gonzalez Amestoy:
 #
-# Note, the original routines have also been intentionally adapted to take advantage of the improved
-# hardware of the Raspberry Pi 3B, such as more memory and higher screen resolution. Please see
-# the top level README.md document for more information.
-################################################################################################
+#   * http://www.retrovirtualmachine.org/en/downloads
+#
+# it has been possible to run the ROM routines through a debugger, to validate
+# assumptions about the behaviour and fine-tine the descriptions.
+#
+# Note, the ZX Spectrum +4 routines have also been intentionally adapted to
+# take advantage of the improved hardware of the Raspberry Pi, such as more
+# memory and higher screen resolution. Please see the top level README.md
+# document for more information.
+###############################################################################
 
 .include "error_1.s"                     // L0008
 .include "print_w0.s"                    // L0010

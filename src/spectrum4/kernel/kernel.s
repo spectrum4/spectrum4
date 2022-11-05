@@ -68,7 +68,7 @@ _start:
   bl      run_tests
 .endif
 .if       ROMS_AUTORUN
-  b       restart                                 // Raspberry Pi 3B initialisation complete.
+  b       restart                                 // Raspberry Pi initialisation complete.
                                                   // Now call entry point in rom0.s which
                                                   // is the converted ZX Spectrum 128k code.
 .endif
@@ -105,7 +105,7 @@ rpi_model_req:
   .word 0x00010001                                // Tag 0 - Get board model
   .word 4                                         //   value buffer size (response > request, so use response size)
   .word 0                                         //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
-// On my rpi 3b, rpi_model = 0x0
+// On my Raspberry Pi 3 Model B, rpi_model = 0x0
 rpi_model:
   .word 0                                         //   request: padding              response: model identifier
   .word 0x00010002                                // Tag 1 - Get board revision
@@ -113,8 +113,8 @@ rpi_model:
   .word 0                                         //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
 // Possible values documented at:
 //   * https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#new-style-revision-codes-in-use
-// On my rpi 3b, rpi_revision = 0x00a02082
-// On my rpi 400, rpi_revision = 0x00c03130
+// On my Raspberry Pi 3 Model B, rpi_revision = 0x00a02082
+// On my Raspberry Pi 400, rpi_revision = 0x00c03130
 rpi_revision:
   .word 0                                         //   request: padding              response: revision identifier
   .word 0                                         // End Tags
@@ -466,21 +466,21 @@ set_peripherals_addresses:
                                                   // R = Revision
                                                   //
                                                   // e.g.
-                                                  //   0x00000000410fd034 (value on my rpi 3b)
+                                                  //   0x00000000410fd034 (value on my Raspberry Pi 3 Model B)
                                                   //   => Implementer = 0x41 = Arm Limited
                                                   //   => Variant = 0x0
                                                   //   => Architecture = 0xf = "features are identified in the ID_* registers"
                                                   //   => Part Number = 0xd03 (presumably, Raspberry Pi 3)
                                                   //   => Revision = 0x4
-                                                  //   0x00000000410fd083 (value on my rpi 400)
+                                                  //   0x00000000410fd083 (value on my Raspberry Pi 400)
                                                   //   => Implementer = 0x41 = Arm Limited
                                                   //   => Variant = 0x0
                                                   //   => Architecture = 0xf = "features are identified in the ID_* registers"
                                                   //   => Part Number = 0xd08 (presumably, Raspberry Pi 4)
                                                   //   => Revision = 0x3
 
-# mrs     x1, revidr_el1                          // e.g. x1 = 0x80 (value on my rpi 3b)
-                                                  //           0x00 (value on my rpi 400)
+# mrs     x1, revidr_el1                          // e.g. x1 = 0x80 (value on my Raspberry Pi 3 Model B)
+                                                  //           0x00 (value on my Raspberry Pi 400)
   and     x0, x0, #0xfff0
   mov     x1, #0xd030
   cmp     x0, x1

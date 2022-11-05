@@ -1,8 +1,8 @@
 .gitignore
 
 # Move files into place
-: foreach ../kernel/config.txt ../firmware/LICENCE.broadcom ../firmware/bootcode.bin ../firmware/start.elf ../firmware/start4.elf |> ln -s ../%f %1o; ln -s ../%f %2o; ln -s ../%f %3o |> debug/%b release/%b debug-all-tests/%b
+: foreach ../kernel/config.txt ../firmware/LICENCE.broadcom ../firmware/bootcode.bin ../firmware/start.elf ../firmware/start4.elf |> ln -s ../%f %1o; ln -s ../%f %2o; ln -s ../%f %3o |> debug/%b release/%b tests/%b
 : ../../../LICENCE |> ln -s ../%f %1o; ln -s ../%f %2o |> debug/%b.spectrum4 release/%b.spectrum4
 : ../targets/release.img |> ln -s ../%f %o |> release/kernel8.img
 : ../targets/debug.img |> ln -s ../%f %o |> debug/kernel8.img
-: ../targets/debug-all-tests.img |> ln -s ../%f %o |> debug-all-tests/kernel8.img
+: ../targets/tests.img |> ln -s ../%f %o |> tests/kernel8.img

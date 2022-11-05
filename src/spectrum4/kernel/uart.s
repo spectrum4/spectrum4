@@ -100,6 +100,7 @@ uart_send:
 // setting the one byte test system variable 'uart_disable' to a non zero value
 // without affecting any register values so to not impact tests.
 .if       TESTS_INCLUDE
+  movl    w2, 0x12323434                          // rpi3/rpi4/qemu hold different values in w2 (from [AUX_MU_LSR_REG]) so use magic value in test
   adrp    x1, uart_disable
   add     x1, x1, :lo12:uart_disable
   ldrb    w1, [x1]
@@ -205,6 +206,9 @@ uart_puts:
   strb    w2, [x1, AUX_MU_IO_REG]                 //   [AUX_MU_IO_REG] = w2
   b       1b
 5:
+.if       TESTS_INCLUDE
+  movl    w3, 0x75364253                          // rpi3/rpi4/qemu hold different values in w3 (from [AUX_MU_LSR_REG]) so use magic value in test
+.endif
   ret
 
 

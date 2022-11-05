@@ -29,7 +29,7 @@ display_sysvar_1_effects_regs:
   adr     x1, aux_base
   ldr     x1, [x1]
   mov     x2, #0
-  mov     x3, AUX_MU_LSR_DATA_READY
+  movl    x3, 0x75364253
   mov     x4, #0x93
   nzcv    #0b1000
   ret
@@ -51,7 +51,7 @@ display_sysvar_2_effects_regs:
   adr     x1, aux_base
   ldr     x1, [x1]
   mov     x2, #0
-  mov     x3, AUX_MU_LSR_DATA_READY
+  movl    x3, 0x75364253
   mov     x4, #0x3945
   nzcv    #0b1000
   ret
@@ -73,7 +73,7 @@ display_sysvar_8_effects_regs:
   adr     x1, aux_base
   ldr     x1, [x1]
   mov     x2, #0
-  mov     x3, AUX_MU_LSR_DATA_READY
+  movl    x3, 0x75364253
   ldr     x4, =0x1324354657687980
   nzcv    #0b1000
   ret
@@ -90,6 +90,6 @@ display_sysvar_other_effects_regs:
   adr     x1, aux_base
   ldr     x1, [x1]
   mov     x2, #0
-  mov     x3, AUX_MU_LSR_DATA_READY
+  movl    x3, 0x75364253
   nzcv    #0b0110
   ret

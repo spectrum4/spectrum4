@@ -30,8 +30,8 @@ display_sysvars_1_effects_regs:
   mov     x0, #0x0a
   adr     x1, aux_base
   ldr     x1, [x1]
-  mov     x2, AUX_MU_LSR_DATA_READY
-  mov     x3, AUX_MU_LSR_DATA_READY
+  movl    x2, 0x12323434
+  movl    x3, 0x75364253
   ldr     x4, =0x0716253443526170
   nzcv    #0b0110
   ret

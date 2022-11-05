@@ -83,22 +83,22 @@ tv_tuner_01_setup:
   add     x0, x0, :lo12:display_file
   adrp    x1, display_file_end
   add     x1, x1, :lo12:display_file_end
-1:
-  str     xzr, [x0], #0x08
-  cmp     x0, x1
-  b.ne    1b
+  1:
+    str     xzr, [x0], #0x08
+    cmp     x0, x1
+    b.ne    1b
   adrp    x0, attributes_file
   add     x0, x0, :lo12:attributes_file
   adrp    x2, attributes_file_end
   add     x2, x2, :lo12:attributes_file_end
-2:
-  mov     w1, #0x38
-  stp     x0, x2, [sp, #-16]!
-  bl      poke_address
-  ldp     x0, x2, [sp], #16
-  add     x0, x0, #0x01
-  cmp     x0, x2
-  b.ne    2b
+  2:
+    mov     w1, #0x38
+    stp     x0, x2, [sp, #-16]!
+    bl      poke_address
+    ldp     x0, x2, [sp], #16
+    add     x0, x0, #0x01
+    cmp     x0, x2
+    b.ne    2b
 # _strb   DUMP_DISPLAY, sp4_test_flags            // Dump display updates to test log
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
@@ -3694,7 +3694,8 @@ tv_tuner_01_display:
 tv_tuner_01_framebuffer:
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000001e02f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -3745,7 +3746,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -3796,7 +3798,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -4183,7 +4186,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -4682,7 +4686,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -5307,7 +5312,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -5848,7 +5854,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -6207,7 +6214,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -6594,7 +6602,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -7065,7 +7074,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -7550,7 +7560,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -7965,7 +7976,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -8338,7 +8350,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -8753,7 +8766,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -9140,7 +9154,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -9191,7 +9206,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -9242,7 +9258,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -9293,7 +9310,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -9344,7 +9362,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -9731,7 +9750,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -10230,7 +10250,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -10855,7 +10876,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -11396,7 +11418,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003d
 .quad 0x00cccccc00cccccc
@@ -11755,7 +11778,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003c
 .quad 0x00cccccc00cccccc
@@ -12142,7 +12166,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -12613,7 +12638,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -13098,7 +13124,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -13513,7 +13540,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -13886,7 +13914,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -14301,7 +14330,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -14688,7 +14718,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -14739,7 +14770,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -14790,7 +14822,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -14841,7 +14874,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -14892,7 +14926,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -15279,7 +15314,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -15778,7 +15814,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -16403,7 +16440,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -16944,7 +16982,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003d
 .quad 0x00cccccc00cccccc
@@ -17303,7 +17342,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003c
 .quad 0x00cccccc00cccccc
@@ -17690,7 +17730,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -18161,7 +18202,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -18646,7 +18688,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -19061,7 +19104,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -19434,7 +19478,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -19849,7 +19894,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -20236,7 +20282,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -20287,7 +20334,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -20338,7 +20386,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -20389,7 +20438,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -20440,7 +20490,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -20827,7 +20878,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -21326,7 +21378,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -21951,7 +22004,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -22492,7 +22546,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003d
 .quad 0x00cccccc00cccccc
@@ -22851,7 +22906,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003c
 .quad 0x00cccccc00cccccc
@@ -23238,7 +23294,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -23709,7 +23766,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -24194,7 +24252,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -24609,7 +24668,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -24982,7 +25042,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -25397,7 +25458,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -25784,7 +25846,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -25835,7 +25898,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -25886,7 +25950,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -25937,7 +26002,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -25988,7 +26054,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -26375,7 +26442,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -26874,7 +26942,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -27499,7 +27568,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -28040,7 +28110,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003d
 .quad 0x00cccccc00cccccc
@@ -28399,7 +28470,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003c
 .quad 0x00cccccc00cccccc
@@ -28786,7 +28858,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -29257,7 +29330,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -29742,7 +29816,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -30157,7 +30232,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -30530,7 +30606,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -30945,7 +31022,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -31332,7 +31410,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -31383,7 +31462,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -31434,7 +31514,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -31485,7 +31566,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -31536,7 +31618,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -31923,7 +32006,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -32422,7 +32506,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -33047,7 +33132,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -33588,7 +33674,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003d
 .quad 0x00cccccc00cccccc
@@ -33947,7 +34034,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003c
 .quad 0x00cccccc00cccccc
@@ -34334,7 +34422,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -34805,7 +34894,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -35290,7 +35380,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -35705,7 +35796,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -36078,7 +36170,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -36493,7 +36586,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -36880,7 +36974,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -36931,7 +37026,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -36982,7 +37078,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -37033,7 +37130,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -37084,7 +37182,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -37471,7 +37570,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -37970,7 +38070,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -38595,7 +38696,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -39136,7 +39238,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003d
 .quad 0x00cccccc00cccccc
@@ -39495,7 +39598,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003c
 .quad 0x00cccccc00cccccc
@@ -39882,7 +39986,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -40353,7 +40458,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -40838,7 +40944,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -41253,7 +41360,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -41626,7 +41734,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -42041,7 +42150,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -42428,7 +42538,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -42479,7 +42590,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -42530,7 +42642,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -42581,7 +42694,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -42632,7 +42746,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -43019,7 +43134,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -43518,7 +43634,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -44143,7 +44260,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -44684,7 +44802,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003d
 .quad 0x00cccccc00cccccc
@@ -45043,7 +45162,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000003c
 .quad 0x00cccccc00cccccc
@@ -45430,7 +45550,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000039
 .quad 0x00cccccc00cccccc
@@ -45901,7 +46022,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -46386,7 +46508,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -46801,7 +46924,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -47174,7 +47298,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -47589,7 +47714,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x0000000000000038
 .quad 0x00cccccc00cccccc
@@ -47976,7 +48102,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48027,7 +48154,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48078,7 +48206,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48129,7 +48258,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48180,7 +48310,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48231,7 +48362,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48282,7 +48414,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48333,7 +48466,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48384,7 +48518,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48435,7 +48570,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48486,7 +48622,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48537,7 +48674,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48588,7 +48726,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48639,7 +48778,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48690,7 +48830,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48741,7 +48882,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48792,7 +48934,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48843,7 +48986,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48894,7 +49038,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48945,7 +49090,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -48996,7 +49142,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49047,7 +49194,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49098,7 +49246,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49149,7 +49298,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49200,7 +49350,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49251,7 +49402,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49302,7 +49454,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49353,7 +49506,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49404,7 +49558,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49455,7 +49610,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49506,7 +49662,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49557,7 +49714,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49608,7 +49766,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49659,7 +49818,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49710,7 +49870,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49761,7 +49922,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49812,7 +49974,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49863,7 +50026,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49914,7 +50078,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -49965,7 +50130,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50016,7 +50182,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50067,7 +50234,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50118,7 +50286,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50169,7 +50338,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50220,7 +50390,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50271,7 +50442,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50322,7 +50494,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50373,7 +50546,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50424,7 +50598,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50475,7 +50650,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50526,7 +50702,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50577,7 +50754,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50628,7 +50806,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50679,7 +50858,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50730,7 +50910,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50781,7 +50962,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50832,7 +51014,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50883,7 +51066,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50934,7 +51118,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -50985,7 +51170,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51036,7 +51222,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51087,7 +51274,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51138,7 +51326,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51189,7 +51378,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51240,7 +51430,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51291,7 +51482,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51342,7 +51534,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51393,7 +51586,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51444,7 +51638,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51495,7 +51690,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51546,7 +51742,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51597,7 +51794,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51648,7 +51846,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51699,7 +51898,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51750,7 +51950,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51801,7 +52002,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51852,7 +52054,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51903,7 +52106,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -51954,7 +52158,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52005,7 +52210,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52056,7 +52262,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52107,7 +52314,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52158,7 +52366,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52209,7 +52418,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52260,7 +52470,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52311,7 +52522,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52362,7 +52574,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52413,7 +52626,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52464,7 +52678,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52515,7 +52730,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52566,7 +52782,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52617,7 +52834,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52668,7 +52886,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52719,7 +52938,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52770,7 +52990,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52821,7 +53042,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52872,7 +53094,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52923,7 +53146,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -52974,7 +53198,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53025,7 +53250,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53076,7 +53302,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53127,7 +53354,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53178,7 +53406,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53229,7 +53458,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53280,7 +53510,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53331,7 +53562,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53382,7 +53614,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53433,7 +53666,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53484,7 +53718,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53535,7 +53770,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53586,7 +53822,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53637,7 +53874,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53688,7 +53926,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53739,7 +53978,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53790,7 +54030,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53841,7 +54082,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53892,7 +54134,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53943,7 +54186,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -53994,7 +54238,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54045,7 +54290,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54096,7 +54342,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54147,7 +54394,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54198,7 +54446,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54249,7 +54498,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54300,7 +54550,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54351,7 +54602,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54402,7 +54654,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54453,7 +54706,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54504,7 +54758,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54555,7 +54810,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54606,7 +54862,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54657,7 +54914,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54708,7 +54966,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54759,7 +55018,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54810,7 +55070,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54861,7 +55122,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54912,7 +55174,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -54963,7 +55226,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55014,7 +55278,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55065,7 +55330,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55116,7 +55382,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55167,7 +55434,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55218,7 +55486,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55269,7 +55538,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55320,7 +55590,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55371,7 +55642,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55422,7 +55694,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55473,7 +55746,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55524,7 +55798,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55575,7 +55850,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55626,7 +55902,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55677,7 +55954,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55728,7 +56006,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55779,7 +56058,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55830,7 +56110,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55881,7 +56162,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55932,7 +56214,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -55983,7 +56266,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56034,7 +56318,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56085,7 +56370,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56136,7 +56422,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56187,7 +56474,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56238,7 +56526,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56289,7 +56578,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56340,7 +56630,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56391,7 +56682,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56442,7 +56734,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56493,7 +56786,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56544,7 +56838,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56595,7 +56890,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56646,7 +56942,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56697,7 +56994,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56748,7 +57046,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56799,7 +57098,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56850,7 +57150,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56901,7 +57202,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -56952,7 +57254,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57003,7 +57306,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57054,7 +57358,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57105,7 +57410,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57156,7 +57462,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57207,7 +57514,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57258,7 +57566,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57309,7 +57618,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57360,7 +57670,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57411,7 +57722,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57462,7 +57774,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57513,7 +57826,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57564,7 +57878,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57615,7 +57930,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57666,7 +57982,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57717,7 +58034,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57768,7 +58086,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57819,7 +58138,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57870,7 +58190,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57921,7 +58242,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -57972,7 +58294,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58023,7 +58346,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58074,7 +58398,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58125,7 +58450,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58176,7 +58502,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58227,7 +58554,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58278,7 +58606,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58329,7 +58658,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58380,7 +58710,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58431,7 +58762,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58482,7 +58814,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58533,7 +58866,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58584,7 +58918,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58635,7 +58970,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58686,7 +59022,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58737,7 +59074,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58788,7 +59126,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58839,7 +59178,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58890,7 +59230,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58941,7 +59282,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -58992,7 +59334,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59043,7 +59386,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59094,7 +59438,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59145,7 +59490,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59196,7 +59542,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59247,7 +59594,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59298,7 +59646,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59349,7 +59698,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59400,7 +59750,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59451,7 +59802,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59502,7 +59854,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59553,7 +59906,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59604,7 +59958,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59655,7 +60010,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59706,7 +60062,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59757,7 +60114,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59808,7 +60166,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59859,7 +60218,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59910,7 +60270,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -59961,7 +60322,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60012,7 +60374,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60063,7 +60426,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60114,7 +60478,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60165,7 +60530,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60216,7 +60582,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60267,7 +60634,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60318,7 +60686,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60369,7 +60738,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60420,7 +60790,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60471,7 +60842,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60522,7 +60894,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60573,7 +60946,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60624,7 +60998,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60675,7 +61050,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60726,7 +61102,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60777,7 +61154,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60828,7 +61206,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60879,7 +61258,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60930,7 +61310,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -60981,7 +61362,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61032,7 +61414,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61083,7 +61466,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61134,7 +61518,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61185,7 +61570,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61236,7 +61622,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61287,7 +61674,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61338,7 +61726,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61389,7 +61778,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61440,7 +61830,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61491,7 +61882,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61542,7 +61934,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61593,7 +61986,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61644,7 +62038,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61695,7 +62090,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61746,7 +62142,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61797,7 +62194,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61848,7 +62246,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61899,7 +62298,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -61950,7 +62350,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62001,7 +62402,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62052,7 +62454,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62103,7 +62506,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62154,7 +62558,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62205,7 +62610,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62256,7 +62662,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62307,7 +62714,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62358,7 +62766,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62409,7 +62818,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62460,7 +62870,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62511,7 +62922,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62562,7 +62974,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62613,7 +63026,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62664,7 +63078,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62715,7 +63130,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62766,7 +63182,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62817,7 +63234,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62868,7 +63286,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62919,7 +63338,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -62970,7 +63390,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63021,7 +63442,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63072,7 +63494,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63123,7 +63546,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63174,7 +63598,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63225,7 +63650,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63276,7 +63702,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63327,7 +63754,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63378,7 +63806,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63429,7 +63858,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63480,7 +63910,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63531,7 +63962,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63582,7 +64014,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63633,7 +64066,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63684,7 +64118,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63735,7 +64170,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63786,7 +64222,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63837,7 +64274,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63888,7 +64326,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63939,7 +64378,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -63990,7 +64430,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64041,7 +64482,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64092,7 +64534,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64143,7 +64586,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64194,7 +64638,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64245,7 +64690,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64296,7 +64742,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64347,7 +64794,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64398,7 +64846,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64449,7 +64898,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64500,7 +64950,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64551,7 +65002,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64602,7 +65054,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64653,7 +65106,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64704,7 +65158,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64755,7 +65210,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64806,7 +65262,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64857,7 +65314,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64908,7 +65366,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -64959,7 +65418,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65010,7 +65470,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65061,7 +65522,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65112,7 +65574,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65163,7 +65626,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65214,7 +65678,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65265,7 +65730,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65316,7 +65782,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65367,7 +65834,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65418,7 +65886,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65469,7 +65938,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65520,7 +65990,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65571,7 +66042,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65622,7 +66094,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65673,7 +66146,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65724,7 +66198,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65775,7 +66250,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65826,7 +66302,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65877,7 +66354,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65928,7 +66406,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -65979,7 +66458,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66030,7 +66510,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66081,7 +66562,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66132,7 +66614,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66183,7 +66666,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66234,7 +66718,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66285,7 +66770,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66336,7 +66822,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66387,7 +66874,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66438,7 +66926,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66489,7 +66978,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66540,7 +67030,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66591,7 +67082,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66642,7 +67134,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66693,7 +67186,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66744,7 +67238,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66795,7 +67290,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66846,7 +67342,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66897,7 +67394,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66948,7 +67446,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -66999,7 +67498,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67050,7 +67550,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67101,7 +67602,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67152,7 +67654,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67203,7 +67706,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67254,7 +67758,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67305,7 +67810,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67356,7 +67862,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67407,7 +67914,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67458,7 +67966,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67509,7 +68018,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67560,7 +68070,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67611,7 +68122,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67662,7 +68174,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67713,7 +68226,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67764,7 +68278,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67815,7 +68330,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67866,7 +68382,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67917,7 +68434,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -67968,7 +68486,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68019,7 +68538,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68070,7 +68590,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68121,7 +68642,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68172,7 +68694,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68223,7 +68746,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68274,7 +68798,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68325,7 +68850,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68376,7 +68902,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68427,7 +68954,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68478,7 +69006,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68529,7 +69058,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68580,7 +69110,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68631,7 +69162,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68682,7 +69214,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68733,7 +69266,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68784,7 +69318,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68835,7 +69370,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68886,7 +69422,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68937,7 +69474,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -68988,7 +69526,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69039,7 +69578,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69090,7 +69630,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69141,7 +69682,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69192,7 +69734,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69243,7 +69786,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69294,7 +69838,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69345,7 +69890,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69396,7 +69942,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69447,7 +69994,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69498,7 +70046,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69549,7 +70098,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69600,7 +70150,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69651,7 +70202,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69702,7 +70254,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69753,7 +70306,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69804,7 +70358,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69855,7 +70410,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69906,7 +70462,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -69957,7 +70514,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70008,7 +70566,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70059,7 +70618,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70110,7 +70670,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70161,7 +70722,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70212,7 +70774,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70263,7 +70826,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70314,7 +70878,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70365,7 +70930,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70416,7 +70982,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70467,7 +71034,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70518,7 +71086,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70569,7 +71138,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70620,7 +71190,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70671,7 +71242,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70722,7 +71294,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70773,7 +71346,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70824,7 +71398,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70875,7 +71450,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70926,7 +71502,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -70977,7 +71554,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71028,7 +71606,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71079,7 +71658,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71130,7 +71710,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71181,7 +71762,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71232,7 +71814,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71283,7 +71866,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71334,7 +71918,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71385,7 +71970,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71436,7 +72022,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71487,7 +72074,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71538,7 +72126,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71589,7 +72178,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71640,7 +72230,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71691,7 +72282,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71742,7 +72334,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71793,7 +72386,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71844,7 +72438,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71895,7 +72490,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71946,7 +72542,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -71997,7 +72594,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72048,7 +72646,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72099,7 +72698,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72150,7 +72750,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72201,7 +72802,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72252,7 +72854,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72303,7 +72906,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72354,7 +72958,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72405,7 +73010,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72456,7 +73062,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72507,7 +73114,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72558,7 +73166,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72609,7 +73218,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72660,7 +73270,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72711,7 +73322,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72762,7 +73374,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72813,7 +73426,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72864,7 +73478,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72915,7 +73530,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -72966,7 +73582,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73017,7 +73634,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73068,7 +73686,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73119,7 +73738,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73170,7 +73790,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73221,7 +73842,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73272,7 +73894,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73323,7 +73946,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73374,7 +73998,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73425,7 +74050,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73476,7 +74102,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73527,7 +74154,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73578,7 +74206,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73629,7 +74258,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73680,7 +74310,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73731,7 +74362,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73782,7 +74414,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73833,7 +74466,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73884,7 +74518,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73935,7 +74570,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -73986,7 +74622,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74037,7 +74674,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74088,7 +74726,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74139,7 +74778,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74190,7 +74830,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74241,7 +74882,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74292,7 +74934,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74343,7 +74986,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74394,7 +75038,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74445,7 +75090,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74496,7 +75142,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74547,7 +75194,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74598,7 +75246,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74649,7 +75298,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74700,7 +75350,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74751,7 +75402,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74802,7 +75454,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74853,7 +75506,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74904,7 +75558,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -74955,7 +75610,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75006,7 +75662,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75057,7 +75714,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75108,7 +75766,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75159,7 +75818,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75210,7 +75870,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75261,7 +75922,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75312,7 +75974,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75363,7 +76026,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75414,7 +76078,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75465,7 +76130,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75516,7 +76182,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75567,7 +76234,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75618,7 +76286,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75669,7 +76338,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75720,7 +76390,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75771,7 +76442,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75822,7 +76494,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75873,7 +76546,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75924,7 +76598,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -75975,7 +76650,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76026,7 +76702,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76077,7 +76754,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76128,7 +76806,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76179,7 +76858,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76230,7 +76910,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76281,7 +76962,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76332,7 +77014,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76383,7 +77066,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76434,7 +77118,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76485,7 +77170,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76536,7 +77222,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76587,7 +77274,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76638,7 +77326,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76689,7 +77378,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76740,7 +77430,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76791,7 +77482,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76842,7 +77534,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76893,7 +77586,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76944,7 +77638,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -76995,7 +77690,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77046,7 +77742,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77097,7 +77794,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77148,7 +77846,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77199,7 +77898,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77250,7 +77950,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77301,7 +78002,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77352,7 +78054,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77403,7 +78106,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77454,7 +78158,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77505,7 +78210,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77556,7 +78262,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77607,7 +78314,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77658,7 +78366,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77709,7 +78418,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77760,7 +78470,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77811,7 +78522,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77862,7 +78574,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77913,7 +78626,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -77964,7 +78678,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78015,7 +78730,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78066,7 +78782,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78117,7 +78834,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78168,7 +78886,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78219,7 +78938,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78270,7 +78990,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78321,7 +79042,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78372,7 +79094,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78423,7 +79146,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78474,7 +79198,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78525,7 +79250,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78576,7 +79302,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78627,7 +79354,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78678,7 +79406,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78729,7 +79458,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78780,7 +79510,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78831,7 +79562,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78882,7 +79614,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78933,7 +79666,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -78984,7 +79718,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79035,7 +79770,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79086,7 +79822,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79137,7 +79874,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79188,7 +79926,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79239,7 +79978,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79290,7 +80030,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79341,7 +80082,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79392,7 +80134,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79443,7 +80186,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79494,7 +80238,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79545,7 +80290,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79596,7 +80342,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79647,7 +80394,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79698,7 +80446,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79749,7 +80498,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79800,7 +80550,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79851,7 +80602,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79902,7 +80654,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -79953,7 +80706,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80004,7 +80758,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80055,7 +80810,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80106,7 +80862,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80157,7 +80914,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80208,7 +80966,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80259,7 +81018,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80310,7 +81070,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80361,7 +81122,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80412,7 +81174,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80463,7 +81226,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80514,7 +81278,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80565,7 +81330,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80616,7 +81382,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80667,7 +81434,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80718,7 +81486,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80769,7 +81538,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80820,7 +81590,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80871,7 +81642,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80922,7 +81694,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -80973,7 +81746,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81024,7 +81798,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81075,7 +81850,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81126,7 +81902,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81177,7 +81954,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81228,7 +82006,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81279,7 +82058,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81330,7 +82110,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81381,7 +82162,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81432,7 +82214,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81483,7 +82266,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81534,7 +82318,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81585,7 +82370,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81636,7 +82422,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81687,7 +82474,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81738,7 +82526,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81789,7 +82578,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81840,7 +82630,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81891,7 +82682,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81942,7 +82734,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -81993,7 +82786,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82044,7 +82838,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82095,7 +82890,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82146,7 +82942,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82197,7 +82994,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82248,7 +83046,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82299,7 +83098,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82350,7 +83150,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82401,7 +83202,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82452,7 +83254,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82503,7 +83306,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82554,7 +83358,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82605,7 +83410,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82656,7 +83462,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82707,7 +83514,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82758,7 +83566,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82809,7 +83618,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82860,7 +83670,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82911,7 +83722,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -82962,7 +83774,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83013,7 +83826,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83064,7 +83878,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83115,7 +83930,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83166,7 +83982,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83217,7 +84034,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83268,7 +84086,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83319,7 +84138,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83370,7 +84190,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83421,7 +84242,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83472,7 +84294,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83523,7 +84346,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83574,7 +84398,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83625,7 +84450,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83676,7 +84502,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83727,7 +84554,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83778,7 +84606,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83829,7 +84658,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83880,7 +84710,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83931,7 +84762,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -83982,7 +84814,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84033,7 +84866,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84084,7 +84918,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84135,7 +84970,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84186,7 +85022,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84237,7 +85074,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84288,7 +85126,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84339,7 +85178,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84390,7 +85230,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84441,7 +85282,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84492,7 +85334,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84543,7 +85386,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84594,7 +85438,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84645,7 +85490,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84696,7 +85542,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84747,7 +85594,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84798,7 +85646,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84849,7 +85698,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84900,7 +85750,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -84951,7 +85802,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85002,7 +85854,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85053,7 +85906,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85104,7 +85958,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85155,7 +86010,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85206,7 +86062,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85257,7 +86114,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85308,7 +86166,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85359,7 +86218,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85410,7 +86270,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85461,7 +86322,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85512,7 +86374,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85563,7 +86426,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85614,7 +86478,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85665,7 +86530,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85716,7 +86582,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85767,7 +86634,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85818,7 +86686,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85869,7 +86738,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85920,7 +86790,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -85971,7 +86842,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86022,7 +86894,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86073,7 +86946,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86124,7 +86998,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86175,7 +87050,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86226,7 +87102,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86277,7 +87154,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86328,7 +87206,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86379,7 +87258,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86430,7 +87310,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86481,7 +87362,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86532,7 +87414,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86583,7 +87466,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86634,7 +87518,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86685,7 +87570,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86736,7 +87622,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86787,7 +87674,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86838,7 +87726,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86889,7 +87778,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86940,7 +87830,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -86991,7 +87882,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87042,7 +87934,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87093,7 +87986,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87144,7 +88038,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87195,7 +88090,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87246,7 +88142,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87297,7 +88194,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87348,7 +88246,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87399,7 +88298,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87450,7 +88350,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87501,7 +88402,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87552,7 +88454,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87603,7 +88506,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87654,7 +88558,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87705,7 +88610,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87756,7 +88662,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87807,7 +88714,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87858,7 +88766,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87909,7 +88818,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -87960,7 +88870,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88011,7 +88922,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88062,7 +88974,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88113,7 +89026,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88164,7 +89078,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88215,7 +89130,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88266,7 +89182,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88317,7 +89234,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88368,7 +89286,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88419,7 +89338,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88470,7 +89390,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88521,7 +89442,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88572,7 +89494,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88623,7 +89546,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88674,7 +89598,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88725,7 +89650,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88776,7 +89702,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88827,7 +89754,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88878,7 +89806,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88929,7 +89858,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -88980,7 +89910,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89031,7 +89962,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89082,7 +90014,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89133,7 +90066,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89184,7 +90118,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89235,7 +90170,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89286,7 +90222,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89337,7 +90274,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89388,7 +90326,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89439,7 +90378,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89490,7 +90430,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89541,7 +90482,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89592,7 +90534,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89643,7 +90586,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89694,7 +90638,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89745,7 +90690,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89796,7 +90742,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89847,7 +90794,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89898,7 +90846,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -89949,7 +90898,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90000,7 +90950,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90051,7 +91002,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90102,7 +91054,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90153,7 +91106,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90204,7 +91158,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90255,7 +91210,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90306,7 +91262,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90357,7 +91314,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90408,7 +91366,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90459,7 +91418,8 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000000005f
 .quad 0x00cccccc00cccccc
@@ -90510,4 +91470,5 @@ tv_tuner_01_framebuffer:
 .quad 0x00cccccc00cccccc
 .quad 0x6a09e667bb67ae85
 .quad 0x000000000001a42f
-.quad 0x000000cc000000cc
+.word BORDER_COLOUR
+.word BORDER_COLOUR

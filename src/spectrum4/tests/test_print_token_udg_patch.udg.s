@@ -60,7 +60,7 @@ print_token_udg_patch_01_setup:
                                                   // perm OVER 1
                                                   // perm INK 9
                                                   // temp PAPER 9
-  _strh   0b00110001, MASK_T
+  _strb   0b00110001, MASK_T
   _strb   0b01100101, ATTR_T                      // BRIGHT 1
                                                   // PAPER  4
                                                   // INK 5
@@ -221,7 +221,7 @@ print_token_udg_patch_02_setup:
                                                   // perm OVER 1
                                                   // perm INK 9
                                                   // temp PAPER 9
-  _strh   0b00110001, MASK_T
+  _strb   0b00110001, MASK_T
   _strb   0b01100101, ATTR_T                      // BRIGHT 1
                                                   // PAPER  4
                                                   // INK 5
@@ -371,7 +371,7 @@ print_token_udg_patch_03_setup:
                                                   // perm OVER 1
                                                   // perm INK 9
                                                   // temp PAPER 9
-  _strh   0b00110001, MASK_T
+  _strb   0b00110001, MASK_T
   _strb   0b01100101, ATTR_T                      // BRIGHT 1
                                                   // PAPER  4
                                                   // INK 5

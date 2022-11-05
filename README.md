@@ -1,7 +1,25 @@
 # ZX Spectrum +4
 
 A modern-day ZX Spectrum OS rewritten from scratch in ARM assembly (aarch64) to
-run natively on RPi +3B. Based on the Spectrum 128K.
+run natively on Raspberry Pi 400. Based on the Spectrum 128K.
+
+Originally targetted at the Raspberry Pi 3 Model B, with the introduction of
+the Raspberry Pi 400, the author decided to adapt the project to target the
+newer model. The USB hardware is easier to work with, and requires support for
+only a single keyboard.
+
+For now, the code continues to work on a Raspberry Pi 3 Model B, however, the
+keyboard interpretation routines will not work on this model when they are
+written. The unit tests are designed to run under QEMU in the CI, which only
+supports the Raspberry Pi 3 Model B (`qemu-system-aarch64 -M raspi3b`). If at
+some point QEMU starts supporting the Raspberry Pi 400 or Raspberry Pi 4 Model
+B, the CI may be adapted to use it, and support removed for the Raspberry Pi 3
+Model B.
+
+In addition to the Raspberry Pi 400, it is likely (although not tested by the
+author) due to hardware similarity, that the ZX Spectrum +4 will also run on
+the Raspberry Pi 4 Model B, together with the standard Raspberry Pi USB
+Keyboard.
 
 If you are not familiar with the ZX Spectrum computer from the 1980's, there
 are some excellent emulators around, such as [Retro Virtual
@@ -25,7 +43,7 @@ Machine](https://www.retrovirtualmachine.org/en/), or for the Raspberry Pi see
 [compatible hardware](https://www.specnext.com/shop/).
 
 The idea behind this project is to imagine what Sinclair/Amstrad might have
-developed for their next Spectrum, if Raspberry Pi 3B hardware had been
+developed for their next Spectrum, if Raspberry Pi 400 hardware had been
 available at the time, rather than to reproduce what they already had.
 
 It is also an excuse for me to learn bare metal programming and aarch64
@@ -87,7 +105,7 @@ mechanics, which is nice to have preserved.
 
 ## Memory
 
-The Raspberry Pi 3B has 1GB RAM, which is considerably more than the Spectrum
+The Raspberry Pi 400 has 4GB RAM, which is considerably more than the Spectrum
 128K.  Using the 64 bit instruction set means that most of the memory paging
 routines in the original Spectrum can be mostly ignored and don't require
 translation. It also means that there is much more space available for BASIC
@@ -144,25 +162,29 @@ files/directories will be updated:
     (*.tzx files) and casette tape audio samples (*.wav files) for running the
     Spectrum 128K unit tests under a Spectrum 128K emulator (such as FUSE or
     Retro Virtual Machine) or on a real Spectrum 128K machine.
-  * Directory `/src/spectrum4/dist/release` contains a release version of Spectrum
-    +4, without debug logging, nor a start up demo.
-  * Directory `/src/spectrum4/targets` contains Raspberry Pi 3B kernel images
-    for running unit tests, either under QEMU, or on a real Raspberry Pi.
+  * Directory `/src/spectrum4/dist` contains a release version of Spectrum
+    +4, a debug version, and a distribution that runs all the test suites.
+  * Directory `/src/spectrum4/targets` contains Raspberry Pi 400 kernel images
+    for running individual test suites, e.g. under QEMU, or on a real Raspberry
+    Pi.
 
 In order to run the debug and/or release builds of Spectrum +4 on an actual
-Raspbery Pi 3B, either copy the contents of the given distribution directory to
-a formatted SD card, or serve the directory contents over TFTP to a suitably
+Raspbery Pi, either copy the contents of the given distribution directory to a
+formatted SD card, or serve the directory contents over TFTP to a suitably
 configured Raspberry Pi that has been configured to network boot. The
 [github.com/spectrum4/notes](https://github.com/spectrum4/notes#5-rpi-3b-bootloading)
 project has some information about that type of setup, if you are interested.
 
-Alternatively, to run Spectrum +4 under QEMU instead of a real Raspberry Pi 3B,
+Alternatively, to run Spectrum +4 under QEMU instead of a real Raspberry Pi,
 run something like:
 
 ```bash
 $ qemu-system-aarch64 -full-screen -M raspi3b -kernel \
 src/spectrum4/targets/debug.elf -serial null -serial stdio
 ```
+
+At the time of writing, `qemu-system-aarch64` does not have Rasperry Pi 4 Model
+B / Raspberry Pi 400 target.
 
 Note, __you will likely need QEMU version 5.2.0 or later__. Also note that the `.elf`
 file is passed to the `-kernel` option, rather than the `.img` file, in order that

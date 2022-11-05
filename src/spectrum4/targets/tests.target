@@ -5,16 +5,15 @@
 
 .set UART_DEBUG, 1
 
-.set TESTS_INCLUDE, 0
-.set TESTS_AUTORUN, 0
+.set TESTS_INCLUDE, 1
+.set TESTS_AUTORUN, 1
+.set MEMORY_DUMPS_BUFFER_SIZE, 0x02000000         // 32MB
 
 .set DEMO_INCLUDE, 1
 .set DEMO_AUTORUN, 1
 
 .set ROMS_INCLUDE, 1
 .set ROMS_AUTORUN, 1
-
-.set QEMU, 1
 
 
 .set BORDER_COLOUR,    0x00cc0000                 // Default border colour around screen.

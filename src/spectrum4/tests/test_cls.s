@@ -119,14 +119,14 @@ cls_1_effects:
   add     x0, x0, :lo12:attributes_file
   adrp    x2, attributes_file_end
   add     x2, x2, :lo12:attributes_file_end
-2:
-  mov     w1, #0x38
-  stp     x0, x2, [sp, #-16]!
-  bl      poke_address
-  ldp     x0, x2, [sp], #16
-  add     x0, x0, #0x01
-  cmp     x0, x2
-  b.ne    2b
+  2:
+    mov     w1, #0x38
+    stp     x0, x2, [sp, #-16]!
+    bl      poke_address
+    ldp     x0, x2, [sp], #16
+    add     x0, x0, #0x01
+    cmp     x0, x2
+    b.ne    2b
   _resbit 1, FLAGS
   _resbit 5, FLAGS
   _resbit 0, FLAGS2                               // updated in cl_all

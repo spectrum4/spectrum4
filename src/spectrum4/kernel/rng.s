@@ -34,17 +34,16 @@ rand_init_bcm283x:
 
 rand_x0_bcm283x:
   movl    w1, 0x3f104000
-  1:                                              // Wait until ([0x3f104004] >> 24) >= 2
+  1:                                              // Wait until ([0x3f104004] >> 24) >= 1
     ldr     w0, [x1, #0x04]                       // Bits 24-31 tell us how many words
-    lsr     w0, w0, RNG_BIT_SHIFT                 // are available, which needs to be at
-    cbz     w0, 1b                                // least two, since we are going to
-                                                  // read two words. However under qemu
-                                                  // bits 24-31 are always 0b00000001 so
-                                                  // we use a symbol for the the shift
-                                                  // size; it is 25, unless building for
-                                                  // QEMU, when it is 24.
-  ldr     w0, [x1, #0x08]                         // w0 = [0x3f104008] (random data)
-  ldr     w2, [x1, #0x08]                         // w2 = [0x3f104008] (random data)
+    lsr     w0, w0, #24                           // are available.
+    cbz     w0, 1b                                // Try again if no words are available.
+  ldr     w2, [x1, #0x08]                         // w0 = [0x3f104008] (random data)
+  1:                                              // Wait until ([0x3f104004] >> 24) >= 1
+    ldr     w0, [x1, #0x04]                       // Bits 24-31 tell us how many words
+    lsr     w0, w0, #24                           // are available.
+    cbz     w0, 1b                                // Try again if no words are available.
+  ldr     w0, [x1, #0x08]                         // w2 = [0x3f104008] (random data)
   bfi     x0, x2, #32, #32                        // Copy bits from w2 into high bits of x0.
   ret
 

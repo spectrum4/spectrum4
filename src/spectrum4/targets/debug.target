@@ -14,8 +14,6 @@
 .set ROMS_INCLUDE, 1
 .set ROMS_AUTORUN, 1
 
-.set QEMU, 0
-
 
 .set BORDER_COLOUR,    0x00cc0000                 // Default border colour around screen.
 .set PAPER_COLOUR,     0x00cccccc                 // Default paper colour (background colour of screen).

@@ -12,5 +12,5 @@ cd "$(dirname "${0}")"
 
 testsuite="${1}"
 
-echo ".include \"qemu-one-test-suite.s\""
+echo ".include \"one-test-suite.s\""
 echo ".include \"${testsuite##*/}\""

@@ -14,22 +14,17 @@ set -eu
 set -o pipefail
 export SHELLOPTS
 
-if [ "${#}" -ne 1 ]; then
-  echo "$(basename "${0}"): specify a version number to release, e.g." >&2
-  echo "  $ '${0}' 0.0.1" >&2
-  exit 64
-fi
-
-release_version="${1}"
-
 cd "$(dirname "${0}")"
-TAG="$(cat dev-setup/docker/TAG)"
-tup -k
 
-find src/spectrum4/dist -maxdepth 1 -mindepth 1 -type d | sed 's/.*\///' | while read build; do
-  zipfile="spectrum4-${release_version}-${build}.zip"
-  (
-    cd "src/spectrum4/dist/${build}"
-    zip -9 -r "../../../../${zipfile}" .
-  )
-done
+if [ -z "$(git status --porcelain)" ]; then
+  git tag --points-at HEAD | sed -n 's/^v//p' | while read release_version; do
+    tup
+    find src/spectrum4/dist -maxdepth 1 -mindepth 1 -type d | sed 's/.*\///' | while read build; do
+      zipfile="spectrum4-${release_version}-${build}.zip"
+      (
+        cd "src/spectrum4/dist/${build}"
+        zip -9 -r "../../../../${zipfile}" .
+      )
+    done
+  done
+fi

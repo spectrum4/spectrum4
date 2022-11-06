@@ -9,6 +9,28 @@
 # needed for building/testing Spectrum +4 natively (i.e. outside of docker).    #
 #################################################################################
 
+function retry {
+  set +e
+  local n=0
+  local max=10
+  while true; do
+    "$@" && break || {
+      if [[ $n -lt $max ]]; then
+        ((n++))
+        echo "Command failed" >&2
+        sleep_time=$((2 ** n))
+        echo "Sleeping $sleep_time seconds..." >&2
+        sleep $sleep_time
+        echo "Attempt $n/$max:" >&2
+      else
+        echo "Failed after $n attempts." >&2
+        exit 1
+      fi
+    }
+  done
+  set -e
+}
+
 set -eu
 set -o pipefail
 
@@ -22,25 +44,33 @@ echo "Preparing installation inside temp directory: '${PREP_DIR}' ..."
 cd "${PREP_DIR}"
 
 # install homebrew
-which brew > /dev/null 2>&1 || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+which brew > /dev/null 2>&1 || /bin/bash -c "$(retry curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 export CPATH=$(brew --prefix)/include
 export LDFLAGS=-L$(brew --prefix)/lib
 
-# in case fuse is installed outside of brew, don't just brew install it
+# This may not be needed in general, but I had issues on macOS Big Sur (version
+# 11.6.4) that were resolved by installing GNU make.
+# in case GNU make is installed outside of brew, don't just brew install it
+if ! hash gmake 2> /dev/null; then
+  brew install make
+fi
+
 if ! hash fuse 2> /dev/null; then
-  # The fuse-emulator brew package has a graphical UI, so when tup runs all the
-  # tests, lots of windows are opened. To avoid this, build a version of fuse
-  # with no user interface.
-  #
-  # brew install fuse-emulator <- what we don't want to do
+
+  # Install (headless) fuse which includes ROMs.
+  # Note, we build from source since we need to specify --with-null-ui so that
+  # windows aren't displayed when unit tests run.
+
+  # brew install fuse-emulator       <- don't do this!
+
   brew install libgcrypt
-  curl -f -L 'https://sourceforge.net/projects/fuse-emulator/files/fuse/1.5.7/fuse-1.5.7.tar.gz/download' > fuse-1.5.7.tar.gz
+  retry curl -fsSL 'https://sourceforge.net/projects/fuse-emulator/files/fuse/1.5.7/fuse-1.5.7.tar.gz/download' > fuse-1.5.7.tar.gz
   tar xvfz fuse-1.5.7.tar.gz
   cd fuse-1.5.7
   ./configure --with-null-ui
-  make
-  sudo make install
+  gmake -j4
+  sudo gmake install
   cd ..
 fi
 
@@ -72,55 +102,40 @@ for tool in as ld readelf objcopy objdump; do
 done
 
 if ${z80_tools_absent} || ${aarch64_tools_absent}; then
-  curl -f -L https://ftp.gnu.org/gnu/binutils/binutils-2.39.tar.gz > binutils-2.39.tar.gz
+  retry curl -fsSL 'https://ftp.gnu.org/gnu/binutils/binutils-2.39.tar.gz' > binutils-2.39.tar.gz
   tar xfz binutils-2.39.tar.gz
 
-  # Note, we may be better off installing gmake at the beginning, it seemed to
-  # help installation on macOS Big Sur (11.6), but I'm not sure if that was
-  # due to other problems.
-  # For future self: if bintutils build fail, try `brew install make`, and if
-  # that fixes it, update this script!
-  MAKE=gmake
-  hash gmake 2> /dev/null || MAKE=make
-  export AR=ar
-  export AS=as
-fi
+  if ${z80_tools_absent}; then
+    mkdir binutils-z80-build
+    cd binutils-z80-build
+    ../binutils-2.39/configure \
+      --target=z80-unknown-elf \
+      --disable-werror \
+      gmake -j4
+    sudo gmake install
+    cd ..
+  fi
 
-if ${z80_tools_absent}; then
-  mkdir binutils-z80-build
-  cd binutils-z80-build
-  ../binutils-2.39/configure \
-    --prefix=/usr/local \
-    --target=z80-unknown-elf \
-    --disable-static \
-    --disable-multilib \
-    --disable-werror \
-    --disable-nls
-  $MAKE clean all
-  sudo $MAKE install
-  cd ..
-fi
-
-if ${aarch64_tools_absent}; then
-  mkdir binutils-aarch64-build
-  cd binutils-aarch64-build
-  ../binutils-2.39/configure \
-    --prefix=/usr/local \
-    --target=aarch64-none-elf
-  $MAKE clean all
-  sudo $MAKE install
-  cd ..
+  if ${aarch64_tools_absent}; then
+    mkdir binutils-aarch64-build
+    cd binutils-aarch64-build
+    ../binutils-2.39/configure \
+      --target=aarch64-none-elf
+    gmake -j4
+    sudo gmake install
+    cd ..
+  fi
 fi
 
 # install tape2wav
 if ! hash tape2wav 2> /dev/null; then
   brew install libgcrypt
-  curl -L https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download > fuse-utils-1.4.3.tar.gz
+  retry curl -fsSL 'https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download' > fuse-utils-1.4.3.tar.gz
   tar xvfz fuse-utils-1.4.3.tar.gz
   cd fuse-utils-1.4.3
   ./configure
-  make
-  sudo make install
+  gmake -j4
+  sudo gmake install
   cd ..
 fi
 
@@ -143,7 +158,7 @@ if ! hash tup 2> /dev/null; then
   # macfuse is needed by tup
   brew install --cask macfuse
   brew install pcre
-  curl -f -L 'https://github.com/gittup/tup/archive/b037d4b211de6025703b77c3287b76159656ef22.zip' > tup.zip
+  retry curl -fsSL 'https://github.com/gittup/tup/archive/b037d4b211de6025703b77c3287b76159656ef22.zip' > tup.zip
   unzip tup.zip
   cd tup-*
   if ! ./bootstrap.sh; then

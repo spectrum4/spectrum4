@@ -75,6 +75,11 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
   curl -f -L https://ftp.gnu.org/gnu/binutils/binutils-2.39.tar.gz > binutils-2.39.tar.gz
   tar xfz binutils-2.39.tar.gz
 
+  # Note, we may be better off installing gmake at the beginning, it seemed to
+  # help installation on macOS Big Sur (11.6), but I'm not sure if that was
+  # due to other problems.
+  # For future self: if bintutils build fail, try `brew install make`, and if
+  # that fixes it, update this script!
   MAKE=gmake
   hash gmake 2> /dev/null || MAKE=make
   export AR=ar

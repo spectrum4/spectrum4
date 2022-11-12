@@ -64,7 +64,7 @@ if ! hash fuse 2> /dev/null; then
 
   # brew install fuse-emulator       <- don't do this!
 
-  brew install libgcrypt
+  brew install libspectrum pkg-config
   retry curl -fsSL 'https://sourceforge.net/projects/fuse-emulator/files/fuse/1.5.7/fuse-1.5.7.tar.gz/download' > fuse-1.5.7.tar.gz
   tar xvfz fuse-1.5.7.tar.gz
   cd fuse-1.5.7
@@ -81,7 +81,14 @@ fi
 
 # in case qemu is installed outside of brew, don't just brew install it
 if ! hash qemu-system-aarch64 2> /dev/null; then
-  brew install qemu
+  brew install qemu || (
+    echo
+    echo "Note, if you are using a very old macOS version (such as High Sierra) you might"
+    echo "have better luck installing QEMU via macports (although the version I tried"
+    echo "didn't open a display window - perhaps gtk disabled in ./configure ?)"
+    echo
+    echo "See https://ports.macports.org/port/qemu/"
+  )
 fi
 
 # This is a bash script, so bash must be installed otherwise this script wouldn't run.
@@ -110,8 +117,8 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
     cd binutils-z80-build
     ../binutils-2.39/configure \
       --target=z80-unknown-elf \
-      --disable-werror \
-      gmake -j4
+      --disable-werror
+    gmake -j4
     sudo gmake install
     cd ..
   fi
@@ -129,7 +136,7 @@ fi
 
 # install tape2wav
 if ! hash tape2wav 2> /dev/null; then
-  brew install libgcrypt
+  brew install libspectrum
   retry curl -fsSL 'https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download' > fuse-utils-1.4.3.tar.gz
   tar xvfz fuse-utils-1.4.3.tar.gz
   cd fuse-utils-1.4.3
@@ -181,4 +188,12 @@ cd
 echo "Deleting '${PREP_DIR}' ..."
 rm -rf "${PREP_DIR}"
 
+echo
+echo 'Note, if you also want to debug tests, you can install aarch64-none-elf-gdb'
+echo 'too, or you can just run it from the spectrum4 docker container. To install it'
+echo 'locally, see:'
+echo
+echo '  * https://www.npmjs.com/package/@xpack-dev-tools/aarch64-none-elf-gcc'
+echo '  * https://xpack.github.io/aarch64-none-elf-gcc/releases/'
+echo
 echo "Installation completed successfully."

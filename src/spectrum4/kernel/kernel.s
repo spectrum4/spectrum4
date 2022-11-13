@@ -58,8 +58,7 @@ _start:
   orr     x0, x0, 0x1000                          // Instruction Caches (Bit 12)
   msr     sctlr_el3, x0                           // System Control Register = x0
 1:
-  adr     x0, rand_init
-  ldr     x0, [x0]
+  ldr     x0, rand_init
   blr     x0
 .if       TESTS_AUTORUN
   bl      fill_memory_with_junk
@@ -184,8 +183,7 @@ fb_req_end:
 #   x12 corrupted
 .align 2
 mbox_call:
-  adr     x9, mailbox_base                        // x9 = mailbox_base
-  ldr     x9, [x9]                                // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0x000000003f00b880 (rpi3) or 0x00000000fe00b880 (rpi4)
+  ldr     x9, mailbox_base                        // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0x000000003f00b880 (rpi3) or 0x00000000fe00b880 (rpi4)
 1:                                                // Wait for mailbox FULL flag to be clear.
   ldr     w10, [x9, MAILBOX_STATUS]               // w10 = mailbox status.
   tbnz    w10, MAILBOX_FULL_BIT, 1b               // If FULL flag set (bit 31), try again...
@@ -468,16 +466,16 @@ set_peripherals_addresses:
                                                   // e.g.
                                                   //   0x00000000410fd034 (value on my Raspberry Pi 3 Model B)
                                                   //   => Implementer = 0x41 = Arm Limited
-                                                  //   => Variant = 0x0
+                                                  //   => Variant = 0x0 (r0 for r0p4)
                                                   //   => Architecture = 0xf = "features are identified in the ID_* registers"
                                                   //   => Part Number = 0xd03 (presumably, Raspberry Pi 3)
-                                                  //   => Revision = 0x4
+                                                  //   => Revision = 0x4 (p4 for r0p4)
                                                   //   0x00000000410fd083 (value on my Raspberry Pi 400)
                                                   //   => Implementer = 0x41 = Arm Limited
-                                                  //   => Variant = 0x0
+                                                  //   => Variant = 0x0 (r0 for r0p3)
                                                   //   => Architecture = 0xf = "features are identified in the ID_* registers"
                                                   //   => Part Number = 0xd08 (presumably, Raspberry Pi 4)
-                                                  //   => Revision = 0x3
+                                                  //   => Revision = 0x3 (p3 for r0p3)
 
 # mrs     x1, revidr_el1                          // e.g. x1 = 0x80 (value on my Raspberry Pi 3 Model B)
                                                   //           0x00 (value on my Raspberry Pi 400)

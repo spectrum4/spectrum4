@@ -104,8 +104,7 @@ run_tests:
     // Prepare pre-test registers with random values
       mov     x0, sp                              // x0 = start of pre-test register block
       mov     x1, #0x100                          // Register storage on stack takes up 0x100 bytes.
-      adr     x2, rand_block
-      ldr     x2, [x2]
+      ldr     x2, rand_block
       blr     x2                                  // Write random bytes to stack so registers are random when popped.
 
     // Set random values for NZCV flags
@@ -958,8 +957,7 @@ fill_memory_with_junk:
   adr     x0, msg_filling_memory_with_junk
   bl      uart_puts
 // Choose random sequence length
-  adr     x0, rand_x0
-  ldr     x0, [x0]
+  ldr     x0, rand_x0
   blr     x0                                      // Fetch random bits in x0
   and     w1, w0, #0x00000070                     // 0x00/0x10/0x20/0x30/0x40/0x50/0x60/0x70
   add     w1, w1, #0x00000040                     // 0x40/0x50/0x60/0x70/0x80/0x90/0xa0/0xb0
@@ -971,8 +969,7 @@ fill_memory_with_junk:
   add     x5, x5, :lo12:rand_data
   mov     x0, x5
   mov     x4, x1                                  // Preserve sequence byte length in x4
-  adr     x8, rand_block
-  ldr     x8, [x8]
+  ldr     x8, rand_block
   blr     x8
 // First random block: __bss_start -> bss_debug_start
   add     x8, x28, bss_start-sysvars

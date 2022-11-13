@@ -47,8 +47,7 @@ uart_init:
   mov     w3, #0x3                                // w3 = 3
   str     w3, [x1, AUX_MU_LCR]                    //   [AUX_MU_LCR_REG] = 0x00000003 => Mini UART in 8-bit mode.
   str     wzr, [x1, AUX_MU_MCR]                   //   [AUX_MU_MCR_REG] = 0x00000000 => Set UART1_RTS line high.
-  adr     x2, aux_mu_baud_reg
-  ldr     w2, [x2]
+  ldr     w2, aux_mu_baud_reg
   str     w2, [x1, AUX_MU_BAUD]                   //   [AUX_MU_BAUD_REG] = 0x0000010e (rpi3) or 0x0000021d (rpi4)
                                                   //         => baudrate = system_clock_freq/(8*([AUX_MU_BAUD_REG]+1))
                                                   //                       (as close to 115200 as possible)

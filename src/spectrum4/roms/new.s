@@ -12,14 +12,12 @@ new:                                     // L019D
 .if       UART_DEBUG
   mov     x0, msg_rpi_model
   bl      uart_puts
-  adr     x0, rpi_model
-  ldr     w0, [x0]
+  ldr     w0, rpi_model
   bl      uart_x0
   bl      uart_newline
   mov     x0, msg_rpi_revision
   bl      uart_puts
-  adr     x0, rpi_revision
-  ldr     w0, [x0]
+  ldr     w0, rpi_revision
   bl      uart_x0
   bl      uart_newline
 

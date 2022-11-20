@@ -86,10 +86,16 @@ This matches the original screen geometry (which had 8 pixels per character):
   * <http://www.zxdesign.info/vidparam.shtml>
 
 In order to enforce the video restrictions, updates to the display file and
-attributes file are trapped by the `poke_address` routine which syncs the
+attributes file explicitly call the `poke_address` routine, which syncs the
 VideoCore IV GPU firmware framebuffer with the display file and attributes
-file. This is rather inefficient, but I don't know a better way (yet) to handle
-this for now.
+file. I believe it should be possible to trap memory writes directly to the
+display file and attributes file, and call `poke_address` from the exception
+handler. Some information about trapping memory writes is
+[here](https://www.cnblogs.com/pengdonglin137/p/14091950.html). This particular
+guide is focussed on EL2 handling of EL1 memory accesses, but the same
+principles should apply with EL1 handling of EL0 memory accesses. Currently MMU
+is not enabled, and interrupts are not enabled, so this code hasn't been
+written yet.
 
 The display file and attributes file differ from the Spectrum 128K as follows:
 

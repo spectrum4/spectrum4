@@ -42,22 +42,59 @@ _start:
   mrs     x0, mpidr_el1                           // x0 = Multiprocessor Affinity Register value.
   ands    x0, x0, #0x3                            // x0 = core number.
   b.ne    sleep                                   // Put all cores except core 0 to sleep.
+
+# Start L1 Caches if in EL3: not sure if this is working
+  mrs     x0, currentel
+  and     x0, x0, #0x0c
+  cmp     x0, #0x0c
+  b.ne    1f
+
+# We are in EL3
+  mrs     x0, sctlr_el3                           // x0 = System Control Register (EL3) value
+  orr     x0, x0, 0x0004                          // Data Cache (Bit 2)
+  orr     x0, x0, 0x1000                          // Instruction Caches (Bit 12)
+  msr     sctlr_el3, x0                           // System Control Register (EL3) = x0
+
+##################################################
+# Move from EL3 to EL1
+  ldr     x0, =0x30d01804
+  msr     sctlr_el1, x0                           // Update "System Control Register (EL1)":
+                                                  //   set RES:1 bits (11, 20, 22, 23, 28, 29)
+                                                  //   enable caches (bits 2, 12)
+  mov     x0, 0x80000000
+  msr     hcr_el2, x0                             // Update "Hypervisor Configuration Register":
+                                                  //   set bit 31 => execution state for EL1 is aarch64
+  mov     x0, 0x00000431
+  msr     scr_el3, x0                             // Update "Secure Configuration Register":
+                                                  //   set bit 0 => EL0 and EL1 are in non-secure state
+                                                  //   set RES:1 bits 4, 5
+                                                  //   set bit 10 => EL2 is aarch64, EL2 controls EL1 and EL0 behaviors
+
+  mov     x0, 0x000001c5
+  msr     spsr_el3, x0                            // Update "Saved Program Status Register (EL3)":
+                                                  //   set bit 0 => dedicated stack pointer selected on EL switch to/from EL3
+                                                  //   set bit 2 (and clear bit 3) => drop to EL1 on eret
+                                                  //   set bit 6 => mask (disable) error (SError) interrupts
+                                                  //   set bit 7 => mask (disable) regular (IRQ) interrupts
+                                                  //   set bit 8 => mask (disable) fast (FIQ) interrupts
+  adr     x0, 2f
+  msr     elr_el3, x0                             // Update Exception Link Register (EL3):
+                                                  //   set to return address after next `eret`
+  eret
+# Move from EL3 to EL1 completed
+##################################################
+
+1:
+# TODO: Check if we are in EL2
+
+2:
+# We are in EL1
   adrp    x28, sysvars
   add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
   bl      set_peripherals_addresses
   bl      uart_init                               // Initialise UART interface.
   bl      init_rpi_model                          // Fetch raspberry pi model identifier into system variable rpi_model.
   bl      init_framebuffer                        // Allocate a frame buffer with chosen screen settings.
-  mrs     x0, currentel
-  lsr     x0, x0, #2
-  cmp     x0, 3
-  b.ne    1f
-# Start L1 Caches if in EL3...
-  mrs     x0, sctlr_el3                           // x0 = System Control Register value
-  orr     x0, x0, 0x0004                          // Data Cache (Bit 2)
-  orr     x0, x0, 0x1000                          // Instruction Caches (Bit 12)
-  msr     sctlr_el3, x0                           // System Control Register = x0
-1:
   ldr     x0, rand_init
   blr     x0
 .if       TESTS_AUTORUN

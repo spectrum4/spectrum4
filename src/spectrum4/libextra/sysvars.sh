@@ -8,6 +8,8 @@ set -eu
 set -o pipefail
 export SHELLOPTS
 
+cd "$(dirname "${0}")"
+
 SYSVARS="$(cat ../roms/bss.s | sed -n '/sysvars:/,/sysvars_end:/p' | sed 's/#.*//' | sed -n 's/^ *\([^ ]*\): *\.space \([^ ]*\) .*$/\1 \2/p')"
 SYSVAR_COUNT=$(echo "${SYSVARS}" | wc -l)
 

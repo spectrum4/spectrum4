@@ -28,8 +28,7 @@ rand_init_bcm283x:
   adr     x0, msg_done
   bl      uart_puts
 .endif
-  mov     x30, x5
-  ret
+  ret     x5
 
 
 rand_x0_bcm283x:
@@ -96,8 +95,7 @@ rand_init_iproc:
   adr     x0, msg_done
   bl      uart_puts
 .endif
-  mov     x30, x5
-  ret
+  ret     x5
 
 
 rand_x0_iproc:

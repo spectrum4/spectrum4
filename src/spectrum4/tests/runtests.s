@@ -984,8 +984,7 @@ fill_memory_with_junk:
 // Log completed
   adr     x0, msg_done
   bl      uart_puts
-  mov     x30, x11
-  ret
+  ret     x11
 
 
 fill_region_with_junk:
@@ -1011,8 +1010,7 @@ fill_region_with_junk:
     add     x10, x10, #0x10
     b       3b
 4:
-  mov     x30, x0
-  ret
+  ret     x0
 
 
 print_string:

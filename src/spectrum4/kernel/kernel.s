@@ -118,19 +118,17 @@ init_rpi_model:
   adr     x0, rpi_model_req                       // x0 = memory block pointer for mailbox call to get rpi model identifier
   mov     x27, x30                                // preserve link register in x27
   bl      mbox_call
-  mov     x30, x27                                // restore link register
-  ret
+  ret     x27
 
 
 init_framebuffer:
   adr     x0, fb_req                              // x0 = memory block pointer for mailbox call.
   mov     x27, x30
   bl      mbox_call
-  mov     x30, x27
   ldr     w11, [x0, framebuffer-fb_req]           // w11 = allocated framebuffer address
   and     w11, w11, #0x3fffffff                   // Translate bus address to physical ARM address.
   str     w11, [x0, framebuffer-fb_req]           // Store framebuffer address in framebuffer system variable.
-  ret
+  ret     x27
 
 
 # Memory block for Raspberry Pi model identifier mailbox call

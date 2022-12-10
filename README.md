@@ -168,8 +168,6 @@ files/directories will be updated:
     (*.tzx files) and casette tape audio samples (*.wav files) for running the
     Spectrum 128K unit tests under a Spectrum 128K emulator (such as FUSE or
     Retro Virtual Machine) or on a real Spectrum 128K machine.
-  * Directory `/src/spectrum4/dist` contains a release version of Spectrum
-    +4, a debug version, and a distribution that runs all the test suites.
   * Directory `/src/spectrum4/targets` contains Raspberry Pi 400 kernel images
     for running individual test suites, e.g. under QEMU, or on a real Raspberry
     Pi.

@@ -60,7 +60,7 @@ esac
 export DEBIAN_FRONTEND=noninteractive
 
 mkdir -p /usr/local/bin
-export PATH="${PATH}:/usr/local/bin"
+export PATH="${PATH}:/usr/local/bin:/usr/lib/go/bin"
 
 retry apt-get update
 retry apt-get upgrade -y
@@ -181,7 +181,7 @@ if ! hash go 2> /dev/null; then
   rm "go1.19.3.linux-${ARCH}.tar.gz"
 fi
 
-if ! shfmt 2> /dev/null; then
+if ! hash shfmt 2> /dev/null; then
   # install shfmt
   /usr/lib/go/bin/go install mvdan.cc/sh/v3/cmd/shfmt@latest
   mv "${HOME}/go/bin/shfmt" /usr/local/bin/shfmt

@@ -21,6 +21,15 @@ new:                                     // L019D
   ldr     w0, rpi_revision
   bl      uart_x0
   bl      uart_newline
+
+  mov     x0, msg_pcie_revision
+  bl      uart_puts
+  adrp    x1, heap
+  add     x1, x1, :lo12:heap
+  ldr     w0, [x1]
+  bl      uart_x0
+  bl      uart_newline
+
 # logarm  ACTLR_EL3
   logarm  CNTFRQ_EL0
   logarm  CTR_EL0
@@ -177,3 +186,6 @@ msg_midr_el1:
 
 msg_revidr_el1:
   .asciz "Register REVIDR_EL1 value: "
+
+msg_pcie_revision:
+  .asciz "PCIe revision: "

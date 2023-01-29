@@ -9,11 +9,11 @@ demo:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   bl      paint_copyright                         // Paint the copyright text ((C) 1982 Amstrad....)
-  mov     w0, 0x20000000
-  bl      wait_cycles
+  mov     w0, 0x400000
+  bl      wait_usec
   bl      display_zx_screen
-  mov     w0, 0x10000000
-  bl      wait_cycles
+  mov     w0, 0x400000
+  bl      wait_usec
   movl    w0, PAPER_COLOUR
   bl      paint_window
   mov     x0, sp

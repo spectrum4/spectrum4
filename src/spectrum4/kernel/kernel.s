@@ -92,10 +92,13 @@ _start:
   adrp    x28, sysvars
   add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
   bl      set_peripherals_addresses
+  bl      set_clocks
   bl      uart_init                               // Initialise UART interface.
   bl      init_rpi_model                          // Fetch raspberry pi model identifier into system variable rpi_model.
   bl      init_framebuffer                        // Allocate a frame buffer with chosen screen settings.
   ldr     x0, rand_init
+  blr     x0
+  ldr     x0, pcie_init
   blr     x0
 .if       TESTS_AUTORUN
   bl      fill_memory_with_junk
@@ -261,10 +264,7 @@ poke_address:
   add     x9, x9, :lo12:fb_req
   ldr     w10, [x9, framebuffer-fb_req]           // w10 = address of framebuffer
   ldr     w12, [x9, pitch-fb_req]                 // w12 = pitch
-  mov     x13, #0x425f
-  movk    x13, #0x97b, lsl #16
-  movk    x13, #0x25ed, lsl #32
-  movk    x13, #0x97b4, lsl #48                   // x13 = 0x97b425ed097b425f = 10931403895531586143
+  ldr     x13, =0x97b425ed097b425f                // x13 = 0x97b425ed097b425f = 10931403895531586143
   umulh   x14, x13, x11                           // x14 = (10931403895531586143 * x11) / 18446744073709551616 = int(x11*16/27)
   lsr     x14, x14, #7                            // x14 = int(x11/216)
   mov     x15, #0xcccccccccccccccc
@@ -273,10 +273,7 @@ poke_address:
   lsr     x16, x16, #4                            // x16 = int(int(x11/216)/20)
   add     x16, x16, x16, lsl #2                   // x16 = 5 * int(int(x11/216)/20)
   sub     x16, x14, x16, lsl #2                   // x16 = int(x11/216) - 20 * int(int(x11/216)/20) = (x11/216)%20
-  mov     x17, #0x9d65
-  movk    x17, #0xf2b, lsl #16
-  movk    x17, #0xd648, lsl #32
-  movk    x17, #0xf2b9, lsl #48                   // x17 = 0xf2b9d6480f2b9d65 = 17490246232850537829
+  ldr     x17, =0xf2b9d6480f2b9d65                // x17 = 0xf2b9d6480f2b9d65 = 17490246232850537829
   umulh   x18, x17, x11                           // x18 = 17490246232850537829 * x11 / 2^64 = int(x11*128/135)
   ubfx    x19, x18, #12, #4                       // x19 = bits 12-15 of int(x11*128/135) = (x11/(216*20)) % 16
   add     x19, x19, x16, lsl #4                   // x19 = (x11/(216*20))%16 + 16*((x11/216)%20)
@@ -378,6 +375,35 @@ wait_cycles:
   ret                                             // Return.
 
 
+# ------------------------------------------------------------------------------
+# Wait x0 microseconds
+#
+# On exit:
+#   x0 corrupted
+#   x1 corrupted
+#   x2 corrupted
+#   x3 corrupted
+# ------------------------------------------------------------------------------
+wait_usec:
+  mrs     x1, cntpct_el0                          // Physical count value in all 64 bits
+  ldr     x2, =0x431bde82d7b634db                 // 4835703278458516699
+  ldr     w3, cntfrq                              // We don't use https://github.com/raspberrypi/tools/blob/master/armstubs/armstub8.S
+                                                  // so ARM register cntfrq_el0 is not set for us. Since we are in EL1 when we know if
+                                                  // we are on rpi3b or rpi4/rpi400 we can't update cntfrq_el0 (need to be in EL3 to
+                                                  // update it) so we have this value in RAM instead.
+  mul     x0, x0, x3                              // x0 = entry x0 * clock frequency
+  umulh   x0, x0, x2                              // x0 = entry x0 * clock frequency * 4835703278458516699
+  lsr     x0, x0, #18                             // x0 = entry x0 * clock frequency * 4835703278458516699 / 4835703278458516698824704
+                                                  //    = entry x0 * clock frequency / 1,000,000
+                                                  //    = number of oscillations to wait
+  1:
+    mrs     x2, cntpct_el0                        // x2 = updated counter
+    sub     x2, x2, x1                            // x2 = number of oscillations since function start
+    cmp     x2, x0                                // compare actual oscillation count against required oscillation count
+    b.lo    1b                                    // loop if additional oscillations are required
+  ret
+
+
 .include "uart.s"
 .include "reboot.s"
 .include "paint.s"
@@ -422,9 +448,15 @@ msg_done:                      .asciz "DONE.\r\n"
 
 
 .include "rng.s"
+.include "pcie.s"
 
 
-# Set initial values to rpi4 values, and replace at runtime if different machine
+# Set initial values to rpi4 values, and replace at runtime if different machine.
+#
+# RPi 4/400 (bcm2711):
+#   * https://datasheets.raspberrypi.com/bcm2711/bcm2711-peripherals.pdf
+#   * https://github.com/raspberrypi/firmware/issues/1374 (implies that low peripherals mode is enabled by default by VPU)
+
 .align 3
 mailbox_base:
   .quad     0x00000000fe00b880                    // default is for rpi4
@@ -438,11 +470,19 @@ rand_block:
   .quad     rand_block_iproc                      // default is for rpi4
 rand_x0:
   .quad     rand_x0_iproc                         // default is for rpi4
-.align 2
 aux_mu_baud_reg:
   .word     0x0000021d                            // default is for rpi4
+cntfrq:
+  .word     54000000                              // default is for rpi4
+pcie_init:
+  .quad     pcie_init_bcm2711                     // default is for rpi4
+local_control:
+  .quad     0x00000000ff800000                    // default is for rpi4
 
 
+# RPi 3B (bcm2837):
+#   * https://github.com/raspberrypi/documentation/issues/325 (explains differences between bcm2835 and bcm2837)
+#   * https://www.raspberrypi.org/app/uploads/2012/02/BCM2835-ARM-Peripherals.pdf
 .align 3
 base_rpi3:
 # rpi3 mailbox_base
@@ -457,10 +497,17 @@ base_rpi3:
   .quad     rand_block_bcm283x
 # rpi3 rand_x0
   .quad     rand_x0_bcm283x
-.align 2
 # rpi3 aux_mu_baud_reg
   .word     0x0000010e
+# rpi3 cntfrq
+  .word     19200000
+# rpi3 pcie_init
+  .quad     do_nothing                            // nothing to do, rpi3 has no pcie
+# rpi3 local_control
+  .quad     0x0000000040000000
 
+do_nothing:
+  ret
 
 .align 2
 set_peripherals_addresses:
@@ -520,21 +567,36 @@ set_peripherals_addresses:
   b.ne    1f
   adr     x0, base_rpi3
   adr     x1, mailbox_base
-  ldp     x2, x3, [x0]                            // x2 = [rpi3 mailbox_base]
-                                                  // x3 = [rpi3 gpio_base]
-  ldp     x4, x5, [x0, #16]                       // x4 = [rpi3 aux_base]
-                                                  // x5 = [rpi3 uart_init]
-  ldp     x6, x7, [x0, #32]                       // x6 = [rpi3 uart_block]
-                                                  // x7 = [rpi3 uart_x0]
-  ldr     w8, [x0, #48]                           // w8 = [rpi3 aux_mu_baud_reg]
+  ldp     x2, x3, [x0]                            //  x2 = [rpi3 mailbox_base]
+                                                  //  x3 = [rpi3 gpio_base]
+  ldp     x4, x5, [x0, #16]                       //  x4 = [rpi3 aux_base]
+                                                  //  x5 = [rpi3 uart_init]
+  ldp     x6, x7, [x0, #32]                       //  x6 = [rpi3 uart_block]
+                                                  //  x7 = [rpi3 uart_x0]
+  ldp     x8, x9, [x0, #48]                       //  x8 = [rpi3 aux_mu_baud_reg] (bits 0-31)
+                                                  //       [rpi3 cntfrq] (bits 32-63)
+                                                  //  x9 = [rpi3 pcie_init]
+  ldr     x10, [x0, #64]                          // x10 = [rpi3 local_control]
   stp     x2, x3, [x1]                            // [mailbox_base]    = [rpi3 mailbox_base]
                                                   // [gpio_base]       = [rpi3 gpio_base]
   stp     x4, x5, [x1, #16]                       // [aux_base]        = [rpi3 aux_base]
                                                   // [uart_init]       = [rpi3 uart_init]
   stp     x6, x7, [x1, #32]                       // [uart_block]      = [rpi3 uart_block]
                                                   // [uart_x0]         = [rpi3 uart_x0]
-  str     w8, [x1, #48]                           // [aux_mu_baud_reg] = [rpi3 aux_mu_baud_reg]
+  stp     x8, x9, [x1, #48]                       // [aux_mu_baud_reg] = [rpi3 aux_mu_baud_reg] (32 bit)
+                                                  // [cntfrq]          = [rpi3 cntfrq] (32 bit)
+                                                  // [pcie_init]       = [rpi3 pcie_init]
+  str     x10, [x1, #64]                          // [local_control]   = [rpi3 local_control]
 1:
+  ret
+
+.align 2
+# Emulates https://github.com/raspberrypi/tools/blob/2e59fc67d465510179155973d2b959e50a440e47/armstubs/armstub8.S#L98-L102
+set_clocks:
+  ldr     x0, local_control
+  str     wzr, [x0]
+  mov     w1, 0x80000000
+  str     w1, [x0, 8]
   ret
 
 .include "armregs.s"

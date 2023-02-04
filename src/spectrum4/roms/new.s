@@ -11,6 +11,7 @@ new:                                     // L019D
   mov     x29, 0                                  // Frame pointer 0 indicates end of stack.
 
 .if       UART_DEBUG
+# RPi version logging
   mov     x0, msg_rpi_model
   bl      uart_puts
   ldr     w0, rpi_model
@@ -22,14 +23,7 @@ new:                                     // L019D
   bl      uart_x0
   bl      uart_newline
 
-  mov     x0, msg_pcie_revision
-  bl      uart_puts
-  adrp    x1, heap
-  add     x1, x1, :lo12:heap
-  ldr     w0, [x1]
-  bl      uart_x0
-  bl      uart_newline
-
+# Register logging
 # logarm  ACTLR_EL3
   logarm  CNTFRQ_EL0
   logarm  CTR_EL0
@@ -73,6 +67,70 @@ new:                                     // L019D
   logarm  SP_EL0
 # logarm  SP_EL1
 # logarm  SP_EL2
+
+# PCIe status logging
+  ldr     x0, pcie_init
+  cbz     x0, 4f                                  // skip PCIE logging if no pcie (e.g. rpi3b)
+  mov     x0, msg_pcie_revision
+  bl      uart_puts
+  adrp    x10, heap
+  add     x10, x10, :lo12:heap
+  ldp     w0, w8, [x10]                           // w0 = revision number
+                                                  // w8 = last read status register
+  ldr     w9, [x10, #0x08]                        // w9 = number of iterations of 1ms reading status register
+  bl      uart_x0
+  bl      uart_newline
+  tbz     w8, #4, 1f
+  tbnz    w8, #5, 2f
+1:
+  adr     x0, msg_pcie_not_ready
+  bl      uart_puts
+2:
+  adr     x0, msg_pcie_link_ready
+  tbnz    w8, #7, 3f
+  adr     x0, msg_pcie_not_in_rc_mode
+3:
+  bl      uart_puts
+  mov     x0, msg_pcie_status_register
+  bl      uart_puts
+  mov     x0, x8
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, msg_pcie_loop_iterations
+  bl      uart_puts
+  mov     x0, x9
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, msg_class_code_initial
+  bl      uart_puts
+  ldp     w0, w8, [x10, #0x0c]                    // w0 = initial class code
+                                                  // w8 = updated class code
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, msg_class_code_updated
+  bl      uart_puts
+  mov     x0, x8
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, msg_vid_did
+  bl      uart_puts
+  ldrh    w0, [x10, #0x14]                        // w0 = vid
+  bl      uart_x0
+  mov     x0, '/'
+  bl      uart_send
+  ldrh    w0, [x10, #0x16]                        // w8 = did
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, msg_header_type
+  bl      uart_puts
+  ldr     w0, [x10, #0x18]                        // w9 = header type
+  bl      uart_x0
+  bl      uart_newline
+  b       5f
+4:
+  mov     x0, msg_no_pcie
+  bl      uart_puts
+5:
 .endif
 
   ldrb    w1, [x28, FLAGS-sysvars]                // w1 = [FLAGS].
@@ -187,5 +245,35 @@ msg_midr_el1:
 msg_revidr_el1:
   .asciz "Register REVIDR_EL1 value: "
 
+msg_no_pcie:
+  .asciz "No PCIe on this machine\r\n"
+
 msg_pcie_revision:
   .asciz "PCIe revision: "
+
+msg_pcie_status_register:
+  .asciz "PCIe status register: "
+
+msg_pcie_loop_iterations:
+  .asciz "PCIe loop iterations: "
+
+msg_pcie_not_ready:
+  .asciz "ERROR: PCIe link not ready!\r\n"
+
+msg_pcie_not_in_rc_mode:
+  .asciz "ERROR: PCIe link not in RC mode!\r\n"
+
+msg_pcie_link_ready:
+  .asciz "PCIe link is ready\r\n"
+
+msg_class_code_initial:
+  .asciz "PCIe class code (initial): "
+
+msg_class_code_updated:
+  .asciz "PCIe class code (updated): "
+
+msg_vid_did:
+  .asciz "VID/DID: "
+
+msg_header_type:
+  .asciz "Header type: "

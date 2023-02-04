@@ -99,7 +99,9 @@ _start:
   ldr     x0, rand_init
   blr     x0
   ldr     x0, pcie_init
+  cbz     x0, 3f
   blr     x0
+3:
 .if       TESTS_AUTORUN
   bl      fill_memory_with_junk
   ldr     w0, arm_size
@@ -502,12 +504,10 @@ base_rpi3:
 # rpi3 cntfrq
   .word     19200000
 # rpi3 pcie_init
-  .quad     do_nothing                            // nothing to do, rpi3 has no pcie
+  .quad     0x0000000000000000                    // 0 => no pcie
 # rpi3 local_control
   .quad     0x0000000040000000
 
-do_nothing:
-  ret
 
 .align 2
 set_peripherals_addresses:
@@ -592,6 +592,7 @@ set_peripherals_addresses:
 
 .align 2
 # Emulates https://github.com/raspberrypi/tools/blob/2e59fc67d465510179155973d2b959e50a440e47/armstubs/armstub8.S#L98-L102
+# which seems to be important for the frequency at which ARM register cntpct_el0 increments (used by wait_usec)
 set_clocks:
   ldr     x0, local_control
   str     wzr, [x0]

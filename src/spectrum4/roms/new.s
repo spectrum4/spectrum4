@@ -130,12 +130,14 @@ new:                                     // L019D
 4:
   mov     x0, msg_no_pcie
   bl      uart_puts
+  b       6f
 5:
   // Display pcie memory region
   mov     w0, 0xfd500000                          // start address
   mov     x1, #54                                 // number of rows to print
   mov     x2, #0                                  // screen line to start at
   bl      display_memory
+6:
 .endif
 
   ldrb    w1, [x28, FLAGS-sysvars]                // w1 = [FLAGS].

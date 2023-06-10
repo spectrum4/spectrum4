@@ -26,24 +26,24 @@ pcie_init_bcm2711:
   add     x9, x9, :lo12:heap                      // x9 = heap
   ldr     w6, [x4]
   orr     w6, w6, #3
-  str     w6, [x4]                                // set bits 0 and 1 of reset controller (0xfd509210)
+  str     w6, [x4]                                // set bits 0 and 1 of [0xfd509210] (reset controller)
   mov     x0, #1000
   bl      wait_usec                               // sleep 1ms (Linux kernel sleeps only 0.1-0.2ms here but has other sleeps later on)
   and     w6, w6, #~0x2
-  str     w6, [x4]                                // clear bit 1 of reset controller (0xfd509210)
+  str     w6, [x4]                                // clear bit 1 of [0xfd509210] (reset controller)
   ldr     w6, [x4]                                // read back value - really necessary?
-  ldr     w0, [x7, 0x406c-0x4068]
+  ldr     w0, [x7, 0x406c-0x4068]                 // w0 = [0xfd50406c] (revision number)
   str     w0, [x9]                                // store revision number on heap for logging later
                                                   // since logging requires stack pointer initialised
                                                   // but that isn't done yet, so do it later
   mov     w0, #0xffffffff
-  str     w0, [x7, 0x4314-0x4068]                 // clear interrupts (0xfd504314)
-  str     w0, [x7, 0x4310-0x4068]                 // mask interrupts (0xfd504310)
+  str     w0, [x7, 0x4314-0x4068]                 // set bits 0-31 of [0xfd504314] (clear interrupts)
+  str     w0, [x7, 0x4310-0x4068]                 // set bits 0-31 of [0xfd504310] (mask interrupts)
   ldr     w6, [x4]                                // read back value - really necessary again? probably not!
   and     w6, w6, #~0x1
-  str     w6, [x4]                                // clear bit 0 of reset controller (0xfd509210) (bring out of reset)
+  str     w6, [x4]                                // clear bit 0 of [0xfd509210] (bring controller out of reset)
   mov     w8, #100
-1:                                                // loop waiting for bits 4 and 5 of pcie status register to be set
+1:                                                // loop waiting for bits 4 and 5 of [0xfd504068] (pcie status register) to be set
   cbz     w8, 2f                                  // exit loop if still not acheived after 100 iterations
   sub     w8, w8, #1
   mov     x0, #1000

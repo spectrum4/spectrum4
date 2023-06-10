@@ -23,13 +23,13 @@ cd "$(dirname "${0}")/src/spectrum4/libextra"
 cd "../targets"
 
 "${AARCH64_TOOLCHAIN_PREFIX}as" -I .. -I ../kernel -I ../roms -I ../tests -I ../demo -I ../libextra -o debug.o debug.target
-"${AARCH64_TOOLCHAIN_PREFIX}ld" --fix-cortex-a53-835769 --fix-cortex-a53-843419 -N -Ttext=0x0 -o debug.elf debug.o
+"${AARCH64_TOOLCHAIN_PREFIX}ld" --fix-cortex-a53-835769 --fix-cortex-a53-843419 --no-warn-rwx-segments -N -Ttext=0x0 -o debug.elf debug.o
 "${AARCH64_TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 debug.elf -O binary debug.img
 "${AARCH64_TOOLCHAIN_PREFIX}objdump" -d debug.elf > debug.disassembly
 "${AARCH64_TOOLCHAIN_PREFIX}readelf" -W -s debug.elf > debug.symbols
 
 "${AARCH64_TOOLCHAIN_PREFIX}as" -I .. -I ../kernel -I ../roms -I ../tests -I ../demo -I ../libextra -o release.o release.target
-"${AARCH64_TOOLCHAIN_PREFIX}ld" --fix-cortex-a53-835769 --fix-cortex-a53-843419 -N -Ttext=0x0 -o release.elf release.o
+"${AARCH64_TOOLCHAIN_PREFIX}ld" --fix-cortex-a53-835769 --fix-cortex-a53-843419 --no-warn-rwx-segments -N -Ttext=0x0 -o release.elf release.o
 "${AARCH64_TOOLCHAIN_PREFIX}objcopy" --set-start=0x0 release.elf -O binary release.img
 "${AARCH64_TOOLCHAIN_PREFIX}objdump" -d release.elf > release.disassembly
 "${AARCH64_TOOLCHAIN_PREFIX}readelf" -W -s release.elf > release.symbols

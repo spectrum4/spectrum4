@@ -5,6 +5,7 @@
 
 LDFLAGS_AARCH64 += --fix-cortex-a53-835769
 LDFLAGS_AARCH64 += --fix-cortex-a53-843419
+LDFLAGS_AARCH64 += --no-warn-rwx-segments
 LDFLAGS_AARCH64 += -N
 LDFLAGS_AARCH64 += -Ttext=0x0
 

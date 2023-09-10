@@ -26,9 +26,17 @@ pcie_init_bcm2711:
   add     x9, x9, :lo12:heap                      // x9 = heap
   ldr     w6, [x4]
   orr     w6, w6, #3
-  str     w6, [x4]                                // set bits 0 and 1 of [0xfd509210] (reset controller)
-  mov     x0, #1000
-  bl      wait_usec                               // sleep 1ms (Linux kernel sleeps only 0.1-0.2ms here but has other sleeps later on)
+  str     w6, [x4]                                // set bits 0 (PCIE_RGR1_SW_INIT_1_PERST_MASK) and 1 (RGR1_SW_INIT_1_INIT_GENERIC_MASK) of [0xfd509210] (RGR1_SW_INIT_1)
+                                                  // bit 0:
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L882
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L771-L778
+                                                  // bit 1:
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L883
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L730-L738
+  mov     x0, #100
+  bl      wait_usec                               // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L885
+                                                  //   https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
   and     w6, w6, #~0x2
   str     w6, [x4]                                // clear bit 1 of [0xfd509210] (reset controller)
   ldr     w6, [x4]                                // read back value - really necessary?

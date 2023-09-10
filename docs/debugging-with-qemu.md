@@ -27,4 +27,4 @@ You will need two sessions for performing the debugging:
   * <https://www.zeuthen.desy.de/dv/documentation/unixguide/infohtml/gdb/Continuing-and-Stepping.html>
   * <https://www.sourceware.org/gdb/current/onlinedocs/gdb.html>
   * <http://www.nodeadbeef.com/2018/07/bare-metal-aarch64-debugging-on.html>
-  * <https://qemu.readthedocs.io/en/latest/system/gdb.html>
+  * <https://qemu.readthedocs.io/en/v7.1.0/system/gdb.html>

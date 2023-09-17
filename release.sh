@@ -5,9 +5,11 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 ################################################################################
-# Run this script, passing in a release number, e.g. ./release.sh 0.0.1
-# This script will not tag the code, but it will create the files
-# spectrum4-${release_version}-debug.img and spectrum4-${release_version}-release.img.
+# Run this script, after tagging the HEAD commit with a version beginning with
+# "v", e.g. `git tag v0.0.1`. This script will then create the files:
+#   * spectrum4-${release_version}-debug.img
+#   * spectrum4-${release_version}-release.img
+#   * spectrum4-${release_version}-tests.img
 ################################################################################
 
 set -eu

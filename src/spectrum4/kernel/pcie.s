@@ -24,6 +24,9 @@ pcie_init_bcm2711:
   movl    w7, 0xfd504068                          // x7 = pcie status register
   adrp    x9, heap
   add     x9, x9, :lo12:heap                      // x9 = heap
+
+# Reset the PCI bridge
+
   ldr     w6, [x4]
   orr     w6, w6, #3
   str     w6, [x4]                                // set bits 0 (PCIE_RGR1_SW_INIT_1_PERST_MASK) and 1 (RGR1_SW_INIT_1_INIT_GENERIC_MASK) of [0xfd509210] (RGR1_SW_INIT_1)
@@ -37,9 +40,66 @@ pcie_init_bcm2711:
   bl      wait_usec                               // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L885
                                                   //   https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
+
+# Take the PCI bridge out of reset
+
   and     w6, w6, #~0x2
-  str     w6, [x4]                                // clear bit 1 of [0xfd509210] (reset controller)
-  ldr     w6, [x4]                                // read back value - really necessary?
+  str     w6, [x4]                                // clear bit 1 (RGR1_SW_INIT_1_INIT_GENERIC_MASK) of [0xfd509210] (RGR1_SW_INIT_1)
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L888
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L730-L738
+  ldr     w6, [x7, 0x4204-0x4068]
+  and     w6, w6, #~0x08000000
+  str     w6, [x7, 0x4204-0x4068]                 // clear bit 27 (HARD_DEBUG_SERDES_IDDQ) of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L890-L892
+  mov     x0, #100
+  bl      wait_usec                               // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L894
+                                                  //   https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
+
+// * set bits 12, 13 and clear bits 20, 21 of [0xfd504008] (PCIE_MISC_MISC_CTRL)
+// * set [0xfd504034]=0x11 (PCIE_MISC_RC_BAR2_CONFIG_LO)
+// * set [0xfd504038]=0x4 (PCIE_MISC_RC_BAR2_CONFIG_HI)
+// * set bits 27-31 of [0xfd504008] to 0b10001 (PCIE_MISC_MISC_CTRL)
+// * clear bits 0-4 of [0xfd50402c] (disable the PCIe->GISB memory window (PCIE_MISC_RC_BAR1_CONFIG_LO))
+// * clear bits 0-4 of [0xfd50403c] (disable the PCIe->SCB memory window (PCIE_MISC_RC_BAR3_CONFIG_LO))
+// * clear bit 0 of [0xfd509210] (RGR1_SW_INIT_1)
+// * wait for bits 4 and 5 of [0xfd504068] to be set, checking every 5000 us
+// * report PCIe not in RC mode, if bit 7 is not set, and error
+// * set [0xfd50400c]=0xc0000000 (lower 32 bits of pcie address as seen by pci controller?)
+// * set [0xfd504010]=0x0 (upper 32 bits of pcie address as seen by pci controller?)
+// * clear bits 30-31, set bits 20-29, clear bits 4-15 of [0xfd504070]
+// * update bit 0-7 of [0xfd504080] to 0x06
+// * update bit 0-7 of [0xfd504084] to 0x06
+// * set bits 10, 11 (already set) of [0xfd5004dc] (priv1 link capability)
+// * set bits 0-23 of [0xfd50043c] to 0x060400 (pcie-pcie bridge) - were already set
+// * Enable SSC (spread spectrum clocking) steps
+//   * set [0xfd501100]=0x1f (SET_ADDR_OFFSET to be written)
+//   * read it back ([0xfd501100])
+//   * set [0xfd501104]=0x80001100 (value to set, with bit 31 set)
+//   * read it back every 10us until bit 31 is clear or 10 attempts fail
+//   * set [0xfd501100]=0x100002 (SSC_CNTL_OFFSET to be read)
+//   * read it back ([0xfd501100])
+//   * SSC_CNTL_OFFSET = read [0xfd501108] every 10us until bit 31 is set or 10 attempts failed
+//   * set bits 14, 15 of SSC_CNTL_OFFSET (although bit 15 was already set)
+//   * set [0xfd501100]=0x2 (SSC_CNTL_OFFSET to be written)
+//   * read it back ([0xfd501100])
+//   * write SSC_CNTL_OFFSET to [0xfd501104]
+//   * read it back every 10us until bit 31 is clear or 10 attempts fail
+//   * set [0xfd501100]=0x100001 (SSC_STATUS_OFFSET to be read)
+//   * read it back ([0xfd501100])
+//   * SSC_STATUS_OFFSET = read [0xfd501108] every 10us until bit 31 is set or 10 attempts failed
+// * read 16 bits of [0xfd5000be]
+// * report pcie current link speed (bits 0-3) and negotiated link width (bits 4-9) (number of lanes?) and whether SSC enabled (from SSC_STATUS_OFFSET??)
+// * clear bits 2, 3 of [0xfd500188] (PCIe->SCB endian mode for BAR) (although already clear)
+// * clear bit 21 and set bit 1 of [0xfd504204] (refclk from RC gated with CLKREQ# input when ASPM L0s,L1 is enabled)
+// * get revision from [0xfd50406c]
+// * MSI init stuff
+//   * set [0xfd504514]=0xffffffff (mask interrupts?)
+//   * set [0xfd504508]=0xffffffff (clear interrupts?)
+//   * set [0xfd504044]=0xfffffffd (lower 32 bits of msi target address with bit 0 set => msi enable)
+//   * set [0xfd504048]=0x0 (upper 32 bits of msi target address)
+//   * set [0xfd50404c]=0xffe06540
+
   ldr     w0, [x7, 0x406c-0x4068]                 // w0 = [0xfd50406c] (revision number)
   str     w0, [x9]                                // store revision number on heap for logging later
                                                   // since logging requires stack pointer initialised

@@ -63,6 +63,10 @@ pcie_init_bcm2711:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L894
                                                   //   https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
 
+  // Note, the entire following section could probably be simplified to just write
+  // a hardcoded value to [0xfd504008] (PCIE_MISC_MISC_CTRL) but for now mirroring
+  // what Linux does (approximately).
+
   // SCB_MAX_BURST_SIZE is a two bit field. For BCM2711 it is encoded as:
   //   0b00 => 128 bytes
   //   0b01 => 256 bytes
@@ -116,7 +120,13 @@ pcie_init_bcm2711:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L957-L960
   str     w6, [x7, 0xfd50403c-0xfd504068]         // of [0xfd50403c] (PCIE_MISC_RC_BAR3_CONFIG_LO)
 
-  // * clear bit 0 of [0xfd509210] (RGR1_SW_INIT_1)
+  // Unassert the fundamental reset
+
+  ldr     w6, [x4]                                // Note, if we can assume the value hasn't changed, we could cache current value in a register and avoid this extra ldr instruction
+  and     w6, w6, #~0x1                           // clear bit 0 (PCIE_RGR1_SW_INIT_1_PERST)
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L966
+  str     w6, [x4]                                // of [0xfd509210] (RGR1_SW_INIT_1)
+
   // * wait for bits 4 and 5 of [0xfd504068] to be set, checking every 5000 us
   // * report PCIe not in RC mode, if bit 7 is not set, and error
   // * set [0xfd50400c]=0xc0000000 (lower 32 bits of pcie address as seen by pci controller?)

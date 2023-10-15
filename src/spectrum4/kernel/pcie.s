@@ -2,9 +2,14 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-
+##########################################################################
 # Information gleaned from the following sources:
-#   * https://forums.raspberrypi.com/viewtopic.php?p=1675084&hilit=pcie#p1675084
+#   * Linux Kernel:
+#     + https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c
+#   * Raspberry Pi Forums:
+#     + https://forums.raspberrypi.com/viewtopic.php?p=1675084
+#     + https://forums.raspberrypi.com/viewtopic.php?p=2087624
+##########################################################################
 
 # On return:
 #   [heap+0x00]: revision number
@@ -15,7 +20,6 @@
 #   [heap+0x14]: vid
 #   [heap+0x16]: did
 #   [heap+0x18]: header type
-
 .align 2
 pcie_init_bcm2711:
   mov     x5, x30
@@ -73,21 +77,45 @@ pcie_init_bcm2711:
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L911
   and     w6, w6, #~0x300000                      //   and clear bits 20, 21 (=> SCB_MAX_BURST_SIZE = 128 bytes)
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L912
+  mov     w8, 0b10001                             //   and bits 27-31 (SCB0_SIZE) write as 0b10001 = 17 (4GB)
+  bfi     w6, w8, #27, #5                         //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L932
   str     w6, [x7, 0xfd504008-0xfd504068]         //   of [0xfd504008] (PCIE_MISC_MISC_CTRL)
 
-  // TODO:
-  //   Work out what is going on here:
-  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L915-L925
-  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L780-L865
-  //
-  // mov     w6, #0x11
-  // str     w6, [x7, 0xfd504034-0xfd504068]         // [0xfd504034] (PCIE_MISC_RC_BAR2_CONFIG_LO) = 0x11
-  // mov     w6, #0x4
-  // str     w6, [x7, 0xfd504038-0xfd504068]         // [0xfd504038] (PCIE_MISC_RC_BAR2_CONFIG_HI) = 0x4
+  // PCIE_MISC_RC_BAR2_CONFIG_{LO,HI} are set here in the Linux kernel, based on the DMA ranges specified in the Device Tree.
+  // The pcie ranges and dma ranges in https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/arch/arm/boot/dts/bcm2711.dtsi#L588-L596
+  // appear to suggest that 1GB of CPU physical addresses [0x0000 0006 0000 0000 -> 0x0000 0006 3fff ffff] should be memory mapped to
+  // 1GB of PCIE bus addresses [0x0000 0000 c000 0000 -> 0x0000 0000 ffff ffff] (from "ranges") and that
+  // 3GB of PCIE bus addresses [0x0000 0000 0000 0000 -> 0x0000 0000 bfff ffff] should be mapped to CPU physical addresses
+  // [0x0000 0000 0000 0000 -> 0x0000 0000 bfff ffff] (from "dma-ranges"):
+  //   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L915-L925
+  //   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L780-L865
+  // The code that calculates PCIE_MISC_RC_BAR2_CONFIG_{LO,HI} I haven't completely understood, but from the values that actually get
+  // assigned on my rpi400, it looks like rc bar2 offset is 16GB, and rc bar2 size is 4GB. This doesn't seem to match the above ranges,
+  // so I am a little confused. The code for determining PCIE_MISC_RC_BAR2_CONFIG_{LO,HI} also appears to only query the "dma-ranges",
+  // and not the "ranges", so this probably only relates to inbound memory views, not outbound.
 
-  // * set bits 27-31 of [0xfd504008] to 0b10001 (PCIE_MISC_MISC_CTRL)
-  // * clear bits 0-4 of [0xfd50402c] (disable the PCIe->GISB memory window (PCIE_MISC_RC_BAR1_CONFIG_LO))
-  // * clear bits 0-4 of [0xfd50403c] (disable the PCIe->SCB memory window (PCIE_MISC_RC_BAR3_CONFIG_LO))
+  mov     w6, #0x11
+  str     w6, [x7, 0xfd504034-0xfd504068]         // [0xfd504034] (PCIE_MISC_RC_BAR2_CONFIG_LO) = 0x11
+                                                  // => RC BAR2 size = 4GB since bits 0-4 are set to return value of:
+                                                  // https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L302-L318
+  mov     w6, #0x4
+  str     w6, [x7, 0xfd504038-0xfd504068]         // [0xfd504038] (PCIE_MISC_RC_BAR2_CONFIG_HI) = 0x4
+                                                  // => RC BAR2 offset = 16GB
+
+  // Disable the PCIe->GISB (Global Incoherent System Bus) memory window
+
+  ldr     w6, [x7, 0xfd50402c-0xfd504068]
+  and     w6, w6, #~0x1f                          // clear bits 0-4 (RC_BAR1_CONFIG_LO_SIZE)
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L952-L955
+  str     w6, [x7, 0xfd50402c-0xfd504068]         // of [0xfd50402c] (PCIE_MISC_RC_BAR1_CONFIG_LO)
+
+  // Disable the PCIe->SCB memory window
+
+  ldr     w6, [x7, 0xfd50403c-0xfd504068]
+  and     w6, w6, #~0x1f                          // clear bits 0-4 (RC_BAR3_CONFIG_LO_SIZE)
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L957-L960
+  str     w6, [x7, 0xfd50403c-0xfd504068]         // of [0xfd50403c] (PCIE_MISC_RC_BAR3_CONFIG_LO)
+
   // * clear bit 0 of [0xfd509210] (RGR1_SW_INIT_1)
   // * wait for bits 4 and 5 of [0xfd504068] to be set, checking every 5000 us
   // * report PCIe not in RC mode, if bit 7 is not set, and error

@@ -30,6 +30,7 @@ pcie_init_bcm2711:
   add     x9, x9, :lo12:heap                      // x9 = heap
 
   // Reset the PCI bridge
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L881-L885
 
   ldr     w6, [x4]
   orr     w6, w6, #3                              // set bits 0 (PCIE_RGR1_SW_INIT_1_PERST) and 1 (RGR1_SW_INIT_1_INIT_GENERIC)
@@ -46,6 +47,7 @@ pcie_init_bcm2711:
                                                   //   https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
 
   // Take the PCI bridge out of reset
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L887-L892
 
   and     w6, w6, #~0x2                           // clear bit 1 (RGR1_SW_INIT_1_INIT_GENERIC)
   str     w6, [x4]                                //   of [0xfd509210] (RGR1_SW_INIT_1)
@@ -57,6 +59,7 @@ pcie_init_bcm2711:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L890-L892
 
   // Wait for SerDes (Serializer/Deserializer) to be stable
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L893-L894
 
   mov     x0, #100
   bl      wait_usec                               // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
@@ -73,6 +76,11 @@ pcie_init_bcm2711:
   //   0b10 => 512 bytes
   //   0b11 => Reserved value
 
+  // Set SCB_MAX_BURST_SIZE, CFG_READ_UR_MODE, SCB_ACCESS_EN
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L896-L913
+  // and SCB0_SIZE (note, we perform these updates in a different order to Linux to reduce code footprint)
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L927-L938
+
   ldur    w6, [x7, 0xfd504008-0xfd504068]
   orr     w6, w6, #0x3000                         // set bits 12 (SCB_ACCESS_EN), 13 (CFG_READ_UR_MODE)
                                                   //   bit 12 (SCB_ACCESS_EN):
@@ -80,10 +88,14 @@ pcie_init_bcm2711:
                                                   //   bit 13 (CFG_READ_UR_MODE):
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L911
   and     w6, w6, #~0x300000                      //   and clear bits 20, 21 (=> SCB_MAX_BURST_SIZE = 128 bytes)
+                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L901-L902
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L912
   mov     w8, 0b10001                             //   and bits 27-31 (SCB0_SIZE) write as 0b10001 = 17 (4GB)
   bfi     w6, w8, #27, #5                         //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L932
   stur    w6, [x7, 0xfd504008-0xfd504068]         //   of [0xfd504008] (PCIE_MISC_MISC_CTRL)
+
+  // Update PCIE_MISC_RC_BAR2_CONFIG_LO and PCIE_MISC_RC_BAR2_CONFIG_HI
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L915-L925
 
   // PCIE_MISC_RC_BAR2_CONFIG_{LO,HI} are set here in the Linux kernel, based on the DMA ranges specified in the Device Tree.
   // The pcie ranges and dma ranges in https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/arch/arm/boot/dts/bcm2711.dtsi#L588-L596
@@ -107,24 +119,24 @@ pcie_init_bcm2711:
                                                   // => RC BAR2 offset = 16GB
 
   // Disable the PCIe->GISB (Global Incoherent System Bus) memory window
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L952-L955
 
   ldur    w6, [x7, 0xfd50402c-0xfd504068]
   and     w6, w6, #~0x1f                          // clear bits 0-4 (RC_BAR1_CONFIG_LO_SIZE)
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L952-L955
   stur    w6, [x7, 0xfd50402c-0xfd504068]         // of [0xfd50402c] (PCIE_MISC_RC_BAR1_CONFIG_LO)
 
   // Disable the PCIe->SCB memory window
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L957-L960
 
   ldur    w6, [x7, 0xfd50403c-0xfd504068]
   and     w6, w6, #~0x1f                          // clear bits 0-4 (RC_BAR3_CONFIG_LO_SIZE)
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L957-L960
   stur    w6, [x7, 0xfd50403c-0xfd504068]         // of [0xfd50403c] (PCIE_MISC_RC_BAR3_CONFIG_LO)
 
   // Unassert the fundamental reset
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L965-L966
 
   ldr     w6, [x4]                                // note, if we can assume the value hasn't changed, we could cache current value in a register and avoid this extra ldr instruction
   and     w6, w6, #~0x1                           // clear bit 0 (PCIE_RGR1_SW_INIT_1_PERST)
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L966
   str     w6, [x4]                                // of [0xfd509210] (RGR1_SW_INIT_1)
 
   // Give the RC/EP time to wake up, before trying to configure RC.
@@ -144,16 +156,19 @@ pcie_init_bcm2711:
   stp     w0, w8, [x9, #0x04]                     // store last read status register value and number of 1ms
                                                   // loop iterations on heap, to report later
   cbz     w8, 3f                                  // exit early if failed to wake up
-  tbz     w0, #7, 3f                              // exit early if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT)
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L980-L983
-                                                  // implies PCIe misconfigured: in EP (endpoint) mode rather than RC (root complex) mode
 
-  // Configure a single outbound window:
+  // Exit early if in endpoint mode, not in root complex mode => implies PCIe misconfiguration
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L980-L983
+
+  tbz     w0, #7, 3f                              // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 3:
+
+  // Configure a single PCIe outbound memory window with values:
   //   pcie base address           = 0x0000 0000 c000 0000
   //   cpu base address            = 0x0000 0006 0000 0000
   //   size                        = 0x0000 0000 3ff0 0000
   //   cpu limit address
   //     (cpu address + size - 1)  = 0x0000 0006 3fef ffff
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L985-L1000
 
   // Set the base of the pcie address window
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L433-L435

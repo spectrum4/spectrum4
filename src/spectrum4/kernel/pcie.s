@@ -127,24 +127,60 @@ pcie_init_bcm2711:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L966
   str     w6, [x4]                                // of [0xfd509210] (RGR1_SW_INIT_1)
 
-  mov     w8, #100                                // loop for up to 100ms, waiting for bits 4 and 5 of [0xfd504068] (pcie status register) to be set
-                                                  // note, linux kernel checks only every 5ms, but we check every 1ms
-1:                                                //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L968-L973
-  cbz     w8, 2f                                  // exit loop if still not acheived after 100 iterations
-  sub     w8, w8, #1
+  // Give the RC/EP time to wake up, before trying to configure RC.
+  // Intermittently check status for link-up, up to a total of 100ms.
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L968-L973
+
+  mov     w8, #100                                // 100ms
+1:
+  cbz     w8, 2f                                  // branch forward to error routine at 3: if 100 iterations have completed
+  sub     w8, w8, #1                              // note, linux kernel checks only every 5ms, but we check every 1ms
   mov     x0, #1000
   bl      wait_usec                               // sleep 1ms
   ldr     w0, [x7]
-  tbz     w0, #4, 1b                              // repeat loop if bit 4 is clear
-  tbz     w0, #5, 1b                              // repeat loop if bit 5 is clear
+  tbz     w0, #4, 1b                              // repeat loop if bit 4 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP)
+  tbz     w0, #5, 1b                              // repeat loop if bit 5 is clear (PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE)
 2:
+  stp     w0, w8, [x9, #0x04]                     // store last read status register value and number of 1ms
+                                                  // loop iterations on heap, to report later
+  cbz     w8, 3f                                  // exit early if failed to wake up
+  tbz     w0, #7, 3f                              // exit early if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT)
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L980-L983
+                                                  // implies PCIe misconfigured: in EP (endpoint) mode rather than RC (root complex) mode
 
-  // * report PCIe not in RC mode, if bit 7 is not set, and error
-  // * set [0xfd50400c]=0xc0000000 (lower 32 bits of pcie address as seen by pci controller?)
-  // * set [0xfd504010]=0x0 (upper 32 bits of pcie address as seen by pci controller?)
-  // * clear bits 30-31, set bits 20-29, clear bits 4-15 of [0xfd504070]
-  // * update bit 0-7 of [0xfd504080] to 0x06
-  // * update bit 0-7 of [0xfd504084] to 0x06
+  // Configure a single outbound window:
+  //   pcie base address           = 0x0000 0000 c000 0000
+  //   cpu base address            = 0x0000 0006 0000 0000
+  //   size                        = 0x0000 0000 3ff0 0000
+  //   cpu limit address
+  //     (cpu address + size - 1)  = 0x0000 0006 3fef ffff
+
+  // Set the base of the pcie address window
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L433-L435
+
+  mov     w0, 0xc0000000                          // PCI address of outbound window
+  stur    w0, [x7, 0xfd50400c-0xfd504068]         // [0xfd50400c] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO) =0xc0000000 (low 32 bits of pcie address)
+  stur    wzr, [x7, 0xfd504010-0xfd504068]        // [0xfd504010] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI) =0x00000000 (high 32 bits of pcie address)
+
+  // Write the cpu base address (bits 20-31) and limit address (bits 20-31)
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L437-L446
+
+  ldr     w0, [x7, 0xfd504070-0xfd504068]
+  and     w0, w0, #0x000f000f                     // Clear bits 4-15 (BASE) and bits 20-31 (LIMIT)
+  orr     w0, w0, #0x3ff00000                     //   then set bits 20-31 (LIMIT) to 0x3ff
+  str     w0, [x7, 0xfd504070-0xfd504068]         // of [0xfd504070] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT)
+
+  // Write the cpu base address (bits 32-39) and limit address (bits 32-39)
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L448-L462
+
+  mov     w8, #0x06                               // constant serves as both cpu base address bits 32-39 and cpu limit address bits 32-39
+  ldr     w0, [x7, 0xfd504080-0xfd504068]         // Update [0xfd504080] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI) lower 8 bits
+  bfi     w0, w8, #0, #8                          //   to cpu base address bits 32-39 (=0x06)
+  str     w0, [x7, 0xfd504080-0xfd504068]         //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L456
+  ldr     w6, [x7, 0xfd504084-0xfd504068]         // Update [0xfd504084] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI) lower 8 bits
+  bfi     w6, w8, #0, #8                          //   to cpu limit address bits 32-39 (=0x06)
+  str     w6, [x7, 0xfd504084-0xfd504068]         //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L462
+
   // * set bits 10, 11 (already set) of [0xfd5004dc] (priv1 link capability)
   // * set bits 0-23 of [0xfd50043c] to 0x060400 (pcie-pcie bridge) - were already set
   // * Enable SSC (spread spectrum clocking) steps
@@ -183,18 +219,13 @@ pcie_init_bcm2711:
   str     w0, [x7, 0xfd504314-0xfd504068]         // set bits 0-31 of [0xfd504314] (clear interrupts)
   str     w0, [x7, 0xfd504310-0xfd504068]         // set bits 0-31 of [0xfd504310] (mask interrupts)
 
-  stp     w0, w8, [x9, #0x04]                     // store last read status register value and number of 1ms
-                                                  // loop iterations on heap, to report later
-  cbz     w8, 3f                                  // abort pcie initialisation if bit 4 or bit 5 not set
+  cbz     w8, 2f                                  // abort pcie initialisation if bit 4 or bit 5 not set
   ldr     w0, [x10, 0x043c]                       // class code
   and     w1, w0, 0xff000000
   mov     w2, 0x181
   bfi     w1, w2, #10, #9                         // w1 = (class code & 0xff000000) | 0x00060400
   str     w1, [x10, 0x043c]                       // update class code
   stp     w0, w1, [x9, #0x0c]                     // store initial and updated class code on heap
-  mov     w0, 0xf8000000                          // PCI address as seen by PCI controller?
-  stur    w0, [x7, 0xfd50400c-0xfd504068]         // [0xfd50400c]=0xf8000000 (low 32 bits of PCIe address as seen by PCI controller?)
-  stur    wzr, [x7, 0xfd504010-0xfd504068]        // [0xfd504010]=0x00000000 (high 32 bits of PCIe address as seen by PCI controller?)
   mov     w0, 0x03f00000
   str     w0, [x7, 0xfd504070-0xfd504068]         // RPI_PCIE_REG_MEM_CPU_LO ([0xfd504070] = 0x03f00000)
   mov     w1, 0x6

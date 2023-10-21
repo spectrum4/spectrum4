@@ -65,7 +65,7 @@ pcie_init_bcm2711:
 
   // Note, the entire following section could probably be simplified to just write
   // a hardcoded value to [0xfd504008] (PCIE_MISC_MISC_CTRL) but for now mirroring
-  // what Linux does (approximately).
+  // what Linux does (although combining and reordering updates).
 
   // SCB_MAX_BURST_SIZE is a two bit field. For BCM2711 it is encoded as:
   //   0b00 => 128 bytes
@@ -122,12 +122,23 @@ pcie_init_bcm2711:
 
   // Unassert the fundamental reset
 
-  ldr     w6, [x4]                                // Note, if we can assume the value hasn't changed, we could cache current value in a register and avoid this extra ldr instruction
+  ldr     w6, [x4]                                // note, if we can assume the value hasn't changed, we could cache current value in a register and avoid this extra ldr instruction
   and     w6, w6, #~0x1                           // clear bit 0 (PCIE_RGR1_SW_INIT_1_PERST)
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L966
   str     w6, [x4]                                // of [0xfd509210] (RGR1_SW_INIT_1)
 
-  // * wait for bits 4 and 5 of [0xfd504068] to be set, checking every 5000 us
+  mov     w8, #100                                // loop for up to 100ms, waiting for bits 4 and 5 of [0xfd504068] (pcie status register) to be set
+                                                  // note, linux kernel checks only every 5ms, but we check every 1ms
+1:                                                //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L968-L973
+  cbz     w8, 2f                                  // exit loop if still not acheived after 100 iterations
+  sub     w8, w8, #1
+  mov     x0, #1000
+  bl      wait_usec                               // sleep 1ms
+  ldr     w0, [x7]
+  tbz     w0, #4, 1b                              // repeat loop if bit 4 is clear
+  tbz     w0, #5, 1b                              // repeat loop if bit 5 is clear
+2:
+
   // * report PCIe not in RC mode, if bit 7 is not set, and error
   // * set [0xfd50400c]=0xc0000000 (lower 32 bits of pcie address as seen by pci controller?)
   // * set [0xfd504010]=0x0 (upper 32 bits of pcie address as seen by pci controller?)
@@ -171,19 +182,7 @@ pcie_init_bcm2711:
   mov     w0, #0xffffffff
   str     w0, [x7, 0xfd504314-0xfd504068]         // set bits 0-31 of [0xfd504314] (clear interrupts)
   str     w0, [x7, 0xfd504310-0xfd504068]         // set bits 0-31 of [0xfd504310] (mask interrupts)
-  ldr     w6, [x4]                                // read back value - really necessary again? probably not!
-  and     w6, w6, #~0x1
-  str     w6, [x4]                                // clear bit 0 of [0xfd509210] (bring controller out of reset)
-  mov     w8, #100
-1:                                                // loop waiting for bits 4 and 5 of [0xfd504068] (pcie status register) to be set
-  cbz     w8, 2f                                  // exit loop if still not acheived after 100 iterations
-  sub     w8, w8, #1
-  mov     x0, #1000
-  bl      wait_usec                               // sleep 1ms
-  ldr     w0, [x7]
-  tbz     w0, #4, 1b                              // only repeat loop if bit 4 is clear
-  tbz     w0, #5, 1b                              // only repeat loop if bit 5 is clear
-2:
+
   stp     w0, w8, [x9, #0x04]                     // store last read status register value and number of 1ms
                                                   // loop iterations on heap, to report later
   cbz     w8, 3f                                  // abort pcie initialisation if bit 4 or bit 5 not set

@@ -56,7 +56,7 @@ pcie_init_bcm2711:
   str     w6, [x7, 0xfd504204-0xfd504068]         //   of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L890-L892
 
-  // Wait for SerDes to be stable
+  // Wait for SerDes (Serializer/Deserializer) to be stable
 
   mov     x0, #100
   bl      wait_usec                               // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
@@ -73,7 +73,7 @@ pcie_init_bcm2711:
   //   0b10 => 512 bytes
   //   0b11 => Reserved value
 
-  ldr     w6, [x7, 0xfd504008-0xfd504068]
+  ldur    w6, [x7, 0xfd504008-0xfd504068]
   orr     w6, w6, #0x3000                         // set bits 12 (SCB_ACCESS_EN), 13 (CFG_READ_UR_MODE)
                                                   //   bit 12 (SCB_ACCESS_EN):
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L910
@@ -83,7 +83,7 @@ pcie_init_bcm2711:
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L912
   mov     w8, 0b10001                             //   and bits 27-31 (SCB0_SIZE) write as 0b10001 = 17 (4GB)
   bfi     w6, w8, #27, #5                         //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L932
-  str     w6, [x7, 0xfd504008-0xfd504068]         //   of [0xfd504008] (PCIE_MISC_MISC_CTRL)
+  stur    w6, [x7, 0xfd504008-0xfd504068]         //   of [0xfd504008] (PCIE_MISC_MISC_CTRL)
 
   // PCIE_MISC_RC_BAR2_CONFIG_{LO,HI} are set here in the Linux kernel, based on the DMA ranges specified in the Device Tree.
   // The pcie ranges and dma ranges in https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/arch/arm/boot/dts/bcm2711.dtsi#L588-L596
@@ -99,26 +99,26 @@ pcie_init_bcm2711:
   // and not the "ranges", so this probably only relates to inbound memory views, not outbound.
 
   mov     w6, #0x11
-  str     w6, [x7, 0xfd504034-0xfd504068]         // [0xfd504034] (PCIE_MISC_RC_BAR2_CONFIG_LO) = 0x11
+  stur    w6, [x7, 0xfd504034-0xfd504068]         // [0xfd504034] (PCIE_MISC_RC_BAR2_CONFIG_LO) = 0x11
                                                   // => RC BAR2 size = 4GB since bits 0-4 are set to return value of:
                                                   // https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L302-L318
   mov     w6, #0x4
-  str     w6, [x7, 0xfd504038-0xfd504068]         // [0xfd504038] (PCIE_MISC_RC_BAR2_CONFIG_HI) = 0x4
+  stur    w6, [x7, 0xfd504038-0xfd504068]         // [0xfd504038] (PCIE_MISC_RC_BAR2_CONFIG_HI) = 0x4
                                                   // => RC BAR2 offset = 16GB
 
   // Disable the PCIe->GISB (Global Incoherent System Bus) memory window
 
-  ldr     w6, [x7, 0xfd50402c-0xfd504068]
+  ldur    w6, [x7, 0xfd50402c-0xfd504068]
   and     w6, w6, #~0x1f                          // clear bits 0-4 (RC_BAR1_CONFIG_LO_SIZE)
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L952-L955
-  str     w6, [x7, 0xfd50402c-0xfd504068]         // of [0xfd50402c] (PCIE_MISC_RC_BAR1_CONFIG_LO)
+  stur    w6, [x7, 0xfd50402c-0xfd504068]         // of [0xfd50402c] (PCIE_MISC_RC_BAR1_CONFIG_LO)
 
   // Disable the PCIe->SCB memory window
 
-  ldr     w6, [x7, 0xfd50403c-0xfd504068]
+  ldur    w6, [x7, 0xfd50403c-0xfd504068]
   and     w6, w6, #~0x1f                          // clear bits 0-4 (RC_BAR3_CONFIG_LO_SIZE)
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L957-L960
-  str     w6, [x7, 0xfd50403c-0xfd504068]         // of [0xfd50403c] (PCIE_MISC_RC_BAR3_CONFIG_LO)
+  stur    w6, [x7, 0xfd50403c-0xfd504068]         // of [0xfd50403c] (PCIE_MISC_RC_BAR3_CONFIG_LO)
 
   // Unassert the fundamental reset
 

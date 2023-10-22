@@ -128,9 +128,14 @@ new:                                     // L019D
   mov     x0, x8
   bl      uart_x0
   bl      uart_newline
-  mov     x0, msg_ssc_status_link_capabilities
+  mov     x0, msg_ssc_config_state_link_capabilities
   bl      uart_puts
-  ldr     w0, [x10, #0x10]                        // w0 = ssc status / link capabilities
+  ldr     w0, [x10, #0x10]                        // w0 = ssc config stage / link capabilities
+  bl      uart_x0
+  bl      uart_newline
+  mov     x0, msg_ssc_status
+  bl      uart_puts
+  ldr     w0, [x10, #0x20]                        // w0 = ssc status
   bl      uart_x0
   bl      uart_newline
   mov     x0, msg_vid_did
@@ -300,8 +305,11 @@ msg_class_code_initial:
 msg_class_code_updated:
   .asciz "PCIe class code (updated): "
 
-msg_ssc_status_link_capabilities:
-  .asciz "SSC Status and link capabilities: "
+msg_ssc_config_state_link_capabilities:
+  .asciz "SSC configuration stage / link capabilities: "
+
+msg_ssc_status:
+  .asciz "SSC status register: "
 
 msg_vid_did:
   .asciz "VID/DID: "

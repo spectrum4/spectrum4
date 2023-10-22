@@ -160,15 +160,15 @@ pcie_init_bcm2711:
   // Poll status until ready, every 1ms, up to maximum of 100 times
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L968-L973
 
-  mov     w8, #100                                // 100ms
-1:
-  cbz     w8, 2f                                  // branch forward to error routine at 3: if 100 iterations have completed
-  sub     w8, w8, #1                              // note, linux kernel checks only every 5ms, but we check every 1ms
-  mov     x0, #1000
-  bl      wait_usec                               // sleep 1ms
-  ldr     w0, [x7]
-  tbz     w0, #4, 1b                              // repeat loop if bit 4 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP)
-  tbz     w0, #5, 1b                              // repeat loop if bit 5 is clear (PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE)
+  mov     w8, #100                                // 100 attempts
+  1:
+    cbz     w8, 2f                                // exit loop if 100 iterations have completed
+    sub     w8, w8, #1                            // note, linux kernel checks only every 5ms, but we check every 1ms
+    mov     x0, #1000
+    bl      wait_usec                             // sleep 1ms
+    ldr     w0, [x7]
+    tbz     w0, #4, 1b                            // repeat loop if bit 4 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP)
+    tbz     w0, #5, 1b                            // repeat loop if bit 5 is clear (PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE)
 2:
   stp     w0, w8, [x9, #0x04]                     // store last read status register value and number of 1ms
                                                   // loop iterations on heap, to report later
@@ -328,21 +328,61 @@ pcie_init_bcm2711:
   //         0x0002: SSC_CNTL
   //         0x001f: SET_ADDR
 
+# ----------------------------------
+# Read from a MDIO register (port 0)
+# ----------------------------------
+# Read a value from an MDIO register. Retry up to 10 times,
+# with 10us wait between each attempt. Linux code allows
+# specifying a port, but port 0 is the only port ever used,
+# so hardcode it in this version of the function.
+#
+# Linux implementation:
+#  https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L331-L349
+#
+# On entry:
+#   w0 = regad value
 # On return:
-# TODO: document function
+#   w0 corrupted
+#   w1 = bits 0-30: MDIO register value
+#        bit 31: set if read was successful, clear if read was unsuccessful
+#   w2 corrupted
+#   w3 corrupted
+#   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
 .align 2
 mdio_read:
-  // TODO: set [0xfd501100]=(0x00100000 | w0) (register represented by offset in w0 to be read)
-  // TODO: read it back ([0xfd501100])
-  // TODO: read [0xfd501108] into w1 every 10us until bit 31 is set or 10 attempts failed
+  orr     w0, w0, 0x00100000                      // w0 command (bits 20-31) clear (0x000) on entry so set bit 20 => command = 0x001 (read operation)
+                                                  // w0 port (bits 16-19) clear (0x0) on entry => port 0
+                                                  // w0 regad (bits 0-15) has desired value on entry
+  str     w0, [x10, 0xfd501100-0xfd500000]        // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (command | port | regad)
+  ldr     w0, [x10, 0xfd501100-0xfd500000]        // read it back, presumably required since linux kernel does this:
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L339
+
+  // Read [0xfd501108] (PCIE_RC_DL_MDIO_RD_DATA) into w1 every 10us until bit 31 is set or 10 attempts exhausted
+
+  mov     w8, #10                                 // 10 attempts
+  1:
+    cbz     w8, 2f                                // exit loop if 10 iterations have completed
+    sub     w8, w8, #1                            // decrement loop counter
+    mov     x0, #10
+    bl      wait_usec                             // sleep 10us
+    ldr     w1, [x10, 0xfd501108-0xfd500000]      // w0=[0xfd501108] (PCIE_RC_DL_MDIO_RD_DATA)
+    tbz     w1, #31, 1b                           // repeat loop if bit 31 is clear (=> read value before register update was complete)
+2:
   ret
 
+#   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L351-L370
+#
 # On return:
 # TODO: document function
+#
 .align 2
 mdio_write:
-  str     w0, [x10, 0xfd501100-0xfd500000]        // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (register represented by offset in w0 to be updated)
-  ldr     w0, [x10, 0xfd501100-0xfd500000]        // read it back (might not be necessary, but linux kernel does this)
+  str     w0, [x10, 0xfd501100-0xfd500000]        // w0 command (bits 20-31) clear (0x000) on entry => write operation
+                                                  // w0 port (bits 16-19) clear (0x0) on entry => port 0
+                                                  // w0 regad (bits 0-15) has desired value on entry
+                                                  // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (command | port | regad)
+  ldr     w0, [x10, 0xfd501100-0xfd500000]        // read it back, presumably required since linux kernel does this:
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L360
   orr     w1, w1, 0x80000000                      // value to set, with bit 31 set
   str     w1, [x10, 0xfd501104-0xfd500000]        // set [0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA) = w1 (value to set, with bit 31 set)
   // TODO: read it back every 10us into w1 until bit 31 is clear or 10 attempts fail

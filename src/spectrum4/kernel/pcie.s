@@ -273,16 +273,13 @@ pcie_init_bcm2711:
   bl      mdio_read                               // w1=[SSC_CNTL]
   tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
   mov     w6, #0x02                               // 2 SSC initialisation steps completed
+  mov     w0, #0x02                               // set w0 again for SSC_CNTL (w0 was corrupted by mdio_read)
   orr     w1, w1, 0xc000                          // set bits 14 (OVRD_VAL) and 15 (OVRD_EN)
   bl      mdio_write                              // [SSC_CNTL] |= (OVRD_VAL | OVRD_EN)
   tbnz    w1, #31, 3f                             // abort SSC setup due to failed MDIO write operation
   mov     w6, #0x03                               // 3 SSC initialisation steps completed
   mov     w0, 0x01                                // MDIO register offset SSC_STATUS
   bl      mdio_read                               // w1=[SSC_STATUS]
-
-  // w1 = 0x80001c17  1000 0000 0000 0000 0001 1100 0001 0111
-  //                  ^                        ^^
-
   tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
   mov     w6, #0x04                               // 4 SSC initialisation steps completed
   str     w1, [x9, #0x20]                         // store [SSC_STATUS] on heap

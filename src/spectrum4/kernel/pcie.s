@@ -24,6 +24,7 @@
 #   [heap+0x18]: vid
 #   [heap+0x1a]: did
 #   [heap+0x1c]: header type
+#   [heap+0x20]: SSC status register
 .align 2
 pcie_init_bcm2711:
 
@@ -278,8 +279,13 @@ pcie_init_bcm2711:
   mov     w6, #0x03                               // 3 SSC initialisation steps completed
   mov     w0, 0x01                                // MDIO register offset SSC_STATUS
   bl      mdio_read                               // w1=[SSC_STATUS]
+
+  // w1 = 0x80001c17  1000 0000 0000 0000 0001 1100 0001 0111
+  //                  ^                        ^^
+
   tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
   mov     w6, #0x04                               // 4 SSC initialisation steps completed
+  str     w1, [x9, #0x20]                         // store [SSC_STATUS] on heap
   tbz     w1, #10, 3f                             // abort SSC setup since bit 10 (SSC_STATUS_SSC) is clear
   mov     w6, #0x05                               // 5 SSC initialisation steps completed
   tbz     w1, #11, 3f                             // abort SSC setup since bit 11 (SSC_STATUS_PLL_LOCK) is clear

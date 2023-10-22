@@ -18,9 +18,7 @@
 #   [heap+0x04]: number of iterations of 1ms reading status register
 #   [heap+0x08]: initial class code
 #   [heap+0x0c]: updated class code
-#   [heap+0x10]: SSC status
-#                  0x0000: enabled
-#                  0xffff: disabled
+#   [heap+0x10]: SSC configuration steps successfully completed (0-6)
 #   [heap+0x12]: link capabilities
 #   [heap+0x14]: revision number
 #   [heap+0x18]: vid
@@ -264,25 +262,30 @@ pcie_init_bcm2711:
   //   * MDIO register SET_ADDR
   //   * MDIO register SSC_CNTL
 
-  mov     w6, 0xffff                              // flag to indicate SSC was unsuccessful
+  mov     w6, wzr                                 // 0 SSC initialisation steps completed
   mov     w0, 0x1f                                // MDIO register offset for SET_ADDR
   mov     w1, 0x1100                              // SSC_REGS_ADDR
   bl      mdio_write                              // [SET_ADDR]=SSC_REGS_ADDR
   tbnz    w1, #31, 3f                             // abort SSC setup due to failed MDIO write operation
-  mov     w0, 0x02                                // MDIO register offset for SSC_CNTL
+  mov     w6, #0x01                               // 1 SSC initialisation steps completed
+  mov     w0, #0x02                               // MDIO register offset for SSC_CNTL
   bl      mdio_read                               // w1=[SSC_CNTL]
   tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
+  mov     w6, #0x02                               // 2 SSC initialisation steps completed
   orr     w1, w1, 0xc000                          // set bits 14 (OVRD_VAL) and 15 (OVRD_EN)
   bl      mdio_write                              // [SSC_CNTL] |= (OVRD_VAL | OVRD_EN)
   tbnz    w1, #31, 3f                             // abort SSC setup due to failed MDIO write operation
+  mov     w6, #0x03                               // 3 SSC initialisation steps completed
   mov     w0, 0x01                                // MDIO register offset SSC_STATUS
   bl      mdio_read                               // w1=[SSC_STATUS]
   tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
+  mov     w6, #0x04                               // 4 SSC initialisation steps completed
   tbz     w1, #10, 3f                             // abort SSC setup since bit 10 (SSC_STATUS_SSC) is clear
+  mov     w6, #0x05                               // 5 SSC initialisation steps completed
   tbz     w1, #11, 3f                             // abort SSC setup since bit 11 (SSC_STATUS_PLL_LOCK) is clear
-  mov     w6, wzr                                 // flag that SSC was successful
+  mov     w6, #0x06                               // 6 SSC initialisation steps completed
 3:
-  strh    w6, [x9, #0x10]                         // store w6 on heap to record whether SSC was successful
+  strh    w6, [x9, #0x10]                         // store w6 on heap to record which configuration stage SSC reached
 
   ldrh    w0, [x10, 0xfd5000be-0xfd500000]        // Query link capabilities
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1028-L1033

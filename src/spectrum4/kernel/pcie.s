@@ -250,26 +250,55 @@ pcie_init_bcm2711:
   str     w1, [x10, 0xfd50043c-0xfd500000]        // update register [0xfd50043c] (PCIE_RC_CFG_PRIV1_ID_VAL3)
   stp     w0, w1, [x9, #0x0c]                     // store initial and updated class code on heap
 
-  // * Enable SSC (spread spectrum clocking) steps
-  //   * set [0xfd501100]=0x1f (SET_ADDR_OFFSET to be written)
-  //   * read it back ([0xfd501100])
-  //   * set [0xfd501104]=0x80001100 (value to set, with bit 31 set)
-  //   * read it back every 10us until bit 31 is clear or 10 attempts fail
-  //   * set [0xfd501100]=0x100002 (SSC_CNTL_OFFSET to be read)
-  //   * read it back ([0xfd501100])
-  //   * SSC_CNTL_OFFSET = read [0xfd501108] every 10us until bit 31 is set or 10 attempts failed
-  //   * set bits 14, 15 of SSC_CNTL_OFFSET (although bit 15 was already set)
-  //   * set [0xfd501100]=0x2 (SSC_CNTL_OFFSET to be written)
-  //   * read it back ([0xfd501100])
-  //   * write SSC_CNTL_OFFSET to [0xfd501104]
-  //   * read it back every 10us until bit 31 is clear or 10 attempts fail
-  //   * set [0xfd501100]=0x100001 (SSC_STATUS_OFFSET to be read)
-  //   * read it back ([0xfd501100])
-  //   * SSC_STATUS_OFFSET = read [0xfd501108] every 10us until bit 31 is set or 10 attempts failed
+  // Enable SSC (spread spectrum clocking) steps
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L372-L409
+  //
+  // Perhaps the MDIO register updates are only needed for ethernet, since MDIO seems to relate only to ethernet:
+  //   https://en.wikipedia.org/wiki/Management_Data_Input/Output
+  //
+  // Updates registers:
+  //   * MDIO register SET_ADDR
+  //   * MDIO register SSC_CNTL
+
+
+
+  mov     w0, 0x1f                                // MDIO register offset for SET_ADDR
+  mov     w1, 0x1100                              // SSC_REGS_ADDR
+  bl      mdio_write                              // [SET_ADDR]=SSC_REGS_ADDR
+  tbnz    w1, #31, 3f                             // branch forward to error routine at 3: if bit 31 is set (=> failed write)
+  mov     w0, 0x02                                // MDIO register offset for SSC_CNTL
+  bl      mdio_read                               // w1=[SSC_CNTL]
+  tbz     w1, #31, 3f                             // branch forward to error routine at 3: if bit 31 is clear (=> failed read)
+  orr     w1, w1, 0xc000                          // set bits 14 (OVRD_VAL) and 15 (OVRD_EN)
+  bl      mdio_write                              // [SSC_CNTL] |= (OVRD_VAL | OVRD_EN)
+  tbnz    w1, #31, 3f                             // branch forward to error routine at 3: if bit 31 is set (=> failed write)
+  mov     w0, 0x01                                // MDIO register offset SSC_STATUS
+  bl      mdio_read                               // w1=[SSC_STATUS]
+  tbz     w1, #31, 3f                             // branch forward to error routine at 3: if bit 31 is clear (=> failed read)
+  tbz     w1, #10, 3f                             // branch forward to error routine at 3: if bit 10 (SSC_STATUS_SSC) is clear
+  tbz     w1, #11, 3f                             // branch forward to error routine at 3: if bit 11 (SSC_STATUS_PLL_LOCK) is clear
+
+  // TODO: preserve above error causes on heap
+
   // * read 16 bits of [0xfd5000be]
   // * report pcie current link speed (bits 0-3) and negotiated link width (bits 4-9) (number of lanes?) and whether SSC enabled (from SSC_STATUS_OFFSET??)
+
+  // PCIe->SCB endian mode for BAR
+  //
+  // Updates registers:
+  //   * PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1
+
   // * clear bits 2, 3 of [0xfd500188] (PCIe->SCB endian mode for BAR) (although already clear)
+
+  // Refclk from RC should be gated with CLKREQ# input when
+  // ASPM L0s,L1 is enabled => setting the CLKREQ_DEBUG_ENABLE
+  // field to 1.
+  //
+  // Updates registers:
+  //   * PCIE_MISC_HARD_PCIE_HARD_DEBUG
+
   // * clear bit 21 and set bit 1 of [0xfd504204] (refclk from RC gated with CLKREQ# input when ASPM L0s,L1 is enabled)
+
   // * get revision from [0xfd50406c]
   // * MSI init stuff
 
@@ -288,3 +317,35 @@ pcie_init_bcm2711:
   stp     w2, w3, [x9, #0x14]                     // store did/vid/header type on heap
 3:
   ret     x5
+
+  //   [0xfd501100] (PCIE_RC_DL_MDIO_ADDR)
+  //     Format: 0xcccprrrr, where:
+  //       ccc = command:
+  //         0x000: write
+  //         0x001: read
+  //       p = port
+  //         0x0: port 0
+  //       rrrr = regad
+  //         0x0001: SSC_STATUS
+  //         0x0002: SSC_CNTL
+  //         0x001f: SET_ADDR
+
+# On return:
+# TODO: document function
+.align 2
+mdio_read:
+  // TODO: set [0xfd501100]=(0x00100000 | w0) (register represented by offset in w0 to be read)
+  // TODO: read it back ([0xfd501100])
+  // TODO: read [0xfd501108] into w1 every 10us until bit 31 is set or 10 attempts failed
+  ret
+
+# On return:
+# TODO: document function
+.align 2
+mdio_write:
+  str     w0, [x10, 0xfd501100-0xfd500000]        // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (register represented by offset in w0 to be updated)
+  ldr     w0, [x10, 0xfd501100-0xfd500000]        // read it back (might not be necessary, but linux kernel does this)
+  orr     w1, w1, 0x80000000                      // value to set, with bit 31 set
+  str     w1, [x10, 0xfd501104-0xfd500000]        // set [0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA) = w1 (value to set, with bit 31 set)
+  // TODO: read it back every 10us into w1 until bit 31 is clear or 10 attempts fail
+  ret

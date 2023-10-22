@@ -2,6 +2,8 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
+
+
 ##########################################################################
 # Information gleaned from the following sources:
 #   * Linux Kernel:
@@ -22,6 +24,10 @@
 #   [heap+0x18]: header type
 .align 2
 pcie_init_bcm2711:
+
+  // TODO: check all error handling is performed correctly in this routine
+  // (early exiting, recording errors on heap, allowing certain failures, etc)
+
   mov     x5, x30
   movl    w10, 0xfd500000                         // x10 = pcie_base
   movl    w4, 0xfd509210                          // x4 = pcie reset controller register
@@ -174,12 +180,12 @@ pcie_init_bcm2711:
                                                   // loop iterations on heap, to report later
                                                   // since logging requires stack pointer initialised
                                                   // but that isn't done yet, use heap instead
-  cbz     w8, 3f                                  // exit early if failed to wake up
+  cbz     w8, 4f                                  // exit early if failed to wake up
 
   // Exit early if in endpoint mode, not in root complex mode => implies PCIe misconfiguration
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L980-L983
 
-  tbz     w0, #7, 3f                              // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 3:
+  tbz     w0, #7, 4f                              // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 4:
 
   // Configure *CPU outbound* memory view (address range in system memory for CPU to access PCIe bus addresses)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L985-L1000
@@ -260,6 +266,7 @@ pcie_init_bcm2711:
   //   * MDIO register SET_ADDR
   //   * MDIO register SSC_CNTL
 
+  // TODO: set flag to say SSC is currently unsuccessful
   mov     w0, 0x1f                                // MDIO register offset for SET_ADDR
   mov     w1, 0x1100                              // SSC_REGS_ADDR
   bl      mdio_write                              // [SET_ADDR]=SSC_REGS_ADDR
@@ -275,27 +282,41 @@ pcie_init_bcm2711:
   tbz     w1, #31, 3f                             // branch forward to error routine at 3: if bit 31 is clear (=> failed read)
   tbz     w1, #10, 3f                             // branch forward to error routine at 3: if bit 10 (SSC_STATUS_SSC) is clear
   tbz     w1, #11, 3f                             // branch forward to error routine at 3: if bit 11 (SSC_STATUS_PLL_LOCK) is clear
+  // TODO: update previous flag to say SSC is successful
+3:
+  // TODO: flag on heap to record if SSC was successful
 
-  // TODO: preserve above error causes on heap
+  // Preserve link capabilities register on stack for later reporting
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1028-L1033
 
-  // * read 16 bits of [0xfd5000be]
-  // * report pcie current link speed (bits 0-3) and negotiated link width (bits 4-9) (number of lanes?) and whether SSC enabled (from SSC_STATUS_OFFSET??)
+  ldrh    w0, [x10, 0xfd5000be-0xfd500000]
+  // TODO:  strh    w0, [x9, ....]
 
-  // PCIe->SCB endian mode for BAR
+  // Set PCIe->SCB little endian mode for BAR 2 (not sure why this requires two bits)
+  // My rpi400 already had correct endian mode after a reset, so this might be unnecessary
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1035-L1039
   //
   // Updates registers:
   //   * PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1
 
-  // * clear bits 2, 3 of [0xfd500188] (PCIe->SCB endian mode for BAR) (although already clear)
+  ldr     w0, [x10, 0xfd500188-0xfd500000]
+  and     w0, w0, #~0xc                           // Clear bits 2, 3 (ENDIAN_MODE_BAR2) => little endian
+  str     w0, [x10, 0xfd500188-0xfd500000]        // of [0xfd500188] (PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1)
 
   // Refclk from RC should be gated with CLKREQ# input when
   // ASPM L0s,L1 is enabled => setting the CLKREQ_DEBUG_ENABLE
-  // field to 1.
+  // field to 1 and CLKREQ_L1SS_ENABLE field to 0
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1041-L1060
   //
   // Updates registers:
   //   * PCIE_MISC_HARD_PCIE_HARD_DEBUG
 
-  // * clear bit 21 and set bit 1 of [0xfd504204] (refclk from RC gated with CLKREQ# input when ASPM L0s,L1 is enabled)
+  ldr     w0, [x7, 0xfd504204-0xfd504068]
+  and     w0, w0, #~0x200000                      // clear bit 21 (CLKREQ_L1SS_ENABLE_MASK)
+  orr     w0, w0, #0x2                            //   and set bit 1 (CLKREQ_DEBUG_ENABLE)
+  str     w0, [x7, 0xfd504204-0xfd504068]         // of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
+
+  // Preserve revision number, header type, device id and vendor id on the heap
 
   ldr     w0, [x7, 0xfd50406c-0xfd504068]         // w0 = [0xfd50406c] (revision number)
   str     w0, [x9]                                // store revision number on heap
@@ -303,7 +324,8 @@ pcie_init_bcm2711:
   ldrb    w3, [x10, #0x0e]                        // w3 = header type
   stp     w2, w3, [x9, #0x14]                     // store did/vid/header type on heap
 
-  // * MSI init stuff
+  // MSI initisalisation
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L623-L641
 
   mov     w0, #0xffffffff
   str     w0, [x7, 0xfd504514-0xfd504068]         // set bits 0-31 of [0xfd504514]
@@ -313,34 +335,31 @@ pcie_init_bcm2711:
   //   * set [0xfd504048]=0x0 (upper 32 bits of msi target address)
   //   * set [0xfd50404c]=0xffe06540
 
-3:
+4:
   ret     x5
 
-  //   [0xfd501100] (PCIE_RC_DL_MDIO_ADDR)
-  //     Format: 0xcccprrrr, where:
-  //       ccc = command:
-  //         0x000: write
-  //         0x001: read
-  //       p = port
-  //         0x0: port 0
-  //       rrrr = regad
-  //         0x0001: SSC_STATUS
-  //         0x0002: SSC_CNTL
-  //         0x001f: SET_ADDR
 
-# ----------------------------------
-# Read from a MDIO register (port 0)
-# ----------------------------------
-# Read a value from an MDIO register. Retry up to 10 times,
-# with 10us wait between each attempt. Linux code allows
-# specifying a port, but port 0 is the only port ever used,
-# so hardcode it in this version of the function.
+# ------------------------------
+# Read from a MDIO register/port
+# ------------------------------
+# Read a value from an MDIO register. This is a two stage process. First,
+# register [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) is written to with details of
+# the desired MDIO register to read from, and then register [0xfd501108]
+# (PCIE_RC_DL_MDIO_RD_DATA) is polled to retrieve the value. The polling occurs
+# at 10us intervals, with a maximum of 10 attempts.
 #
 # Linux implementation:
 #  https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L331-L349
 #
 # On entry:
-#   w0 = regad value
+#   w0 = MDIO register/port to read from
+#          bits 21-31: clear (required)
+#          bit 20: ignored
+#          bits 16-19: port (usually 0x0)
+#          bits 0-15: regad
+#            0x0001: SSC_STATUS
+#            0x0002: SSC_CNTL
+#            0x001f: SET_ADDR
 # On return:
 #   w0 corrupted
 #   w1 = bits 0-30: MDIO register value
@@ -350,9 +369,7 @@ pcie_init_bcm2711:
 #   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
 .align 2
 mdio_read:
-  orr     w0, w0, 0x00100000                      // w0 command (bits 20-31) clear (0x000) on entry so set bit 20 => command = 0x001 (read operation)
-                                                  // w0 port (bits 16-19) clear (0x0) on entry => port 0
-                                                  // w0 regad (bits 0-15) has desired value on entry
+  orr     w0, w0, 0x00100000                      // set bit 20 => command = 0x001 (read operation)
   str     w0, [x10, 0xfd501100-0xfd500000]        // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (command | port | regad)
   ldr     w0, [x10, 0xfd501100-0xfd500000]        // read it back, presumably required since linux kernel does this:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L339
@@ -370,20 +387,55 @@ mdio_read:
 2:
   ret
 
-#   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L351-L370
+
+# -----------------------------
+# Write to a MDIO register/port
+# -----------------------------
+# Write a value to an MDIO register. This is a three stage process. First,
+# register [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) is written to with details of
+# the desired MDIO register to update, and then register [0xfd501104]
+# (PCIE_RC_DL_MDIO_WR_DATA) is written to with the target value. Finally, the
+# same register [0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA) is polled to determine
+# if the update was successful. The polling occurs at 10us intervals, with a
+# maximum of 10 attempts.
 #
+# Linux implementation:
+#  https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L351-L370
+#
+# On entry:
+#   w0 = MDIO register/port to write to
+#          bits 20-31: clear (required)
+#          bits 16-19: port (usually 0x0)
+#          bits 0-15: regad
+#            0x0002: SSC_CNTL
+#            0x001f: SET_ADDR
+#   w1 = bits 0-30: desired value to write to MDIO register
+#        bit 31: ignored
 # On return:
-# TODO: document function
-#
+#   w0 corrupted
+#   w1 = bits 0-30: unchanged, if successful
+#        bit 31: clear if read was successful, set if read was unsuccessful
+#   w2 corrupted
+#   w3 corrupted
+#   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
 .align 2
 mdio_write:
-  str     w0, [x10, 0xfd501100-0xfd500000]        // w0 command (bits 20-31) clear (0x000) on entry => write operation
-                                                  // w0 port (bits 16-19) clear (0x0) on entry => port 0
-                                                  // w0 regad (bits 0-15) has desired value on entry
-                                                  // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (command | port | regad)
+  str     w0, [x10, 0xfd501100-0xfd500000]        // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (command | port | regad)
+                                                  // w0 command (bits 20-31) clear (0x000) on entry => write operation
   ldr     w0, [x10, 0xfd501100-0xfd500000]        // read it back, presumably required since linux kernel does this:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L360
   orr     w1, w1, 0x80000000                      // value to set, with bit 31 set
   str     w1, [x10, 0xfd501104-0xfd500000]        // set [0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA) = w1 (value to set, with bit 31 set)
-  // TODO: read it back every 10us into w1 until bit 31 is clear or 10 attempts fail
+
+  // Read [0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA) into w1 every 10us until bit 31 is clear or 10 attempts exhausted
+
+  mov     w8, #10                                 // 10 attempts
+  1:
+    cbz     w8, 2f                                // exit loop if 10 iterations have completed
+    sub     w8, w8, #1                            // decrement loop counter
+    mov     x0, #10
+    bl      wait_usec                             // sleep 10us
+    ldr     w1, [x10, 0xfd501104-0xfd500000]      // w0=[0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA)
+    tbnz    w1, #31, 1b                           // repeat loop if bit 31 is set (=> read value before register update was complete)
+2:
   ret

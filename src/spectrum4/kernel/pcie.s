@@ -260,8 +260,6 @@ pcie_init_bcm2711:
   //   * MDIO register SET_ADDR
   //   * MDIO register SSC_CNTL
 
-
-
   mov     w0, 0x1f                                // MDIO register offset for SET_ADDR
   mov     w1, 0x1100                              // SSC_REGS_ADDR
   bl      mdio_write                              // [SET_ADDR]=SSC_REGS_ADDR
@@ -299,7 +297,12 @@ pcie_init_bcm2711:
 
   // * clear bit 21 and set bit 1 of [0xfd504204] (refclk from RC gated with CLKREQ# input when ASPM L0s,L1 is enabled)
 
-  // * get revision from [0xfd50406c]
+  ldr     w0, [x7, 0xfd50406c-0xfd504068]         // w0 = [0xfd50406c] (revision number)
+  str     w0, [x9]                                // store revision number on heap
+  ldr     w2, [x10]                               // x2 bits 0-15: did, bits 16-31: vid
+  ldrb    w3, [x10, #0x0e]                        // w3 = header type
+  stp     w2, w3, [x9, #0x14]                     // store did/vid/header type on heap
+
   // * MSI init stuff
 
   mov     w0, #0xffffffff
@@ -310,11 +313,6 @@ pcie_init_bcm2711:
   //   * set [0xfd504048]=0x0 (upper 32 bits of msi target address)
   //   * set [0xfd50404c]=0xffe06540
 
-  ldr     w0, [x7, 0xfd50406c-0xfd504068]         // w0 = [0xfd50406c] (revision number)
-  str     w0, [x9]                                // store revision number on heap
-  ldr     w2, [x10]                               // x2 bits 0-15: did, bits 16-31: vid
-  ldrb    w3, [x10, #0x0e]                        // w3 = header type
-  stp     w2, w3, [x9, #0x14]                     // store did/vid/header type on heap
 3:
   ret     x5
 

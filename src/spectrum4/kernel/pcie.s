@@ -94,21 +94,16 @@ pcie_init_bcm2711:
   bfi     w6, w8, #27, #5                         //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L932
   stur    w6, [x7, 0xfd504008-0xfd504068]         //   of [0xfd504008] (PCIE_MISC_MISC_CTRL)
 
-  // Update PCIE_MISC_RC_BAR2_CONFIG_LO and PCIE_MISC_RC_BAR2_CONFIG_HI
+  // Configure *CPU inbound* memory view (address range on PCIe bus for PCIe devices to access system memory)
+  //   Registers: PCIE_MISC_RC_BAR2_CONFIG_LO, PCIE_MISC_RC_BAR2_CONFIG_HI
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L915-L925
-
-  // PCIE_MISC_RC_BAR2_CONFIG_{LO,HI} are set here in the Linux kernel, based on the DMA ranges specified in the Device Tree.
-  // The pcie ranges and dma ranges in https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/arch/arm/boot/dts/bcm2711.dtsi#L588-L596
-  // appear to suggest that 1GB of CPU physical addresses [0x0000 0006 0000 0000 -> 0x0000 0006 3fff ffff] should be memory mapped to
-  // 1GB of PCIE bus addresses [0x0000 0000 c000 0000 -> 0x0000 0000 ffff ffff] (from "ranges") and that
-  // 3GB of PCIE bus addresses [0x0000 0000 0000 0000 -> 0x0000 0000 bfff ffff] should be mapped to CPU physical addresses
-  // [0x0000 0000 0000 0000 -> 0x0000 0000 bfff ffff] (from "dma-ranges"):
-  //   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L915-L925
-  //   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L780-L865
-  // The code that calculates PCIE_MISC_RC_BAR2_CONFIG_{LO,HI} I haven't completely understood, but from the values that actually get
-  // assigned on my rpi400, it looks like rc bar2 offset is 16GB, and rc bar2 size is 4GB. This doesn't seem to match the above ranges,
-  // so I am a little confused. The code for determining PCIE_MISC_RC_BAR2_CONFIG_{LO,HI} also appears to only query the "dma-ranges",
-  // and not the "ranges", so this probably only relates to inbound memory views, not outbound.
+  //
+  //   rc bar2 size:  0x0000 0001 0000 0000 (4GB)
+  //   pcie start:    0x0000 0004 0000 0000 -> cpu start:   0x0000 0000 0000 0000
+  //   pcie end:      0x0000 0004 ffff ffff -> cpu end:     0x0000 0000 ffff ffff
+  //
+  // Explanation of values
+  //   https://forums.raspberrypi.com/viewtopic.php?p=2148607
 
   mov     w6, #0x11
   stur    w6, [x7, 0xfd504034-0xfd504068]         // [0xfd504034] (PCIE_MISC_RC_BAR2_CONFIG_LO) = 0x11
@@ -162,22 +157,22 @@ pcie_init_bcm2711:
 
   tbz     w0, #7, 3f                              // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 3:
 
-  // Configure a single PCIe outbound memory window with values:
-  //   pcie base address           = 0x0000 0000 c000 0000
-  //   cpu base address            = 0x0000 0006 0000 0000
-  //   size                        = 0x0000 0000 3ff0 0000
-  //   cpu limit address
-  //     (cpu address + size - 1)  = 0x0000 0006 3fef ffff
+  // Configure *CPU outbound* memory view (address range in system memory for CPU to access PCIe bus addresses)
+  //   Registers: PCIE_MISC_CPU_2_PCIE_MEM_WIN0_*
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L985-L1000
+  //
+  //   size:          0x0000 0000 4000 0000 (1GB)
+  //   cpu start:     0x0000 0006 0000 0000 -> pcie start:   0x0000 0000 c000 0000
+  //   cpu end:       0x0000 0006 3fff ffff -> pcie end:     0x0000 0000 ffff ffff
 
-  // Set the base of the pcie address window
+  // Set the pcie start address
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L433-L435
 
   mov     w0, 0xc0000000                          // PCI address of outbound window
-  stur    w0, [x7, 0xfd50400c-0xfd504068]         // [0xfd50400c] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO) =0xc0000000 (low 32 bits of pcie address)
-  stur    wzr, [x7, 0xfd504010-0xfd504068]        // [0xfd504010] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI) =0x00000000 (high 32 bits of pcie address)
+  stur    w0, [x7, 0xfd50400c-0xfd504068]         // [0xfd50400c] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO) =0xc0000000 (low 32 bits of pcie start)
+  stur    wzr, [x7, 0xfd504010-0xfd504068]        // [0xfd504010] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI) =0x00000000 (high 32 bits of pcie start)
 
-  // Write the cpu base address (bits 20-31) and limit address (bits 20-31)
+  // Set bits 20-31 of cpu start address and bits 20-31 of cpu end address
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L437-L446
 
   ldr     w0, [x7, 0xfd504070-0xfd504068]
@@ -185,7 +180,7 @@ pcie_init_bcm2711:
   orr     w0, w0, #0x3ff00000                     //   then set bits 20-31 (LIMIT) to 0x3ff
   str     w0, [x7, 0xfd504070-0xfd504068]         // of [0xfd504070] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT)
 
-  // Write the cpu base address (bits 32-39) and limit address (bits 32-39)
+  // Set bits 32-39 of cpu start address and bits 32-39 of cpu end address
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L448-L462
 
   mov     w8, #0x06                               // constant serves as both cpu base address bits 32-39 and cpu limit address bits 32-39

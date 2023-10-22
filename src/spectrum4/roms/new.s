@@ -69,15 +69,31 @@ new:                                     // L019D
 # logarm  SP_EL2
 
 # PCIe status logging
+
+
+#   [heap+0x00]: * last read status register
+#   [heap+0x04]: * number of iterations of 1ms reading status register
+#   [heap+0x08]: * initial class code
+#   [heap+0x0c]: * updated class code
+#   [heap+0x10]: SSC status
+#                  0x0000: enabled
+#                  0xffff: disabled
+#   [heap+0x12]: link capabilities
+#   [heap+0x14]: * revision number
+#   [heap+0x18]: * vid
+#   [heap+0x1a]: * did
+#   [heap+0x1c]: * header type
+
+
   ldr     x0, pcie_init
   cbz     x0, 4f                                  // skip PCIE logging if no pcie (e.g. rpi3b)
   mov     x0, msg_pcie_revision
   bl      uart_puts
   adrp    x10, heap
   add     x10, x10, :lo12:heap
-  ldp     w0, w8, [x10]                           // w0 = revision number
-                                                  // w8 = last read status register
-  ldr     w9, [x10, #0x08]                        // w9 = number of iterations of 1ms reading status register
+  ldr     w0, [x10, #0x14]                        // w0 = revision number
+  ldp     w8, w9, [x10]                           // w8 = last read status register,
+                                                  // w9 = number of iterations of 1ms reading status register
   bl      uart_x0
   bl      uart_newline
   tbz     w8, #4, 1f
@@ -103,7 +119,7 @@ new:                                     // L019D
   bl      uart_newline
   mov     x0, msg_class_code_initial
   bl      uart_puts
-  ldp     w0, w8, [x10, #0x0c]                    // w0 = initial class code
+  ldp     w0, w8, [x10, #0x08]                    // w0 = initial class code
                                                   // w8 = updated class code
   bl      uart_x0
   bl      uart_newline
@@ -112,18 +128,23 @@ new:                                     // L019D
   mov     x0, x8
   bl      uart_x0
   bl      uart_newline
+  mov     x0, msg_ssc_status_link_capabilities
+  bl      uart_puts
+  ldr     w0, [x10, #0x10]                        // w0 = ssc status / link capabilities
+  bl      uart_x0
+  bl      uart_newline
   mov     x0, msg_vid_did
   bl      uart_puts
-  ldrh    w0, [x10, #0x14]                        // w0 = vid
+  ldrh    w0, [x10, #0x18]                        // w0 = vid
   bl      uart_x0
   mov     x0, '/'
   bl      uart_send
-  ldrh    w0, [x10, #0x16]                        // w8 = did
+  ldrh    w0, [x10, #0x1a]                        // w8 = did
   bl      uart_x0
   bl      uart_newline
   mov     x0, msg_header_type
   bl      uart_puts
-  ldr     w0, [x10, #0x18]                        // w9 = header type
+  ldr     w0, [x10, #0x1c]                        // w9 = header type
   bl      uart_x0
   bl      uart_newline
   b       5f
@@ -278,6 +299,9 @@ msg_class_code_initial:
 
 msg_class_code_updated:
   .asciz "PCIe class code (updated): "
+
+msg_ssc_status_link_capabilities:
+  .asciz "SSC Status and link capabilities: "
 
 msg_vid_did:
   .asciz "VID/DID: "

@@ -384,8 +384,10 @@ pcie_init_bcm2711:
 #   w2 corrupted
 #   w3 corrupted
 #   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
+#   x11 = return address of function
 .align 2
 mdio_read:
+  mov     x11, x30
   orr     w0, w0, 0x00100000                      // set bit 20 => command = 0x001 (read operation)
   str     w0, [x10, 0xfd501100-0xfd500000]        // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (command | port | regad)
   ldr     w0, [x10, 0xfd501100-0xfd500000]        // read it back, presumably required since linux kernel does this:
@@ -402,7 +404,7 @@ mdio_read:
     ldr     w1, [x10, 0xfd501108-0xfd500000]      // w0=[0xfd501108] (PCIE_RC_DL_MDIO_RD_DATA)
     tbz     w1, #31, 1b                           // repeat loop if bit 31 is clear (=> read value before register update was complete)
 2:
-  ret
+  ret     x11
 
 
 # -----------------------------
@@ -435,8 +437,10 @@ mdio_read:
 #   w2 corrupted
 #   w3 corrupted
 #   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
+#   x11 = return address of function
 .align 2
 mdio_write:
+  mov     x11, x30
   str     w0, [x10, 0xfd501100-0xfd500000]        // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (command | port | regad)
                                                   // w0 command (bits 20-31) clear (0x000) on entry => write operation
   ldr     w0, [x10, 0xfd501100-0xfd500000]        // read it back, presumably required since linux kernel does this:
@@ -455,4 +459,4 @@ mdio_write:
     ldr     w1, [x10, 0xfd501104-0xfd500000]      // w0=[0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA)
     tbnz    w1, #31, 1b                           // repeat loop if bit 31 is set (=> read value before register update was complete)
 2:
-  ret
+  ret     x11

@@ -315,7 +315,7 @@ pcie_init_bcm2711:
 
   // Preserve revision number, device id, vendor id and header type on the heap
 
-  ldr     w0, [x7, 0xfd50406c-0xfd504068]         // w0 = [0xfd50406c] (revision number)
+  ldr     w0, [x7, 0xfd50406c-0xfd504068]         // w0 = [0xfd50406c] (PCIE_MISC_REVISION)
   str     w0, [x9, #0x14]                         // store revision number on heap
   ldr     w2, [x10]                               // x2 bits 0-15: did, bits 16-31: vid
   ldrb    w3, [x10, #0x0e]                        // w3 = header type
@@ -323,6 +323,13 @@ pcie_init_bcm2711:
 
   // MSI initisalisation
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L623-L641
+  //
+  // Updates registers:
+  //   * MSI_INT_MASK_CLR
+  //   * MSI_INT_CLR
+  //   * PCIE_MISC_MSI_BAR_CONFIG_LO
+  //   * PCIE_MISC_MSI_BAR_CONFIG_HI
+  //   * PCIE_MISC_MSI_DATA_CONFIG
 
   mov     w0, #0xffffffff
   str     w0, [x7, 0xfd504514-0xfd504068]         // set bits 0-31 of [0xfd504514] (MSI_INT_MASK_CLR)

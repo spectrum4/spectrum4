@@ -172,6 +172,8 @@ pcie_init_bcm2711:
 2:
   stp     w0, w8, [x9, #0x04]                     // store last read status register value and number of 1ms
                                                   // loop iterations on heap, to report later
+                                                  // since logging requires stack pointer initialised
+                                                  // but that isn't done yet, use heap instead
   cbz     w8, 3f                                  // exit early if failed to wake up
 
   // Exit early if in endpoint mode, not in root complex mode => implies PCIe misconfiguration
@@ -270,27 +272,17 @@ pcie_init_bcm2711:
   // * clear bit 21 and set bit 1 of [0xfd504204] (refclk from RC gated with CLKREQ# input when ASPM L0s,L1 is enabled)
   // * get revision from [0xfd50406c]
   // * MSI init stuff
-  //   * set [0xfd504514]=0xffffffff (mask interrupts?)
-  //   * set [0xfd504508]=0xffffffff (clear interrupts?)
+
+  mov     w0, #0xffffffff
+  str     w0, [x7, 0xfd504514-0xfd504068]         // set bits 0-31 of [0xfd504514]
+  str     w0, [x7, 0xfd504508-0xfd504068]         // set bits 0-31 of [0xfd504508]
+
   //   * set [0xfd504044]=0xfffffffd (lower 32 bits of msi target address with bit 0 set => msi enable)
   //   * set [0xfd504048]=0x0 (upper 32 bits of msi target address)
   //   * set [0xfd50404c]=0xffe06540
 
   ldr     w0, [x7, 0xfd50406c-0xfd504068]         // w0 = [0xfd50406c] (revision number)
-  str     w0, [x9]                                // store revision number on heap for logging later
-                                                  // since logging requires stack pointer initialised
-                                                  // but that isn't done yet, so do it later
-  mov     w0, #0xffffffff
-  str     w0, [x7, 0xfd504314-0xfd504068]         // set bits 0-31 of [0xfd504314] (clear interrupts)
-  str     w0, [x7, 0xfd504310-0xfd504068]         // set bits 0-31 of [0xfd504310] (mask interrupts)
-
-  cbz     w8, 2f                                  // abort pcie initialisation if bit 4 or bit 5 not set
-
-  mov     w0, 0x03f00000
-  str     w0, [x7, 0xfd504070-0xfd504068]         // RPI_PCIE_REG_MEM_CPU_LO ([0xfd504070] = 0x03f00000)
-  mov     w1, 0x6
-  str     w1, [x7, 0xfd504080-0xfd504068]         // RPI_PCIE_REG_MEM_CPU_HI_START ([0xfd504080] = 0x00000006)
-  str     w1, [x7, 0xfd504084-0xfd504068]         // RPI_PCIE_REG_MEM_CPU_HI_END ([0xfd504084] = 0x00000006)
+  str     w0, [x9]                                // store revision number on heap
   ldr     w2, [x10]                               // x2 bits 0-15: did, bits 16-31: vid
   ldrb    w3, [x10, #0x0e]                        // w3 = header type
   stp     w2, w3, [x9, #0x14]                     // store did/vid/header type on heap

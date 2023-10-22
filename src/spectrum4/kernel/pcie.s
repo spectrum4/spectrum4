@@ -14,19 +14,20 @@
 ##########################################################################
 
 # On return:
-#   [heap+0x00]: revision number
-#   [heap+0x04]: last read status register
-#   [heap+0x08]: number of iterations of 1ms reading status register
-#   [heap+0x0c]: initial class code
-#   [heap+0x10]: updated class code
-#   [heap+0x14]: vid
-#   [heap+0x16]: did
-#   [heap+0x18]: header type
+#   [heap+0x00]: last read status register
+#   [heap+0x04]: number of iterations of 1ms reading status register
+#   [heap+0x08]: initial class code
+#   [heap+0x0c]: updated class code
+#   [heap+0x10]: SSC status
+#                  0x0000: enabled
+#                  0xffff: disabled
+#   [heap+0x12]: link capabilities
+#   [heap+0x14]: revision number
+#   [heap+0x18]: vid
+#   [heap+0x1a]: did
+#   [heap+0x1c]: header type
 .align 2
 pcie_init_bcm2711:
-
-  // TODO: check all error handling is performed correctly in this routine
-  // (early exiting, recording errors on heap, allowing certain failures, etc)
 
   mov     x5, x30
   movl    w10, 0xfd500000                         // x10 = pcie_base
@@ -176,10 +177,7 @@ pcie_init_bcm2711:
     tbz     w0, #4, 1b                            // repeat loop if bit 4 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP)
     tbz     w0, #5, 1b                            // repeat loop if bit 5 is clear (PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE)
 2:
-  stp     w0, w8, [x9, #0x04]                     // store last read status register value and number of 1ms
-                                                  // loop iterations on heap, to report later
-                                                  // since logging requires stack pointer initialised
-                                                  // but that isn't done yet, use heap instead
+  stp     w0, w8, [x9]                            // store last read status register value and number of 1ms on heap
   cbz     w8, 4f                                  // exit early if failed to wake up
 
   // Exit early if in endpoint mode, not in root complex mode => implies PCIe misconfiguration
@@ -254,7 +252,7 @@ pcie_init_bcm2711:
                                                   // can be used in conjunction with a bfi instruction
   bfi     w1, w2, #10, #9                         // w1 = (class code & 0xff000000) | 0x00060400
   str     w1, [x10, 0xfd50043c-0xfd500000]        // update register [0xfd50043c] (PCIE_RC_CFG_PRIV1_ID_VAL3)
-  stp     w0, w1, [x9, #0x0c]                     // store initial and updated class code on heap
+  stp     w0, w1, [x9, #0x08]                     // store initial and updated class code on heap
 
   // Enable SSC (spread spectrum clocking) steps
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L372-L409
@@ -266,31 +264,30 @@ pcie_init_bcm2711:
   //   * MDIO register SET_ADDR
   //   * MDIO register SSC_CNTL
 
-  // TODO: set flag to say SSC is currently unsuccessful
+  mov     w6, 0xffff                              // flag to indicate SSC was unsuccessful
   mov     w0, 0x1f                                // MDIO register offset for SET_ADDR
   mov     w1, 0x1100                              // SSC_REGS_ADDR
   bl      mdio_write                              // [SET_ADDR]=SSC_REGS_ADDR
-  tbnz    w1, #31, 3f                             // branch forward to error routine at 3: if bit 31 is set (=> failed write)
+  tbnz    w1, #31, 3f                             // abort SSC setup due to failed MDIO write operation
   mov     w0, 0x02                                // MDIO register offset for SSC_CNTL
   bl      mdio_read                               // w1=[SSC_CNTL]
-  tbz     w1, #31, 3f                             // branch forward to error routine at 3: if bit 31 is clear (=> failed read)
+  tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
   orr     w1, w1, 0xc000                          // set bits 14 (OVRD_VAL) and 15 (OVRD_EN)
   bl      mdio_write                              // [SSC_CNTL] |= (OVRD_VAL | OVRD_EN)
-  tbnz    w1, #31, 3f                             // branch forward to error routine at 3: if bit 31 is set (=> failed write)
+  tbnz    w1, #31, 3f                             // abort SSC setup due to failed MDIO write operation
   mov     w0, 0x01                                // MDIO register offset SSC_STATUS
   bl      mdio_read                               // w1=[SSC_STATUS]
-  tbz     w1, #31, 3f                             // branch forward to error routine at 3: if bit 31 is clear (=> failed read)
-  tbz     w1, #10, 3f                             // branch forward to error routine at 3: if bit 10 (SSC_STATUS_SSC) is clear
-  tbz     w1, #11, 3f                             // branch forward to error routine at 3: if bit 11 (SSC_STATUS_PLL_LOCK) is clear
-  // TODO: update previous flag to say SSC is successful
+  tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
+  tbz     w1, #10, 3f                             // abort SSC setup since bit 10 (SSC_STATUS_SSC) is clear
+  tbz     w1, #11, 3f                             // abort SSC setup since bit 11 (SSC_STATUS_PLL_LOCK) is clear
+  mov     w6, wzr                                 // flag that SSC was successful
 3:
-  // TODO: flag on heap to record if SSC was successful
+  strh    w6, [x9, #0x10]                         // store w6 on heap to record whether SSC was successful
 
-  // Preserve link capabilities register on stack for later reporting
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1028-L1033
+  ldrh    w0, [x10, 0xfd5000be-0xfd500000]        // Query link capabilities
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1028-L1033
 
-  ldrh    w0, [x10, 0xfd5000be-0xfd500000]
-  // TODO:  strh    w0, [x9, ....]
+  strh    w0, [x9, #0x12]                         // store w0 on heap to record link capabilities register
 
   // Set PCIe->SCB little endian mode for BAR 2 (not sure why this requires two bits)
   // My rpi400 already had correct endian mode after a reset, so this might be unnecessary
@@ -316,24 +313,37 @@ pcie_init_bcm2711:
   orr     w0, w0, #0x2                            //   and set bit 1 (CLKREQ_DEBUG_ENABLE)
   str     w0, [x7, 0xfd504204-0xfd504068]         // of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
 
-  // Preserve revision number, header type, device id and vendor id on the heap
+  // Preserve revision number, device id, vendor id and header type on the heap
 
   ldr     w0, [x7, 0xfd50406c-0xfd504068]         // w0 = [0xfd50406c] (revision number)
-  str     w0, [x9]                                // store revision number on heap
+  str     w0, [x9, #0x14]                         // store revision number on heap
   ldr     w2, [x10]                               // x2 bits 0-15: did, bits 16-31: vid
   ldrb    w3, [x10, #0x0e]                        // w3 = header type
-  stp     w2, w3, [x9, #0x14]                     // store did/vid/header type on heap
+  stp     w2, w3, [x9, #0x18]                     // store did/vid and header type on heap
 
   // MSI initisalisation
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L623-L641
 
   mov     w0, #0xffffffff
-  str     w0, [x7, 0xfd504514-0xfd504068]         // set bits 0-31 of [0xfd504514]
-  str     w0, [x7, 0xfd504508-0xfd504068]         // set bits 0-31 of [0xfd504508]
+  str     w0, [x7, 0xfd504514-0xfd504068]         // set bits 0-31 of [0xfd504514] (MSI_INT_MASK_CLR)
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L627
+  str     w0, [x7, 0xfd504508-0xfd504068]         // set bits 0-31 of [0xfd504508] (MSI_INT_CLR)
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L628
 
-  //   * set [0xfd504044]=0xfffffffd (lower 32 bits of msi target address with bit 0 set => msi enable)
-  //   * set [0xfd504048]=0x0 (upper 32 bits of msi target address)
-  //   * set [0xfd50404c]=0xffe06540
+  // Place the MSI target address inside the 32 bit addressable memory area
+  // (0xfffffffc). Some devices might depend on it. This is possible since the
+  // inbound window is located above the lower 4GB. Bit 0 of
+  // PCIE_MISC_MSI_BAR_CONFIG_LO is repurposed to MSI enable, which we set,
+  // thus target value is 0xfffffffc | 0x1 = 0xfffffffd.
+
+  mov     w0, #0xfffffffd
+  str     w0, [x7, 0xfd504044-0xfd504068]         // [0xfd504044] (PCIE_MISC_MSI_BAR_CONFIG_LO) = 0xfffffffd
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L634-L635
+  str     wzr, [x7, 0xfd504048-0xfd504068]        // [0xfd504048] (PCIE_MISC_MSI_BAR_CONFIG_HI) = 0x0
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L636-L637
+  movl    w0, 0xffe06540                          // PCIE_MISC_MSI_DATA_CONFIG_VAL_32
+  str     w0, [x7, 0xfd50404c-0xfd504068]         // [0xfd50404c] (PCIE_MISC_MSI_DATA_CONFIG) = 0xffe06540 ("PCIE_MISC_MSI_DATA_CONFIG_VAL_32")
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L639-L640
 
 4:
   ret     x5

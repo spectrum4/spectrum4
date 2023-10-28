@@ -225,7 +225,6 @@ uart_x0:
   sub     sp, sp, #0x20                           // Allocate space on stack for hex string
   mov     w2, 0x7830
   mov     x1, sp
-  mov     x1, sp
   strh    w2, [x1], #2                            // "0x"
   mov     x2, 64
   bl      hex_x0

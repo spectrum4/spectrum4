@@ -70,20 +70,28 @@ new:                                     // L019D
 
 # PCIe status logging
 
+# PCIe revision: 0x0000000000000304
+# PCIe link is ready
+# PCIe status register: 0x00000000000000b0
+# PCIe loop iterations: 0x000000000000002e
+# PCIe class code (initial): 0x0000000020060400
+# PCIe class code (updated): 0x0000000020060400
+# SSC configuration stage / link capabilities: 0x0000000090120006
+# SSC status register: 0x0000000080001c17
+# VID/DID: 0x00000000000014e4/0x0000000000002711
+# Header type: 0x0000000000000001
 
-#   [heap+0x00]: * last read status register
-#   [heap+0x04]: * number of iterations of 1ms reading status register
-#   [heap+0x08]: * initial class code
-#   [heap+0x0c]: * updated class code
-#   [heap+0x10]: SSC status
-#                  0x0000: enabled
-#                  0xffff: disabled
+#   [heap+0x00]: last read status register
+#   [heap+0x04]: number of iterations of 1ms reading status register
+#   [heap+0x08]: initial class code
+#   [heap+0x0c]: updated class code
+#   [heap+0x10]: SSC configuration steps successfully completed (0-6)
 #   [heap+0x12]: link capabilities
-#   [heap+0x14]: * revision number
-#   [heap+0x18]: * vid
-#   [heap+0x1a]: * did
-#   [heap+0x1c]: * header type
-
+#   [heap+0x14]: revision number
+#   [heap+0x18]: vid
+#   [heap+0x1a]: did
+#   [heap+0x1c]: header type
+#   [heap+0x20]: SSC status register
 
   ldr     x0, pcie_init
   cbz     x0, 4f                                  // skip PCIE logging if no pcie (e.g. rpi3b)
@@ -188,11 +196,11 @@ new:                                     // L019D
   adrp    x7, initial_channel_info
   add     x7, x7, :lo12:initial_channel_info
   // Loop to copy initial_channel_info block to [CHANS] = start of heap = heap
-  3:
+  7:
     ldr     x8, [x7], #8
     str     x8, [x5], #8
     subs    x6, x6, #1
-    b.ne    3b
+    b.ne    7b
   sub     x9, x5, 1
   str     x9, [x28, DATADD-sysvars]
   str     x5, [x28, PROG-sysvars]
@@ -223,11 +231,11 @@ new:                                     // L019D
                                                   // x6 = number of half words (2 bytes) in initial_stream_data block
   adr     x7, initial_stream_data
   // Loop to copy initial_stream_data block to [STRMS]
-  4:
+  8:
     ldrh    w8, [x7], #2
     strh    w8, [x5], #2
     subs    x6, x6, #1
-    b.ne    4b
+    b.ne    8b
   ldrb    w0, [x28, FLAGS-sysvars]
   and     w0, w0, #~0x02
   strb    w0, [x28, FLAGS-sysvars]                // clear bit 1 of FLAGS (signal printer not in use)

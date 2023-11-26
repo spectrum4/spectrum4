@@ -24,12 +24,10 @@ new:                                     // L019D
   bl      uart_newline
 
 # Register logging
-# logarm  ACTLR_EL3
   logarm  CNTFRQ_EL0
   logarm  CTR_EL0
   logarm  CurrentEL
   logarm  DAIF
-# logarm  ELR_EL3
   logarm  ID_AA64AFR0_EL1
   logarm  ID_AA64AFR1_EL1
   logarm  ID_AA64DFR0_EL1
@@ -59,14 +57,8 @@ new:                                     // L019D
   logarm  MIDR_EL1
   logarm  NZCV
   logarm  REVIDR_EL1
-# logarm  SCR_EL3
   logarm  SCTLR_EL1
-# logarm  SCTLR_EL2
-# logarm  SCTLR_EL3
-# logarm  SPSR_EL3
   logarm  SP_EL0
-# logarm  SP_EL1
-# logarm  SP_EL2
 
 # PCIe status logging
 

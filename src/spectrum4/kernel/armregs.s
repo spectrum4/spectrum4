@@ -1,33 +1,10 @@
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 
-.macro logarm reg
-.if       UART_DEBUG
-  stp     x29, x30, [sp, #-16]!
-  stp     x0, x1, [sp, #-16]!
-  stp     x2, x3, [sp, #-16]!
-  stp     x4, x5, [sp, #-16]!
-  mrs     x4, nzcv                                // preserve N, Z, C, and V flags in x4 (not disturbed by following uart_puts call)
-  adrp    x0, msg_\reg
-  add     x0, x0, :lo12:msg_\reg
-  bl      uart_puts
-  msr     nzcv, x4                                // restore flags from x4 (in case nzcv is flag being logged)
-  mrs     x0, \reg                                // read register value into x0
-  bl      uart_x0
-  bl      uart_newline
-  msr     nzcv, x4                                // restore nzcv again (since uart_x0 / uart_newline may have disturbed it)
-  ldp     x4, x5, [sp], #16
-  ldp     x2, x3, [sp], #16
-  ldp     x0, x1, [sp], #16
-  ldp     x29, x30, [sp], #16
-.endif
-.endm
 
 .if       UART_DEBUG
-.macro msgreg regname
-msg_\regname:
-.asciz "\regname: "
-.endm
-
 msgreg  ACCDATA_EL1
 msgreg  ACTLR_EL1
 msgreg  ACTLR_EL2

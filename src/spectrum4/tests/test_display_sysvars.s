@@ -29,8 +29,8 @@ display_sysvars_1_setup:
 display_sysvars_1_effects_regs:
   mov     x0, #0x0a
   ldr     x1, aux_base
-  movl    x2, 0x12323434
-  movl    x3, 0x75364253
+  movl    w2, 0x12323434
+  movl    w3, 0x75364253
   ldr     x4, =0x0716253443526170
   nzcv    #0b0110
   ret

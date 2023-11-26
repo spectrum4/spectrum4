@@ -28,7 +28,7 @@ display_sysvar_1_effects_regs:
   sub     x0, sp, #0x5d
   ldr     x1, aux_base
   mov     x2, #0
-  movl    x3, 0x75364253
+  movl    w3, 0x75364253
   mov     x4, #0x93
   nzcv    #0b1000
   ret
@@ -49,7 +49,7 @@ display_sysvar_2_effects_regs:
   sub     x0, sp, #0x5b
   ldr     x1, aux_base
   mov     x2, #0
-  movl    x3, 0x75364253
+  movl    w3, 0x75364253
   mov     x4, #0x3945
   nzcv    #0b1000
   ret
@@ -70,7 +70,7 @@ display_sysvar_8_effects_regs:
   sub     x0, sp, #0x4f
   ldr     x1, aux_base
   mov     x2, #0
-  movl    x3, 0x75364253
+  movl    w3, 0x75364253
   ldr     x4, =0x1324354657687980
   nzcv    #0b1000
   ret
@@ -86,6 +86,6 @@ display_sysvar_other_effects_regs:
   sub     x0, sp, #0x5c
   ldr     x1, aux_base
   mov     x2, #0
-  movl    x3, 0x75364253
+  movl    w3, 0x75364253
   nzcv    #0b0110
   ret

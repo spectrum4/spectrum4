@@ -123,11 +123,11 @@ programs, machine code routines, and RAM disk storage.
 
 ## Execution context
 
-  * Spectrum +4 runs at EL3
-  * MMU is not enabled
+  * Spectrum +4 runs at EL1
+  * MMU is not yet enabled
   * EL3 data cache is enabled
   * EL3 instruction cache is enabled
-  * Currently interrupts are not enabled (keyboard routines not yet written)
+  * Timer interrupts configured and enabled, but keyboard routines not yet written
 
 ## Code organisation
 

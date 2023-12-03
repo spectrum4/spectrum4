@@ -16,6 +16,7 @@
 # #   https://github.com/torvalds/linux/blob/366a4e38b8d0d3e8c7673ab5c1b5e76bbfbc0085/drivers/firmware/raspberrypi.c#L249-L257
 # #   https://github.com/torvalds/linux/blob/366a4e38b8d0d3e8c7673ab5c1b5e76bbfbc0085/drivers/watchdog/bcm2835_wdt.c#L100-L123
 # # ------------------------------------------------------------------------------
+# .align 2
 # reboot:
 # .if       UART_DEBUG
 #   adr     x0, msg_rebooting

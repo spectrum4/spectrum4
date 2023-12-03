@@ -2,8 +2,6 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-.align 2
-
 # pci_bus
 #   0x00-0x07: parent
 
@@ -17,6 +15,7 @@
 #
 # Based on:
 #   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L707-L722
+.align 2
 brcm_pcie_map_conf:
 
 

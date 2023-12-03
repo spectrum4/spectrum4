@@ -10,6 +10,15 @@ new:                                     // L019D
   and     sp, x1, #~0x0f                          // sp = highest 16-byte aligned address equal to or lower than ([RAMTOP] + 1).
   mov     x29, 0                                  // Frame pointer 0 indicates end of stack.
 
+  bl      irq_vector_init
+  dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
+  bl      timer_init
+  dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
+  ldr     x0, enable_ic
+  blr     x0
+  dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
+  bl      enable_irq
+
 .if       UART_DEBUG
 # RPi version logging
   mov     x0, msg_rpi_model

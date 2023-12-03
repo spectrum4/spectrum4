@@ -106,6 +106,14 @@ _start:
   bl      fill_memory_with_junk
   ldr     w0, arm_size
   and     sp, x0, #~0x0f                          // Set stack pointer at top of ARM memory
+  bl      irq_vector_init
+  dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
+  bl      timer_init
+  dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
+  ldr     x0, enable_ic
+  blr     x0
+  dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
+  bl      enable_irq
   bl      run_tests
 .endif
 .if       ROMS_AUTORUN
@@ -451,6 +459,8 @@ msg_done:                      .asciz "DONE.\r\n"
 
 .include "rng.s"
 .include "pcie.s"
+.include "irq.s"
+.include "timer.s"
 
 
 # Set initial values to rpi4 values, and replace at runtime if different machine.
@@ -480,6 +490,12 @@ pcie_init:
   .quad     pcie_init_bcm2711                     // default is for rpi4
 local_control:
   .quad     0x00000000ff800000                    // default is for rpi4
+timer_base:
+  .quad     0x00000000fe003000                    // default is for rpi4
+enable_ic:
+  .quad     enable_ic_bcm2711                     // default is for rpi4
+handle_irq:
+  .quad     handle_irq_bcm2711                    // default is for rpi4
 
 
 # RPi 3B (bcm2837):
@@ -507,6 +523,12 @@ base_rpi3:
   .quad     0x0000000000000000                    // 0 => no pcie
 # rpi3 local_control
   .quad     0x0000000040000000
+# rpi3 timer_base
+  .quad     0x000000003f003000
+# rpi3 enable_ic
+  .quad     enable_ic_bcm283x
+# rpi3 handle_irq
+  .quad     handle_irq_bcm283x
 
 
 .align 2
@@ -576,7 +598,10 @@ set_peripherals_addresses:
   ldp     x8, x9, [x0, #48]                       //  x8 = [rpi3 aux_mu_baud_reg] (bits 0-31)
                                                   //       [rpi3 cntfrq] (bits 32-63)
                                                   //  x9 = [rpi3 pcie_init]
-  ldr     x10, [x0, #64]                          // x10 = [rpi3 local_control]
+  ldp     x10, x11, [x0, #64]                     // x10 = [rpi3 local_control]
+                                                  // x11 = [rpi3 timer_base]
+  ldp     x12, x13, [x0, #80]                     // x12 = [rpi3 enable_ic]
+                                                  // x13 = [rpi3 handle_irq]
   stp     x2, x3, [x1]                            // [mailbox_base]    = [rpi3 mailbox_base]
                                                   // [gpio_base]       = [rpi3 gpio_base]
   stp     x4, x5, [x1, #16]                       // [aux_base]        = [rpi3 aux_base]
@@ -586,9 +611,13 @@ set_peripherals_addresses:
   stp     x8, x9, [x1, #48]                       // [aux_mu_baud_reg] = [rpi3 aux_mu_baud_reg] (32 bit)
                                                   // [cntfrq]          = [rpi3 cntfrq] (32 bit)
                                                   // [pcie_init]       = [rpi3 pcie_init]
-  str     x10, [x1, #64]                          // [local_control]   = [rpi3 local_control]
+  stp     x10, x11, [x1, #64]                     // [local_control]   = [rpi3 local_control]
+                                                  // [timer_base]      = [rpi3 timer_base]
+  stp     x12, x13, [x1, #80]                     // [enable_ic]       = [rpi3 enable_ic]
+                                                  // [handle_irq]      = [rpi3 handle_irq]
 1:
   ret
+
 
 .align 2
 # Emulates https://github.com/raspberrypi/tools/blob/2e59fc67d465510179155973d2b959e50a440e47/armstubs/armstub8.S#L98-L102
@@ -602,3 +631,4 @@ set_clocks:
 
 .include "armregs.s"
 .include "font.s"
+.include "entry.s"

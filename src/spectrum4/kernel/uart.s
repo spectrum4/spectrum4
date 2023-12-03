@@ -164,7 +164,7 @@ uart_puts:
   tbz     x3, #5, 2b                              // Repeat last statement until bit 5 is set.
 
 /////////////////////
-// This following section allows us to disable UART output during testing but
+// This following section allows us to disable UART output during testing by
 // setting the one byte test system variable 'uart_disable' to a non zero value
 // without affecting any register values so to not impact tests.
 .if       TESTS_INCLUDE
@@ -189,7 +189,7 @@ uart_puts:
   tbz     x3, #5, 4b                              // Repeat last statement until bit 5 is set.
 
 /////////////////////
-// This following section allows us to disable UART output during testing but
+// This following section allows us to disable UART output during testing by
 // setting the one byte test system variable 'uart_disable' to a non zero value
 // without affecting any register values so to not impact tests.
 .if       TESTS_INCLUDE

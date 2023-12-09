@@ -27,8 +27,9 @@ function run_tests {
 
     runs=$((runs + 1))
     passed='false'
+    died='false'
 
-    until "${completed}" || [ "${seconds}" -eq "${max_seconds_per_run}" ]; do
+    until "${completed}" || "${died}" || [ "${seconds}" -ge "${max_seconds_per_run}" ]; do
       if [ "$(cat "${output_file}" | sed -n '/All tests completed./p' | wc -l)" -gt 0 ] ||
         [ "$(cat "${output_file}" | sed -n '/No tests to run./p' | wc -l)" -gt 0 ]; then
         completed='true'
@@ -38,6 +39,8 @@ function run_tests {
       elif [ "$(cat "${output_file}" | sed -n '/Test failures!/p' | wc -l)" -gt 0 ] ||
         [ "$(cat "${output_file}" | sed -n '/FATAL: Out of space/p' | wc -l)" -gt 0 ]; then
         completed='true'
+      elif ! ps -p "${pid}" > /dev/null; then
+        died='true'
       else
         sleep 1
         seconds=$((seconds + 1))
@@ -49,7 +52,10 @@ function run_tests {
     #
     # TODO: if we continue to get intermittent failures, investigate further if
     # it is related to kill and a better way to gracefully bring down fuse.
-    kill "${pid}"
+
+    if "${died}"; then
+      echo 'Fuse died!' >&2
+    fi
 
     if ! "${passed}"; then
       cat "${output_file}" | sed 's///g'
@@ -58,6 +64,8 @@ function run_tests {
     if ! "${completed}"; then
       echo 'Timed out!' >&2
     fi
+
+    kill "${pid}" || true
   done
 
   if ! "${completed}"; then

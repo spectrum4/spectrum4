@@ -4,7 +4,7 @@
 
 
 
-.if       UART_DEBUG
+.if UART_DEBUG
 msgreg  ACCDATA_EL1
 msgreg  ACTLR_EL1
 msgreg  ACTLR_EL2

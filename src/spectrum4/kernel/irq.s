@@ -74,11 +74,11 @@ handle_irq_bcm283x:
   cmp     w0, #2
   b.ne    1f
   bl      handle_timer_irq
-.if       UART_DEBUG
+.if UART_DEBUG
   b       2f
 .endif
 1:
-.if       UART_DEBUG
+.if UART_DEBUG
   bl      log_unknown_interrupt_value
 2:
 .endif
@@ -94,11 +94,11 @@ handle_irq_bcm2711:
   cmp     w0, #2
   b.ne    1f
   bl      handle_timer_irq
-.if       UART_DEBUG
+.if UART_DEBUG
   b       2f
 .endif
 1:
-.if       UART_DEBUG
+.if UART_DEBUG
   bl      log_unknown_interrupt_value
 2:
 .endif
@@ -106,8 +106,9 @@ handle_irq_bcm2711:
   ret
 
 
-.if       UART_DEBUG
+.if UART_DEBUG
 
+.if UART_DEBUG
 log_unknown_interrupt_value:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -123,5 +124,6 @@ msg_unknown_interrupt:
   .ascii "Unknown interrupt: 0x"                  // concatenates with the string below
 msg_unknown_interrupt_value:
   .asciz "........\r\n"                           // stops (.) are replaced with value in hex_x0 routine
+.endif
 
 .endif

@@ -10,7 +10,7 @@
 .align 2
 rand_init_bcm283x:
   mov     x5, x30
-.if       UART_DEBUG
+.if UART_DEBUG
   adr     x0, msg_init_rand
   bl      uart_puts
 .endif
@@ -24,7 +24,7 @@ rand_init_bcm283x:
   ldr     w0, [x1]
   orr     w0, w0, #0x01
   str     w0, [x1]                                // Set bit 0 of [0x3f104000]  (enable the hardware generator)
-.if       UART_DEBUG
+.if UART_DEBUG
   adr     x0, msg_done
   bl      uart_puts
 .endif
@@ -79,7 +79,7 @@ rand_block_bcm283x:
 
 rand_init_iproc:
   mov     x5, x30
-.if       UART_DEBUG
+.if UART_DEBUG
   adr     x0, msg_init_rand
   bl      uart_puts
 .endif
@@ -91,7 +91,7 @@ rand_init_iproc:
   str     w0, [x1, #0x24]                         // [0xfe104024] = 0x00000200
   mov     w0, #0x00007fff
   str     w0, [x1]                                // [0xfe104000] = 0x00007fff
-.if       UART_DEBUG
+.if UART_DEBUG
   adr     x0, msg_done
   bl      uart_puts
 .endif

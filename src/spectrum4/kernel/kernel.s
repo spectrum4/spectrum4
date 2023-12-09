@@ -93,7 +93,9 @@ _start:
   add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
   bl      set_peripherals_addresses
   bl      set_clocks
+.if UART_DEBUG
   bl      uart_init                               // Initialise UART interface.
+.endif
   bl      init_rpi_model                          // Fetch raspberry pi model identifier into system variable rpi_model.
   bl      init_framebuffer                        // Allocate a frame buffer with chosen screen settings.
   ldr     x0, rand_init
@@ -102,7 +104,7 @@ _start:
   cbz     x0, 3f
   blr     x0
 3:
-.if       TESTS_AUTORUN
+.if TESTS_AUTORUN
   bl      fill_memory_with_junk
   ldr     w0, arm_size
   and     sp, x0, #~0x0f                          // Set stack pointer at top of ARM memory
@@ -116,7 +118,7 @@ _start:
   bl      enable_irq
   bl      run_tests
 .endif
-.if       ROMS_AUTORUN
+.if ROMS_AUTORUN
   b       restart                                 // Raspberry Pi initialisation complete.
                                                   // Now call entry point in rom0.s which
                                                   // is the converted ZX Spectrum 128k code.
@@ -414,7 +416,9 @@ wait_usec:
   ret
 
 
-.include "uart.s"
+.if UART_DEBUG
+  .include "uart.s"
+.endif
 .include "reboot.s"
 .include "paint.s"
 
@@ -451,7 +455,7 @@ base10:
   ret
 
 
-.if       UART_DEBUG
+.if UART_DEBUG
 msg_init_rand:                 .asciz "Initialising random number generator unit... "
 msg_done:                      .asciz "DONE.\r\n"
 .endif

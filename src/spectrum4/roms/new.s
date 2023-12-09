@@ -19,7 +19,7 @@ new:                                     // L019D
   dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
   bl      enable_irq
 
-.if       UART_DEBUG
+.if UART_DEBUG
 # RPi version logging
   mov     x0, msg_rpi_model
   bl      uart_puts
@@ -275,6 +275,8 @@ new:                                     // L019D
   b       main_menu
 
 
+.if UART_DEBUG
+
 msg_rpi_model:
   .asciz "Raspberry Pi model: "
 
@@ -325,3 +327,5 @@ msg_vid_did:
 
 msg_header_type:
   .asciz "Header type: "
+
+.endif

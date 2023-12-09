@@ -71,7 +71,7 @@ uart_init:
   b.ne    2b                                      // Repeat until x0 == 0.
   str     wzr, [x4, GPPUDCLK0]                    //   [GPPUDCLK0] = 0x00000000 => Remove control signal to lines 14, 15.
   str     w3, [x1, AUX_MU_CNTL]                   //   [AUX_MU_CNTL_REG] = 0x00000003 => Enable Mini UART Tx/Rx
-.if       TESTS_INCLUDE
+.if TESTS_INCLUDE
   adrp    x0, uart_disable
   add     x0, x0, :lo12:uart_disable
   strb    wzr, [x0]
@@ -98,7 +98,7 @@ uart_send:
 // This following section allows us to disable UART output during testing but
 // setting the one byte test system variable 'uart_disable' to a non zero value
 // without affecting any register values so to not impact tests.
-.if       TESTS_INCLUDE
+.if TESTS_INCLUDE
   movl    w2, 0x12323434                          // rpi3/rpi4/qemu hold different values in w2 (from [AUX_MU_LSR_REG]) so use magic value in test
   adrp    x1, uart_disable
   add     x1, x1, :lo12:uart_disable
@@ -117,7 +117,6 @@ uart_send:
   strb    w0, [x1, AUX_MU_IO_REG]                 //   [AUX_MU_IO_REG] = w0
   ret
 
-.if       UART_DEBUG
 # ------------------------------------------------------------------------------
 # Send '\r\n' over Mini UART
 # ------------------------------------------------------------------------------
@@ -167,7 +166,7 @@ uart_puts:
 // This following section allows us to disable UART output during testing by
 // setting the one byte test system variable 'uart_disable' to a non zero value
 // without affecting any register values so to not impact tests.
-.if       TESTS_INCLUDE
+.if TESTS_INCLUDE
   adrp    x1, uart_disable
   add     x1, x1, :lo12:uart_disable
   ldrb    w1, [x1]
@@ -192,7 +191,7 @@ uart_puts:
 // This following section allows us to disable UART output during testing by
 // setting the one byte test system variable 'uart_disable' to a non zero value
 // without affecting any register values so to not impact tests.
-.if       TESTS_INCLUDE
+.if TESTS_INCLUDE
   adrp    x1, uart_disable
   add     x1, x1, :lo12:uart_disable
   ldrb    w1, [x1]
@@ -205,7 +204,7 @@ uart_puts:
   strb    w2, [x1, AUX_MU_IO_REG]                 //   [AUX_MU_IO_REG] = w2
   b       1b
 5:
-.if       TESTS_INCLUDE
+.if TESTS_INCLUDE
   movl    w3, 0x75364253                          // rpi3/rpi4/qemu hold different values in w3 (from [AUX_MU_LSR_REG]) so use magic value in test
 .endif
   ret
@@ -236,4 +235,3 @@ uart_x0:
   ldp     x19, x20, [sp], #16                     // Restore x19, x20
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
-.endif

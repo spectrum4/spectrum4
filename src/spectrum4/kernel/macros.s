@@ -91,7 +91,7 @@
 
 
 .macro log char
-.if       UART_DEBUG
+.if UART_DEBUG
   stp     x29, x30, [sp, #-16]!
   stp     x0, x1, [sp, #-16]!
   stp     x2, x3, [sp, #-16]!
@@ -110,7 +110,7 @@
 
 
 .macro logreg index
-.if       UART_DEBUG
+.if UART_DEBUG
   stp     x29, x30, [sp, #-16]!
   stp     x0, x1, [sp, #-16]!
   stp     x2, x3, [sp, #-16]!
@@ -213,7 +213,7 @@
 
 
 .macro logarm reg
-.if       UART_DEBUG
+.if UART_DEBUG
   stp     x29, x30, [sp, #-16]!
   stp     x0, x1, [sp, #-16]!
   stp     x2, x3, [sp, #-16]!
@@ -235,7 +235,7 @@
 .endm
 
 
-.if       UART_DEBUG
+.if UART_DEBUG
 .macro msgreg regname
 msg_\regname:
 .asciz "\regname: "

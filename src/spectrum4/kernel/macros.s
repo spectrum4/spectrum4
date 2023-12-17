@@ -46,6 +46,7 @@
   adrp    x2, framebuffer
   add     x2, x2, :lo12:framebuffer
   ldr     w0, [x2]
+  orr     x0, x0, 0xffff000000000000              // Convert to virtual address
   ldr     w1, [x2, pitch-framebuffer]
   mov     w2, \y
   umaddl  x0, w1, w2, x0

@@ -22,7 +22,7 @@ cd "$(dirname "${0}")"
 
 if [ "${#}" -ne 1 ]; then
   echo "$(basename "${0}"): specify a test to debug, e.g." >&2
-  echo "  $ '${0}' po_any_80_f010" >&2
+  echo "  $ '${0}' po_t_udg_ab_s111" >&2
   exit 64
 fi
 

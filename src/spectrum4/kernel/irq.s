@@ -54,23 +54,23 @@ show_invalid_entry_message:
 
 enable_ic_bcm283x:
   mov     w0, #0x00000002
-  movl    w1, 0x3f00b200
-  str     w0, [x1, #0x10]                         // [0x3f00b210] = 0x00000002
+  adrp    x1, 0x3f00b000 + _start
+  str     w0, [x1, #0x210]                        // [0x3f00b210] = 0x00000002
   ret
 
 
 enable_ic_bcm2711:
   mov     w0, #0x00000002
-  movl    w1, 0xfe00b200
-  str     w0, [x1, #0x10]                         // [0xfe00b210] = 0x00000002
+  adrp    x1, 0xfe00b000 + _start
+  str     w0, [x1, #0x210]                        // [0xfe00b210] = 0x00000002
   ret
 
 
 handle_irq_bcm283x:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
-  movl    w1, 0x3f00b200
-  ldr     w0, [x1, #0x04]                         // w0 = [0x3f00b204]
+  adrp    x1, 0x3f00b000 + _start
+  ldr     w0, [x1, #0x204]                        // w0 = [0x3f00b204]
   cmp     w0, #2
   b.ne    1f
   bl      handle_timer_irq
@@ -89,8 +89,8 @@ handle_irq_bcm283x:
 handle_irq_bcm2711:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
-  movl    w1, 0xfe00b200
-  ldr     w0, [x1]                                // w0 = [0xfe00b200]
+  adrp    x1, 0xfe00b000 + _start
+  ldr     w0, [x1, 0x200]                         // w0 = [0xfe00b200]
   cmp     w0, #2
   b.ne    1f
   bl      handle_timer_irq
@@ -107,8 +107,6 @@ handle_irq_bcm2711:
 
 
 .if UART_DEBUG
-
-.if UART_DEBUG
 log_unknown_interrupt_value:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -120,10 +118,9 @@ log_unknown_interrupt_value:
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 
+
 msg_unknown_interrupt:
   .ascii "Unknown interrupt: 0x"                  // concatenates with the string below
 msg_unknown_interrupt_value:
   .asciz "........\r\n"                           // stops (.) are replaced with value in hex_x0 routine
-.endif
-
 .endif

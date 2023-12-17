@@ -36,7 +36,7 @@
 .align 2
 uart_init:
   adr     x4, mailbox_base                        // x4 = mailbox_base
-  ldr     x1, [x4, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+  ldr     x1, [x4, aux_base-mailbox_base]         // x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
   ldr     w2, [x1, AUX_ENABLES]                   // w2 = [AUX_ENABLES] (Auxiliary enables)
   orr     w2, w2, #1
   str     w2, [x1, AUX_ENABLES]                   //   [AUX_ENABLES] |= 0x00000001 => Enable Mini UART.
@@ -51,7 +51,7 @@ uart_init:
   str     w2, [x1, AUX_MU_BAUD]                   //   [AUX_MU_BAUD_REG] = 0x0000010e (rpi3) or 0x0000021d (rpi4)
                                                   //         => baudrate = system_clock_freq/(8*([AUX_MU_BAUD_REG]+1))
                                                   //                       (as close to 115200 as possible)
-  ldr     x4, [x4, gpio_base-mailbox_base]        // x4 = [gpio_base] = 0x000000003f200000 (rpi3) or 0x00000000fe200000 (rpi4)
+  ldr     x4, [x4, gpio_base-mailbox_base]        // x4 = [gpio_base] = 0x3f200000 (rpi3) or 0xfe200000 (rpi4)
   ldr     w2, [x4, GPFSEL1]                       // w2 = [GPFSEL1]
   and     w2, w2, #0xfffc0fff                     // Unset bits 12, 13, 14 (FSEL14 => GPIO Pin 14 is an input).
                                                   // Unset bits 15, 16, 17 (FSEL15 => GPIO Pin 15 is an input).
@@ -85,11 +85,11 @@ uart_init:
 # On entry:
 #   x0: char to send
 # On exit:
-#   x1: [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+#   x1: [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
 #   x2: Last read of [AUX_MU_LSR_REG] when waiting for bit 5 to be set
 uart_send:
   adr     x1, mailbox_base                        // x1 = mailbox_base
-  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
 1:
   ldr     w2, [x1, AUX_MU_LSR]                    // w2 = [AUX_MU_LSR_REG]
   tbz     x2, #5, 1b                              // Repeat last statement until bit 5 is set.
@@ -105,11 +105,11 @@ uart_send:
   ldrb    w1, [x1]
   cbnz    w1, 2f
   adr     x1, mailbox_base                        // x1 = mailbox_base
-  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
   b       3f
 2:
   adr     x1, mailbox_base                        // x1 = mailbox_base
-  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
   ret
 3:
 .endif
@@ -125,7 +125,7 @@ uart_send:
 #   <nothing>
 # On exit:
 #   x0: 0x0a
-#   x1: [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+#   x1: [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
 #   x2: Last read of [AUX_MU_LSR_REG] when waiting for bit 5 to be set
 uart_newline:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -146,12 +146,12 @@ uart_newline:
 #   x0 = address of null terminated string
 # On exit:
 #   x0 = address of null terminator
-#   x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+#   x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
 #   x2 = 0
 #   x3 = [AUX_MU_LSR]
 uart_puts:
   adr     x1, mailbox_base                        // x1 = mailbox_base
-  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
 1:
   ldrb    w2, [x0], #1
   cbz     w2, 5f
@@ -172,7 +172,7 @@ uart_puts:
   ldrb    w1, [x1]
   cbnz    x1, uart_puts
   adr     x1, mailbox_base                        // x1 = mailbox_base
-  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
 .endif
 /////////////////////
 
@@ -197,7 +197,7 @@ uart_puts:
   ldrb    w1, [x1]
   cbnz    x1, uart_puts
   adr     x1, mailbox_base                        // x1 = mailbox_base
-  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x000000003f215000 (rpi3) or 0x00000000fe215000 (rpi4)
+  ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
 .endif
 /////////////////////
 

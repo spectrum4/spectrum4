@@ -38,11 +38,11 @@ paint_string:
     add     w14, w14, w2, lsl #4                  // w14 = BORDER_TOP + y * 16
     mov     w15, BORDER_LEFT                      // w15 = BORDER_LEFT
     add     w15, w15, w1, lsl #4                  // w15 = BORDER_LEFT + x * 16
-    add     w15, w10, w15, lsl #2                 // w15 = address of framebuffer + 4* (BORDER_LEFT + x * 16)
-    umaddl  x14, w9, w14, x15                     // w14 = pitch*(BORDER_TOP + y * 16) + address of framebuffer + 4 * (BORDER_LEFT + x*16)
+    add     x15, x10, x15, lsl #2                 // x15 = address of framebuffer + 4* (BORDER_LEFT + x * 16)
+    umaddl  x14, w9, w14, x15                     // x14 = pitch*(BORDER_TOP + y * 16) + address of framebuffer + 4 * (BORDER_LEFT + x*16)
     mov     w15, 16                               // w15 = y counter
     2:                                            // Paint char
-      mov     w16, w14                            // w16 = leftmost pixel of current row address
+      mov     x16, x14                            // x16 = leftmost pixel of current row address
       mov     w12, 0x800080                       // w12 = mask for current pixel
       ldrh    w17, [x13], 2                       // w17 = bitmap for current row, and update x13 to next bitmap pattern
       3:                                          // Paint a horizontal row of pixels of character
@@ -52,7 +52,7 @@ paint_string:
         lsr     w12, w12, 1                       // Shift bit mask to next pixel
         cmp     w12, 0x80
         b.ne    3b
-      add     w14, w16, w9                        // x14 = start of current line + pitch = start of new line.
+      add     x14, x16, x9                        // x14 = start of current line + pitch = start of new line.
       subs    w15, w15, 1                         // Decrease vertical pixel counter.
       b.ne    2b
     add     w1, w1, 1                             // Increment w1 (x print position) so that the next char starts to the right of the current char.

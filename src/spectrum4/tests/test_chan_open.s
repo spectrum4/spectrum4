@@ -221,8 +221,8 @@ chan_open_03_effects:
 
 chan_open_03_effects_regs:
   ldrb    w0, [x28, FLAGS-sysvars]
-  mov     x1, chn_cd_lu + 0x08 + 2*0x10           // Third record in chn-cd-lu
-  mov     x2, chan_p
+  adr     x1, chn_cd_lu + 0x08 + 2*0x10           // Third record in chn-cd-lu
+  adr     x2, chan_p
   mov     w9, #0x00                               // No more records in chn-cd-lu
   mov     x10, 'P'                                // Key for chn-cd-lu table
   nzcv    #0b0110

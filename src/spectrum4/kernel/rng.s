@@ -15,6 +15,7 @@ rand_init_bcm283x:
   bl      uart_puts
 .endif
   movl    w1, 0x3f104000
+  orr     x1, x1, 0xffff000000000000
   mov     w0, #0x00100000                         // "warmup count": the initial numbers generated are "less random" so will be discarded
                                                   // set this higher than in linux kernel, as results seem better with higher value
   str     w0, [x1, #0x04]                         // [0x3f104004] = 0x00100000
@@ -33,6 +34,7 @@ rand_init_bcm283x:
 
 rand_x0_bcm283x:
   movl    w1, 0x3f104000
+  orr     x1, x1, 0xffff000000000000
   1:                                              // Wait until ([0x3f104004] >> 24) >= 1
     ldr     w0, [x1, #0x04]                       // Bits 24-31 tell us how many words
     lsr     w0, w0, #24                           // are available.
@@ -61,6 +63,7 @@ rand_block_bcm283x:
   and     x0, x0, #~0b11
   and     x1, x1, #~0b11
   movl    w2, 0x3f104000
+  orr     x2, x2, 0xffff000000000000
   1:                                              // Loop until buffer filled
     2:                                            // Wait until ([0x3f104004] >> 24) >= 1
       ldr     w3, [x2, #0x04]                     // Since bits 24-31 tell us how many words
@@ -84,6 +87,7 @@ rand_init_iproc:
   bl      uart_puts
 .endif
   movl    w1, 0xfe104000
+  orr     x1, x1, 0xffff000000000000
   mov     w0, #0x00100000                         // "warmup count": the initial numbers generated are "less random" so will be discarded
                                                   // set this higher than in linux kernel, as results seem better with higher value
   str     w0, [x1, #0x10]                         // [0xfe104010] = 0x00100000
@@ -100,6 +104,7 @@ rand_init_iproc:
 
 rand_x0_iproc:
   movl    w1, 0xfe104000
+  orr     x1, x1, 0xffff000000000000
   1:                                              // Wait until [0xfe10400c] >= 16
     ldr     w0, [x1, #0x0c]
     cmp     w0, #16
@@ -128,6 +133,7 @@ rand_block_iproc:
   and     x0, x0, #~0b11
   and     x1, x1, #~0b11
   movl    w2, 0xfe104000
+  orr     x2, x2, 0xffff000000000000
   1:                                              // Wait until [0xfe10400c] >= 16
     ldr     w3, [x2, #0x0c]
     cmp     w3, #16

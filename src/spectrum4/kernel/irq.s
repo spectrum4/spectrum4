@@ -55,6 +55,7 @@ show_invalid_entry_message:
 enable_ic_bcm283x:
   mov     w0, #0x00000002
   movl    w1, 0x3f00b200
+  orr     x1, x1, #0xffff000000000000
   str     w0, [x1, #0x10]                         // [0x3f00b210] = 0x00000002
   ret
 
@@ -62,6 +63,7 @@ enable_ic_bcm283x:
 enable_ic_bcm2711:
   mov     w0, #0x00000002
   movl    w1, 0xfe00b200
+  orr     x1, x1, #0xffff000000000000
   str     w0, [x1, #0x10]                         // [0xfe00b210] = 0x00000002
   ret
 
@@ -70,6 +72,7 @@ handle_irq_bcm283x:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   movl    w1, 0x3f00b200
+  orr     x1, x1, #0xffff000000000000
   ldr     w0, [x1, #0x04]                         // w0 = [0x3f00b204]
   cmp     w0, #2
   b.ne    1f
@@ -90,6 +93,7 @@ handle_irq_bcm2711:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   movl    w1, 0xfe00b200
+  orr     x1, x1, #0xffff000000000000
   ldr     w0, [x1]                                // w0 = [0xfe00b200]
   cmp     w0, #2
   b.ne    1f

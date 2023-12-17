@@ -128,6 +128,7 @@ tv_tuner_01_effects:
   bl      restore_snapshot
   adrp    x0, framebuffer
   add     x0, x0, :lo12:framebuffer
+  orr     x0, x0, 0xffff000000000000              // Convert to virtual address
   ldp     w0, w1, [x0]
   add     x1, x0, x1
   adr     x2, tv_tuner_01_framebuffer

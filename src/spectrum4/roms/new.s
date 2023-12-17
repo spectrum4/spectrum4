@@ -21,12 +21,12 @@ new:                                     // L019D
 
 .if UART_DEBUG
 # RPi version logging
-  mov     x0, msg_rpi_model
+  adr     x0, msg_rpi_model
   bl      uart_puts
   ldr     w0, rpi_model
   bl      uart_x0
   bl      uart_newline
-  mov     x0, msg_rpi_revision
+  adr     x0, msg_rpi_revision
   bl      uart_puts
   ldr     w0, rpi_revision
   bl      uart_x0
@@ -96,7 +96,7 @@ new:                                     // L019D
 
   ldr     x0, pcie_init
   cbz     x0, 4f                                  // skip PCIE logging if no pcie (e.g. rpi3b)
-  mov     x0, msg_pcie_revision
+  adr     x0, msg_pcie_revision
   bl      uart_puts
   adrp    x10, heap
   add     x10, x10, :lo12:heap
@@ -116,38 +116,38 @@ new:                                     // L019D
   adr     x0, msg_pcie_not_in_rc_mode
 3:
   bl      uart_puts
-  mov     x0, msg_pcie_status_register
+  adr     x0, msg_pcie_status_register
   bl      uart_puts
   mov     x0, x8
   bl      uart_x0
   bl      uart_newline
-  mov     x0, msg_pcie_loop_iterations
+  adr     x0, msg_pcie_loop_iterations
   bl      uart_puts
   mov     x0, x9
   bl      uart_x0
   bl      uart_newline
-  mov     x0, msg_class_code_initial
+  adr     x0, msg_class_code_initial
   bl      uart_puts
   ldp     w0, w8, [x10, #0x08]                    // w0 = initial class code
                                                   // w8 = updated class code
   bl      uart_x0
   bl      uart_newline
-  mov     x0, msg_class_code_updated
+  adr     x0, msg_class_code_updated
   bl      uart_puts
   mov     x0, x8
   bl      uart_x0
   bl      uart_newline
-  mov     x0, msg_ssc_config_state_link_capabilities
+  adr     x0, msg_ssc_config_state_link_capabilities
   bl      uart_puts
   ldr     w0, [x10, #0x10]                        // w0 = ssc config stage / link capabilities
   bl      uart_x0
   bl      uart_newline
-  mov     x0, msg_ssc_status
+  adr     x0, msg_ssc_status
   bl      uart_puts
   ldr     w0, [x10, #0x20]                        // w0 = ssc status
   bl      uart_x0
   bl      uart_newline
-  mov     x0, msg_vid_did
+  adr     x0, msg_vid_did
   bl      uart_puts
   ldrh    w0, [x10, #0x18]                        // w0 = vid
   bl      uart_x0
@@ -156,14 +156,14 @@ new:                                     // L019D
   ldrh    w0, [x10, #0x1a]                        // w8 = did
   bl      uart_x0
   bl      uart_newline
-  mov     x0, msg_header_type
+  adr     x0, msg_header_type
   bl      uart_puts
   ldr     w0, [x10, #0x1c]                        // w9 = header type
   bl      uart_x0
   bl      uart_newline
   b       5f
 4:
-  mov     x0, msg_no_pcie
+  adr     x0, msg_no_pcie
   bl      uart_puts
   b       6f
 5:

@@ -21,8 +21,9 @@ restart:                                 // L0000
   str     x9, [x28, SFSPACE-sysvars]              // Store free space in SFSPACE.
 
   ldr     w14, arm_size                           // x14 = first byte of shared GPU memory, for determining where CPU dedicated RAM ends (one byte below)
+  orr     x14, x14, 0xffff000000000000            // Convert to virtual address
   sub     x14, x14, 1                             // x14 = last byte of dedicated RAM (not shared with GPU)
-  str     x14, [x28, P_RAMT-sysvars]              // [P_RAMT] = 0x3bffffff
+  str     x14, [x28, P_RAMT-sysvars]              // TODO: [P_RAMT] = 0xffff000007ffffff (rpi3 and rpi4) with gpu_mem=64 in config.txt - find out why!
   mov     x15, UDG_COUNT * 4                      // x15 = number of double words (8 bytes) of characters to copy to the user defined graphics region
   adrp    x16, char_set + (FIRST_UDG_CHAR - 32) * 32
   add     x16, x16, :lo12:(char_set + (FIRST_UDG_CHAR - 32) * 32)

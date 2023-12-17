@@ -72,6 +72,8 @@ function generate_test_suites {
   echo "    .include \"libextra.s\""
   echo "  .endif"
   echo ".endif"
+  echo
+  echo ".include \"mmu.s\""
   if [ "${bashflags/x/-}" != "${bashflags}" ]; then set -x; fi
 }
 

@@ -120,7 +120,7 @@ po_any_G_81_effects:
 .align 2
 po_any_G_81_effects_regs:
   sub     w1, w1, #1
-  add     w2, w2, #2
+  add     x2, x2, #2
   mov     w3, wzr
   adrp    x4, MEMBOT
   add     x4, x4, :lo12:MEMBOT

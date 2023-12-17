@@ -34,36 +34,30 @@
 .text
 .align 2
 _start:
-# TODO: enable interrupts, set up vector jump tables, switch execution
-# level etc, and all the kinds of things to initialise the processor system
-# registers, memory virtualisation, initialise sound chip, USB, etc.
-# There seems to be a pretty good guide on exactly this here:
+# TODO: enable caches
+# There seems to be a reasonable guide to system initialisation here:
 #   * https://developer.arm.com/documentation/dai0527/a/
   mrs     x0, mpidr_el1                           // x0 = Multiprocessor Affinity Register value.
   ands    x0, x0, #0x3                            // x0 = core number.
   b.ne    sleep                                   // Put all cores except core 0 to sleep.
 
-# Start L1 Caches if in EL3: not sure if this is working
+# ldr     x0, =0x30d01804                         // This version enables caches (bits 2, 12)
+  ldr     x0, =0x30d00800
+  msr     sctlr_el1, x0                           // Update "System Control Register (EL1)":
+                                                  //   set RES:1 bits (11, 20, 22, 23, 28, 29)
+                                                  //   disable caches (bits 2, 12)
+  mov     x0, 0x80000000
+  msr     hcr_el2, x0                             // Update "Hypervisor Configuration Register":
+                                                  //   set bit 31 => execution state for EL1 is aarch64
+
   mrs     x0, currentel
   and     x0, x0, #0x0c
   cmp     x0, #0x0c
   b.ne    1f
 
-# We are in EL3
-  mrs     x0, sctlr_el3                           // x0 = System Control Register (EL3) value
-  orr     x0, x0, 0x0004                          // Data Cache (Bit 2)
-  orr     x0, x0, 0x1000                          // Instruction Caches (Bit 12)
-  msr     sctlr_el3, x0                           // System Control Register (EL3) = x0
-
 ##################################################
-# Move from EL3 to EL1
-  ldr     x0, =0x30d01804
-  msr     sctlr_el1, x0                           // Update "System Control Register (EL1)":
-                                                  //   set RES:1 bits (11, 20, 22, 23, 28, 29)
-                                                  //   enable caches (bits 2, 12)
-  mov     x0, 0x80000000
-  msr     hcr_el2, x0                             // Update "Hypervisor Configuration Register":
-                                                  //   set bit 31 => execution state for EL1 is aarch64
+# We are in EL3
+# Move from EL3 to EL1 directly (skip EL2)
   mov     x0, 0x00000431
   msr     scr_el3, x0                             // Update "Secure Configuration Register":
                                                   //   set bit 0 => EL0 and EL1 are in non-secure state
@@ -85,14 +79,78 @@ _start:
 ##################################################
 
 1:
-# TODO: Check if we are in EL2
+##################################################
+# We are in EL2 - this shouldn't happen
+# Move from EL2 to EL1
+  mov     x0, 0x000001c5
+  msr     spsr_el2, x0                            // Update "Saved Program Status Register (EL2)":
+                                                  //   set bit 0 => dedicated stack pointer selected on EL switch to/from EL2
+                                                  //   set bit 2 (and clear bit 3) => drop to EL1 on eret
+                                                  //   set bit 6 => mask (disable) error (SError) interrupts
+                                                  //   set bit 7 => mask (disable) regular (IRQ) interrupts
+                                                  //   set bit 8 => mask (disable) fast (FIQ) interrupts
+  adr     x0, 2f
+  msr     elr_el2, x0                             // Update Exception Link Register (EL2):
+                                                  //   set to return address after next `eret`
+  eret
+# Move from EL2 to EL1 completed
+##################################################
 
 2:
 # We are in EL1
-  adrp    x28, sysvars
-  add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
+
   bl      set_peripherals_addresses
   bl      set_clocks
+
+# Configure page tables
+  adrp    x0, pg_dir                              // x0 = pg_dir (page aligned, so no additional add needed)
+  mov     x1, #0x6000                             // clear 6 pages
+  bl      memzero
+  adrp    x0, pg_dir
+  mov     x1, #0x1003
+  add     x1, x0, x1
+  str     x1, [x0]                                // [pg_dir] = pg_dir + 0x1003
+  add     x0, x0, #0x1000
+  add     x1, x1, #0x1000
+  ldr     x3, peripherals_end
+  lsr     x2, x3, #30
+  3:
+    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = pg_dir + 0x1003 + i*0x1000
+    add     x1, x1, #0x1000
+    subs    x2, x2, #0x1
+    b.ne    3b
+  adrp    x0, (pg_dir+0x2000)
+  mov     x1, #0x405
+  ldr     x2, peripherals_start
+  4:                                              // creates 2016 entries for 0x00000000 - 0xfc000000
+    str     x1, [x0], #8                          // [pg_dir + 0x2000 + i*8] = 0x405 + i*0x200000
+    add     x1, x1, #0x200000
+    cmp     x1, x2
+    b.lt    4b
+  sub     x1, x1, #0x4
+  5:                                              // creates 32 entries for 0xfc000000 - 0x100000000
+    str     x1, [x0], #8                          // [pg_dir + 0x2000 + i*8] = 0x401 + i*0x200000
+    add     x1, x1, #0x200000
+    cmp     x1, x3
+    b.lt    5b
+  adrp    x0, pg_dir
+  msr     ttbr1_el1, x0                           // Configure page tables for virtual addresses with 1's in first 16 bits
+  msr     ttbr0_el1, x0                           // Configure page tables for virtual addresses with 0's in first 16 bits
+                                                  // This seems to be needed on qemu so that when sctlr_el1 is updated
+                                                  // below, that the following instruction can be fetched since at this
+                                                  // point, the program counter is using a physical address. On rpi3 this
+                                                  // instruction seems not to be needed, for whatever reason.
+  ldr     x0, =0x80100010
+  msr     tcr_el1, x0                             // tcr_el1 = 0x0000000080100010
+  ldr     x0, =0x00004400
+  msr     mair_el1, x0                            // mair_el1 = 0x0000000000004400
+  ldr     x2, =6f                                 // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)
+  mov     x0, #0x1
+  msr     sctlr_el1, x0                           // sctlr_el1 = 0x0000000000000001
+  br      x2                                      // jump to next instruction so that program counter starts using virtual address
+6:
+  adrp    x28, sysvars
+  add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
 .if UART_DEBUG
   bl      uart_init                               // Initialise UART interface.
 .endif
@@ -101,12 +159,12 @@ _start:
   ldr     x0, rand_init
   blr     x0
   ldr     x0, pcie_init
-  cbz     x0, 3f
+  cbz     x0, 7f
   blr     x0
-3:
+7:
 .if TESTS_AUTORUN
-  bl      fill_memory_with_junk
   ldr     w0, arm_size
+  orr     x0, x0, 0xffff000000000000              // Convert to virtual address
   and     sp, x0, #~0x0f                          // Set stack pointer at top of ARM memory
   bl      irq_vector_init
   dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
@@ -116,6 +174,7 @@ _start:
   blr     x0
   dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
   bl      enable_irq
+  bl      fill_memory_with_junk
   bl      run_tests
 .endif
 .if ROMS_AUTORUN
@@ -233,7 +292,7 @@ fb_req_end:
 #   x12 corrupted
 .align 2
 mbox_call:
-  ldr     x9, mailbox_base                        // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0x000000003f00b880 (rpi3) or 0x00000000fe00b880 (rpi4)
+  ldr     x9, mailbox_base                        // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0xffff00003f00b880 (rpi3) or 0xffff0000fe00b880 (rpi4)
 1:                                                // Wait for mailbox FULL flag to be clear.
   ldr     w10, [x9, MAILBOX_STATUS]               // w10 = mailbox status.
   tbnz    w10, MAILBOX_FULL_BIT, 1b               // If FULL flag set (bit 31), try again...
@@ -274,7 +333,8 @@ poke_address:
   // attribute address = attributes_file+((x11/2)%108)+108*(((x11/216)%20)+20*(x11/(216*20*16)))
   adrp    x9, fb_req                              // x9 = address of mailbox request.
   add     x9, x9, :lo12:fb_req
-  ldr     w10, [x9, framebuffer-fb_req]           // w10 = address of framebuffer
+  ldr     w10, [x9, framebuffer-fb_req]           // w10 = physical address of framebuffer
+  orr     x10, x10, #0xffff000000000000           // x10 = virtual address of framebuffer
   ldr     w12, [x9, pitch-fb_req]                 // w12 = pitch
   ldr     x13, =0x97b425ed097b425f                // x13 = 0x97b425ed097b425f = 10931403895531586143
   umulh   x14, x13, x11                           // x14 = (10931403895531586143 * x11) / 18446744073709551616 = int(x11*16/27)
@@ -475,11 +535,11 @@ msg_done:                      .asciz "DONE.\r\n"
 
 .align 3
 mailbox_base:
-  .quad     0x00000000fe00b880                    // default is for rpi4
+  .quad     0xffff0000fe00b880                    // default is for rpi4
 gpio_base:
-  .quad     0x00000000fe200000                    // default is for rpi4
+  .quad     0xffff0000fe200000                    // default is for rpi4
 aux_base:
-  .quad     0x00000000fe215000                    // default is for rpi4
+  .quad     0xffff0000fe215000                    // default is for rpi4
 rand_init:
   .quad     rand_init_iproc                       // default is for rpi4
 rand_block:
@@ -495,11 +555,15 @@ pcie_init:
 local_control:
   .quad     0x00000000ff800000                    // default is for rpi4
 timer_base:
-  .quad     0x00000000fe003000                    // default is for rpi4
+  .quad     0xffff0000fe003000                    // default is for rpi4
 enable_ic:
   .quad     enable_ic_bcm2711                     // default is for rpi4
 handle_irq:
   .quad     handle_irq_bcm2711                    // default is for rpi4
+peripherals_start:
+  .quad     0x00000000fc000000                    // default is for rpi4
+peripherals_end:
+  .quad     0x0000000100000000                    // default is for rpi4
 
 
 # RPi 3B (bcm2837):
@@ -508,11 +572,11 @@ handle_irq:
 .align 3
 base_rpi3:
 # rpi3 mailbox_base
-  .quad     0x000000003f00b880
+  .quad     0xffff00003f00b880
 # rpi3 gpio_base
-  .quad     0x000000003f200000
+  .quad     0xffff00003f200000
 # rpi3 aux_base
-  .quad     0x000000003f215000
+  .quad     0xffff00003f215000
 # rpi3 rand_init
   .quad     rand_init_bcm283x
 # rpi3 rand_block
@@ -528,11 +592,15 @@ base_rpi3:
 # rpi3 local_control
   .quad     0x0000000040000000
 # rpi3 timer_base
-  .quad     0x000000003f003000
+  .quad     0xffff00003f003000
 # rpi3 enable_ic
   .quad     enable_ic_bcm283x
 # rpi3 handle_irq
   .quad     handle_irq_bcm283x
+# rpi3 peripherals_start
+  .quad     0x000000003f000000
+# rpi3 peripherals_end
+  .quad     0x0000000040000000
 
 
 .align 2
@@ -606,19 +674,23 @@ set_peripherals_addresses:
                                                   // x11 = [rpi3 timer_base]
   ldp     x12, x13, [x0, #80]                     // x12 = [rpi3 enable_ic]
                                                   // x13 = [rpi3 handle_irq]
-  stp     x2, x3, [x1]                            // [mailbox_base]    = [rpi3 mailbox_base]
-                                                  // [gpio_base]       = [rpi3 gpio_base]
-  stp     x4, x5, [x1, #16]                       // [aux_base]        = [rpi3 aux_base]
-                                                  // [uart_init]       = [rpi3 uart_init]
-  stp     x6, x7, [x1, #32]                       // [uart_block]      = [rpi3 uart_block]
-                                                  // [uart_x0]         = [rpi3 uart_x0]
-  stp     x8, x9, [x1, #48]                       // [aux_mu_baud_reg] = [rpi3 aux_mu_baud_reg] (32 bit)
-                                                  // [cntfrq]          = [rpi3 cntfrq] (32 bit)
-                                                  // [pcie_init]       = [rpi3 pcie_init]
-  stp     x10, x11, [x1, #64]                     // [local_control]   = [rpi3 local_control]
-                                                  // [timer_base]      = [rpi3 timer_base]
-  stp     x12, x13, [x1, #80]                     // [enable_ic]       = [rpi3 enable_ic]
-                                                  // [handle_irq]      = [rpi3 handle_irq]
+  ldp     x14, x15, [x0, #96]                     // x14 = [rpi3 peripherals_start]
+                                                  // x15 = [rpi3 peripherals_end]
+  stp     x2, x3, [x1]                            // [mailbox_base]      = [rpi3 mailbox_base]
+                                                  // [gpio_base]         = [rpi3 gpio_base]
+  stp     x4, x5, [x1, #16]                       // [aux_base]          = [rpi3 aux_base]
+                                                  // [uart_init]         = [rpi3 uart_init]
+  stp     x6, x7, [x1, #32]                       // [uart_block]        = [rpi3 uart_block]
+                                                  // [uart_x0]           = [rpi3 uart_x0]
+  stp     x8, x9, [x1, #48]                       // [aux_mu_baud_reg]   = [rpi3 aux_mu_baud_reg] (32 bit)
+                                                  // [cntfrq]            = [rpi3 cntfrq] (32 bit)
+                                                  // [pcie_init]         = [rpi3 pcie_init]
+  stp     x10, x11, [x1, #64]                     // [local_control]     = [rpi3 local_control]
+                                                  // [timer_base]        = [rpi3 timer_base]
+  stp     x12, x13, [x1, #80]                     // [enable_ic]         = [rpi3 enable_ic]
+                                                  // [handle_irq]        = [rpi3 handle_irq]
+  stp     x14, x15, [x1, #96]                     // [peripherals_start] = [rpi3 peripherals_start]
+                                                  // [peripherals_end]   = [rpi3 peripherals_end]
 1:
   ret
 
@@ -631,6 +703,13 @@ set_clocks:
   str     wzr, [x0]
   mov     w1, 0x80000000
   str     w1, [x0, 8]
+  ret
+
+memzero:
+1:
+  str     xzr, [x0], #8
+  subs    x1, x1, #0x8
+  b.gt    1b
   ret
 
 .include "armregs.s"

@@ -210,6 +210,7 @@ run_tests:
       bl      snapshot_memory                     // x2 = first address after end of snapshot
       adr     x0, framebuffer
       ldp     w0, w1, [x0]
+      orr     x0, x0, 0xffff000000000000          // Convert to virtual address
       add     x1, x0, x1
       mov     w4, #0x20                           // w4 = random block length
       adr     x11, random_block_zeros
@@ -602,7 +603,7 @@ snapshot_all_ram:
     b.ne    1b
   mov     x0, #3                                  // Number of RAM regions to snapshot
   str     x0, [x2], #8                            // Store number of RAM regions to snapshot
-  mov     x0, #0                                  // start address of region to snapshot
+  adrp    x0, _start                              // Start address of region to snapshot
   adrp    x1, sysvars
   add     x1, x1, :lo12:sysvars
   adrp    x7, rand_seq_length
@@ -623,6 +624,7 @@ snapshot_all_ram:
   bl      snapshot_memory                         // x2 = first address after end of snapshot
   adr     x0, framebuffer
   ldp     w0, w1, [x0]
+  orr     x0, x0, 0xffff000000000000              // Convert to virtual address
   add     x1, x0, x1
   adrp    x7, rand_seq_length
   add     x7, x7, :lo12:rand_seq_length
@@ -657,7 +659,8 @@ snapshot_memory:
   stur    x0, [x2, #-16]                          // Store start address of data region to start of buffer
   stur    x1, [x2, #-8]                           // Store end address of data region to start of buffer
   udiv    x8, x0, x4                              // x8 = int(start_address_decompressed/x4)
-  umsubl  x8, w8, w4, x0                          // x8 = x0 - x4 * int(x0/x4) = start_address_decompressed % random_sequence_length
+  mul     x8, x8, x4
+  sub     x8, x0, x8                              // x8 = x0 - x4 * int(x0/x4) = start_address_decompressed % random_sequence_length
   add     x8, x8, x11                             // x8 = address inside random block that holds quad for masking start address
   add     x7, x4, x11                             // x7 = first address after random block
   mov     x26, #0                                 // Set quad repeat counter to zero
@@ -759,7 +762,8 @@ restore_all_ram:
 #  TODO: update reg list
 restore_snapshot:
   udiv    x8, x0, x4                              // x8 = int(start_address_decompressed/x4)
-  umsubl  x8, w8, w4, x0                          // x8 = x0 - x4 * int(x0/x4) = start_address_decompressed % random_sequence_length
+  mul     x8, x8, x4
+  sub     x8, x0, x8                              // x8 = x0 - x4 * int(x0/x4) = start_address_decompressed % random_sequence_length
   add     x8, x8, x11                             // x8 = address inside random block that holds quad for masking start address
   add     x7, x4, x11                             // x7 = first address after random block
   ldr     x27, =0x6a09e667bb67ae85
@@ -893,7 +897,8 @@ compare_snapshots:
   adrp    x11, rand_data
   add     x11, x11, :lo12:rand_data               // x11 = address of random data
   udiv    x25, x8, x4                             // x25 = int(start_address_decompressed/x4)
-  umsubl  x25, w25, w4, x8                        // x25 = x8 - x4 * int(x8/x4) = start_address_decompressed % random_sequence_length
+  mul     x25, x25, x4
+  sub     x25, x8, x25                            // x25 = x8 - x4 * int(x8/x4) = start_address_decompressed % random_sequence_length
   add     x25, x25, x11                           // x25 = address inside random block that holds quad for masking start address
   add     x26, x4, x11                            // x26 = first address after random block
 // x8 will loop through quads until it reaches x9
@@ -979,6 +984,7 @@ fill_memory_with_junk:
 // Second random block: framebuffer
   adr     x0, framebuffer
   ldp     w8, w6, [x0]
+  orr     x8, x8, 0xffff000000000000              // Convert to virtual address
   add     x6, x8, x6
   bl      fill_region_with_junk
 // Log completed
@@ -987,10 +993,16 @@ fill_memory_with_junk:
   ret     x11
 
 
+# On entry:
+#   x4: random block length
+#   x5: random bytes
+#   x6: end address (exclusive)
+#   x8: start address (inclusive)
 fill_region_with_junk:
   mov     x0, x30
   udiv    x9, x8, x4                              // x9 = int(__bss_start/x4)
-  umsubl  x10, w9, w4, x8                         // x10 = x8 - x4 * int(x8/x4) = __bss_start % (random sequence length)
+  mul     x9, x9, x4
+  sub     x10, x8, x9                             // x10 = x8 - x4 * int(x8/x4) = __bss_start % (random sequence length)
   1:
     tst     x10, 0x0f
     b.eq    2f

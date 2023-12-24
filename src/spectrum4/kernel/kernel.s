@@ -522,6 +522,7 @@ msg_done:                      .asciz "DONE.\r\n"
 
 
 .include "rng.s"
+.include "pci.s"
 .include "pcie.s"
 .include "irq.s"
 .include "timer.s"

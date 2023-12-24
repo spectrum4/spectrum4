@@ -40,3 +40,7 @@ kernel_old=1
 # Ensure the bootloader loads a 64-bit kernel (not entirely necessary but a
 # good safety check).
 arm_64bit=1
+
+# Name of kernel image file. Let's customise it rather than have kernel8.img
+# to be all fancy (like RISC OS does).
+kernel=spectrum4.img

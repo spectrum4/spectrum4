@@ -2,21 +2,9 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
-# pci_bus
-#   0x00-0x07: parent
-
-
-# On entry:
-#   x0 = pci_bus address
-#   x1 = devfn
-#   x2 = where (pci reg offset)
-#
-# On exit:
-#
-# Based on:
-#   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L707-L722
-.align 2
-brcm_pcie_map_conf:
+# pci_bus memory block
+#   0x00-0x07: parent bus address (or 0 if root bus)
+#   0x08-0x0f: bus number
 
 
 # On entry:
@@ -24,13 +12,37 @@ brcm_pcie_map_conf:
 #   x1 = devfn
 #   x2 = where (pci reg offset)
 #   x3 = size
-#   w4 = val
+#   w4 = *val
 #
 # On return:
+#   w0 = 0 (success) or 0x86 (PCI device not found)
+#   w1 = value read
 #
 # Based on https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/access.c#L77-L96
-pci_generic_config_read:
-
-
-
-
+pci_read:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
+  bl      map_conf
+  cbnz    x0, 1f
+  mov     w1, #-1
+  mov     w0, #0x86
+  b       5f
+1:
+  cmp     w3, #0x1
+  b.eq    3f
+  cmp     w3, #0x2
+  b.eq    2f
+  ldr     w1, [x0]
+  b       4b
+2:
+  ldrh    w1, [x0]
+  b       4b
+3:
+  ldrb    w1, [x0]
+4:
+  dmb     oshld
+  mov     w0, #0
+5:
+  str     w1, [x4]
+  ldp     x29, x30, [sp], #16
+  ret

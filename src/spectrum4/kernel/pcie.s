@@ -479,10 +479,14 @@ mdio_write:
 # On entry:
 #   x0 = pci_bus address
 #   x1 = devfn
-#   x2 = where (pci reg offset)
+#   w2 = where (pci reg offset)
 #
 # On exit:
 #   x0 = pcie register address
+#   x1 untouched
+#   w2 untouched
+#   x3 disturbed
+#   x4 disturbed
 #
 # Based on:
 #   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L707-L722
@@ -497,8 +501,8 @@ map_conf:
   ret
 1:
   ldrb    w3, [x0, #8]                            // w3 = [x3 + 8] = bus number
-  ubfiz   w2, w1, #12, #8                         // w2 = (w1 & 0xff) << 12 = (devfn & 0xff) << 12
-  orr     w4, w2, w3, lsl #20                     // w4 = (devfn & 0xff) << 12 | (bus number << 20)
+  ubfiz   w4, w1, #12, #8                         // w4 = (w1 & 0xff) << 12 = (devfn & 0xff) << 12
+  orr     w4, w4, w3, lsl #20                     // w4 = (devfn & 0xff) << 12 | (bus number << 20)
   dmb     oshst                                   // Data Memory Barrier Operation, Outer Shareable, Shareability Type
   adrp    x0, 0xfd509000 + _start                 // x0 = pcie_base + 0x9000
   str     w4, [x0]                                // [pcie_base + 0x9000] = (devfn & 0xff) << 12 | (bus number << 20)

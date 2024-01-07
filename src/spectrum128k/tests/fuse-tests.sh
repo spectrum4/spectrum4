@@ -21,6 +21,9 @@ function run_tests {
   local completed='false'
 
   while [ "${runs}" -lt "${max_runs}" ] && ! "${completed}"; do
+    if [ "${runs}" -gt 0 ]; then
+      echo 'Retrying...' >&2
+    fi
     "${func}"
     local pid=$!
     disown
@@ -47,25 +50,18 @@ function run_tests {
       fi
     done
 
-    # This used to be `kill -9`, but removed the `-9` in the hope of reducing
-    # intermittent failures.
-    #
-    # TODO: if we continue to get intermittent failures, investigate further if
-    # it is related to kill and a better way to gracefully bring down fuse.
-
-    if "${died}"; then
-      echo 'Fuse died!' >&2
-    fi
-
     if ! "${passed}"; then
       cat "${output_file}" | sed 's///g'
     fi
 
-    if ! "${completed}"; then
-      echo 'Timed out!' >&2
+    if "${died}"; then
+      echo 'Fuse died!' >&2
+    else
+      if ! "${completed}"; then
+        echo 'Timed out!' >&2
+      fi
+      kill "${pid}" || true
     fi
-
-    kill "${pid}" || true
   done
 
   if ! "${completed}"; then
@@ -74,6 +70,10 @@ function run_tests {
 
   if ! "${passed}"; then
     exit "${failuresexitcode}"
+  fi
+
+  if [ "${runs}" -gt 1 ]; then
+    echo 'Succeeded this time!' >&2
   fi
 }
 

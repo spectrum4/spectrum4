@@ -24,7 +24,7 @@ function retry {
         echo "Attempt $n/$max:" >&2
       else
         echo "Failed after $n attempts." >&2
-        exit 1
+        exit 67
       fi
     }
   done
@@ -109,13 +109,22 @@ for tool in as ld readelf objcopy objdump; do
 done
 
 if ${z80_tools_absent} || ${aarch64_tools_absent}; then
-  retry curl -fsSL 'https://ftp.gnu.org/gnu/binutils/binutils-2.39.tar.gz' > binutils-2.39.tar.gz
-  tar xfz binutils-2.39.tar.gz
+
+  # This makeinfo hack avoids needing to install makeinfo 6.8 or higher for binutils 2.41.
+  # See:
+  #   * https://sourceware.org/bugzilla/show_bug.cgi?id=30703#c16
+  TEMP_BIN_DIR="${PREP_DIR}/temp-bin-dir"
+  mkdir -p "${TEMP_BIN_DIR}"
+  PATH="${TEMP_BIN_DIR}:${PATH}"
+  ln -s /usr/bin/true "${TEMP_BIN_DIR}/makeinfo"
+
+  retry curl -fsSL 'https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz' > binutils-2.41.tar.gz
+  tar xfz binutils-2.41.tar.gz
 
   if ${z80_tools_absent}; then
     mkdir binutils-z80-build
     cd binutils-z80-build
-    ../binutils-2.39/configure \
+    ../binutils-2.41/configure \
       --target=z80-unknown-elf \
       --disable-werror
     gmake -j4
@@ -126,7 +135,7 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
   if ${aarch64_tools_absent}; then
     mkdir binutils-aarch64-build
     cd binutils-aarch64-build
-    ../binutils-2.39/configure \
+    ../binutils-2.41/configure \
       --target=aarch64-none-elf
     gmake -j4
     sudo gmake install

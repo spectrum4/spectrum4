@@ -56,6 +56,7 @@ function run_tests {
 
     if "${died}"; then
       echo 'Fuse died!' >&2
+      cat "${fuse_log}" >&2
     else
       if ! "${completed}"; then
         echo 'Timed out!' >&2

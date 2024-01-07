@@ -13,4 +13,4 @@ cd "$(dirname "${0}")"
 TAG="$(cat dev-setup/docker/TAG)"
 # use --init to capture signals correctly (e.g. Ctrl-C)
 # see https://ddanilov.me/how-signals-are-handled-in-a-docker-container
-docker run --init -t --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm -v "$(pwd):/spectrum4" -w /spectrum4 "${TAG}" tup "${@}"
+docker run --init -t --cap-add SYS_ADMIN --device /dev/fuse --security-opt apparmor:unconfined --rm -v "$(pwd):/spectrum4" -w /spectrum4 --ulimit core=-1 "${TAG}" tup "${@}"

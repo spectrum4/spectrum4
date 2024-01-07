@@ -522,8 +522,10 @@ msg_done:                      .asciz "DONE.\r\n"
 
 
 .include "rng.s"
-.include "pci.s"
-.include "pcie.s"
+.if PCI_INCLUDE
+  .include "pci.s"
+  .include "pcie.s"
+.endif
 .include "irq.s"
 .include "timer.s"
 
@@ -552,7 +554,11 @@ aux_mu_baud_reg:
 cntfrq:
   .word     54000000                              // default is for rpi4
 pcie_init:
+.if PCI_INCLUDE
   .quad     pcie_init_bcm2711                     // default is for rpi4
+.else
+  .quad     0x0000000000000000                    // 0 => no pcie
+.endif
 local_control:
   .quad     0x00000000ff800000                    // default is for rpi4
 timer_base:

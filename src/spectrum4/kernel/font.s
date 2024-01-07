@@ -7,6 +7,8 @@
 # THE 'ZX SPECTRUM CHARACTER SET'
 # -------------------------------
 
+.text
+
 .align 5
 char_set:
 

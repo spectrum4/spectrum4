@@ -29,6 +29,7 @@
 #
 #   * https://leiradel.github.io/2019/01/20/Raspberry-Pi-Stubs.html#armstub8s
 
+.text
 
 .align 2
 irq_vector_init:

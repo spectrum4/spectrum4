@@ -1,3 +1,7 @@
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2021 Spectrum +4 Authors. All rights reserved.
+
 .gitignore
 # Specify main.go explicitly so that go build doesn't call `git status
 # --porcelain` which would read all files in repository, so that if any file is

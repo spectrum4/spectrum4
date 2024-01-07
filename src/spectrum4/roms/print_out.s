@@ -1,3 +1,7 @@
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2021 Spectrum +4 Authors. All rights reserved.
+
 .text
 .align 2
 # Default print routine for channels S/K, to print a single byte.

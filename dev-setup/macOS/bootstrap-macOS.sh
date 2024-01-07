@@ -44,7 +44,7 @@ echo "Preparing installation inside temp directory: '${PREP_DIR}' ..."
 cd "${PREP_DIR}"
 
 # install homebrew
-which brew > /dev/null 2>&1 || /bin/bash -c "$(retry curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+which brew > /dev/null 2>&1 || bash -c "$(retry curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
 export CPATH=$(brew --prefix)/include
 export LDFLAGS=-L$(brew --prefix)/lib
@@ -163,7 +163,7 @@ fi
 
 # install md5sum
 if ! hash md5sum 2> /dev/null; then
-  echo '#!/bin/bash
+  echo '#!/usr/bin/env bash
   md5 -r "${@}"' > md5sum
   chmod a+x md5sum
   sudo mv md5sum /usr/local/bin/md5sum

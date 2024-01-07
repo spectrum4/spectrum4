@@ -1,5 +1,9 @@
 # syntax=docker/dockerfile:1.3
 
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2021 Spectrum +4 Authors. All rights reserved.
+
 FROM ubuntu:latest AS spectrum4_too_much
 MAINTAINER Pete Moore <petemoore@gmx.net>
 COPY ./ubuntu/bootstrap-ubuntu.sh /

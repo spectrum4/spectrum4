@@ -3,6 +3,7 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 
+.text
 
 # On entry:
 #   w0 = colour to paint border

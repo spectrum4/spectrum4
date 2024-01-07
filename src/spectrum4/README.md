@@ -1,3 +1,9 @@
+<!--
+This file is part of the Spectrum +4 Project.
+Licencing information can be found in the LICENCE file
+(C) 2021 Spectrum +4 Authors. All rights reserved.
+-->
+
 # Spectrum +4 debug profile
 
 The debug profile of Spectrum +4 contains the following features in addition to

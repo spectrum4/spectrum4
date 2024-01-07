@@ -4,6 +4,8 @@
 
 .include "screen.s"
 
+.text
+.align 2
 
 demo:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -119,21 +121,23 @@ display_memory:
 display_zx_screen:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
-  adr     x9, ZX_SCREEN
-  adr     x0, display_file
+  adrp    x9, ZX_SCREEN
+  add     x9, x9, :lo12:ZX_SCREEN
+  adrp    x0, display_file
+  add     x0, x0, :lo12:display_file
 1:
   ldrb    w1, [x9], #1
   stp     x0, x9, [sp, #-16]!
   bl      poke_address
   ldp     x0, x9, [sp], #16
   add     x0, x0, #1
-  adr     x2, attributes_file_end
+  adrp    x2, attributes_file_end
+  add     x2, x2, :lo12:attributes_file_end
   cmp     x0, x2
   b.ne    1b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
-.data
 msg_hex_header:                .asciz "           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f  "
 msg_demo_copyright:                      // L0561
   .byte 0x7f                                      // '(c)'.

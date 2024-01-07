@@ -2,6 +2,9 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
+.text
+.align 2
+
 
 # On entry:
 #   x0 = hex value to convert to text

@@ -60,6 +60,8 @@
   eret
 .endm
 
+.text
+
 /*
  * Exception vectors.
  */

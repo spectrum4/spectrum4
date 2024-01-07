@@ -1,10 +1,14 @@
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2021 Spectrum +4 Authors. All rights reserved.
+
 .text
 # ------------------
 # THE 'TOKEN TABLES'
 # ------------------
 # The tokenized characters 165 (RND) to 255 (COPY) are expanded using this
 # table. The first token '?' is a step-over token.
-
+.align 0
 tkn_table:                               // L0095
   .asciz    "?"                                   // Step over marker
 tkn_rnd:                                 // L0096

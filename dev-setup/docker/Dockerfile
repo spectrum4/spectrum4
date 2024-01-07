@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.3
 
-FROM ubuntu:22.10 AS spectrum4_too_much
+FROM ubuntu:latest AS spectrum4_too_much
 MAINTAINER Pete Moore <petemoore@gmx.net>
 COPY ./ubuntu/bootstrap-ubuntu.sh /
 RUN ./bootstrap-ubuntu.sh

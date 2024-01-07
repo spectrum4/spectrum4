@@ -111,13 +111,13 @@ for tool in as ld readelf objcopy objdump; do
 done
 
 if ${z80_tools_absent} || ${aarch64_tools_absent}; then
-  retry curl -fsSL 'https://ftp.gnu.org/gnu/binutils/binutils-2.39.tar.gz' > binutils-2.39.tar.gz
-  tar xfz binutils-2.39.tar.gz
+  retry curl -fsSL 'https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz' > binutils-2.41.tar.gz
+  tar xfz binutils-2.41.tar.gz
 
   if ${z80_tools_absent}; then
     mkdir binutils-z80-build
     cd binutils-z80-build
-    ../binutils-2.39/configure \
+    ../binutils-2.41/configure \
       --target=z80-unknown-elf \
       --disable-werror
     make -j4
@@ -128,7 +128,7 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
   if ${aarch64_tools_absent}; then
     mkdir binutils-aarch64-build
     cd binutils-aarch64-build
-    ../binutils-2.39/configure \
+    ../binutils-2.41/configure \
       --target=aarch64-none-elf
     make -j4
     make install
@@ -147,7 +147,7 @@ if ! hash aarch64-none-elf-gdb 2> /dev/null; then
 fi
 
 if ! hash qemu-system-aarch64 2> /dev/null; then
-  retry curl -fsSL 'https://download.qemu-project.org/qemu-7.1.0.tar.xz' > qemu-7.1.0.tar.xz
+  retry curl -fsSL 'https://download.qemu.org/qemu-7.1.0.tar.xz' > qemu-7.1.0.tar.xz
   tar xvf qemu-7.1.0.tar.xz
   mkdir qemu-7.1.0/build
   cd qemu-7.1.0/build

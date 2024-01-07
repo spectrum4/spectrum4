@@ -12,7 +12,6 @@
 #   x1 = devfn
 #   x2 = where (pci reg offset)
 #   w3 = size
-#   w4 = *val
 #
 # On return:
 #   w0 = 0x00 (PCI successful), or
@@ -21,11 +20,10 @@
 #   w1 = value read (if access was aligned)
 #   w2 = untouched
 #   x3 disturbed
-#   x4 disturbed
 #   w5 = size - 1
 #
 # Based on
-#   * https://github.com/raspberrypi/linux/blob/3ea9b35bd3eef731a94c48e197d4ea1539f3aae2/drivers/pci/access.c#L35-L48
+#   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/access.c#L35-L48
 #   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/access.c#L77-L96
 pci_read:
   sub     w5, w3, #1
@@ -53,9 +51,28 @@ pci_read:
   dmb     oshld
   mov     w0, #0                                  // PCIBIOS_SUCCESSFUL
 5:
-  str     w1, [x4]
   ldp     x29, x30, [sp], #16
   ret
 6:
   mov     w0, #0x87                               // PCIBIOS_BAD_REGISTER_NUMBER (unaligned access)
+  ret
+
+# TODO work in progress
+#
+# Based on
+#   * https://github.com/petemoore/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2333-L2348
+pci_dev_vendor_id:
+  stp     x29, x30, [sp, #-16]!
+  mov     x29, sp
+  mov     w2, #0x00
+  mov     w3, #0x04
+  bl      pci_read
+  and     w2, w1, #0xffff
+  cmp     w2, #0x0001
+  b.eq    1f
+  mov     x0, #0x01
+  b       2f
+1:
+2:
+  ldp     x29, x30, [sp], #16
   ret

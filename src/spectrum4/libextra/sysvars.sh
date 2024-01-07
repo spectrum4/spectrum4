@@ -22,6 +22,7 @@ echo "# This file is part of the Spectrum +4 Project.
 .set SYSVAR_COUNT, ${SYSVAR_COUNT}
 
 .align 3
+.text
 sysvars_meta:" | sed 's/^  //'
 echo "${SYSVARS}" | while read sysvar size; do
   echo "  .quad sysvar_${sysvar}"

@@ -1,3 +1,9 @@
+<!--
+This file is part of the Spectrum +4 Project.
+Licencing information can be found in the LICENCE file
+(C) 2021 Spectrum +4 Authors. All rights reserved.
+-->
+
 # 48K BASIC Printer Buffer
 
 ## Memory Layout in original Spectrum 128K

@@ -2,6 +2,9 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
+.text
+.align 2
+
 
 # paint_string paints the zero byte delimited text string pointed to by x0 to the screen in the
 # system font (16x16 pixels) at the screen print coordinates given by w1, w2. The ink colour is

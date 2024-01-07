@@ -2,6 +2,8 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
+.text
+
 
 .align 2
 timer_init:

@@ -1,7 +1,7 @@
 # This file is part of the Spectrum +4 Project.
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
-#
+
 # See https://www.raspberrypi.com/documentation/computers/config_txt.html for
 # an explanation of the purpose and format of this file.
 

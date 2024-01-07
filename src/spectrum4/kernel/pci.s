@@ -2,6 +2,9 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
+.text
+.align 2
+
 # pci_bus memory block
 #   0x00-0x07: parent bus address (or 0 if root bus)
 #   0x08-0x0f: bus number

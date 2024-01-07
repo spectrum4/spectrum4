@@ -6,6 +6,7 @@
 # These bcm283x hardware random number generator routines are inspired by:
 #   https://github.com/torvalds/linux/blob/d4f6d923238dbdb69b8525e043fedef2670d4f2c/drivers/char/hw_random/bcm2835-rng.c
 
+.text
 
 .align 2
 rand_init_bcm283x:

@@ -25,7 +25,7 @@ import Z80_TOOLCHAIN_PREFIX=z80-unknown-elf-
 
 : foreach test_*.s test_*.gen-s | ../../../utils/asm-format/asm-format ../roms/rom0.symbols ../roms/rom1.symbols |> ^o^ ./tests.sh %f > %o |> %B.runner {gen-testlist}
 : foreach {gen-testlist} | {gen-test} |> ^o^ $(Z80_TOOLCHAIN_PREFIX)as -o %o %f |> %B.o {test-o}
-: foreach {test-o} | ../roms/rom0.elf ../roms/rom1.elf runtests.o randomdata.o |> ^o^ $(Z80_TOOLCHAIN_PREFIX)ld -N -Ttext=0x8100 --allow-multiple-definition -R %1i -R %2i -o %o %3i %f %4i |> %B.elf {test-elf}
+: foreach {test-o} | ../roms/rom0.elf ../roms/rom1.elf runtests.o randomdata.o |> ^o^ $(Z80_TOOLCHAIN_PREFIX)ld -N -Ttext=0x8100 --allow-multiple-definition --no-warn-rwx-segments -R %1i -R %2i -o %o %3i %f %4i |> %B.elf {test-elf}
 : foreach {test-elf} |> ^o^ $(Z80_TOOLCHAIN_PREFIX)objcopy --set-start=0x8100 %f -O binary %o |> %B.img
 : foreach {test-elf} |> $(Z80_TOOLCHAIN_PREFIX)objdump -d %f > %o |> %B.disassembly
 : foreach {test-elf} |> $(Z80_TOOLCHAIN_PREFIX)readelf -W -s %f > %o |> %B.symbols

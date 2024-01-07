@@ -15,6 +15,8 @@
 .set ROMS_INCLUDE, 0
 .set ROMS_AUTORUN, 0
 
+.set PCI_INCLUDE, 0
+
 
 .set BORDER_COLOUR,    0x000000cc                 // Default border colour around screen.
 .set PAPER_COLOUR,     0x00cccccc                 // Default paper colour (background colour of screen).

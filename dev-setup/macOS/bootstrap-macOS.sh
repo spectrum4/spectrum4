@@ -170,12 +170,6 @@ if ! hash tape2wav 2> /dev/null; then
   cd ..
 fi
 
-# install shfmt
-if ! hash shfmt 2> /dev/null; then
-  go install mvdan.cc/sh/v3/cmd/shfmt@latest
-  sudo mv $(go env GOPATH)/bin/shfmt /usr/local/bin
-fi
-
 # install md5sum
 if ! hash md5sum 2> /dev/null; then
   echo '#!/usr/bin/env bash
@@ -206,6 +200,12 @@ if ! hash tup 2> /dev/null; then
   fi
   sudo mv build/tup /usr/local/bin
   cd ..
+fi
+
+# install shfmt
+if ! hash shfmt 2> /dev/null; then
+  go install mvdan.cc/sh/v3/cmd/shfmt@latest
+  sudo mv $(go env GOPATH)/bin/shfmt /usr/local/bin
 fi
 
 cd

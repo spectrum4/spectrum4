@@ -4,6 +4,11 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
+###################################################################################
+# This script is an attempt to bootstrap an ubuntu environment with all the tools #
+# needed for building/testing Spectrum +4 natively (i.e. outside of docker).      #
+###################################################################################
+
 function retry {
   set +e
   local n=0
@@ -19,7 +24,7 @@ function retry {
         echo "Attempt $n/$max:" >&2
       else
         echo "Failed after $n attempts." >&2
-        exit 1
+        exit 67
       fi
     }
   done
@@ -40,6 +45,7 @@ if [ "${EUID}" -ne 0 ]; then
 fi
 
 PREP_DIR="$(mktemp -t -d spectrum4-toolchains-install.XXXXXXXXXX)"
+echo "Preparing installation inside temp directory: '${PREP_DIR}' ..."
 cd "${PREP_DIR}"
 
 case "$(uname -m)" in
@@ -199,6 +205,7 @@ if ! hash go 2> /dev/null; then
   rm "go1.19.3.linux-${ARCH}.tar.gz"
 fi
 
+# install shfmt
 if ! hash shfmt 2> /dev/null; then
   # install shfmt
   /usr/lib/go/bin/go install mvdan.cc/sh/v3/cmd/shfmt@latest

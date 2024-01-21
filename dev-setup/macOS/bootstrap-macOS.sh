@@ -46,9 +46,6 @@ cd "${PREP_DIR}"
 # install homebrew
 which brew > /dev/null 2>&1 || bash -c "$(retry curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 
-export CPATH=$(brew --prefix)/include
-export LDFLAGS=-L$(brew --prefix)/lib
-
 # This may not be needed in general, but I had issues on macOS Big Sur (version
 # 11.6.4) that were resolved by installing GNU make.
 # in case GNU make is installed outside of brew, don't just brew install it

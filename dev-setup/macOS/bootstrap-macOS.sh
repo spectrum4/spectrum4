@@ -60,14 +60,29 @@ if ! hash fuse 2> /dev/null; then
 
   # Install (headless) fuse which includes ROMs.
   # Note, we build from source since we need to specify --with-null-ui so that
-  # windows aren't displayed when unit tests run.
+  # windows aren't displayed when unit tests run. This also picks up newer
+  # fixes which were missing from the previous release, e.g.
+  #   * https://github.com/spectrum4/spectrum4/issues/10#issuecomment-1902378210
 
   # brew install fuse-emulator       <- don't do this!
 
-  brew install libspectrum pkg-config
-  retry curl -fsSL 'https://sourceforge.net/projects/fuse-emulator/files/fuse/1.5.7/fuse-1.5.7.tar.gz/download' > fuse-1.5.7.tar.gz
-  tar xvfz fuse-1.5.7.tar.gz
-  cd fuse-1.5.7
+  brew install pkg-config
+
+  # libspectrum
+  retry git clone https://git.code.sf.net/p/fuse-emulator/libspectrum
+  cd libspectrum
+  git checkout e85c934f585cb8caff5eeab55899617b606abfeb
+  ./autogen.sh
+  ./configure
+  gmake -j4
+  sudo gmake install
+  cd ..
+
+  # fuse
+  retry git clone https://git.code.sf.net/p/fuse-emulator/fuse
+  cd fuse
+  git checkout 54bb53145a42f054dd7b5e5aa0bfa2d41020e265
+  ./autogen.sh
   ./configure --with-null-ui
   gmake -j4
   sudo gmake install

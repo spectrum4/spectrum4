@@ -66,7 +66,7 @@ if ! hash fuse 2> /dev/null; then
 
   # brew install fuse-emulator       <- don't do this!
 
-  brew install pkg-config
+  brew install autoconf pkg-config
 
   # libspectrum
   retry git clone https://git.code.sf.net/p/fuse-emulator/libspectrum

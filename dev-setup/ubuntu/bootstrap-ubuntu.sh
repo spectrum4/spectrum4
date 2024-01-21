@@ -65,22 +65,26 @@ export PATH="${PATH}:/usr/local/bin:/usr/lib/go/bin"
 retry apt-get update
 retry apt-get upgrade -y
 
+# autoconf is needed for running autogen.sh when building libspectrum and fuse
+# bison is needed for building fuse
 # bsdmainutils contains hexdump
 # build-essential is needed for building z80 binutils, aarch64 binutils and fuse
+# flex is needed for building fuse
 # fuse-emulator-utils contains tape2wav
 # fuse3 is needed by tup
+# git is needed to fetch fuse/libspectrum sources
 # libfuse3-dev is needed by fuse
 # libglib2.0 is needed for building fuse-1.5.7 (seems to fix a pkg-config issue, might be overkill)
 # libgmp-dev is required to build aarch64-none-elf-gdb
 # libncurses-dev might be useful for building aarch64-none-elf-gdb (not sure)
 # libpixman-1-dev is needed for building qemu
-# libspectrum-dev is needed for building fuse-1.5.7
+# libtool is needed by autogen.sh when building libspectrum and fuse
 # meson is needed for building qemu
 # texinfo is needed for building z80 binutils and aarch64 binutils
 # unzip is needed for unzipping tup
 # wget is needed for downloading curl
 # xz-utils is needed by tar commands below
-retry apt-get install -y bsdmainutils build-essential fuse-emulator-utils fuse3 libfuse3-dev libglib2.0 libgmp-dev libncurses-dev libpixman-1-dev libspectrum-dev meson texinfo unzip wget xz-utils
+retry apt-get install -y autoconf bison bsdmainutils build-essential flex fuse-emulator-utils fuse3 git libfuse3-dev libglib2.0 libgmp-dev libncurses-dev libpixman-1-dev libtool meson texinfo unzip wget xz-utils
 
 if ! hash curl 2> /dev/null; then
   retry wget -O /usr/local/bin/curl "https://github.com/moparisthebest/static-curl/releases/download/v7.84.0/curl-${ARCH2}"
@@ -89,16 +93,30 @@ fi
 
 if ! hash fuse 2> /dev/null; then
 
-  # Install (headless) fuse emulator which includes ROMs.
+  # Install (headless) fuse which includes ROMs.
   # Note, we build from source since we need to specify --with-null-ui so that
-  # windows aren't displayed when unit tests run.
+  # windows aren't displayed when unit tests run. This also picks up newer
+  # fixes which were missing from the previous release, e.g.
+  #   * https://github.com/spectrum4/spectrum4/issues/10#issuecomment-1902378210
 
-  retry curl -fsSL 'https://sourceforge.net/projects/fuse-emulator/files/fuse/1.5.7/fuse-1.5.7.tar.gz/download' > fuse-1.5.7.tar.gz
-  tar xvfz fuse-1.5.7.tar.gz
-  cd fuse-1.5.7
+  # libspectrum
+  retry git clone https://git.code.sf.net/p/fuse-emulator/libspectrum
+  cd libspectrum
+  git checkout e85c934f585cb8caff5eeab55899617b606abfeb
+  ./autogen.sh
+  ./configure
+  gmake -j4
+  gmake install
+  cd ..
+
+  # fuse
+  retry git clone https://git.code.sf.net/p/fuse-emulator/fuse
+  cd fuse
+  git checkout 54bb53145a42f054dd7b5e5aa0bfa2d41020e265
+  ./autogen.sh
   ./configure --with-null-ui
-  make -j4
-  make install
+  gmake -j4
+  gmake install
   cd ..
 fi
 

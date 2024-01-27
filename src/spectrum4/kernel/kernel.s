@@ -525,6 +525,7 @@ msg_done:                      .asciz "DONE.\r\n"
 .if PCI_INCLUDE
   .include "pci.s"
   .include "pcie.s"
+  .include "pci-probe.gen-s"
 .endif
 .include "irq.s"
 .include "timer.s"

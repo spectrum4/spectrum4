@@ -11,9 +11,7 @@ int pci_host_probe(struct pci_host_bridge *bridge) {
   int ret;
   ret = pci_scan_root_bus_bridge(bridge);
   if (ret < 0) {
-    /*
-        dev_err(bridge->dev.parent, "Scanning root bridge failed");
-    */
+    pci_log("Scanning root bridge failed");
     return ret;
   }
 

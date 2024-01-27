@@ -9,3 +9,4 @@ include_rules
 import AARCH64_TOOLCHAIN_PREFIX=aarch64-none-elf-
 
 : foreach *.s *.gen-s |> !check-asm-formatted |>
+: foreach *.c |> ^o^ aarch64-elf-gcc -S -Wall -nostdlib -nostartfiles -ffreestanding -Iinclude -mgeneral-regs-only -c %f -o %o |> %B.gen-s

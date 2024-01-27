@@ -5,7 +5,6 @@
 
 .if ROMS_INCLUDE
 .else
-  .include "print_w0.s"
   .include "temps.s"
 .endif
 

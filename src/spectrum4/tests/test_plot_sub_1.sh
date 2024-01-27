@@ -23,7 +23,6 @@ cd "$(dirname "${0}")"
   echo '.else'
   echo '  .include "pixel_addr.s"'
   echo '  .include "po_attr.s"'
-  echo '  .include "print_w0.s"'
   echo '.endif'
   echo
   echo '.text'

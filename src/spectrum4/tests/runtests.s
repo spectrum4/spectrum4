@@ -1025,20 +1025,6 @@ fill_region_with_junk:
   ret     x0
 
 
-print_string:
-  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                                 // Update frame pointer to new stack location.
-  1:
-    ldrb    w0, [x2], #1
-    cbz     w0, 2f
-    bl      print_w0
-    b       1b
-2:
-  ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
-  ret
-
-
-
 .align 3
 fake_channel_block:
   .quad fake_printout

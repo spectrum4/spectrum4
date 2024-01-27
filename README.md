@@ -99,9 +99,9 @@ display file and attributes file, and call `poke_address` from the exception
 handler. Some information about trapping memory writes is
 [here](https://www.cnblogs.com/pengdonglin137/p/14091950.html). This particular
 guide is focussed on EL2 handling of EL1 memory accesses, but the same
-principles should apply with EL1 handling of EL0 memory accesses. Currently MMU
-is not enabled, and interrupts are not enabled, so this code hasn't been
-written yet.
+principles should apply with EL1 handling of EL0 memory accesses. The MMU
+is enabled, and so are interrupts. At the moment the interrupt routine doesn't
+do anything. It is fired by a timer.
 
 The display file and attributes file differ from the Spectrum 128K as follows:
 
@@ -130,7 +130,8 @@ programs, machine code routines, and RAM disk storage.
 ## Execution context
 
   * Spectrum +4 runs at EL1
-  * MMU is not yet enabled
+  * MMU is enabled
+  * Kernel virtual addresses map 1:1 with physical addresses, but with upper 16 bits set
   * EL3 data cache is enabled
   * EL3 instruction cache is enabled
   * Timer interrupts configured and enabled, but keyboard routines not yet written

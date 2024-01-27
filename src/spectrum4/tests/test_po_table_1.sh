@@ -56,7 +56,7 @@ function output {
   echo '  stp     x29, x30, [sp, #-16]!           // Push frame pointer, procedure link register on stack.'
   echo '  mov     x29, sp                         // Update frame pointer to new stack location.'
   echo "  adr     x2, msg_po_table_1_${id}_out"
-  echo '  bl      print_string                    // Expected output.'
+  echo '  bl      print_message                   // Expected output.'
   echo '  ldp     x29, x30, [sp], #16             // Pop frame pointer, procedure link register off stack.'
   echo '  ret'
   echo
@@ -85,6 +85,7 @@ cd "$(dirname "${0}")"
   echo
   echo '.if ROMS_INCLUDE'
   echo '.else'
+  echo '  .include "print_message.s"'
   echo '  .include "print_w0.s"'
   echo '.endif'
   echo

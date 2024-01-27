@@ -117,6 +117,7 @@ for fake_or_fake_reg_update in f s; do
       echo '  .include "po_search.s"'
       echo '  .include "po_table.s"'
       echo '  .include "po_table_1.s"'
+      echo '  .include "print_message.s"'
       echo '  .include "print_w0.s"'
       echo '  .include "tkn_table.s"'
       echo '.endif'
@@ -186,7 +187,7 @@ for fake_or_fake_reg_update in f s; do
         echo '  stp     x29, x30, [sp, #-16]!                        // Push frame pointer, procedure link register on stack.'
         echo '  mov     x29, sp                                      // Update frame pointer to new stack location.'
         echo "  adr     x2, ${msgname}"
-        echo "  bl      print_string                                 // Expect output \"${expectedtext}\""
+        echo "  bl      print_message                                // Expect output \"${expectedtext}\""
         echo "  ldp     x29, x30, [sp], #16                          // Pop frame pointer, procedure link register off stack."
         echo "  ret"
         echo

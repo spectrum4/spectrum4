@@ -45,6 +45,7 @@
   .include "po_tv_1.s"
   .include "po_tv_2.s"
   .include "pr_all.s"
+  .include "print_message.s"
   .include "print_out.s"
   .include "print_token_udg_patch.s"
   .include "print_w0.s"
@@ -124,7 +125,7 @@ po_msg_01_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adr     x2, msg_po_msg_bakery0
-  bl      print_string                            // Expected output.
+  bl      print_message                           // Expected output.
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -155,7 +156,7 @@ po_msg_02_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adr     x2, msg_32_out
-  bl      print_string                            // Expected output.
+  bl      print_message                           // Expected output.
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -186,7 +187,7 @@ po_msg_03_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adr     x2, msg_33
-  bl      print_string                            // Expected output.
+  bl      print_message                           // Expected output.
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 

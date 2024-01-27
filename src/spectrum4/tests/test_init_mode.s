@@ -7,7 +7,6 @@
 .else
   .include "init_cursor.s"
   .include "mode_l.s"
-  .include "print_w0.s"
   .include "reset_cursor.s"
   .include "reset_indentation.s"
   .include "reset_main_screen.s"

@@ -10,7 +10,7 @@ import AARCH64_TOOLCHAIN_PREFIX=aarch64-none-elf-
 
 : foreach ../tests/test_*.runner | ../tests/<runners> |> ./test-targets.sh %f > %o |> %B.target
 : foreach *.target | ../tests/all_suites.runner ../libextra/sysvars.gen-s ../kernel/*.gen-s |> ^o^ $(AARCH64_TOOLCHAIN_PREFIX)as $(ASFLAGS_AARCH64) -o %o %f |> %B.o {obj}
-: foreach {obj} |> ^o^ ./generate-qemu-elf.sh %o %f $(AARCH64_TOOLCHAIN_PREFIX)ld $(LDFLAGS_AARCH64) |> %B.elf {elf}
+: foreach {obj} | ../kernel/*.o |> ^o^ ./generate-qemu-elf.sh %o %f $(AARCH64_TOOLCHAIN_PREFIX)ld $(LDFLAGS_AARCH64) |> %B.elf {elf}
 : foreach {elf} |> ^o^ $(AARCH64_TOOLCHAIN_PREFIX)objcopy --set-start=0xffff000000000000 %f -O binary %o |> %B.img {img}
 : foreach {elf} |> $(AARCH64_TOOLCHAIN_PREFIX)objdump -d %f > %o |> %B.disassembly
 : foreach {elf} |> $(AARCH64_TOOLCHAIN_PREFIX)readelf -W -s %f > %o |> %B.symbols

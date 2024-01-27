@@ -6,9 +6,13 @@
 
 #include "pci.h"
 
+// https://github.com/torvalds/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c
+
+// Line 3022
 int pci_host_probe(struct pci_host_bridge *bridge) {
   struct pci_bus *bus, *child;
   int ret;
+
   ret = pci_scan_root_bus_bridge(bridge);
   if (ret < 0) {
     pci_log("Scanning root bridge failed");
@@ -22,22 +26,25 @@ int pci_host_probe(struct pci_host_bridge *bridge) {
    * ioport_resource trees in either pci_bus_claim_resources()
    * or pci_bus_assign_resources().
    */
+  if (pci_flags & PCI_PROBE_ONLY) {
+    pci_bus_claim_resources(bus);
+  } else {
+    /*
+        pci_bus_size_bridges(bus);
+        pci_bus_assign_resources(bus);
+
+        list_for_each_entry(child, &bus->children, node)
+            pcie_bus_configure_settings(child);
+*/
+  }
+
   /*
-    if (pci_has_flag(PCI_PROBE_ONLY)) {
-      pci_bus_claim_resources(bus);
-    } else {
-      pci_bus_size_bridges(bus);
-      pci_bus_assign_resources(bus);
-
-      list_for_each_entry(child, &bus->children, node)
-          pcie_bus_configure_settings(child);
-    }
-
-    pci_bus_add_devices(bus);
-  */
+        pci_bus_add_devices(bus);
+      */
   return 0;
 }
 
+// Line 3116
 int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge) {
   /*
     struct resource_entry *window;

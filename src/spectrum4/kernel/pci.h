@@ -4,8 +4,11 @@
  * (C) 2021 Spectrum +4 Authors. All rights reserved.
  */
 
+// https://github.com/torvalds/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/include/linux/pci.h
+
 extern void pci_log(const char *str);
 
+// Line 544
 struct pci_host_bridge {
   /*
     struct device dev;
@@ -50,6 +53,7 @@ struct pci_host_bridge {
   unsigned long private[];              // ____cacheline_aligned;
 };
 
+// Line 626
 struct pci_bus {
 
   /*
@@ -92,5 +96,22 @@ struct pci_bus {
   unsigned int unsafe_warn : 1; // warned about RW1C config write
 };
 
+// Line 1065
+enum {
+  PCI_REASSIGN_ALL_RSRC = 0x00000001,   /* Ignore firmware setup */
+  PCI_REASSIGN_ALL_BUS = 0x00000002,    /* Reassign all bus numbers */
+  PCI_PROBE_ONLY = 0x00000004,          /* Use existing setup */
+  PCI_CAN_SKIP_ISA_ALIGN = 0x00000008,  /* Don't do ISA alignment */
+  PCI_ENABLE_PROC_DOMAINS = 0x00000010, /* Enable domains in /proc */
+  PCI_COMPAT_DOMAIN_0 = 0x00000020,     /* ... except domain 0 */
+  PCI_SCAN_ALL_PCIE_DEVS = 0x00000040,  /* Scan all, not just dev 0 */
+};
+
+// Line 1082
 int pci_host_probe(struct pci_host_bridge *bridge);
+// Line 1085
+extern unsigned int pci_flags;
+// Line 1089
 int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge);
+// Line 1458
+void pci_bus_claim_resources(struct pci_bus *bus);

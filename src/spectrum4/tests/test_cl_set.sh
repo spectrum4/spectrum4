@@ -16,7 +16,6 @@ function header {
   echo '.else'
   echo '  .include "cl_addr.s"'
   echo '  .include "po_store.s"'
-  echo '  .include "print_w0.s"'
   echo '.endif'
   echo
   echo '.text'

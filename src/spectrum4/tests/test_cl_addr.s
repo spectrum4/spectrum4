@@ -3,14 +3,6 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 
-.if ROMS_INCLUDE
-.else
-  .include "print_w0.s"
-.endif
-
-
-
-
 .text
 .align 2
 

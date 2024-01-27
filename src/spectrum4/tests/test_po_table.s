@@ -7,6 +7,7 @@
 .else
   .include "po_search.s"
   .include "po_table_1.s"
+  .include "print_message.s"
   .include "print_w0.s"
 .endif
 
@@ -41,7 +42,7 @@ po_table_01_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adr     x2, msg_po_table_bakery0
-  bl      print_string                            // Expected output.
+  bl      print_message                           // Expected output.
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 

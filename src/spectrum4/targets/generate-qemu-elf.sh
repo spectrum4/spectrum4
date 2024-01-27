@@ -16,7 +16,7 @@ o_input_file="${2}"
 shift 2
 
 # Link the .o file to generate the elf file
-"${@}" -o "${elf_output_file}" "${o_input_file}"
+"${@}" -o "${elf_output_file}" "${o_input_file}" ../kernel/*.o
 # Now patch the elf program header to set p_paddr to physical address
 # 0x0000000000000000 instead of 0xffff000000000000. See:
 #

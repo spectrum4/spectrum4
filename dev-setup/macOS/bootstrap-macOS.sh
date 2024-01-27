@@ -53,6 +53,36 @@ if ! hash gmake 2> /dev/null; then
   brew install make
 fi
 
+# install libspectrum (needed for building tape2wav and fuse)
+if ! hash fuse 2> /dev/null || ! hash tape2wav 2> /dev/null; then
+
+  # Note, libspectrum may already be installed, but not trivial to test if it
+  # is working and all dependencies exist and are working, so reinstall. This
+  # is a reasonably small overhead, and libspectrum is unlikely to be present
+  # anyway, if neither fuse nor fuse-utils are present. So prefer
+  # safety/reliability over time-saving here.
+
+  # Install from source, since e.g. fuse version requires newer version than in
+  # brew.
+
+  # Note, audiofile is technically not needed for libspectrum, but needed later
+  # for tape2wav. By installing it here, libspectrum and fuse will also inherit
+  # libaudio support. Although not technically needed for libspectrum/fuse, if
+  # we only installed audiofile immediately prior to building tape2wav, we
+  # would get inconsistent results if libspectrum or fuse would be later
+  # reinstalled, since audiofile support would get included. So include it from
+  # the start, to avoid unexpected changes when reinstalling software.
+  brew install automake audiofile
+  retry git clone https://git.code.sf.net/p/fuse-emulator/libspectrum
+  cd libspectrum
+  git checkout e85c934f585cb8caff5eeab55899617b606abfeb
+  ./autogen.sh
+  ./configure
+  gmake -j4
+  sudo gmake install
+  cd ..
+fi
+
 if ! hash fuse 2> /dev/null; then
 
   # Install (headless) fuse which includes ROMs.
@@ -63,24 +93,24 @@ if ! hash fuse 2> /dev/null; then
 
   # brew install fuse-emulator       <- don't do this!
 
-  brew install autoconf pkg-config
-
-  # libspectrum
-  retry git clone https://git.code.sf.net/p/fuse-emulator/libspectrum
-  cd libspectrum
-  git checkout e85c934f585cb8caff5eeab55899617b606abfeb
-  ./autogen.sh
-  ./configure
-  gmake -j4
-  sudo gmake install
-  cd ..
-
-  # fuse
+  # libspectrum and automake already installed above
   retry git clone https://git.code.sf.net/p/fuse-emulator/fuse
   cd fuse
   git checkout 54bb53145a42f054dd7b5e5aa0bfa2d41020e265
   ./autogen.sh
   ./configure --with-null-ui
+  gmake -j4
+  sudo gmake install
+  cd ..
+fi
+
+# install tape2wav
+if ! hash tape2wav 2> /dev/null; then
+  # libspectrum and automake already installed above
+  retry curl -fsSL 'https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download' > fuse-utils-1.4.3.tar.gz
+  tar xvfz fuse-utils-1.4.3.tar.gz
+  cd fuse-utils-1.4.3
+  ./configure
   gmake -j4
   sudo gmake install
   cd ..
@@ -153,18 +183,6 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
     sudo gmake install
     cd ..
   fi
-fi
-
-# install tape2wav
-if ! hash tape2wav 2> /dev/null; then
-  brew install libspectrum
-  retry curl -fsSL 'https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download' > fuse-utils-1.4.3.tar.gz
-  tar xvfz fuse-utils-1.4.3.tar.gz
-  cd fuse-utils-1.4.3
-  ./configure
-  gmake -j4
-  sudo gmake install
-  cd ..
 fi
 
 # install md5sum

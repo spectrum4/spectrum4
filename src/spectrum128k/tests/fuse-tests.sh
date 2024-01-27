@@ -89,3 +89,9 @@ tzx_file="${suite}.tzx"
 suite_log="${suite}.log"
 fuse_log="${suite}.fuselog"
 run_tests fuse-tests "${suite_log}" 67 68 300 3
+if [ -f core ]; then
+  mv core "${suite}.core"
+else
+  echo > "${fuse_log}"
+fi
+touch "${suite}.core"

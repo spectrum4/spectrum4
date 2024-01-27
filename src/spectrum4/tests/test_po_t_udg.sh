@@ -130,23 +130,24 @@ for printer_in_use in 0 1; do
           echo '  .include "cl_set.s"'
           echo '  .include "copy_buff.s"'
           echo '  .include "indexer.s"'
+          echo '  .include "new_tokens.s"'
           echo '  .include "po_attr.s"'
           echo '  .include "po_char.s"'
           echo '  .include "po_char_2.s"'
+          echo '  .include "po_fetch.s"'
           echo '  .include "po_msg.s"'
           echo '  .include "po_scr.s"'
           echo '  .include "po_search.s"'
           echo '  .include "po_store.s"'
           echo '  .include "po_table.s"'
           echo '  .include "po_table_1.s"'
-          echo '  .include "pr_all.s"'
-          echo '  .include "print_w0.s"'
-          echo '  .include "temps.s"'
-          echo '  .include "rejoin_po_t_udg.s"'
           echo '  .include "po_tokens.s"'
-          echo '  .include "po_fetch.s"'
+          echo '  .include "pr_all.s"'
+          echo '  .include "print_message.s"'
           echo '  .include "print_token_udg_patch.s"'
-          echo '  .include "new_tokens.s"'
+          echo '  .include "print_w0.s"'
+          echo '  .include "rejoin_po_t_udg.s"'
+          echo '  .include "temps.s"'
           echo '  .include "tkn_table.s"'
           echo '.endif'
           echo
@@ -232,7 +233,7 @@ for printer_in_use in 0 1; do
             echo "  stp     x29, x30, [sp, #-16]!                        // Push frame pointer, procedure link register on stack."
             echo "  mov     x29, sp                                      // Update frame pointer to new stack location."
             echo "  adr     x2, ${msgname}"
-            echo "  bl      print_string                                 // Expect output \"${expectedtext}\""
+            echo "  bl      print_message                                // Expect output \"${expectedtext}\""
             echo "  ldp     x29, x30, [sp], #16                          // Pop frame pointer, procedure link register off stack."
             echo "  ret"
             echo

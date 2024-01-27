@@ -4,6 +4,8 @@
  * (C) 2021 Spectrum +4 Authors. All rights reserved.
  */
 
+extern void pci_log(const char *str);
+
 struct pci_host_bridge {
   /*
     struct device dev;

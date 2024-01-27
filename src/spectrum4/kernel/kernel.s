@@ -722,4 +722,3 @@ memzero:
 .include "armregs.s"
 .include "font.s"
 .include "entry.s"
-.include "stubs.s"

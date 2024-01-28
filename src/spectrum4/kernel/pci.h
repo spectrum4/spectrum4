@@ -8,6 +8,11 @@
 
 extern void pci_log(const char *str);
 
+// general purpose, from e.g. include/linux/types.h
+struct list_head {
+  struct list_head *next, *prev;
+};
+
 // For simplicity, this has been embedded directly from:
 // https://github.com/torvalds/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L280-L300
 struct brcm_pcie {
@@ -87,21 +92,21 @@ struct pci_host_bridge {
 
 // Line 626
 struct pci_bus {
-
+  struct list_head node;     // Node in list of buses
+  struct pci_bus *parent;    // Parent bus this bridge is on
+  struct list_head children; // List of child buses
+  struct list_head devices;  // List of devices on this bus
   /*
-    struct list_head node;     // Node in list of buses
-    struct pci_bus *parent;    // Parent bus this bridge is on
-    struct list_head children; // List of child buses
-    struct list_head devices;  // List of devices on this bus
-    struct pci_dev *self;      // Bridge device as seen by parent
-    struct list_head slots;    // List of slots on this bus;
-                               // protected by pci_slot_mutex
-    struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
-    struct list_head resources; // Address space routed to this bus
-    struct resource busn_res;   // Bus numbers routed to this bus
-
-    struct pci_ops *ops;         // Configuration access functions
+  struct pci_dev *self;      // Bridge device as seen by parent
+  struct list_head slots;    // List of slots on this bus;
+                             // protected by pci_slot_mutex
+  struct resource *resource[PCI_BRIDGE_RESOURCE_NUM];
   */
+  struct list_head resources; // Address space routed to this bus
+  /*
+  struct resource busn_res;   // Bus numbers routed to this bus
+  struct pci_ops *ops;         // Configuration access functions
+*/
   void *sysdata;               // Hook for sys-specific extension
                                /*
                                    struct proc_dir_entry *procdir;    // Directory entry in /proc/bus/pci
@@ -110,12 +115,8 @@ struct pci_bus {
   unsigned char primary;       // Number of primary bridge
   unsigned char max_bus_speed; // enum pci_bus_speed
   unsigned char cur_bus_speed; // enum pci_bus_speed
-#ifdef CONFIG_PCI_DOMAINS_GENERIC
   int domain_nr;
-#endif
-
   char name[48];
-
   unsigned short bridge_ctl; // Manage NO_ISA/FBB/et al behaviors
                              /*
                                pci_bus_flags_t bus_flags; // Inherited by child buses
@@ -139,6 +140,10 @@ enum {
   PCI_SCAN_ALL_PCIE_DEVS = 0x00000040,  /* Scan all, not just dev 0 */
 };
 
+// Line 1032
+void pcie_bus_configure_settings(struct pci_bus *bus);
+// Line 1077
+void pci_bus_add_devices(const struct pci_bus *bus);
 // Line 1082
 int pci_host_probe(struct pci_host_bridge *bridge);
 // Line 1085

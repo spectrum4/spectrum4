@@ -177,7 +177,7 @@ new:                                     // L019D
   mov     x2, #0                                  // screen line to start at
   bl      display_memory
 .if PCI_INCLUDE
-  bl      pci_host_probe
+  bl      brcm_pcie_probe
 .endif
 6:
 .endif

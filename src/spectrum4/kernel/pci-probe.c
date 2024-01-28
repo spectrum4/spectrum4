@@ -8,6 +8,9 @@
 
 // https://github.com/torvalds/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c
 
+// Line 2778
+void pcie_bus_configure_settings(struct pci_bus *bus) {}
+
 // Line 3022
 int pci_host_probe(struct pci_host_bridge *bridge) {
   struct pci_bus *bus, *child;
@@ -30,17 +33,16 @@ int pci_host_probe(struct pci_host_bridge *bridge) {
     pci_bus_claim_resources(bus);
   } else {
     pci_bus_size_bridges(bus);
-    /*
-        pci_bus_assign_resources(bus);
+    // pci_bus_assign_resources(bus);
 
-        list_for_each_entry(child, &bus->children, node)
-            pcie_bus_configure_settings(child);
-*/
+    for (child = (struct pci_bus *)bus->children.next;
+         child != (struct pci_bus *)&bus->children;
+         child = (struct pci_bus *)((struct list_head *)child)->next) {
+      pcie_bus_configure_settings(child);
+    }
   }
 
-  /*
-        pci_bus_add_devices(bus);
-      */
+  pci_bus_add_devices(bus);
   return 0;
 }
 

@@ -11,7 +11,7 @@
 struct pci_host_bridge bridge;
 
 // Line 1250
-static int brcm_pcie_probe() {
+int brcm_pcie_probe() {
   bridge.bus = 0; // null
   bridge.busnr = 0;
   bridge.domain_nr = 0xffffffff;

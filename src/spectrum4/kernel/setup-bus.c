@@ -11,6 +11,13 @@
 // Line 28
 unsigned int pci_flags;
 
+// Line 1337
+void pci_bus_size_bridges(struct pci_bus *bus) {
+  /*
+          __pci_bus_size_bridges(bus, NULL);
+  */
+}
+
 // Line 1481
 void pci_bus_claim_resources(struct pci_bus *b) {
   /*

@@ -29,8 +29,8 @@ int pci_host_probe(struct pci_host_bridge *bridge) {
   if (pci_flags & PCI_PROBE_ONLY) {
     pci_bus_claim_resources(bus);
   } else {
+    pci_bus_size_bridges(bus);
     /*
-        pci_bus_size_bridges(bus);
         pci_bus_assign_resources(bus);
 
         list_for_each_entry(child, &bus->children, node)

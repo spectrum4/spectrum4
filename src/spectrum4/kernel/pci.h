@@ -8,6 +8,40 @@
 
 extern void pci_log(const char *str);
 
+// For simplicity, this has been embedded directly from:
+// https://github.com/torvalds/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L280-L300
+struct brcm_pcie {
+  /*
+          struct device		*dev;
+  */
+  void *base;
+  /*
+          struct clk		*clk;
+          struct device_node	*np;
+  bool ssc;
+  bool l1ss;
+  */
+  int gen;
+  /*
+          u64			msi_target_addr;
+          struct brcm_msi		*msi;
+  */
+  const int *reg_offsets;
+  /*
+          enum pcie_type		type;
+          struct reset_control	*rescal;
+          struct reset_control	*perst_reset;
+  */
+  int num_memc;
+  /*
+          u64			memc_size[PCIE_BRCM_MAX_MEMC];
+          u32			hw_rev;
+          void			(*perst_set)(struct brcm_pcie *pcie, u32 val);
+          void			(*bridge_sw_init_set)(struct brcm_pcie *pcie,
+     u32 val);
+  */
+};
+
 // Line 544
 struct pci_host_bridge {
   /*
@@ -31,14 +65,12 @@ struct pci_host_bridge {
   void *release_data;
   unsigned int ignore_reset_delay : 1;  // For entire hierarchy
   unsigned int no_ext_tags : 1;         // No Extended Tags
-  unsigned int no_inc_mrrs : 1;         // No Increase MRRS
   unsigned int native_aer : 1;          // OS may use PCIe AER
   unsigned int native_pcie_hotplug : 1; // OS may use PCIe hotplug
   unsigned int native_shpc_hotplug : 1; // OS may use SHPC hotplug
   unsigned int native_pme : 1;          // OS may use PCIe PME
   unsigned int native_ltr : 1;          // OS may use PCIe LTR
   unsigned int native_dpc : 1;          // OS may use PCIe DPC
-  unsigned int native_cxl_error : 1;    // OS may use CXL RAS//vents
   unsigned int preserve_config : 1;     // Preserve FW resource setup
   unsigned int size_windows : 1;        // Enable root bus sizing
   unsigned int msi_domain : 1;          // Bridge wants MSI domain
@@ -50,7 +82,7 @@ struct pci_host_bridge {
                                                     resource_size_t size,
                                                     resource_size_t align);
                                         */
-  unsigned long private[];              // ____cacheline_aligned;
+  struct brcm_pcie pcie; // For simplicity, this has been embedded directly
 };
 
 // Line 626
@@ -115,3 +147,5 @@ extern unsigned int pci_flags;
 int pci_scan_root_bus_bridge(struct pci_host_bridge *bridge);
 // Line 1458
 void pci_bus_claim_resources(struct pci_bus *bus);
+// Line 1459
+void pci_bus_size_bridges(struct pci_bus *bus);

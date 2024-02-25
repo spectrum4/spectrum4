@@ -35,40 +35,40 @@
 uart_init:
   adr     x4, mailbox_base                        // x4 = mailbox_base
   ldr     x1, [x4, aux_base-mailbox_base]         // x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
-  ldr     w2, [x1, 0x0004]                        // w2 = [AUX_ENABLES] (Auxiliary enables)
+  ldr     w2, [x1, #0x4]                          // w2 = [AUX_ENABLES] (Auxiliary enables)
   orr     w2, w2, #1
-  str     w2, [x1, 0x0004]                        //   [AUX_ENABLES] |= 0x00000001 => Enable Mini UART.
-  str     wzr, [x1, 0x0044]                       //   [AUX_MU_IER] = 0x00000000 => Disable Mini UART interrupts.
-  str     wzr, [x1, 0x0060]                       //   [AUX_MU_CNTL] = 0x00000000 => Disable Mini UART Tx/Rx
+  str     w2, [x1, #0x4]                          //   [AUX_ENABLES] |= 0x00000001 => Enable Mini UART.
+  str     wzr, [x1, #0x44]                        //   [AUX_MU_IER] = 0x00000000 => Disable Mini UART interrupts.
+  str     wzr, [x1, #0x60]                        //   [AUX_MU_CNTL] = 0x00000000 => Disable Mini UART Tx/Rx
   mov     w2, #0x6                                // w2 = 6
-  str     w2, [x1, 0x0048]                        //   [AUX_MU_IIR] = 0x00000006 => Mini UART clear Tx, Rx FIFOs
+  str     w2, [x1, #0x48]                         //   [AUX_MU_IIR] = 0x00000006 => Mini UART clear Tx, Rx FIFOs
   mov     w3, #0x3                                // w3 = 3
-  str     w3, [x1, 0x004c]                        //   [AUX_MU_LCR] = 0x00000003 => Mini UART in 8-bit mode.
-  str     wzr, [x1, 0x0050]                       //   [AUX_MU_MCR] = 0x00000000 => Set UART1_RTS line high.
+  str     w3, [x1, #0x4c]                         //   [AUX_MU_LCR] = 0x00000003 => Mini UART in 8-bit mode.
+  str     wzr, [x1, #0x50]                        //   [AUX_MU_MCR] = 0x00000000 => Set UART1_RTS line high.
   ldr     w2, aux_mu_baud_reg
-  str     w2, [x1, 0x0068]                        //   [AUX_MU_BAUD] = 0x0000010e (rpi3) or 0x0000021d (rpi4)
+  str     w2, [x1, #0x68]                         //   [AUX_MU_BAUD] = 0x0000010e (rpi3) or 0x0000021d (rpi4)
                                                   //         => baudrate = system_clock_freq/(8*([AUX_MU_BAUD]+1))
                                                   //                       (as close to 115200 as possible)
   ldr     x4, [x4, gpio_base-mailbox_base]        // x4 = [gpio_base] = 0x3f200000 (rpi3) or 0xfe200000 (rpi4)
-  ldr     w2, [x4, 0x0004]                        // w2 = [GPFSEL1]
+  ldr     w2, [x4, #0x4]                          // w2 = [GPFSEL1]
   and     w2, w2, #0xfffc0fff                     // Unset bits 12, 13, 14 (FSEL14 => GPIO Pin 14 is an input).
                                                   // Unset bits 15, 16, 17 (FSEL15 => GPIO Pin 15 is an input).
   orr     w2, w2, #0x00002000                     // Set bit 13 (FSEL14 => GPIO Pin 14 takes alternative function 5).
   orr     w2, w2, #0x00010000                     // Set bit 16 (FSEL15 => GPIO Pin 15 takes alternative function 5).
-  str     w2, [x4, 0x0004]                        //   [GPFSEL1] = updated value => Enable UART 1.
-  str     wzr, [x4, 0x0094]                       //   [GPPUD] = 0x00000000 => GPIO Pull up/down = OFF
+  str     w2, [x4, #0x4]                          //   [GPFSEL1] = updated value => Enable UART 1.
+  str     wzr, [x4, #0x94]                        //   [GPPUD] = 0x00000000 => GPIO Pull up/down = OFF
   mov     x5, #0x96                               // Wait 150 instruction cycles (as stipulated by datasheet).
 1:
   subs    x5, x5, #0x1                            // x0 -= 1
   b.ne    1b                                      // Repeat until x0 == 0.
   mov     w2, #0xc000                             // w2 = 2^14 + 2^15
-  str     w2, [x4, 0x0098]                        //   [GPPUDCLK0] = 0x0000c000 => Control signal to lines 14, 15.
+  str     w2, [x4, #0x98]                         //   [GPPUDCLK0] = 0x0000c000 => Control signal to lines 14, 15.
   mov     x0, #0x96                               // Wait 150 instruction cycles (as stipulated by datasheet).
 2:
   subs    x0, x0, #0x1                            // x0 -= 1
   b.ne    2b                                      // Repeat until x0 == 0.
-  str     wzr, [x4, 0x0098]                       //   [GPPUDCLK0] = 0x00000000 => Remove control signal to lines 14, 15.
-  str     w3, [x1, 0x0060]                        //   [AUX_MU_CNTL] = 0x00000003 => Enable Mini UART Tx/Rx
+  str     wzr, [x4, #0x98]                        //   [GPPUDCLK0] = 0x00000000 => Remove control signal to lines 14, 15.
+  str     w3, [x1, #0x60]                         //   [AUX_MU_CNTL] = 0x00000003 => Enable Mini UART Tx/Rx
 .if TESTS_INCLUDE
   adrp    x0, uart_disable
   add     x0, x0, :lo12:uart_disable
@@ -89,7 +89,7 @@ uart_send:
   adr     x1, mailbox_base                        // x1 = mailbox_base
   ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
 1:
-  ldr     w2, [x1, 0x0054]                        // w2 = [AUX_MU_LSR]
+  ldr     w2, [x1, #0x54]                         // w2 = [AUX_MU_LSR]
   tbz     x2, #5, 1b                              // Repeat last statement until bit 5 is set.
 
 /////////////////////
@@ -112,7 +112,7 @@ uart_send:
 3:
 .endif
 /////////////////////
-  strb    w0, [x1, 0x0040]                        //   [AUX_MU_IO] = w0
+  strb    w0, [x1, #0x40]                         //   [AUX_MU_IO] = w0
   ret
 
 # ------------------------------------------------------------------------------
@@ -157,7 +157,7 @@ uart_puts:
   b.ne    4f
   mov     w2, '('
 2:
-  ldr     w3, [x1, 0x0054]                        // w3 = [AUX_MU_LSR]
+  ldr     w3, [x1, #0x54]                         // w3 = [AUX_MU_LSR]
   tbz     x3, #5, 2b                              // Repeat last statement until bit 5 is set.
 
 /////////////////////
@@ -174,15 +174,15 @@ uart_puts:
 .endif
 /////////////////////
 
-  strb    w2, [x1, 0x0040]                        //   [AUX_MU_IO] = w2
+  strb    w2, [x1, #0x40]                         //   [AUX_MU_IO] = w2
   mov     w2, 'c'
 3:
-  ldr     w3, [x1, 0x0054]                        // w3 = [AUX_MU_LSR]
+  ldr     w3, [x1, #0x54]                         // w3 = [AUX_MU_LSR]
   tbz     x3, #5, 3b                              // Repeat last statement until bit 5 is set.
-  strb    w2, [x1, 0x0040]                        //   [AUX_MU_IO] = w2
+  strb    w2, [x1, #0x40]                         //   [AUX_MU_IO] = w2
   mov     w2, ')'
 4:
-  ldr     w3, [x1, 0x0054]                        // w3 = [AUX_MU_LSR]
+  ldr     w3, [x1, #0x54]                         // w3 = [AUX_MU_LSR]
   tbz     x3, #5, 4b                              // Repeat last statement until bit 5 is set.
 
 /////////////////////
@@ -199,7 +199,7 @@ uart_puts:
 .endif
 /////////////////////
 
-  strb    w2, [x1, 0x0040]                        //   [AUX_MU_IO] = w2
+  strb    w2, [x1, #0x40]                         //   [AUX_MU_IO] = w2
   b       1b
 5:
 .if TESTS_INCLUDE
@@ -220,10 +220,10 @@ uart_x0:
   stp     x19, x20, [sp, #-16]!                   // Backup x19, x20
   mov     x19, x0                                 // Backup x0 in x19
   sub     sp, sp, #0x20                           // Allocate space on stack for hex string
-  mov     w2, 0x7830
+  mov     w2, #0x7830
   mov     x1, sp
   strh    w2, [x1], #2                            // "0x"
-  mov     x2, 64
+  mov     x2, #64
   bl      hex_x0
   strb    wzr, [x1], #1
   mov     x0, sp

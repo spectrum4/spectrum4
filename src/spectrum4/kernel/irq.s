@@ -91,7 +91,7 @@ handle_irq_bcm2711:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adrp    x1, 0xfe00b000 + _start
-  ldr     w0, [x1, 0x200]                         // w0 = [0xfe00b200]
+  ldr     w0, [x1, #0x200]                        // w0 = [0xfe00b200]
   cmp     w0, #2
   b.ne    1f
   bl      handle_timer_irq

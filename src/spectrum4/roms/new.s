@@ -132,7 +132,7 @@ new:                                     // L019D
   bl      uart_newline
   adr     x0, msg_class_code_initial
   bl      uart_puts
-  ldp     w0, w8, [x10, #0x08]                    // w0 = initial class code
+  ldp     w0, w8, [x10, #0x8]                     // w0 = initial class code
                                                   // w8 = updated class code
   bl      uart_x0
   bl      uart_newline

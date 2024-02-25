@@ -9,7 +9,7 @@
 timer_init:
   adr     x0, mailbox_base                        // x0 = mailbox_base
   ldr     x0, [x0, timer_base-mailbox_base]       // x0 = [timer_base] = 0x3f003000 (rpi3) or 0xfe003000 (rpi4)
-  ldr     w1, [x0, #0x04]
+  ldr     w1, [x0, #0x4]
   movl    w2, 200000                              // TODO: this value should be dependent on clock speed (different for rpi3/rpi4)
   add     w1, w1, w2
   str     w1, [x0, #0x10]                         // [0x3f003010] += [0x3f003004] + 200000 (rpi3) /  [0xfe003010] += [0xfe003004] + 200000 (rpi4)

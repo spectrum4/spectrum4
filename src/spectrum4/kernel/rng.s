@@ -18,7 +18,7 @@ rand_init_bcm283x:
   adrp    x1, 0x3f104000 + _start
   mov     w0, #0x00100000                         // "warmup count": the initial numbers generated are "less random" so will be discarded
                                                   // set this higher than in linux kernel, as results seem better with higher value
-  str     w0, [x1, #0x04]                         // [0x3f104004] = 0x00100000
+  str     w0, [x1, #0x4]                          // [0x3f104004] = 0x00100000
   ldr     w0, [x1, #0x10]
   orr     w0, w0, #0x01
   str     w0, [x1, #0x10]                         // Set bit 0 of [0x3f104010]  (mask the interrupt)
@@ -35,15 +35,15 @@ rand_init_bcm283x:
 rand_x0_bcm283x:
   adrp    x1, 0x3f104000 + _start
   1:                                              // Wait until ([0x3f104004] >> 24) >= 1
-    ldr     w0, [x1, #0x04]                       // Bits 24-31 tell us how many words
+    ldr     w0, [x1, #0x4]                        // Bits 24-31 tell us how many words
     lsr     w0, w0, #24                           // are available.
     cbz     w0, 1b                                // Try again if no words are available.
-  ldr     w2, [x1, #0x08]                         // w0 = [0x3f104008] (random data)
+  ldr     w2, [x1, #0x8]                          // w0 = [0x3f104008] (random data)
   1:                                              // Wait until ([0x3f104004] >> 24) >= 1
-    ldr     w0, [x1, #0x04]                       // Bits 24-31 tell us how many words
+    ldr     w0, [x1, #0x4]                        // Bits 24-31 tell us how many words
     lsr     w0, w0, #24                           // are available.
     cbz     w0, 1b                                // Try again if no words are available.
-  ldr     w0, [x1, #0x08]                         // w2 = [0x3f104008] (random data)
+  ldr     w0, [x1, #0x8]                          // w2 = [0x3f104008] (random data)
   bfi     x0, x2, #32, #32                        // Copy bits from w2 into high bits of x0.
   ret
 
@@ -64,10 +64,10 @@ rand_block_bcm283x:
   adrp    x2, 0x3f104000 + _start
   1:                                              // Loop until buffer filled
     2:                                            // Wait until ([0x3f104004] >> 24) >= 1
-      ldr     w3, [x2, #0x04]                     // Since bits 24-31 tell us how many words
+      ldr     w3, [x2, #0x4]                      // Since bits 24-31 tell us how many words
       lsr     w3, w3, #24                         // are available, this must be at least one.
       cbz     w3, 2b
-    ldr     w3, [x2, #0x08]                       // w3 = [0x3f104008] (random data)
+    ldr     w3, [x2, #0x8]                        // w3 = [0x3f104008] (random data)
     str     w3, [x0], #0x04                       // Write to buffer.
     subs    x1, x1, #0x04
     cbnz    x1, 1b
@@ -102,7 +102,7 @@ rand_init_iproc:
 rand_x0_iproc:
   adrp    x1, 0xfe104000 + _start
   1:                                              // Wait until [0xfe10400c] >= 16
-    ldr     w0, [x1, #0x0c]
+    ldr     w0, [x1, #0xc]
     cmp     w0, #16
     b.ls    1b
   2:
@@ -130,7 +130,7 @@ rand_block_iproc:
   and     x1, x1, #~0b11
   adrp    x2, 0xfe104000 + _start
   1:                                              // Wait until [0xfe10400c] >= 16
-    ldr     w3, [x2, #0x0c]
+    ldr     w3, [x2, #0xc]
     cmp     w3, #16
     b.ls    1b
   1:                                              // Loop until buffer filled

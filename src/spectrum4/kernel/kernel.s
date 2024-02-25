@@ -18,12 +18,6 @@
 .set BORDER_TOP,       128
 .set BORDER_BOTTOM,    112
 
-.set MAILBOX_REQ_ADDR, 0x0
-.set MAILBOX_WRITE,    0x20
-.set MAILBOX_STATUS,   0x18
-.set MAILBOX_EMPTY_BIT,30
-.set MAILBOX_FULL_BIT, 31
-
 .set FIRST_UDG_CHAR,   'A'
 .set UDG_COUNT,        21                         // Number of User Defined Graphics to copy (=> 'A'-'U').
 
@@ -294,15 +288,15 @@ fb_req_end:
 mbox_call:
   ldr     x9, mailbox_base                        // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0xffff00003f00b880 (rpi3) or 0xffff0000fe00b880 (rpi4)
 1:                                                // Wait for mailbox FULL flag to be clear.
-  ldr     w10, [x9, MAILBOX_STATUS]               // w10 = mailbox status.
-  tbnz    w10, MAILBOX_FULL_BIT, 1b               // If FULL flag set (bit 31), try again...
+  ldr     w10, [x9, #0x18]                        // w10 = mailbox status.
+  tbnz    w10, 31, 1b                             // If FULL flag set (bit 31), try again...
   mov     w11, 8                                  // Mailbox channel 8.
   orr     w11, w0, w11                            // w11 = encoded request address + channel number.
-  str     w11, [x9, MAILBOX_WRITE]                // Write request address / channel number to mailbox write register.
+  str     w11, [x9, #0x20]                        // Write request address / channel number to mailbox write register.
 2:                                                // Wait for mailbox EMPTY flag to be clear.
-  ldr     w12, [x9, MAILBOX_STATUS]               // w12 = mailbox status.
-  tbnz    w12, MAILBOX_EMPTY_BIT, 2b              // If EMPTY flag set (bit 30), try again...
-  ldr     w12, [x9, MAILBOX_REQ_ADDR]             // w12 = message request address + channel number.
+  ldr     w12, [x9, #0x18]                        // w12 = mailbox status.
+  tbnz    w12, 30, 2b                             // If EMPTY flag set (bit 30), try again...
+  ldr     w12, [x9]                               // w12 = message request address + channel number.
   cmp     w11, w12                                // See if the message is for us.
   b.ne    2b                                      // If not, try again.
   ret

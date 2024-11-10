@@ -23,15 +23,18 @@
 #   [heap+0x14]: revision number
 #   [heap+0x18]: vid
 #   [heap+0x1a]: did
-#   [heap+0x1c]: header type
-#   [heap+0x20]: SSC status register
+#   [heap+0x1c]: header type (lower 8 bits)
+#   [heap+0x20]: bus 1 class (upper 24 bits) and revision (lower 8 bits)
+#   [heap+0x24]: bus 1 header type (lower 8 bits)
+#   [heap+0x28]: SSC status register
 .align 2
 pcie_init_bcm2711:
 
   mov     x5, x30
   adrp    x10, 0xfd500000 + _start                // x10 = pcie_base
   adrp    x4, 0xfd504000 + _start
-  adrp    x9, 0xfd509000 + _start
+  adrp    x13, 0xfd508000 + _start                // x13 = VL805 internal registers
+  adrp    x9, 0xfd509000 + _start                 // x9 = VL805 configuration space
   adrp    x7, heap
   add     x7, x7, :lo12:heap                      // x7 = heap
 
@@ -282,7 +285,7 @@ pcie_init_bcm2711:
   bl      mdio_read                               // w1=[SSC_STATUS]
   tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
   mov     w6, #0x04                               // 4 SSC initialisation steps completed
-  str     w1, [x7, #0x20]                         // store [SSC_STATUS] on heap
+  str     w1, [x7, #0x28]                         // store [SSC_STATUS] on heap
   tbz     w1, #10, 3f                             // abort SSC setup since bit 10 (SSC_STATUS_SSC) is clear
   mov     w6, #0x05                               // 5 SSC initialisation steps completed
   tbz     w1, #11, 3f                             // abort SSC setup since bit 11 (SSC_STATUS_PLL_LOCK) is clear
@@ -359,6 +362,19 @@ pcie_init_bcm2711:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L639-L640
 
 4:
+  // reset VL805 firmware (the USB Host Controller chip)
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L26-L66
+  //   https://github.com/rsta2/circle/blob/c21f2efdad86c1062f255fbf891135a2a356713e/lib/usb/xhcidevice.cpp#L124-L130
+  adr     x0, vl805_reset_req                     // x0 = memory block pointer for mailbox call to reset VL805 firmware
+  bl      mbox_call
+  mov     x0, #1000                               // sleep 200-1000us
+  bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
+  mov     w0, #0x00100000                         // bus 1, slot 0, func 0, where 0
+  str     w0, [x9]
+  ldr     w2, [x13, #0x8]                         // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)
+                                                  //   class should be 0x0c0330
+  ldrb    w3, [x13, #0xe]                         // w3 = bus 1 header type
+  stp     w2, w3, [x7, #0x20]                     // store bus 1 class, revision and header type on heap
   ret     x5
 
 
@@ -509,3 +525,19 @@ map_conf:
   adrp    x0, 0xfd508000 + _start                 // x0 = pcie_base + 0x8000
   add     x0, x0, x2                              // x0 = pcie_base + 0x8000 + where
   ret
+
+
+# Memory block for requesting VL805 host controller firmware reset
+.align 4
+vl805_reset_req:
+  .word (vl805_reset_req_end-vl805_reset_req)     // Buffer size
+  .word 0                                         // Request/response code
+  .word 0x00030058                                // Tag 0 - Reset XHCI
+                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/include/soc/bcm2835/raspberrypi-firmware.h#L97
+  .word 4                                         //   value buffer size
+  .word 0                                         //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
+  .word 0x00100000                                //   request: reset configuration  response: unknown
+                                                  //     0x00100000 => pcie bus = 1 (bits 20-?), slot = 0 (bits 15-19), func = 0 (bits 12-14)
+                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L26-L66
+  .word 0                                         // End Tags
+vl805_reset_req_end:

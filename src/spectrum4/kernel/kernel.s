@@ -275,7 +275,6 @@ arm_size:
 fb_req_end:
 
 
-
 # On entry:
 #   x0 = address of mailbox request
 # On exit:

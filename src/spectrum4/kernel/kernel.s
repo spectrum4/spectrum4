@@ -152,10 +152,6 @@ _start:
   bl      init_framebuffer                        // Allocate a frame buffer with chosen screen settings.
   ldr     x0, rand_init
   blr     x0
-  ldr     x0, pcie_init
-  cbz     x0, 7f
-  blr     x0
-7:
 .if TESTS_AUTORUN
   ldr     w0, arm_size
   orr     x0, x0, 0xffff000000000000              // Convert to virtual address
@@ -168,6 +164,10 @@ _start:
   blr     x0
   dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
   bl      enable_irq
+  ldr     x0, pcie_init
+  cbz     x0, 7f
+  blr     x0
+7:
   bl      fill_memory_with_junk
   bl      run_tests
 .endif

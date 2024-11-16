@@ -384,6 +384,8 @@ pcie_init_bcm2711:
   strb    w3, [x13, #0x3d]                        // update PCI interrupt pin (might have already been enabled)
   mov     w2, 0x0146                              // prepare PCI command config: memory | master | parity | serr
   strh    w2, [x13, #0x4]                         // apply
+  mov     x0, #0x600000000                        // x0 = pcie start address
+  ldrh    w1, [x0, #0x2]                          // w1 = [XHCI_REG_CAP_HCIVERSION] // should be 0x110
   ret     x5
 
 

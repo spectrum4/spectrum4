@@ -375,6 +375,11 @@ pcie_init_bcm2711:
                                                   //   class should be 0x0c0330
   ldrb    w3, [x13, #0xe]                         // w3 = bus 1 header type
   stp     w2, w3, [x7, #0x20]                     // store bus 1 class, revision and header type on heap
+  mov     x2, #0x10                               // 64/4 (pci cache line size - get this value from cache config instead?)
+  strb    w2, [x13, #0xc]                         // set pci cache line size
+  ldr     w3, =0xf8000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type)
+  str     w3, [x13, #0x10]                        // apply
+  str     wzr, [x13, #0x14]                       // upper 32 address bits = 0
   ret     x5
 
 

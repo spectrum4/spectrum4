@@ -380,6 +380,10 @@ pcie_init_bcm2711:
   ldr     w3, =0xf8000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type)
   str     w3, [x13, #0x10]                        // apply
   str     wzr, [x13, #0x14]                       // upper 32 address bits = 0
+  mov     w3, #0x1                                // prepare INTA enable
+  strb    w3, [x13, #0x3d]                        // update PCI interrupt pin (might have already been enabled)
+  mov     w2, 0x0146                              // prepare PCI command config: memory | master | parity | serr
+  strh    w2, [x13, #0x4]                         // apply
   ret     x5
 
 

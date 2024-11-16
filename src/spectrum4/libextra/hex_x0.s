@@ -9,9 +9,12 @@
 # On entry:
 #   x0 = hex value to convert to text
 #   x1 = address to write text to (no trailing 0)
-#   x2 = number of bits to print (multiple of 4)
+#   x2 = number of bits to convert (multiple of 4)
 # On exit:
+#   x0 = <unchanged>
 #   x1 = address of next unused char (x1 += x2/4)
+#   x2 = 0
+#   x3 = last char in text
 hex_x0:
   ror     x0, x0, x2
 1:

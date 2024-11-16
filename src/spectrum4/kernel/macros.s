@@ -236,9 +236,91 @@
 .endm
 
 
+.macro strbi val, base, offset
+  read_write_immediate strb, msg_write, 8, \val, \base, \offset
+.endm
+
+
+.macro strhi val, base, offset
+  read_write_immediate strh, msg_write, 16, \val, \base, \offset
+.endm
+
+
+.macro strwi val, base, offset
+  read_write_immediate str, msg_write, 32, \val, \base, \offset
+.endm
+
+
+.macro strxi val, base, offset
+  read_write_immediate str, msg_write, 64, \val, \base, \offset
+.endm
+
+
+.macro ldrbi val, base, offset
+  read_write_immediate ldrb, msg_read, 8, \val, \base, \offset
+.endm
+
+
+.macro ldrhi val, base, offset
+  read_write_immediate ldrh, msg_read, 16, \val, \base, \offset
+.endm
+
+
+.macro ldrwi val, base, offset
+  read_write_immediate ldr, msg_read, 32, \val, \base, \offset
+.endm
+
+
+.macro ldrxi val, base, offset
+  read_write_immediate ldr, msg_read, 64, \val, \base, \offset
+.endm
+
+
+.macro read_write_immediate op, message, bitcount, val, base, offset
+  \op     \val, [\base, \offset]
+.if UART_DEBUG
+  stp     x29, x30, [sp, #-16]!
+  stp     x0, x1, [sp, #-16]!
+  stp     x2, x3, [sp, #-16]!
+  stp     x4, x5, [sp, #-16]!
+  str     \base, [sp, #-8]!
+  str     \val, [sp, #-8]!
+  mrs     x0, nzcv                                // preserve N, Z, C, V flags
+  str     x0, [sp, #-8]!
+  adr     x0, \message
+  bl      uart_puts
+  mov     x0, '['
+  bl      uart_send
+  ldr     x0, [sp, #16]                           // x0 = \base
+  add     x0, x0, \offset                         // x0 = \base + \offset
+  bl      uart_x0
+  mov     x0, ']'
+  bl      uart_send
+  mov     x0, '='
+  bl      uart_send
+  ldr     x0, [sp, #8]
+  mov     x2, \bitcount
+  bl      uart_x0_s
+  bl      uart_newline
+  ldr     x0, [sp], #8
+  msr     nzcv, x0                                // restore N, Z, C, V flags
+  ldr     \val, [sp], #8
+  ldr     \base, [sp], #8
+  ldp     x4, x5, [sp], #16
+  ldp     x2, x3, [sp], #16
+  ldp     x0, x1, [sp], #16
+  ldp     x29, x30, [sp], #16
+.endif
+.endm
+
+
 .if UART_DEBUG
 .macro msgreg regname
 msg_\regname:
 .asciz "\regname: "
 .endm
+msg_read:
+.asciz "read "
+msg_write:
+.asciz "write "
 .endif

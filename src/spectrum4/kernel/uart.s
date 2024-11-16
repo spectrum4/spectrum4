@@ -209,21 +209,41 @@ uart_puts:
 
 
 # ------------------------------------------------------------------------------
-# Write the value of x0 as a hex string (0x0123456789abcdef) to Mini UART.
+# Write the full value of x0 as hex string (0x0123456789abcdef) to Mini UART.
+# Sends 18 bytes ('0', 'x', <16 byte hex string>). No trailing newline.
 # ------------------------------------------------------------------------------
 #
 # On entry:
 #   x0 = value to write as a hex string to Mini UART.
+#   x2 = number of bits to print (multiple of 4)
 uart_x0:
+  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                                 // Update frame pointer to new stack location.
+  mov     x2, #64
+  bl      uart_x0_s
+  ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+# ------------------------------------------------------------------------------
+# Write the lower nibbles of x0 as a hex string to Mini UART, with custom size
+# (number of nibbles).
+# ------------------------------------------------------------------------------
+#
+# Includes leading '0x' and no trailing newline.
+#
+# On entry:
+#   x0 = value to write as a hex string to Mini UART.
+#   x2 = number of lower bits of x0 to print (multiple of 4)
+uart_x0_s:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   stp     x19, x20, [sp, #-16]!                   // Backup x19, x20
   mov     x19, x0                                 // Backup x0 in x19
   sub     sp, sp, #0x20                           // Allocate space on stack for hex string
-  mov     w2, #0x7830
+  mov     w3, #0x7830
   mov     x1, sp
-  strh    w2, [x1], #2                            // "0x"
-  mov     x2, #64
+  strh    w3, [x1], #2                            // "0x"
   bl      hex_x0
   strb    wzr, [x1], #1
   mov     x0, sp

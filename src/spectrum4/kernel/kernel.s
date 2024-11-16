@@ -516,7 +516,7 @@ msg_done:                      .asciz "DONE.\r\n"
 
 .include "rng.s"
 .if PCI_INCLUDE
-  .include "pci.s"
+# .include "pci.s"
   .include "pcie.s"
 .endif
 .include "irq.s"

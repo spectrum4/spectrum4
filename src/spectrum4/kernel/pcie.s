@@ -31,10 +31,10 @@
 pcie_init_bcm2711:
 
   mov     x5, x30
-  adrp    x10, 0xfd500000 + _start                // x10 = pcie_base
+  adrp    x10, 0xfd500000 + _start                // x10 = VL805 internal registers (pcie_base)
   adrp    x4, 0xfd504000 + _start
-  adrp    x13, 0xfd508000 + _start                // x13 = VL805 internal registers
-  adrp    x9, 0xfd509000 + _start                 // x9 = VL805 configuration space
+  adrp    x13, 0xfd508000 + _start                // x13 = VL805 extended config space data
+  adrp    x9, 0xfd509000 + _start                 // x9 = VL805 extended config space index
   adrp    x7, heap
   add     x7, x7, :lo12:heap                      // x7 = heap
 
@@ -370,7 +370,7 @@ pcie_init_bcm2711:
   mov     x0, #1000                               // sleep 200-1000us
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
   mov     w0, #0x00100000                         // bus 1, slot 0, func 0, where 0
-  str     w0, [x9]
+  str     w0, [x9]                                // directs VL805 to use extended config space for bus 1 (same config space used for all buses)
   ldr     w2, [x13, #0x8]                         // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)
                                                   //   class should be 0x0c0330
   ldrb    w3, [x13, #0xe]                         // w3 = bus 1 header type

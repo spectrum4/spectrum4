@@ -21,7 +21,13 @@ new:                                     // L019D
   ldr     x0, enable_ic
   blr     x0
   dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
+
   bl      enable_irq
+
+  ldr     x0, pcie_init
+  cbz     x0, 9f
+  blr     x0
+9:
 
 .if UART_DEBUG
 # RPi version logging

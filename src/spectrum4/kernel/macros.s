@@ -292,7 +292,8 @@
   mov     x0, '['
   bl      uart_send
   ldr     x0, [sp, #16]                           // x0 = \base
-  add     x0, x0, \offset                         // x0 = \base + \offset
+  mov     x1, \offset
+  add     x0, x0, x1                              // x0 = \base + \offset
   bl      uart_x0
   mov     x0, ']'
   bl      uart_send

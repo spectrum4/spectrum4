@@ -320,8 +320,4 @@
 msg_\regname:
 .asciz "\regname: "
 .endm
-msg_read:
-.asciz "read "
-msg_write:
-.asciz "write "
 .endif

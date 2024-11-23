@@ -511,6 +511,8 @@ base10:
 .if UART_DEBUG
 msg_init_rand:                 .asciz "Initialising random number generator unit... "
 msg_done:                      .asciz "DONE.\r\n"
+msg_read:                      .asciz "read "
+msg_write:                     .asciz "write "
 .endif
 
 

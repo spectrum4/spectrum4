@@ -182,6 +182,8 @@ new:                                     // L019D
   mov     x1, #54                                 // number of rows to print
   mov     x2, #0                                  // screen line to start at
   bl      display_memory
+  mov     w0, 0x400000
+  bl      wait_usec
 6:
 .endif
 

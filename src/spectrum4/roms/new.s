@@ -177,14 +177,25 @@ new:                                     // L019D
   bl      uart_puts
   b       6f
 5:
-  // Display pcie memory region
+// Display pcie memory region
   mov     w0, 0xfd500000                          // start address
   mov     x1, #54                                 // number of rows to print
   mov     x2, #0                                  // screen line to start at
   bl      display_memory
   mov     w0, 0x400000
   bl      wait_usec
+// Display MMU tables
 6:
+  adrp    x19, pg_dir                             // start address
+  mov     x20, #25
+  7:
+    mov     x0, x19
+    mov     x1, #32                               // number of rows to print
+    mov     x2, #0                                // screen line to start at
+    bl      display_memory
+    add     x19, x19, #0x400
+    subs    x20, x20, #1
+    b.ne    7b
 .endif
 
   ldrb    w1, [x28, FLAGS-sysvars]                // w1 = [FLAGS].
@@ -209,11 +220,11 @@ new:                                     // L019D
   adrp    x7, initial_channel_info
   add     x7, x7, :lo12:initial_channel_info
   // Loop to copy initial_channel_info block to [CHANS] = start of heap = heap
-  7:
+  8:
     ldr     x8, [x7], #8
     str     x8, [x5], #8
     subs    x6, x6, #1
-    b.ne    7b
+    b.ne    8b
   sub     x9, x5, 1
   str     x9, [x28, DATADD-sysvars]
   str     x5, [x28, PROG-sysvars]
@@ -244,11 +255,11 @@ new:                                     // L019D
                                                   // x6 = number of half words (2 bytes) in initial_stream_data block
   adr     x7, initial_stream_data
   // Loop to copy initial_stream_data block to [STRMS]
-  8:
+  9:
     ldrh    w8, [x7], #2
     strh    w8, [x5], #2
     subs    x6, x6, #1
-    b.ne    8b
+    b.ne    9b
   ldrb    w0, [x28, FLAGS-sysvars]
   and     w0, w0, #~0x02
   strb    w0, [x28, FLAGS-sysvars]                // clear bit 1 of FLAGS (signal printer not in use)

@@ -98,35 +98,50 @@ _start:
 
 # Configure page tables
   adrp    x0, pg_dir                              // x0 = pg_dir (page aligned, so no additional add needed)
-  mov     x1, #0x6000                             // clear 6 pages
+  mov     x1, pg_dir_end - pg_dir                 // clear 7 pages
   bl      memzero
   adrp    x0, pg_dir
   mov     x1, #0x1003
   add     x1, x0, x1
-  str     x1, [x0]                                // [pg_dir] = pg_dir + 0x1003
+  str     x1, [x0]                                // [pg_dir] = pg_dir + 0x1003. PGD table complete, only one entry required.
   add     x0, x0, #0x1000
   add     x1, x1, #0x1000
   ldr     x3, peripherals_end
   lsr     x2, x3, #30
   3:
-    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = pg_dir + 0x1003 + i*0x1000
+    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = pg_dir + 0x1003 + i*0x1000. PUD table complete for 0 - peripherals end.
     add     x1, x1, #0x1000
     subs    x2, x2, #0x1
     b.ne    3b
   adrp    x0, (pg_dir+0x2000)
-  mov     x1, #0x405
+  mov     x1, #0x401                              // bit 10: AF=1, bits 2-4: mair attr index = 0 (normal), bits 0-1: 1 (block descriptor)
   ldr     x2, peripherals_start
   4:                                              // creates 2016 entries for 0x00000000 - 0xfc000000
-    str     x1, [x0], #8                          // [pg_dir + 0x2000 + i*8] = 0x405 + i*0x200000
+    str     x1, [x0], #8                          // [pg_dir + 0x2000 + i*8] = 0x401 + i*0x200000. PMD table entries complete for 0 - peripherals start address.
     add     x1, x1, #0x200000
     cmp     x1, x2
     b.lt    4b
-  sub     x1, x1, #0x4
+  add     x1, x1, #0x4                            // bits 2-4: mair attr index = 1 (device)
   5:                                              // creates 32 entries for 0xfc000000 - 0x100000000
-    str     x1, [x0], #8                          // [pg_dir + 0x2000 + i*8] = 0x401 + i*0x200000
+    str     x1, [x0], #8                          // [pg_dir + 0x2000 + i*8] = 0x405 + i*0x200000. PMD table entries complete for peripherals start to peripherals end address.
     add     x1, x1, #0x200000
     cmp     x1, x3
     b.lt    5b
+  ldr     x0, pcie_init                           // Is PCIe available?
+  cbz     x0, 7f                                  // Skip mapping xHCI region if no PCIe
+  adrp    x0, (pg_dir+0x1000)
+  adrp    x1, (pg_dir+0x6000)
+  orr     x2, x1, #0b11                           // bit 0 = 1 => valid descriptor. bit 1 = 1 => table descriptor
+  str     x2, [x0, 0xc0]                          // [pg_dir+0x10c0] = pg_dir+0x6003. PUD table entry for xHCI region (entry 0x600000000-0x640000000 covers more than xHCI).
+  mov     x2, 0x600000000                         // x2 = xHCI start (24GB)
+  orr     x3, x2, 0x4000000                       // x3 = xHCI end (64MB higher) (0x604000000) - so we don't fill entire table, only first 32/512 entries
+  add     x2, x2, #0x409                          // bit 10: AF=1, bits 2-4: mair attr index = 2 (coherent), bits 0-1: 1 (block descriptor)
+  6:                                              // creates 32 entries for xHCI addresses 0x600000000 - 0x604000000
+    str     x2, [x1], #8                          // [pg_dir + 0x6000 + i*8] = 0x409 + i*0x200000. PMD table entries complete for xHCI region.
+    add     x2, x2, #0x200000
+    cmp     x2, x3
+    b.lt    6b
+7:
   adrp    x0, pg_dir
   msr     ttbr1_el1, x0                           // Configure page tables for virtual addresses with 1's in first 16 bits
   msr     ttbr0_el1, x0                           // Configure page tables for virtual addresses with 0's in first 16 bits
@@ -136,13 +151,13 @@ _start:
                                                   // instruction seems not to be needed, for whatever reason.
   ldr     x0, =0x80100010
   msr     tcr_el1, x0                             // tcr_el1 = 0x0000000080100010
-  ldr     x0, =0x00004400
-  msr     mair_el1, x0                            // mair_el1 = 0x0000000000004400
-  ldr     x2, =6f                                 // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)
+  ldr     x0, =0x000004ff
+  msr     mair_el1, x0                            // mair_el1 = 0x00000000000004ff => attr index 0 => normal, attr index 1 => device, attr index 2 => coherent
+  ldr     x2, =8f                                 // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)
   mov     x0, #0x1
   msr     sctlr_el1, x0                           // sctlr_el1 = 0x0000000000000001
   br      x2                                      // jump to next instruction so that program counter starts using virtual address
-6:
+8:
   adrp    x28, sysvars
   add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
 .if UART_DEBUG
@@ -155,7 +170,7 @@ _start:
 .if TESTS_AUTORUN
   ldr     w0, arm_size
   orr     x0, x0, 0xffff000000000000              // Convert to virtual address
-  and     sp, x0, #~0x0f                          // Set stack pointer at top of ARM memory
+  and     sp, x0, #~0xf                           // Set stack pointer at top of ARM memory
   bl      irq_vector_init
   dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
   bl      timer_init
@@ -165,9 +180,9 @@ _start:
   dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
   bl      enable_irq
   ldr     x0, pcie_init
-  cbz     x0, 7f
+  cbz     x0, 9f
   blr     x0
-7:
+9:
   bl      fill_memory_with_junk
   bl      run_tests
 .endif

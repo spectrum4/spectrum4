@@ -149,8 +149,47 @@ _start:
                                                   // below, that the following instruction can be fetched since at this
                                                   // point, the program counter is using a physical address. On rpi3 this
                                                   // instruction seems not to be needed, for whatever reason.
+
+# mrs     x0, tcr_el1
+# ldr     x2, =0xfffffff8ffbf0040
+# ldr     x1, =0x000000010080751c
+# and     x0, x0, x2
+                                                  // = bic ~0x000000070040ffbf
+                                                  // => clear bits 0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 22, 32, 33, 34
+# orr     x0, x0, x1
+                                                  // => set bits 2, 3, 4, 8, 10, 12, 13, 14, 23, 32
+                                                  // => remaining cleared bits are 0, 1, 5, 7, 9, 11, 15, 22, 33, 34
+                                                  // => T0SZ [5:0] = 0b011100 = 28 => region size = 2^(64-28) = 2^36 bytes = 64 GB
+                                                  // => EPD0 [7] = 0 => perform walk on a miss
+                                                  // => IRGN0 [9:8] = 0b01 => Normal memory, Inner Write-Back Read-Allocate Write-Allocate Cacheable.
+                                                  // => ORGN0 [11:10] = 0b01 => Normal memory, Outer Write-Back Read-Allocate Write-Allocate Cacheable.
+                                                  // => SH0 [13:12] = 0b11 => Inner Shareable
+                                                  // => TG0 [15:14] = 0b01 => Granule size 64KB
+                                                  // => T1SZ [21:16] = <unchanged>
+                                                  // => A1 [22] = 0 => TTBR0_EL1.ASID defines the ASID
+                                                  // => EPD1 [23] = 1 => A TLB miss on an address that is translated using TTBR1_EL1 generates a Translation fault. No translation table walk is performed
+                                                  // => IRGN1 [25:24] = <unchanged>
+                                                  // => ORGN1 [27:26] = <unchanged>
+                                                  // => SH1 [29:28] = <unchanged>
+                                                  // => TG1 [31:30] = <unchanged> (Granule size for TTBR1_EL1)
+                                                  // => IPS [34:32] = 0 => Intermediate Physical Address size = 32 bits, 4GB
   ldr     x0, =0x80100010
-  msr     tcr_el1, x0                             // tcr_el1 = 0x0000000080100010
+                                                  // => T0SZ [5:0] = 0b010000 = 16 = region size = 2^(64-16) = 2^48 bytes = 256TB
+                                                  // => EPD0 [7] = 0b0 = 0 => perform walk on a miss
+                                                  // => IRGN0 [9:8] = 0b00 => Normal memory, Inner Non-cacheable.
+                                                  // => ORGN0 [11:10] = 0b00 => Normal memory, Outer Non-cacheable.
+                                                  // => SH0 [13:12] = 0b00 => Non-shareable
+                                                  // => TG0 [15:14] = 0b00 => 4KB
+                                                  // => T1SZ [21:16] = 0b010000 = 16 = region size = 2^(64-16) = 2^48 bytes = 256TB
+                                                  // => A1 [22] = 0b => TTRB0_EL1.ASID defines the ASID
+                                                  // => EPD1 [23] = 0b (Perform translation table walks using TTBR1_EL1 on TLB miss)
+                                                  // => IRGN1 [25:24] = 0b00 (Normal memory, Inner Non-cacheable.)
+                                                  // => ORGN1 [27:26] = 0b00 (Normal memory, Outer Non-cacheable.)
+                                                  // => SH1 [29:28] = 0b00 (Non-shareable.)
+                                                  // => TG1 [31:30] = 0b10 => 4KB Granule size for the TTBR1_EL1.
+                                                  // => IPS [34:32] = 0b000 => Intermediate Physical Address size = 32 bits, 4GB.
+  msr     tcr_el1, x0
+
   ldr     x0, =0x000004ff
   msr     mair_el1, x0                            // mair_el1 = 0x00000000000004ff => attr index 0 => normal, attr index 1 => device, attr index 2 => coherent
   ldr     x2, =8f                                 // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)

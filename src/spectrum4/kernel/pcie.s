@@ -36,7 +36,7 @@ pcie_init_bcm2711:
   adrp    x10, 0xfd500000 + _start                // x10 = VL805 internal registers (pcie_base)
   adrp    x4, 0xfd504000 + _start
   adrp    x13, 0xfd508000 + _start                // x13 = VL805 extended config space data
-  adrp    x9, 0xfd509000 + _start                 // x9 = VL805 extended config space index
+  adrp    x14, 0xfd509000 + _start                // x14 = VL805 extended config space index
   adrp    x7, heap
   add     x7, x7, :lo12:heap                      // x7 = heap
 
@@ -46,7 +46,7 @@ pcie_init_bcm2711:
   // Updates registers:
   //   * RGR1_SW_INIT_1
 
-  ldrwi   w6, x9, #0x210
+  ldrwi   w6, x14, #0x210
   orr     w6, w6, #3                              // set bits 0 (PCIE_RGR1_SW_INIT_1_PERST) and 1 (RGR1_SW_INIT_1_INIT_GENERIC)
                                                   //   bit 0 (PCIE_RGR1_SW_INIT_1_PERST):
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L882
@@ -54,7 +54,7 @@ pcie_init_bcm2711:
                                                   //   bit 1 (RGR1_SW_INIT_1_INIT_GENERIC):
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L883
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L730-L738
-  strwi   w6, x9, #0x210                          //   of [0xfd509210] (RGR1_SW_INIT_1)
+  strwi   w6, x14, #0x210                         //   of [0xfd509210] (RGR1_SW_INIT_1)
   mov     x0, #100
   bl      wait_usec                               // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L885
@@ -68,7 +68,7 @@ pcie_init_bcm2711:
   //   * PCIE_MISC_HARD_PCIE_HARD_DEBUG
 
   and     w6, w6, #~0x2                           // clear bit 1 (RGR1_SW_INIT_1_INIT_GENERIC)
-  strwi   w6, x9, #0x210                          //   of [0xfd509210] (RGR1_SW_INIT_1)
+  strwi   w6, x14, #0x210                         //   of [0xfd509210] (RGR1_SW_INIT_1)
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L888
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L730-L738
   ldrwi   w6, x4, #0x204
@@ -163,9 +163,9 @@ pcie_init_bcm2711:
   // Updates registers:
   //   * RGR1_SW_INIT_1
 
-  ldrwi   w6, x9, #0x210                          // note, if we can assume the value hasn't changed, we could cache current value in a register and avoid this extra ldr instruction
+  ldrwi   w6, x14, #0x210                         // note, if we can assume the value hasn't changed, we could cache current value in a register and avoid this extra ldr instruction
   and     w6, w6, #~0x1                           // clear bit 0 (PCIE_RGR1_SW_INIT_1_PERST)
-  strwi   w6, x9, #0x210                          // of [0xfd509210] (RGR1_SW_INIT_1)
+  strwi   w6, x14, #0x210                         // of [0xfd509210] (RGR1_SW_INIT_1)
 
   // Give the RC/EP time to wake up, before trying to configure RC.
   // Poll status until ready, every 1ms, up to maximum of 100 times
@@ -372,7 +372,7 @@ pcie_init_bcm2711:
   mov     x0, #1000                               // sleep 200-1000us
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
   mov     w0, #0x00100000                         // bus 1, slot 0, func 0, where 0
-  strwi   w0, x9, #0                              // directs VL805 to use extended config space for bus 1 (same config space used for all buses)
+  strwi   w0, x14, #0                             // directs VL805 to use extended config space for bus 1 (same config space used for all buses)
   ldrwi   w2, x13, #0x8                           // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)
                                                   //   class should be 0x0c0330
   ldrbi   w3, x13, #0xe                           // w3 = bus 1 header type

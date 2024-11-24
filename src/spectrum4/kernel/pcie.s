@@ -389,11 +389,11 @@ pcie_init_bcm2711:
   strbi   w3, x13, #0x3d                          // update PCI interrupt pin (might have already been enabled)
   mov     w2, 0x0146                              // prepare PCI command config: memory | master | parity | serr
   strhi   w2, x13, #0x4                           // apply
-# mov     x0, #0x600000000                        // x0 = pcie start address
+  ldr     x0, =(0x600000000 + _start)             // x0 = pcie start address
 # ldrhi   w1, x0, #0x2                            // w1 = [XHCI_REG_CAP_HCIVERSION]
 # strhi   w1, x7, #0x2c                           // store [XHCI_REG_CAP_HCIVERSION] on heap (should be 0x0110)
 
-  // init MMIO
+# // init MMIO
 # adr     x2, xhci_mmio
 # str     x0, [x2], #8                            // [xhci_mmio] = 0x600000000 (pcie base)
 # ldrbi   w1, x0, #0x0                            // w1 = capabilities length
@@ -585,7 +585,7 @@ mdio_write:
 vl805_reset_req:
   .word (vl805_reset_req_end-vl805_reset_req)     // Buffer size
   .word 0                                         // Request/response code
-  .word 0x00030058                                // Tag 0 - Reset XHCI
+  .word 0x00030058                                // Tag 0 - Reset xHCI
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/include/soc/bcm2835/raspberrypi-firmware.h#L97
   .word 4                                         //   value buffer size
   .word 0                                         //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)

@@ -182,6 +182,9 @@ new:                                     // L019D
   mov     x1, #54                                 // number of rows to print
   mov     x2, #0                                  // screen line to start at
   bl      display_memory
+.if PCI_INCLUDE
+  bl      brcm_pcie_probe
+.endif
 6:
 .endif
 

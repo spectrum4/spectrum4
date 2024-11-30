@@ -173,8 +173,18 @@ _start:
                                                   // => SH1 [29:28] = <unchanged>
                                                   // => TG1 [31:30] = <unchanged> (Granule size for TTBR1_EL1)
                                                   // => IPS [34:32] = 1 => Intermediate Physical Address size = 36 bits, 64GB.
-# ldr     x0, =0x00000001801c001c
-  ldr     x0, =0x0000000080100010
+
+                               //                                            O  I                   O  I
+                               //                                            R  R  E                R  R  E
+                               //                                      T  S  G  G  P          T  S  G  G  P
+                               //                                      G  H  N  N  D A        G  H  N  N  D
+                               //                                  IPS 1  1  1  1  1 1 T1SZ   0  0  0  0  0   T0SZ
+                               //    66665555555555444444444433333 333 33 22 22 22 2 2 221111 11 11 11
+                               //    32109876543210987654321098765 432 10 98 76 54 3 2 109876 54 32 10 98 7 6 543210
+  ldr     x0, =0x0000000080100010  0b00000000000000000000000000000 000 10 00 00 00 0 0 010000 00 00 00 00 0 0 010000 // working spectrum4 value
+# ldr     x0, =0x00000001801c001c  0b00000000000000000000000000000 001 10 00 00 00 0 0 011100 00 00 00 00 0 0 011100 // intended spectrum4 value
+# ldr     x0, =0x000000010080751c  0b00000000000000000000000000000 001 00 00 00 00 1 0 000000 01 11 01 01 0 0 011100 // circle actual value
+
                                                   // => T0SZ [5:0] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
                                                   // => EPD0 [7] = 0b0 = 0 => perform walk on a miss
                                                   // => IRGN0 [9:8] = 0b00 => Normal memory, Inner Non-cacheable.

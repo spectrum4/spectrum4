@@ -174,16 +174,18 @@ _start:
                                                   // => TG1 [31:30] = <unchanged> (Granule size for TTBR1_EL1)
                                                   // => IPS [34:32] = 1 => Intermediate Physical Address size = 36 bits, 64GB.
 
-                               //                                            O  I                   O  I
-                               //                                            R  R  E                R  R  E
-                               //                                      T  S  G  G  P          T  S  G  G  P
-                               //                                      G  H  N  N  D A        G  H  N  N  D
-                               //                                  IPS 1  1  1  1  1 1 T1SZ   0  0  0  0  0   T0SZ
-                               //    66665555555555444444444433333 333 33 22 22 22 2 2 221111 11 11 11
-                               //    32109876543210987654321098765 432 10 98 76 54 3 2 109876 54 32 10 98 7 6 543210
-  ldr     x0, =0x0000000080100010  0b00000000000000000000000000000 000 10 00 00 00 0 0 010000 00 00 00 00 0 0 010000 // working spectrum4 value
-# ldr     x0, =0x00000001801c001c  0b00000000000000000000000000000 001 10 00 00 00 0 0 011100 00 00 00 00 0 0 011100 // intended spectrum4 value
-# ldr     x0, =0x000000010080751c  0b00000000000000000000000000000 001 00 00 00 00 1 0 000000 01 11 01 01 0 0 011100 // circle actual value
+                                                  //                                           O  I                   O  I
+                                                  //                                           R  R  E                R  R  E
+                                                  //                                     T  S  G  G  P          T  S  G  G  P
+                                                  //                                     G  H  N  N  D A        G  H  N  N  D
+                                                  //                                 IPS 1  1  1  1  1 1 T1SZ   0  0  0  0  0   T0SZ
+
+                                                  //   66665555555555444444444433333 333 33 22 22 22 2 2 221111 11 11 11
+                                                  //   32109876543210987654321098765 432 10 98 76 54 3 2 109876 54 32 10 98 7 6 543210
+
+  ldr     x0, =0x0000000080100010                 // 0b00000000000000000000000000000 000 10 00 00 00 0 0 010000 00 00 00 00 0 0 010000 // working spectrum4 value
+# ldr     x0, =0x00000001801c001c                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 011100 00 00 00 00 0 0 011100 // intended spectrum4 value
+# ldr     x0, =0x000000010080751c                 // 0b00000000000000000000000000000 001 00 00 00 00 1 0 000000 01 11 01 01 0 0 011100 // circle actual value
 
                                                   // => T0SZ [5:0] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
                                                   // => EPD0 [7] = 0b0 = 0 => perform walk on a miss
@@ -204,6 +206,23 @@ _start:
   ldr     x0, =0x000004ff
   msr     mair_el1, x0                            // mair_el1 = 0x00000000000004ff => attr index 0 => normal, attr index 1 => device, attr index 2 => coherent
   ldr     x2, =8f                                 // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)
+
+                                                  //     S
+                                                  //     P
+                                                  //     I                                                                                                            C
+                                                  //     N                         T    T                             L n                                   E         P
+                                                  //   T T   E   T   E E E         W    W D           I     E M       S T               T                   n         1
+                                                  //   I M   n T C E n n n   T   T E    E S   A    T  T     n S C E E M L E       S   I S   n R n     E     R         5
+                                                  //   D A N T C S P A A A T M T M D    D S A T T  C  F B B F C M n n A S n U   E P E E C W T E T U D n   E C U S I n B S
+                                                  //   C S M P S O A L S S M E M T E    E B T A C  F  S T T P E O I I O M D C E 0 A I S X X W S W T Z D   O T M E T A E A S
+                                                  //   P K I 2 O 0 N S 0 R E 0 T 0 L    n S A 0 F  0  B 1 0 M n W A B E D A I E E N S B T N E 0 I C E B I S X A D D A N 0 A C A M
+
+                                                  //   6 6 6 6 5 5 5 5 5 5 5 5 5 5 4444 4 4 4 4 44 33 3 3 3 3 3 3 3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1
+                                                  //   3 2 1 0 9 8 7 6 5 4 3 2 1 0 9876 5 4 3 2 10 98 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
+
+# circle sctlr_el1: 0x0000000030d01805            // 0b0 0 0 0 0 0 0 0 0 0 0 0 0 0 0000 0 0 0 0 00 00 0 0 0 0 0 0 0 0 1 1 0 0 0 0 1 1 0 1 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 1 0 1
+# spectrum4 value:  0x0000000000000001            // 0b0 0 0 0 0 0 0 0 0 0 0 0 0 0 0000 0 0 0 0 00 00 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+
   mov     x0, #0x1
   msr     sctlr_el1, x0                           // sctlr_el1 = 0x0000000000000001
   br      x2                                      // jump to next instruction so that program counter starts using virtual address

@@ -172,22 +172,23 @@ _start:
                                                   // => ORGN1 [27:26] = <unchanged>
                                                   // => SH1 [29:28] = <unchanged>
                                                   // => TG1 [31:30] = <unchanged> (Granule size for TTBR1_EL1)
-                                                  // => IPS [34:32] = 0 => Intermediate Physical Address size = 32 bits, 4GB
-  ldr     x0, =0x80100010
-                                                  // => T0SZ [5:0] = 0b010000 = 16 = region size = 2^(64-16) = 2^48 bytes = 256TB
+                                                  // => IPS [34:32] = 1 => Intermediate Physical Address size = 36 bits, 64GB.
+# ldr     x0, =0x00000001801c001c
+  ldr     x0, =0x0000000080100010
+                                                  // => T0SZ [5:0] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
                                                   // => EPD0 [7] = 0b0 = 0 => perform walk on a miss
                                                   // => IRGN0 [9:8] = 0b00 => Normal memory, Inner Non-cacheable.
                                                   // => ORGN0 [11:10] = 0b00 => Normal memory, Outer Non-cacheable.
                                                   // => SH0 [13:12] = 0b00 => Non-shareable
                                                   // => TG0 [15:14] = 0b00 => 4KB
-                                                  // => T1SZ [21:16] = 0b010000 = 16 = region size = 2^(64-16) = 2^48 bytes = 256TB
+                                                  // => T1SZ [21:16] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
                                                   // => A1 [22] = 0b => TTRB0_EL1.ASID defines the ASID
                                                   // => EPD1 [23] = 0b (Perform translation table walks using TTBR1_EL1 on TLB miss)
                                                   // => IRGN1 [25:24] = 0b00 (Normal memory, Inner Non-cacheable.)
                                                   // => ORGN1 [27:26] = 0b00 (Normal memory, Outer Non-cacheable.)
                                                   // => SH1 [29:28] = 0b00 (Non-shareable.)
                                                   // => TG1 [31:30] = 0b10 => 4KB Granule size for the TTBR1_EL1.
-                                                  // => IPS [34:32] = 0b000 => Intermediate Physical Address size = 32 bits, 4GB.
+                                                  // => IPS [34:32] = 0b001 => Intermediate Physical Address size = 36 bits, 64GB
   msr     tcr_el1, x0
 
   ldr     x0, =0x000004ff

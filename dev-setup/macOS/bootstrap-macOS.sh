@@ -72,7 +72,30 @@ if ! hash fuse 2> /dev/null || ! hash tape2wav 2> /dev/null; then
   # would get inconsistent results if libspectrum or fuse would be later
   # reinstalled, since audiofile support would get included. So include it from
   # the start, to avoid unexpected changes when reinstalling software.
-  brew install automake audiofile
+
+  # The audiolib brew package was disabled in
+  #   https://github.com/Homebrew/homebrew-core/commit/2c649b3754e01c1e5f0daee63674efd652055f0c
+  # so here we emulate the steps...
+  brew install automake autoconf libtool asciidoc
+  curl -fsSL -o audiofile-0.3.6.tar.gz https://audiofile.68k.org/audiofile-0.3.6.tar.gz
+  echo "cdc60df19ab08bfe55344395739bb08f50fc15c92da3962fac334d3bff116965  audiofile-0.3.6.tar.gz" | shasum -a 256 --check --status
+  tar -xf audiofile-0.3.6.tar.gz
+  curl -fsSL -o audiofile-patch.tar.xz https://deb.debian.org/debian/pool/main/a/audiofile/audiofile_0.3.6-5.debian.tar.xz
+  echo "7ae94516b5bfea75031c5bab1e9cccf6a25dd438f1eda40bb601b8ee85a07daa  audiofile-patch.tar.xz" | shasum -a 256 --check --status
+  tar -xf audiofile-patch.tar.xz
+  cd audiofile-0.3.6
+  for patch in ../debian/patches/*.patch; do
+    patch -p1 < "${patch}"
+  done
+  ./configure --disable-dependency-tracking --prefix=/usr/local
+  gmake -j"$(nproc)"
+  gmake install
+  curl -fsSL -o test.aiff https://mmsp.ece.mcgill.ca/Documents/AudioFormats/AIFF/Samples/CCRMA/wood24.aiff
+  echo "a87279e3a101162f6ab0d4f70df78594d613e16b80e6257cf19c5fc957a375f9  test.aiff" | shasum -a 256 --check --status
+  sfconvert test.aiff test.wav format wave
+  sfinfo --short --reporterror test.wav
+  cd ..
+
   retry git clone https://git.code.sf.net/p/fuse-emulator/libspectrum
   cd libspectrum
   git checkout e85c934f585cb8caff5eeab55899617b606abfeb

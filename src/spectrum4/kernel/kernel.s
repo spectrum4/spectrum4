@@ -224,7 +224,7 @@ _start:
 # spectrum4 value:  0x0000000000000001            // 0b0 0 0 0 0 0 0 0 0 0 0 0 0 0 0000 0 0 0 0 00 00 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
 
   mov     x0, #0x1
-  msr     sctlr_el1, x0                           // sctlr_el1 = 0x0000000000000001
+# msr     sctlr_el1, x0                           // sctlr_el1 = 0x0000000000000001
   br      x2                                      // jump to next instruction so that program counter starts using virtual address
 8:
   msr     ttbr0_el1, xzr                          // Ensure only ttbr1_el1 is used from now on
@@ -239,7 +239,7 @@ _start:
   blr     x0
 .if TESTS_AUTORUN
   ldr     w0, arm_size
-  orr     x0, x0, 0xffff000000000000              // Convert to virtual address
+# orr     x0, x0, 0xffff000000000000              // Convert to virtual address
   and     sp, x0, #~0xf                           // Set stack pointer at top of ARM memory
   bl      irq_vector_init
   dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
@@ -370,7 +370,8 @@ fb_req_end:
 #   x12 corrupted
 .align 2
 mbox_call:
-  ldr     x9, mailbox_base                        // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0xffff00003f00b880 (rpi3) or 0xffff0000fe00b880 (rpi4)
+  ldr     x9, mailbox_base                        // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0x000000003f00b880 (rpi3) or 0x00000000fe00b880 (rpi4)
+# ldr     x9, mailbox_base                        // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0xffff00003f00b880 (rpi3) or 0xffff0000fe00b880 (rpi4)
 1:                                                // Wait for mailbox FULL flag to be clear.
   ldr     w10, [x9, #0x18]                        // w10 = mailbox status.
   tbnz    w10, 31, 1b                             // If FULL flag set (bit 31), try again...
@@ -412,7 +413,7 @@ poke_address:
   adrp    x9, fb_req                              // x9 = address of mailbox request.
   add     x9, x9, :lo12:fb_req
   ldr     w10, [x9, framebuffer-fb_req]           // w10 = physical address of framebuffer
-  orr     x10, x10, #0xffff000000000000           // x10 = virtual address of framebuffer
+# orr     x10, x10, #0xffff000000000000           // x10 = virtual address of framebuffer
   ldr     w12, [x9, pitch-fb_req]                 // w12 = pitch
   ldr     x13, =0x97b425ed097b425f                // x13 = 0x97b425ed097b425f = 10931403895531586143
   umulh   x14, x13, x11                           // x14 = (10931403895531586143 * x11) / 18446744073709551616 = int(x11*16/27)

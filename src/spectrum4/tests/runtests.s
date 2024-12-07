@@ -210,7 +210,7 @@ run_tests:
       bl      snapshot_memory                     // x2 = first address after end of snapshot
       adr     x0, framebuffer
       ldp     w0, w1, [x0]
-      orr     x0, x0, 0xffff000000000000          // Convert to virtual address
+#     orr     x0, x0, 0xffff000000000000          // Convert to virtual address
       add     x1, x0, x1
       mov     w4, #0x20                           // w4 = random block length
       adr     x11, random_block_zeros
@@ -624,7 +624,7 @@ snapshot_all_ram:
   bl      snapshot_memory                         // x2 = first address after end of snapshot
   adr     x0, framebuffer
   ldp     w0, w1, [x0]
-  orr     x0, x0, 0xffff000000000000              // Convert to virtual address
+# orr     x0, x0, 0xffff000000000000              // Convert to virtual address
   add     x1, x0, x1
   adrp    x7, rand_seq_length
   add     x7, x7, :lo12:rand_seq_length
@@ -984,7 +984,7 @@ fill_memory_with_junk:
 // Second random block: framebuffer
   adr     x0, framebuffer
   ldp     w8, w6, [x0]
-  orr     x8, x8, 0xffff000000000000              // Convert to virtual address
+# orr     x8, x8, 0xffff000000000000              // Convert to virtual address
   add     x6, x8, x6
   bl      fill_region_with_junk
 // Log completed

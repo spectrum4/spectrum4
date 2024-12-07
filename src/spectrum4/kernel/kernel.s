@@ -227,6 +227,7 @@ _start:
   msr     sctlr_el1, x0                           // sctlr_el1 = 0x0000000000000001
   br      x2                                      // jump to next instruction so that program counter starts using virtual address
 8:
+  msr     ttbr0_el1, xzr                          // Ensure only ttbr1_el1 is used from now on
   adrp    x28, sysvars
   add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
 .if UART_DEBUG

@@ -178,7 +178,7 @@ new:                                     // L019D
   b       6f
 5:
 // Display pcie memory region
-  mov     w0, 0xfd500000                          // start address
+  adrp    x0, 0xfd500000 + _start                 // start address
   mov     x1, #54                                 // number of rows to print
   mov     x2, #0                                  // screen line to start at
   bl      display_memory

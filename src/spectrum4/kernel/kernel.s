@@ -617,11 +617,11 @@ msg_write:                     .asciz "write "
 
 .align 3
 mailbox_base:
-  .quad     0xffff0000fe00b880                    // default is for rpi4
+  .quad     0xfe00b880 + _start                   // default is for rpi4
 gpio_base:
-  .quad     0xffff0000fe200000                    // default is for rpi4
+  .quad     0xfe200000 + _start                   // default is for rpi4
 aux_base:
-  .quad     0xffff0000fe215000                    // default is for rpi4
+  .quad     0xfe215000 + _start                   // default is for rpi4
 rand_init:
   .quad     rand_init_iproc                       // default is for rpi4
 rand_block:
@@ -640,16 +640,19 @@ pcie_init:
 .endif
 local_control:
   .quad     0x00000000ff800000                    // default is for rpi4
+                                                  // note, clock is set before MMU is enabled, so use physical (not virtual) address
 timer_base:
-  .quad     0xffff0000fe003000                    // default is for rpi4
+  .quad     0xfe003000 + _start                   // default is for rpi4
 enable_ic:
   .quad     enable_ic_bcm2711                     // default is for rpi4
 handle_irq:
   .quad     handle_irq_bcm2711                    // default is for rpi4
 peripherals_start:
   .quad     0x00000000fc000000                    // default is for rpi4
+                                                  // used for MMU page tables, thus physical address needed
 peripherals_end:
   .quad     0x0000000100000000                    // default is for rpi4
+                                                  // used for MMU page tables, thus physical address needed
 
 
 # RPi 3B (bcm2837):
@@ -658,11 +661,11 @@ peripherals_end:
 .align 3
 base_rpi3:
 # rpi3 mailbox_base
-  .quad     0xffff00003f00b880
+  .quad     0x3f00b880 + _start
 # rpi3 gpio_base
-  .quad     0xffff00003f200000
+  .quad     0x3f200000 + _start
 # rpi3 aux_base
-  .quad     0xffff00003f215000
+  .quad     0x3f215000 + _start
 # rpi3 rand_init
   .quad     rand_init_bcm283x
 # rpi3 rand_block
@@ -675,17 +678,17 @@ base_rpi3:
   .word     19200000
 # rpi3 pcie_init
   .quad     0x0000000000000000                    // 0 => no pcie
-# rpi3 local_control
+# rpi3 local_control (physical address, not virtual)
   .quad     0x0000000040000000
 # rpi3 timer_base
-  .quad     0xffff00003f003000
+  .quad     0x3f003000 + _start
 # rpi3 enable_ic
   .quad     enable_ic_bcm283x
 # rpi3 handle_irq
   .quad     handle_irq_bcm283x
-# rpi3 peripherals_start
+# rpi3 peripherals_start (physical address, not virtual)
   .quad     0x000000003f000000
-# rpi3 peripherals_end
+# rpi3 peripherals_end (physical address, not virtual)
   .quad     0x0000000040000000
 
 

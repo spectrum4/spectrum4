@@ -221,10 +221,11 @@ _start:
                                                   //   3 2 1 0 9 8 7 6 5 4 3 2 1 0 9876 5 4 3 2 10 98 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
 
 # circle sctlr_el1: 0x0000000030d01805            // 0b0 0 0 0 0 0 0 0 0 0 0 0 0 0 0000 0 0 0 0 00 00 0 0 0 0 0 0 0 0 1 1 0 0 0 0 1 1 0 1 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 1 0 1
-# spectrum4 value:  0x0000000000000001            // 0b0 0 0 0 0 0 0 0 0 0 0 0 0 0 0000 0 0 0 0 00 00 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1
+# spectrum4 value:  0x0000000030d00801            // 0b0 0 0 0 0 0 0 0 0 0 0 0 0 0 0000 0 0 0 0 00 00 0 0 0 0 0 0 0 0 1 1 0 0 0 0 1 1 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1
 
-  mov     x0, #0x1
-  msr     sctlr_el1, x0                           // sctlr_el1 = 0x0000000000000001
+  mrs     x0, sctlr_el1                           // x0 = 0x30d00800
+  orr     x0, x0, #0x1                            // x0 = 0x30d00801
+  msr     sctlr_el1, x0                           // sctlr_el1 = 0x30d00801
   br      x2                                      // jump to next instruction so that program counter starts using virtual address
 8:
   msr     ttbr0_el1, xzr                          // Ensure only ttbr1_el1 is used from now on

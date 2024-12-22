@@ -224,6 +224,13 @@ if ! hash tup 2> /dev/null; then
   retry curl -fsSL 'https://github.com/gittup/tup/archive/b037d4b211de6025703b77c3287b76159656ef22.zip' > tup.zip
   unzip tup.zip
   cd tup-*
+
+  # See https://github.com/gittup/tup/issues/427#issuecomment-2562008768
+  export PKG_CONFIG_PATH=/usr/local/lib/pkgconfig
+  cp Tupfile Tupfile.orig
+  cat Tupfile.orig | sed 's/`pkg-config fuse --libs`/-L\/usr\/local\/lib -lfuse -pthread/' > Tupfile
+  rm Tupfile.orig
+
   if ! ./bootstrap.sh; then
     echo
     echo "Now you (probably) need to enable kernel extensions for macFUSE. Follow the guide here: "

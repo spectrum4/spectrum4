@@ -66,6 +66,7 @@
  * Exception vectors.
  */
 .align 11
+VectorTable:
 vectors:
   ventry  sync_invalid_el1t                       // Synchronous EL1t
   ventry  irq_invalid_el1t                        // IRQ EL1t
@@ -138,3 +139,23 @@ fiq_invalid_el0_32:
 
 error_invalid_el0_32:
   handle_invalid_entry  15
+
+
+.align 12
+VectorTableEL3:
+  handle_invalid_entry  16
+  handle_invalid_entry  17
+  handle_invalid_entry  18
+  handle_invalid_entry  19
+  handle_invalid_entry  20
+  handle_invalid_entry  21
+  handle_invalid_entry  22
+  handle_invalid_entry  23
+  handle_invalid_entry  24
+  handle_invalid_entry  25
+  handle_invalid_entry  26
+  handle_invalid_entry  27
+  handle_invalid_entry  28
+  handle_invalid_entry  29
+  handle_invalid_entry  30
+  handle_invalid_entry  31

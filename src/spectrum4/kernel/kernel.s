@@ -35,62 +35,166 @@ _start:
   ands    x0, x0, #0x3                            // x0 = core number.
   b.ne    sleep                                   // Put all cores except core 0 to sleep.
 
-# ldr     x0, =0x30d01804                         // This version enables caches (bits 2, 12)
-  ldr     x0, =0x30d00800
-  msr     sctlr_el1, x0                           // Update "System Control Register (EL1)":
-                                                  //   set RES:1 bits (11, 20, 22, 23, 28, 29)
-                                                  //   disable caches (bits 2, 12)
-  mov     x0, 0x80000000
-  msr     hcr_el2, x0                             // Update "Hypervisor Configuration Register":
-                                                  //   set bit 31 => execution state for EL1 is aarch64
 
-  mrs     x0, currentel
-  and     x0, x0, #0x0c
-  cmp     x0, #0x0c
-  b.ne    1f
 
-##################################################
-# We are in EL3
-# Move from EL3 to EL1 directly (skip EL2)
-  mov     x0, 0x00000431
-  msr     scr_el3, x0                             // Update "Secure Configuration Register":
-                                                  //   set bit 0 => EL0 and EL1 are in non-secure state
-                                                  //   set RES:1 bits 4, 5
-                                                  //   set bit 10 => EL2 is aarch64, EL2 controls EL1 and EL0 behaviors
 
-  mov     x0, 0x000001c5
-  msr     spsr_el3, x0                            // Update "Saved Program Status Register (EL3)":
-                                                  //   set bit 0 => dedicated stack pointer selected on EL switch to/from EL3
-                                                  //   set bit 2 (and clear bit 3) => drop to EL1 on eret
-                                                  //   set bit 6 => mask (disable) error (SError) interrupts
-                                                  //   set bit 7 => mask (disable) regular (IRQ) interrupts
-                                                  //   set bit 8 => mask (disable) fast (FIQ) interrupts
-  adr     x0, 2f
-  msr     elr_el3, x0                             // Update Exception Link Register (EL3):
-                                                  //   set to return address after next `eret`
-  eret
-# Move from EL3 to EL1 completed
-##################################################
 
+
+
+
+  mov     x0, #0x00000000ff800000
+  str     wzr, [x0]
+  mov     w1, #0x0000000080000000
+  str     w1, [x0, #8]
+
+  mrs     x0, s3_1_c11_c0_2                       // l2ctlr_el1
+  mov     x1, #0x0000000000000022
+  orr     x0, x0, x1
+  msr     s3_1_c11_c0_2, x0
+
+  ldr     x0, =0x000000000337f980                 // 54,000,000 Hz
+  msr     cntfrq_el0, x0
+
+  msr     cntvoff_el2, xzr
+
+  msr     cptr_el3, xzr
+
+  mov     x0, #0x0000000000000531
+  msr     scr_el3, x0
+
+  adrp    x0, VectorTableEL3
+  msr     vbar_el3, x0
+
+  mov     sp, x0
+
+  mov     x0, #0x0000000000000040
+  msr     s3_1_c15_c2_1, x0                       // cpuectlr_el1
+
+// setup gic
+  mrs     x0, mpidr_el1
+  ldr     x2, =0x00000000ff841000
+  tst     x0, #0x3
+  b.eq    1f
+  mov     w0, #0x3
+  str     w0, [x2]
 1:
-##################################################
-# We are in EL2 - this shouldn't happen
-# Move from EL2 to EL1
-  mov     x0, 0x000001c5
-  msr     spsr_el2, x0                            // Update "Saved Program Status Register (EL2)":
-                                                  //   set bit 0 => dedicated stack pointer selected on EL switch to/from EL2
-                                                  //   set bit 2 (and clear bit 3) => drop to EL1 on eret
-                                                  //   set bit 6 => mask (disable) error (SError) interrupts
-                                                  //   set bit 7 => mask (disable) regular (IRQ) interrupts
-                                                  //   set bit 8 => mask (disable) fast (FIQ) interrupts
-  adr     x0, 2f
-  msr     elr_el2, x0                             // Update Exception Link Register (EL2):
-                                                  //   set to return address after next `eret`
-  eret
-# Move from EL2 to EL1 completed
-##################################################
+  add     x1, x2, #0x0000000000001000
+  mov     w0, #0x000001e7
+  str     w0, [x1]
+  mov     w0, #0x000000ff
+  str     w0, [x1, #4]
+  add     x2, x2, #0x80
+  mov     x0, #0x20
+  mov     w1, #0xffffffff
+  2:
+    subs    x0, x0, #0x4
+    str     w1, [x2, x0]
+    b.ne    2b
 
-2:
+  ldr     x0, =0x0000000030c50830
+  msr     sctlr_el2, x0
+
+  mov     x0, #0x00000000000003c9
+  msr     spsr_el3, x0
+
+  adr     x0, 3f
+  msr     elr_el3, x0
+  eret
+
+3:
+
+  mrs     x0, currentel                           // check if already in EL1t mode?
+  cmp     x0, #0x4
+  b.eq    5f                                      // skip ahead, if already at EL1t, no work to do
+  ldr     x0, =0x0000000000308000                 // IRQ, FIQ and exception handler run in EL1h
+  msr     sp_el1, x0                              // init their stack
+  adrp    x0, VectorTable                         // init exception vector table for EL2
+  msr     vbar_el2, x0                            // switch to el1_m
+  mrs     x0, cnthctl_el2                         // Initialize Generic Timers
+  orr     x0, x0, #0x3                            // Enable EL1 access to timers
+  msr     cnthctl_el2, x0
+  msr     cntvoff_el2, xzr
+  mrs     x0, midr_el1                            // Initilize MPID/MPIDR registers
+  mrs     x1, mpidr_el1
+  msr     vpidr_el2, x0
+  msr     vmpidr_el2, x1
+  mov     x0, #0x33ff                             // Disable coprocessor traps
+  msr     cptr_el2, x0                            // Disable coprocessor traps to EL2
+  msr     hstr_el2, xzr                           // Disable coprocessor traps to EL2
+  mov     x0, #0x300000
+  msr     cpacr_el1, x0                           // Enable FP/SIMD at EL1
+  mov     x0, #0x80000000                         // 64bit EL1
+  msr     hcr_el2, x0
+                                                  // SCTLR_EL1 initialization
+                                                  //
+                                                  // setting RES1 bits (29,28,23,22,20,11) to 1
+                                                  // and RES0 bits (31,30,27,21,17,13,10,6) +
+                                                  // UCI,EE,EOE,WXN,nTWE,nTWI,UCT,DZE,I,UMA,SED,ITD,
+                                                  // CP15BEN,SA0,SA,C,A,M to 0
+  mov     x0, #0x800
+  movk    x0, #0x30d0, lsl #16
+  msr     sctlr_el1, x0                           // SCTLR_EL1 = 0x30d00800
+  mov     x0, #0x3c4                              // Return to the EL1_SP1 mode from EL2
+  msr     spsr_el2, x0                            // EL1_SP0 | D | A | I | F
+  adr     x0, 4f
+  msr     elr_el2, x0
+  eret
+
+4:
+  ldr     x0, =0x00000000002a0000                 // main thread runs in EL1t and uses sp_el0
+  mov     sp, x0                                  // init its stack
+  adrp    x0, VectorTable                         // init exception vector table
+  msr     vbar_el1, x0
+
+
+
+
+# adrp    x0, 0x2001000
+# msr     sp_el1, x0
+
+# adrp    x0, VectorTable
+# msr     vbar_el2, x0
+
+# mrs     x0, cnthctl_el2
+# orr     x0, x0, #0x0000000000000003
+# msr     cnthctl_el2, x0
+
+# msr     cntvoff_el2, xzr
+
+# mrs     x0, midr_el1
+# msr     vpidr_el2, x0
+
+# mrs     x1, mpidr_el1
+# msr     vmpidr_el2, x1
+
+# mov     x0, #0x00000000000033ff
+# msr     cptr_el2, x0
+
+# msr     hstr_el2, xzr
+
+# mov     x0, #0x0000000000300000
+# msr     cpacr_el1, x0
+
+# mov     x0, #0x0000000080000000
+# msr     hcr_el2, x0
+
+# ldr     x0, =0x0000000030d00800
+# msr     sctlr_el1, x0
+
+# mov     x0, #0x00000000000003c4
+# msr     spsr_el2, x0
+
+# adr     x0, 5f
+# msr     elr_el2, x0
+# eret
+
+5:
+  msr     daifclr, #0x1
+  msr     daifclr, #0x2
+
+# adrp    x0, VectorTable
+# msr     vbar_el1, x0
+
 # We are in EL1
 
   bl      set_peripherals_addresses
@@ -183,8 +287,8 @@ _start:
                                                   //   66665555555555444444444433333 333 33 22 22 22 2 2 221111 11 11 11
                                                   //   32109876543210987654321098765 432 10 98 76 54 3 2 109876 54 32 10 98 7 6 543210
 
-  ldr     x0, =0x0000000180100010                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 010000 00 00 00 00 0 0 010000 // working spectrum4 value
-# ldr     x0, =0x00000001801c001c                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 011100 00 00 00 00 0 0 011100 // intended spectrum4 value
+# ldr     x0, =0x0000000180100010                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 010000 00 00 00 00 0 0 010000 // working spectrum4 value
+  ldr     x0, =0x00000001801c001c                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 011100 00 00 00 00 0 0 011100 // intended spectrum4 value
 # ldr     x0, =0x000000010080751c                 // 0b00000000000000000000000000000 001 00 00 00 00 1 0 000000 01 11 01 01 0 0 011100 // circle actual value
 
                                                   // => T0SZ [5:0] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB

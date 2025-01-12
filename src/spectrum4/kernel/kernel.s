@@ -109,7 +109,7 @@ _start:
   ldr     x3, peripherals_end
   lsr     x2, x3, #30
   3:
-    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = pg_dir + 0x1003 + i*0x1000. PUD table complete for 0 - peripherals end.
+    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = pg_dir + 0x2003 + i*0x1000. PUD table complete for 0 - peripherals end.
     add     x1, x1, #0x1000
     subs    x2, x2, #0x1
     b.ne    3b

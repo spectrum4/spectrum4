@@ -73,11 +73,15 @@ new:                                     // L019D
   logarm  ID_MMFR4_EL1
   logarm  ID_PFR0_EL1
   logarm  ID_PFR1_EL1
+  logarm  MAIR_EL1
   logarm  MIDR_EL1
   logarm  NZCV
   logarm  REVIDR_EL1
   logarm  SCTLR_EL1
   logarm  SP_EL0
+  logarm  TCR_EL1
+  logarm  TTBR0_EL1
+  logarm  TTBR1_EL1
 
 # PCIe status logging
 

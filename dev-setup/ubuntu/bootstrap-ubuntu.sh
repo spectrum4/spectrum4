@@ -82,6 +82,8 @@ retry apt-get upgrade -y
 # libfuse3-dev is needed by fuse
 # libglib2.0 is needed for building fuse-1.5.7 (seems to fix a pkg-config issue, might be overkill)
 # libgmp-dev is required to build aarch64-none-elf-gdb
+# libmpc-dev might be required to build aarch64-none-elf-gdb
+# libmpfr-dev might be required to build aarch64-none-elf-gdb
 # libncurses-dev might be useful for building aarch64-none-elf-gdb (not sure)
 # libpixman-1-dev is needed for building qemu
 # libtool is needed by autogen.sh when building libspectrum and fuse
@@ -90,7 +92,8 @@ retry apt-get upgrade -y
 # unzip is needed for unzipping tup
 # wget is needed for downloading curl
 # xz-utils is needed by tar commands below
-retry apt-get install -y autoconf bison bsdmainutils build-essential flex fuse-emulator-utils fuse3 git libfuse3-dev libglib2.0 libgmp-dev libncurses-dev libpixman-1-dev libtool meson texinfo unzip wget xz-utils
+# zlib1g-dev might be needed to build aarch64-none-elf-gdb
+retry apt-get install -y autoconf bison bsdmainutils build-essential flex fuse-emulator-utils fuse3 git libfuse3-dev libglib2.0 libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libpixman-1-dev libtool meson texinfo unzip wget xz-utils zlib1g-dev
 
 if ! hash curl 2> /dev/null; then
   retry wget -O /usr/local/bin/curl "https://github.com/moparisthebest/static-curl/releases/download/v7.84.0/curl-${ARCH2}"
@@ -161,9 +164,9 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
 fi
 
 if ! hash aarch64-none-elf-gdb 2> /dev/null; then
-  retry curl -fsSL 'https://ftp.gnu.org/gnu/gdb/gdb-12.1.tar.gz' > gdb-12.1.tar.gz
-  tar zvfx gdb-12.1.tar.gz
-  cd gdb-12.1
+  retry curl -fsSL 'https://ftp.gnu.org/gnu/gdb/gdb-16.1.tar.gz' > gdb-16.1.tar.gz
+  tar zvfx gdb-16.1.tar.gz
+  cd gdb-16.1
   ./configure --target=aarch64-none-elf
   make -j4
   make install

@@ -66,7 +66,7 @@ esac
 export DEBIAN_FRONTEND=noninteractive
 
 mkdir -p /usr/local/bin
-export PATH="${PATH}:/usr/local/bin:/usr/lib/go/bin"
+export PATH="${PATH}:/usr/local/bin"
 
 retry apt-get update
 retry apt-get upgrade -y
@@ -79,6 +79,7 @@ retry apt-get upgrade -y
 # fuse-emulator-utils contains tape2wav
 # fuse3 is needed by tup
 # git is needed to fetch fuse/libspectrum sources
+# golang-go is needed by shfmt and for building go programs in project
 # libfuse3-dev is needed by fuse
 # libglib2.0 is needed for building fuse-1.5.7 (seems to fix a pkg-config issue, might be overkill)
 # libgmp-dev is required to build aarch64-none-elf-gdb
@@ -93,7 +94,7 @@ retry apt-get upgrade -y
 # wget is needed for downloading curl
 # xz-utils is needed by tar commands below
 # zlib1g-dev might be needed to build aarch64-none-elf-gdb
-retry apt-get install -y autoconf bison bsdmainutils build-essential flex fuse-emulator-utils fuse3 git libfuse3-dev libglib2.0 libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libpixman-1-dev libtool meson texinfo unzip wget xz-utils zlib1g-dev
+retry apt-get install -y autoconf bison bsdmainutils build-essential flex fuse-emulator-utils fuse3 git golang-go libfuse3-dev libglib2.0 libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libpixman-1-dev libtool meson texinfo unzip wget xz-utils zlib1g-dev
 
 if ! hash curl 2> /dev/null; then
   retry wget -O /usr/local/bin/curl "https://github.com/moparisthebest/static-curl/releases/download/v7.84.0/curl-${ARCH2}"
@@ -199,19 +200,10 @@ if ! hash tup 2> /dev/null; then
   cd ..
 fi
 
-if ! hash go 2> /dev/null; then
-  # install go 1.19.3
-  mkdir -p /usr/lib
-  cd /usr/lib
-  retry curl -fsSL "https://golang.org/dl/go1.19.3.linux-${ARCH}.tar.gz" > "go1.19.3.linux-${ARCH}.tar.gz"
-  tar xvfz "go1.19.3.linux-${ARCH}.tar.gz"
-  rm "go1.19.3.linux-${ARCH}.tar.gz"
-fi
-
 # install shfmt
 if ! hash shfmt 2> /dev/null; then
   # install shfmt
-  /usr/lib/go/bin/go install mvdan.cc/sh/v3/cmd/shfmt@latest
+  go install mvdan.cc/sh/v3/cmd/shfmt@latest
   mv "${HOME}/go/bin/shfmt" /usr/local/bin/shfmt
 fi
 
@@ -220,6 +212,5 @@ echo "Deleting '${PREP_DIR}' ..."
 rm -r "${PREP_DIR}"
 
 echo "Please note the following environment variables need to be set in order for the tools to be available:"
-echo "$ export PATH='/usr/lib/go/bin:/bin:/usr/bin:/usr/local/bin'"
-echo "$ export GOROOT='/usr/lib/go'"
+echo "$ export PATH='/bin:/usr/bin:/usr/local/bin'"
 echo "You may wish to update e.g. ~/.profile or ~/.bash_profile or ~/.bashrc etc to do this for future login shells."

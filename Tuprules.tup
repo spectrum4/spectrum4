@@ -11,7 +11,7 @@ LDFLAGS_AARCH64 += --fix-cortex-a53-835769
 LDFLAGS_AARCH64 += --fix-cortex-a53-843419
 LDFLAGS_AARCH64 += --no-warn-rwx-segments
 LDFLAGS_AARCH64 += -N
-LDFLAGS_AARCH64 += -Ttext=0xffff000000000000
+LDFLAGS_AARCH64 += -Ttext=0xfffffff000000000
 
 ASFLAGS_AARCH64 += -I ..
 ASFLAGS_AARCH64 += -I ../kernel

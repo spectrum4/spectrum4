@@ -129,7 +129,7 @@ tv_tuner_01_effects:
   adrp    x0, framebuffer
   add     x0, x0, :lo12:framebuffer
   ldp     w0, w1, [x0]
-  orr     x0, x0, 0xffff000000000000              // Convert to virtual address
+  orr     x0, x0, 0xfffffff000000000              // Convert to virtual address
   add     x1, x0, x1
   adr     x2, tv_tuner_01_framebuffer
   mov     x4, #0x20

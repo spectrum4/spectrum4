@@ -87,15 +87,14 @@ retry apt-get upgrade -y
 # libmpfr-dev might be required to build aarch64-none-elf-gdb
 # libncurses-dev might be useful for building aarch64-none-elf-gdb (not sure)
 # libpcre3-dev is required to build tup
-# libpixman-1-dev is needed for building qemu
 # libtool is needed by autogen.sh when building libspectrum and fuse
-# meson is needed for building qemu
+# qemu-system-arm provides qemu-system-aarch64
 # texinfo is needed for building z80 binutils and aarch64 binutils
 # unzip is needed for unzipping tup
 # wget is needed for downloading curl
 # xz-utils is needed by tar commands below
 # zlib1g-dev might be needed to build aarch64-none-elf-gdb
-retry apt-get install -y autoconf bison bsdmainutils build-essential flex fuse-emulator-utils fuse3 git golang-go libfuse3-dev libglib2.0 libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libpcre3-dev libpixman-1-dev libtool meson texinfo unzip wget xz-utils zlib1g-dev
+retry apt-get install -y autoconf bison bsdmainutils build-essential flex fuse-emulator-utils fuse3 git golang-go libfuse3-dev libglib2.0 libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libpcre3-dev libtool qemu-system-arm texinfo unzip wget xz-utils zlib1g-dev
 
 if ! hash curl 2> /dev/null; then
   retry wget -O /usr/local/bin/curl "https://github.com/moparisthebest/static-curl/releases/download/v7.84.0/curl-${ARCH2}"
@@ -173,17 +172,6 @@ if ! hash aarch64-none-elf-gdb 2> /dev/null; then
   make -j4
   make install
   cd ..
-fi
-
-if ! hash qemu-system-aarch64 2> /dev/null; then
-  retry curl -fsSL 'https://download.qemu.org/qemu-7.1.0.tar.xz' > qemu-7.1.0.tar.xz
-  tar xvf qemu-7.1.0.tar.xz
-  mkdir qemu-7.1.0/build
-  cd qemu-7.1.0/build
-  ../configure --target-list=aarch64-softmmu --disable-vnc
-  make -j4
-  make install
-  cd ../..
 fi
 
 if ! hash tup 2> /dev/null; then

@@ -142,7 +142,7 @@ _start:
     cmp     x2, x3
     b.lt    6b
 7:
-  adrp    x0, pg_dir
+  adrp    x0, (pg_dir+0x1000)
   msr     ttbr1_el1, x0                           // Configure page tables for virtual addresses with 1's in first 16 bits
   msr     ttbr0_el1, x0                           // Configure page tables for virtual addresses with 0's in first 16 bits
                                                   // This seems to be needed on qemu so that when sctlr_el1 is updated
@@ -183,7 +183,7 @@ _start:
                                                   //   66665555555555444444444433333 333 33 22 22 22 2 2 221111 11 11 11
                                                   //   32109876543210987654321098765 432 10 98 76 54 3 2 109876 54 32 10 98 7 6 543210
 
-  ldr     x0, =0x0000000180100010                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 010000 00 00 00 00 0 0 010000 // working spectrum4 value
+  ldr     x0, =0x00000001801c001c                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 010000 00 00 00 00 0 0 010000 // working spectrum4 value
 # ldr     x0, =0x00000001801c001c                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 011100 00 00 00 00 0 0 011100 // intended spectrum4 value
 # ldr     x0, =0x000000010080751c                 // 0b00000000000000000000000000000 001 00 00 00 00 1 0 000000 01 11 01 01 0 0 011100 // circle actual value
 
@@ -240,7 +240,7 @@ _start:
   blr     x0
 .if TESTS_AUTORUN
   ldr     w0, arm_size
-  orr     x0, x0, 0xffff000000000000              // Convert to virtual address
+  orr     x0, x0, 0xfffffff000000000              // Convert to virtual address
   and     sp, x0, #~0xf                           // Set stack pointer at top of ARM memory
   bl      irq_vector_init
   dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
@@ -413,7 +413,7 @@ poke_address:
   adrp    x9, fb_req                              // x9 = address of mailbox request.
   add     x9, x9, :lo12:fb_req
   ldr     w10, [x9, framebuffer-fb_req]           // w10 = physical address of framebuffer
-  orr     x10, x10, #0xffff000000000000           // x10 = virtual address of framebuffer
+  orr     x10, x10, #0xfffffff000000000           // x10 = virtual address of framebuffer
   ldr     w12, [x9, pitch-fb_req]                 // w12 = pitch
   ldr     x13, =0x97b425ed097b425f                // x13 = 0x97b425ed097b425f = 10931403895531586143
   umulh   x14, x13, x11                           // x14 = (10931403895531586143 * x11) / 18446744073709551616 = int(x11*16/27)

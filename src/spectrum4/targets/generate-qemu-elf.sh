@@ -18,7 +18,7 @@ shift 2
 # Link the .o file to generate the elf file
 "${@}" -o "${elf_output_file}" "${o_input_file}"
 # Now patch the elf program header to set p_paddr to physical address
-# 0x0000000000000000 instead of 0xffff000000000000. See:
+# 0x0000000000000000 instead of 0xfffffff000000000. See:
 #
 #   https://en.wikipedia.org/wiki/Executable_and_Linkable_Format#Program_header
 #
@@ -32,5 +32,5 @@ shift 2
 # Otherwise, if we specify the .img file in the qemu command, we have no way
 # of specifying a load address, and it will use 0x80000 which we don't want.
 # If we didn't patch the physical address, qemu would try to load the code
-# at the virtual address 0xffff000000000000, which wouldn't work.
-printf '\x0\x0\' | dd of="${elf_output_file}" bs=1 seek=94 count=2 conv=notrunc 2> /dev/null
+# at the virtual address 0xfffffff000000000, which wouldn't work.
+printf '\x0\x0\x0\x0' | dd of="${elf_output_file}" bs=1 seek=92 count=4 conv=notrunc 2> /dev/null

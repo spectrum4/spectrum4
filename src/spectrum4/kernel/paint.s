@@ -51,7 +51,7 @@ paint_border:
 paint_rectangle:
   adr     x9, fb_req                              // x9 = address of mailbox request.
   ldr     w10, [x9, framebuffer-fb_req]           // w10 = physical address of framebuffer
-  orr     x10, x10, #0xffff000000000000           // x10 = virtual address of framebuffer
+  orr     x10, x10, #0xfffffff000000000           // x10 = virtual address of framebuffer
   ldr     w11, [x9, pitch-fb_req]                 // w11 = pitch
   umaddl  x10, w1, w11, x10                       // x10 = address of framebuffer + y*pitch
   add     x10, x10, x0, lsl #2                    // x10 = address of framebuffer + y*pitch + x*4

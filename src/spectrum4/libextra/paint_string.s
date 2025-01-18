@@ -30,7 +30,7 @@ paint_string:
   adrp    x9, fb_req
   add     x9, x9, :lo12:fb_req                    // x9 = address of mailbox request.
   ldr     w10, [x9, framebuffer-fb_req]           // w10 = physical address of framebuffer
-  orr     x10, x10, #0xffff000000000000           // x10 = virtual address of framebuffer
+  orr     x10, x10, #0xfffffff000000000           // x10 = virtual address of framebuffer
   ldr     w9, [x9, pitch-fb_req]                  // w9 = pitch
   adrp    x11, char_set-32*32
   add     x11, x11, :lo12:(char_set-32*32)        // x11 = theoretical start of character table for char 0

@@ -33,4 +33,4 @@ shift 2
 # of specifying a load address, and it will use 0x80000 which we don't want.
 # If we didn't patch the physical address, qemu would try to load the code
 # at the virtual address 0xfffffff000000000, which wouldn't work.
-printf '\x0\x0\x0\x0' | dd of="${elf_output_file}" bs=1 seek=92 count=4 conv=notrunc 2> /dev/null
+dd if=/dev/zero of="${elf_output_file}" bs=1 seek=88 count=8 conv=notrunc 2> /dev/null

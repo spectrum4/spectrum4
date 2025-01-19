@@ -98,7 +98,7 @@ _start:
 
 # Configure page tables
   adrp    x0, pg_dir                              // x0 = pg_dir (page aligned, so no additional add needed)
-  mov     x1, pg_dir_end - pg_dir                 // clear 7 pages
+  mov     x1, pg_dir_end - pg_dir                 // clear 6 pages
   bl      memzero
   adrp    x0, pg_dir
   mov     x1, #0x1003
@@ -106,7 +106,7 @@ _start:
   ldr     x3, peripherals_end
   lsr     x2, x3, #30
   3:
-    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = pg_dir + 0x2003 + i*0x1000. PUD table complete for 0 - peripherals end.
+    str     x1, [x0], #8                          // [pg_dir + i*8] = pg_dir + 0x1003 + i*0x1000. PUD table complete for 0 - peripherals end.
     add     x1, x1, #0x1000
     subs    x2, x2, #0x1
     b.ne    3b
@@ -114,13 +114,13 @@ _start:
   mov     x1, #0x401                              // bit 10: AF=1, bits 2-4: mair attr index = 0 (normal), bits 0-1: 1 (block descriptor)
   ldr     x2, peripherals_start
   4:                                              // creates 2016 entries for 0x00000000 - 0xfc000000
-    str     x1, [x0], #8                          // [pg_dir + 0x2000 + i*8] = 0x401 + i*0x200000. PMD table entries complete for 0 - peripherals start address.
+    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = 0x401 + i*0x200000. PMD table entries complete for 0 - peripherals start address.
     add     x1, x1, #0x200000
     cmp     x1, x2
     b.lt    4b
   add     x1, x1, #0x4                            // bits 2-4: mair attr index = 1 (device)
   5:                                              // creates 32 entries for 0xfc000000 - 0x100000000
-    str     x1, [x0], #8                          // [pg_dir + 0x2000 + i*8] = 0x405 + i*0x200000. PMD table entries complete for peripherals start to peripherals end address.
+    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = 0x405 + i*0x200000. PMD table entries complete for peripherals start to peripherals end address.
     add     x1, x1, #0x200000
     cmp     x1, x3
     b.lt    5b
@@ -140,8 +140,8 @@ _start:
     b.lt    6b
 7:
   adrp    x0, pg_dir
-  msr     ttbr1_el1, x0                           // Configure page tables for virtual addresses with 1's in first 16 bits
-  msr     ttbr0_el1, x0                           // Configure page tables for virtual addresses with 0's in first 16 bits
+  msr     ttbr1_el1, x0                           // Configure page tables for virtual addresses with 1's in first 28 bits
+  msr     ttbr0_el1, x0                           // Configure page tables for virtual addresses with 0's in first 28 bits
                                                   // This seems to be needed on qemu so that when sctlr_el1 is updated
                                                   // below, that the following instruction can be fetched since at this
                                                   // point, the program counter is using a physical address. On rpi3 this

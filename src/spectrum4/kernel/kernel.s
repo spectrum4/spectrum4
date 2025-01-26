@@ -33,9 +33,9 @@ _start:
   b.ne    sleep                                   // Put all cores except core 0 to sleep.
 
 
-                                                  // +=========================================+
-                                                  // | SCTLR_EL1 System Control Register (EL1) |
-                                                  // +=========================================+
+                                                  // +========================================+
+                                                  // | SCTLR_EL1 System Control Register, EL1 |
+                                                  // +========================================+
                                                   //
                                                   // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/System-Control-Register--EL1?lang=en
                                                   // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/System-Control-Register--EL1?lang=en
@@ -52,6 +52,7 @@ _start:
                                                   //    1098/7 6 5 4/3210/9 8 7 6/5 4 3 2/10 9 8/7 6 5 4/3 2 1 0
 
   ldr     x0, =0x30d0088a                         // 0b 0011/0 0 0 0/1101/0 0 0 0/0 0 0 0/10 0 0/1 0 0 0/1 0 1 0
+                                                  // 0x    3       0    d       0       0      8       8       a
 
                                                   // UCI:     0b0 => EL0 access to DC CVAU, DC CIVAC, DC CVAC and IC IVAU disabled
                                                   // EE:      0b0 => Translation tables are little endian
@@ -74,9 +75,59 @@ _start:
                                                   // M:       0b0 => MMU disabled
   msr     sctlr_el1, x0
 
-  mov     x0, 0x80000000
-  msr     hcr_el2, x0                             // Update "Hypervisor Configuration Register":
-                                                  //   set bit 31 => execution state for EL1 is aarch64
+                                                  // +================================================+
+                                                  // | HCR_EL2 Hypervisor Configuration Register, EL2 |
+                                                  // +================================================+
+                                                  //
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/Hypervisor-Configuration-Register?lang=en
+                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/Hypervisor-Configuration-Register--EL2?lang=en
+                                                  //
+                                                  //                                                                    T
+                                                  //                                                T         T       T I   T T T T                          S
+                                                  //                                                R H T T T T T T T A D T I I I I T T   B    V     A I F P W
+                                                  //                                          I C R V C D G V L P P S C C S D D D D W W D S  F S V V M M M T I V
+                                                  //    0000 0000 0000 0000 0000 0000 0000 00 D D W M D Z E M B U C W R P C 3 2 1 0 E I C U  B E I F O O O W O M
+
+                                                  //    6666/5555/5555/5544/4444/4444/3333/33 3 3/3 3 2 2/2 2 2 2/2 2 2 2/1 1 1 1/1 1 1 1/11
+                                                  //    3210/9876/5432/1098/7654/3210/9876/54 3 2/1 0 9 8/7 6 5 4/3 2 1 0/9 8 7 6/5 4 3 2/10 9 8/7 6 5 4/3 2 1 0
+
+  mov     x0, 0x80000000                          // 0b 0000/0000/0000/0000/0000/0000/0000/00 0 0/1 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/00 0 0/0 0 0 0/0 0 0 0
+                                                  // 0x    0    0    0    0    0    0    0      0       8       0       0       0       0      0       0       0
+
+                                                  // VM:    0b0 => Disable second stage MMU address translation
+                                                  // SWIO:  0b0 => DC ISW is not treated as DC CISW in AArch64 state
+                                                  // PTW:   0b0 => Protected Table Walk; doesn't apply since VM = 0b0
+                                                  // FMO:   0b0 => Physical FIQ are not taken to EL2
+                                                  // IMO:   0b0 => Physical IRQ are not taken to EL2
+                                                  // AMO:   0b0 => Async external Aborts and SError interrupts not taken to EL2
+                                                  // VF:    0b0 => Virtual FIQ not pending
+                                                  // VI:    0b0 => Virtual IRQ not pending
+                                                  // VSE:   0b0 => Virtual Async Abort / SError not pending
+                                                  // FB:    0b0 => Do not broadcast instructions within Inner Sharable domain
+                                                  // BSU:   0b0 => Barrier sharability disabled
+                                                  // DC:    0b0 =>
+                                                  // TWI:   0b0 =>
+                                                  // TWE:   0b0 =>
+                                                  // TID0:  0b0 =>
+                                                  // TID1:  0b0 =>
+                                                  // TID2:  0b0 =>
+                                                  // TID3:  0b0 =>
+                                                  // TSC:   0b0 =>
+                                                  // TIDCP: 0b0 =>
+                                                  // TACR:  0b0 =>
+                                                  // TSW:   0b0 =>
+                                                  // TPC:   0b0 =>
+                                                  // TPU:   0b0 =>
+                                                  // TTLB:  0b0 =>
+                                                  // TVM:   0b0 =>
+                                                  // TGE:   0b0 =>
+                                                  // TDZ:   0b0 =>
+                                                  // HCD:   0b0 =>
+                                                  // TRVM:  0b0 =>
+                                                  // RW:    0b1 => EL1 is AArch64, not AArch32
+                                                  // CD:    0b0 =>
+                                                  // ID:    0b0 =>
+  msr     hcr_el2, x0
 
   mrs     x0, currentel
   and     x0, x0, #0x0c
@@ -237,25 +288,9 @@ _start:
   msr     mair_el1, x0                            // mair_el1 = 0x00000000000004ff => attr index 0 => normal, attr index 1 => device, attr index 2 => coherent
   ldr     x2, =8f                                 // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)
 
-                                                  //     S
-                                                  //     P
-                                                  //     I                                                                                                            C
-                                                  //     N                         T    T                             L n                                   E         P
-                                                  //   T T   E   T   E E E         W    W D           I     E M       S T               T                   n         1
-                                                  //   I M   n T C E n n n   T   T E    E S   A    T  T     n S C E E M L E       S   I S   n R n     E     R       T 5
-                                                  //   D A N T C S P A A A T M T M D    D S A T T  C  F B B F C M n n A S n U   E P E E C W T E T U D n   E C U S I H B S
-                                                  //   C S M P S O A L S S M E M T E    E B T A C  F  S T T P E O I I O M D C E 0 A I S X X W S W T Z D   O T M E T E E A S
-                                                  //   P K I 2 O 0 N S 0 R E 0 T 0 L    n S A 0 F  0  B 1 0 M n W A B E D A I E E N S B T N E 0 I C E B I S X A D D E N 0 A C A M
-
-                                                  //   6 6 6 6 5 5 5 5 5 5 5 5 5 5 4444 4 4 4 4 44 33 3 3 3 3 3 3 3 3 2 2 2 2 2 2 2 2 2 2 1 1 1 1 1 1 1 1 1 1
-                                                  //   3 2 1 0 9 8 7 6 5 4 3 2 1 0 9876 5 4 3 2 10 98 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0 9 8 7 6 5 4 3 2 1 0
-
-# sctlr_el1 (circle):     0x0000000030d01805      // 0b0 0 0 0 0 0 0 0 0 0 0 0 0 0 0000 0 0 0 0 00 00 0 0 0 0 0 0 0 0 1 1 0 0 0 0 1 1 0 1 0 0 0 0 0 0 0 1 1 0 0 0 0 0 0 0 0 1 0 1
-# sctlr_el1 (spectrum4):  0x0000000030d00801      // 0b0 0 0 0 0 0 0 0 0 0 0 0 0 0 0000 0 0 0 0 00 00 0 0 0 0 0 0 0 0 1 1 0 0 0 0 1 1 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1
-
-  mrs     x0, sctlr_el1                           // x0 = 0x30d00800
-  orr     x0, x0, #0x1                            // x0 = 0x30d00801
-  msr     sctlr_el1, x0                           // sctlr_el1 = 0x30d00801
+  mrs     x0, sctlr_el1                           // fetch System Control Register (EL1)
+  orr     x0, x0, #0x1                            // enable MMU
+  msr     sctlr_el1, x0                           // update System Control Register (EL1)
   br      x2                                      // jump to next instruction so that program counter starts using virtual address
 8:
   msr     ttbr0_el1, xzr                          // Ensure only ttbr1_el1 is used from now on

@@ -280,18 +280,18 @@
   \op     \val, [\base, \offset]
 .if UART_DEBUG
   stp     x29, x30, [sp, #-16]!
-  stp     x0, x1, [sp, #-16]!
-  stp     x2, x3, [sp, #-16]!
-  stp     x4, x5, [sp, #-16]!
-  str     \base, [sp, #-8]!
-  str     \val, [sp, #-8]!
+  stp     x0, x1, [sp, #-80]!
+  stp     x2, x3, [sp, #16]
+  stp     x4, x5, [sp, #32]
+  str     \base, [sp, #48]
+  str     \val, [sp, #56]
   mrs     x0, nzcv                                // preserve N, Z, C, V flags
-  str     x0, [sp, #-8]!
+  str     x0, [sp, #64]
   adr     x0, \message
   bl      uart_puts
   mov     x0, '['
   bl      uart_send
-  ldr     x0, [sp, #16]                           // x0 = \base
+  ldr     x0, [sp, #48]                           // x0 = \base
   mov     x1, \offset
   add     x0, x0, x1                              // x0 = \base + \offset
   bl      uart_x0
@@ -299,17 +299,17 @@
   bl      uart_send
   mov     x0, '='
   bl      uart_send
-  ldr     x0, [sp, #8]
+  ldr     x0, [sp, #56]                           // x0 = \val
   mov     x2, \bitcount
   bl      uart_x0_s
   bl      uart_newline
-  ldr     x0, [sp], #8
+  ldr     x0, [sp, #64]
   msr     nzcv, x0                                // restore N, Z, C, V flags
-  ldr     \val, [sp], #8
-  ldr     \base, [sp], #8
-  ldp     x4, x5, [sp], #16
-  ldp     x2, x3, [sp], #16
-  ldp     x0, x1, [sp], #16
+  ldr     \val, [sp, #56]
+  ldr     \base, [sp, #48]
+  ldp     x4, x5, [sp, #32]
+  ldp     x2, x3, [sp, #16]
+  ldp     x0, x1, [sp], #80
   ldp     x29, x30, [sp], #16
 .endif
 .endm

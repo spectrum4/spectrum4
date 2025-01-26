@@ -186,6 +186,13 @@ if ! hash tup 2> /dev/null; then
   # sufficient.
   CFLAGS="-g" ./build.sh
   mv build/tup /usr/local/bin
+  cat << EOF | sed 's/^    //' | sudo tee /etc/apparmor.d/tup > /dev/null
+    abi <abi/4.0>,
+
+    profile tup /usr/local/bin/tup flags=(unconfined) {
+      userns,
+    }
+EOF
   cd ..
 fi
 

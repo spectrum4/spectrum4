@@ -28,18 +28,53 @@
 .text
 .align 2
 _start:
-# TODO: enable caches
-# There seems to be a reasonable guide to system initialisation here:
-#   * https://developer.arm.com/documentation/dai0527/a/
   mrs     x0, mpidr_el1                           // x0 = Multiprocessor Affinity Register value.
   ands    x0, x0, #0x3                            // x0 = core number.
   b.ne    sleep                                   // Put all cores except core 0 to sleep.
 
-# ldr     x0, =0x30d01804                         // This version enables caches (bits 2, 12)
-  ldr     x0, =0x30d00800
-  msr     sctlr_el1, x0                           // Update "System Control Register (EL1)":
-                                                  //   set RES:1 bits (11, 20, 22, 23, 28, 29)
-                                                  //   disable caches (bits 2, 12)
+
+                                                  // +=========================================+
+                                                  // | SCTLR_EL1 System Control Register (EL1) |
+                                                  // +=========================================+
+                                                  //
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/System-Control-Register--EL1?lang=en
+                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/System-Control-Register--EL1?lang=en
+                                                  //
+                                                  //                                                 C
+                                                  //                                                 P
+                                                  //                                                 1
+                                                  //                        n   n                  T 5
+                                                  //           U   E      W T   T U D        U S I H B S
+                                                  //           C E 0      X W   W T Z        M E T E E A S
+                                                  //    0011 0 I E E 1101 N E 0 I C E 0 I 10 A D D E N 0 A C A M
+
+                                                  //    3322/2 2 2 2/2222/1 1 1 1/1 1 1 1/11
+                                                  //    1098/7 6 5 4/3210/9 8 7 6/5 4 3 2/10 9 8/7 6 5 4/3 2 1 0
+
+  ldr     x0, =0x30d00800                         // 0b 0011/0 0 0 0/1101/0 0 0 0/0 0 0 0/10 0 0/0 0 0 0/0 0 0 0
+  ldr     x0, =0x30d0088a                         // 0b 0011/0 0 0 0/1101/0 0 0 0/0 0 0 0/10 0 0/1 0 0 0/1 0 1 0
+
+                                                  // UCI:     0b0 => EL0 access to DC CVAU, DC CIVAC, DC CVAC and IC IVAU disabled
+                                                  // EE:      0b0 => Translation tables are little endian
+                                                  // E0E:     0b0 => Data access are little endian
+                                                  // WXN:     0b0 => Writable memory regions can also be executed
+                                                  // nTWE:    0b0 => WFE instructions at EL0 are trapped (raise an exception)
+                                                  // nTWI:    0b0 => WFI instructions at EL0 are trapped (raise an exception)
+                                                  // UCT:     0b0 => Disables EL0 access to the CTR_EL0 register (cache information, read only) (security: side channel attacks)
+                                                  // DZE:     0b0 => Disables execution access to the DC ZVA instruction at EL0 (clearing cache lines)
+                                                  // I:       0b0 => Disable instruction cache
+                                                  // UMA:     0b0 => Disable access to the interrupt masks from EL0
+                                                  // SED:     0b0 => Disable SETEND instruction under aarch32 in EL0
+                                                  // ITD:     0b0 => Enable Thumb IT instruction at EL0
+                                                  // THEE:    0b0 => T32EE (Thumb big endian) not implemented on cortex-a53/cortex-a72 (effectively RES0)
+                                                  // CP15BEN: 0b0 => CP15 barrier operations disabled in aarch32 in EL0
+                                                  // SA0:     0b0 => Disable EL0 Stack Alignment (16 byte bounday) check
+                                                  // SA:      0b0 => Disable Stack Alignment (16 byte bounday) check
+                                                  // C:       0b0 => Data and unified caches disabled
+                                                  // A:       0b0 => Alignment fault checking disabled
+                                                  // M:       0b0 => MMU disabled
+  msr     sctlr_el1, x0
+
   mov     x0, 0x80000000
   msr     hcr_el2, x0                             // Update "Hypervisor Configuration Register":
                                                   //   set bit 31 => execution state for EL1 is aarch64

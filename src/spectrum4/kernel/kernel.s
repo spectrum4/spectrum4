@@ -51,7 +51,6 @@ _start:
                                                   //    3322/2 2 2 2/2222/1 1 1 1/1 1 1 1/11
                                                   //    1098/7 6 5 4/3210/9 8 7 6/5 4 3 2/10 9 8/7 6 5 4/3 2 1 0
 
-  ldr     x0, =0x30d00800                         // 0b 0011/0 0 0 0/1101/0 0 0 0/0 0 0 0/10 0 0/0 0 0 0/0 0 0 0
   ldr     x0, =0x30d0088a                         // 0b 0011/0 0 0 0/1101/0 0 0 0/0 0 0 0/10 0 0/1 0 0 0/1 0 1 0
 
                                                   // UCI:     0b0 => EL0 access to DC CVAU, DC CIVAC, DC CVAC and IC IVAU disabled
@@ -65,13 +64,13 @@ _start:
                                                   // I:       0b0 => Disable instruction cache
                                                   // UMA:     0b0 => Disable access to the interrupt masks from EL0
                                                   // SED:     0b0 => Disable SETEND instruction under aarch32 in EL0
-                                                  // ITD:     0b0 => Enable Thumb IT instruction at EL0
+                                                  // ITD:     0b1 => Disable Thumb IT instruction at EL0
                                                   // THEE:    0b0 => T32EE (Thumb big endian) not implemented on cortex-a53/cortex-a72 (effectively RES0)
                                                   // CP15BEN: 0b0 => CP15 barrier operations disabled in aarch32 in EL0
                                                   // SA0:     0b0 => Disable EL0 Stack Alignment (16 byte bounday) check
-                                                  // SA:      0b0 => Disable Stack Alignment (16 byte bounday) check
+                                                  // SA:      0b1 => Enable Stack Alignment (16 byte bounday) check
                                                   // C:       0b0 => Data and unified caches disabled
-                                                  // A:       0b0 => Alignment fault checking disabled
+                                                  // A:       0b1 => Enable alignment fault checking
                                                   // M:       0b0 => MMU disabled
   msr     sctlr_el1, x0
 

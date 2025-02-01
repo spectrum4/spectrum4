@@ -99,39 +99,39 @@ _start:
   mov     x0, 0x80000000                          // 0b 0000/0000/0000/0000/0000/0000/0000/00 0 0/1 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/00 0 0/0 0 0 0/0 0 0 0
                                                   // 0x    0    0    0    0    0    0    0      0       8       0       0       0       0      0       0       0
                                                   //
-                                                  // VM:    0b0  => Disable second stage MMU address translation
-                                                  // SWIO:  0b0  => DC ISW is not treated as DC CISW in AArch64 state
-                                                  // PTW:   0b0  => Protected table walk; doesn't apply since VM = 0b0
-                                                  // FMO:   0b0  => Physical FIQ are not taken to EL2
-                                                  // IMO:   0b0  => Physical IRQ are not taken to EL2
-                                                  // AMO:   0b0  => Async external Aborts and SError interrupts not taken to EL2
-                                                  // VF:    0b0  => Virtual FIQ not pending
-                                                  // VI:    0b0  => Virtual IRQ not pending
-                                                  // VSE:   0b0  => Virtual Async Abort / SError not pending
-                                                  // FB:    0b0  => Do not broadcast instructions within Inner Sharable domain
-                                                  // BSU:   0b00 => Barrier sharability disabled
-                                                  // DC:    0b0  =>
-                                                  // TWI:   0b0  =>
-                                                  // TWE:   0b0  =>
-                                                  // TID0:  0b0  =>
-                                                  // TID1:  0b0  =>
-                                                  // TID2:  0b0  =>
-                                                  // TID3:  0b0  =>
-                                                  // TSC:   0b0  =>
-                                                  // TIDCP: 0b0  =>
-                                                  // TACR:  0b0  =>
-                                                  // TSW:   0b0  =>
-                                                  // TPC:   0b0  =>
-                                                  // TPU:   0b0  =>
-                                                  // TTLB:  0b0  =>
-                                                  // TVM:   0b0  =>
-                                                  // TGE:   0b0  =>
-                                                  // TDZ:   0b0  =>
-                                                  // HCD:   0b0  =>
-                                                  // TRVM:  0b0  =>
-                                                  // RW:    0b1  => EL1 is AArch64, not AArch32
-                                                  // CD:    0b0  =>
                                                   // ID:    0b0  =>
+                                                  // CD:    0b0  =>
+                                                  // RW:    0b1  => EL1 is AArch64, not AArch32
+                                                  // TRVM:  0b0  =>
+                                                  // HCD:   0b0  =>
+                                                  // TDZ:   0b0  =>
+                                                  // TGE:   0b0  =>
+                                                  // TVM:   0b0  =>
+                                                  // TTLB:  0b0  =>
+                                                  // TPU:   0b0  =>
+                                                  // TPC:   0b0  =>
+                                                  // TSW:   0b0  =>
+                                                  // TACR:  0b0  =>
+                                                  // TIDCP: 0b0  =>
+                                                  // TSC:   0b0  =>
+                                                  // TID3:  0b0  =>
+                                                  // TID2:  0b0  =>
+                                                  // TID1:  0b0  =>
+                                                  // TID0:  0b0  =>
+                                                  // TWE:   0b0  =>
+                                                  // TWI:   0b0  =>
+                                                  // DC:    0b0  => Don't enable Default Cachable behaviour
+                                                  // BSU:   0b00 => Barrier sharability disabled
+                                                  // FB:    0b0  => Do not broadcast instructions within Inner Sharable domain
+                                                  // VSE:   0b0  => Virtual Async Abort / SError not pending
+                                                  // VI:    0b0  => Virtual IRQ not pending
+                                                  // VF:    0b0  => Virtual FIQ not pending
+                                                  // AMO:   0b0  => Async external Aborts and SError interrupts not taken to EL2
+                                                  // IMO:   0b0  => Physical IRQ are not taken to EL2
+                                                  // FMO:   0b0  => Physical FIQ are not taken to EL2
+                                                  // PTW:   0b0  => Protected table walk; doesn't apply since VM = 0b0
+                                                  // SWIO:  0b0  => DC ISW is not treated as DC CISW in AArch64 state
+                                                  // VM:    0b0  => Disable second stage MMU address translation
   msr     hcr_el2, x0
 
 ##################################################
@@ -156,18 +156,17 @@ _start:
   mov     x0, 0x00000431                          // 0b 0000/0000/0000/0000/00 0 0/0 1 0 0/0 011/0 0 0 1
                                                   // 0x    0    0    0    0      0       4     3       1
                                                   //
-                                                  // NS:  0b1 => EL0 and EL1 are in Non-secure state
-                                                  // IRQ: 0b0 => Physical IRQ at EL0-EL2 are not taken in EL3
-                                                  // FIQ: 0b0 => Physical FIQ at EL0-EL2 are not taken in EL3
-                                                  // EA:  0b0 => External Abort and SError at EL0-EL2 are not taken in EL3
-                                                  // SMD: 0b0 => The SMC instruction is enabled at EL1, EL2, and EL3
-                                                  // HCE: 0b0 => The HVC instruction is undefined at all exception levels
-                                                  // SIF: 0b0 => Secure state instruction fetches from Non-secure memory are permitted
-                                                  // RW:  0b1 => The next lower level (EL2) is AArch64
-                                                  // ST:  0b0 => No Secure EL1 access to CNTPS_TVAL_EL1, CNTS_CTL_EL1, and CNTPS_CVAL_EL1 registers
-                                                  // TWI: 0b0 => WFI instructions are not trapped
                                                   // TWE: 0b0 => WFE instructions are not trapped
-
+                                                  // TWI: 0b0 => WFI instructions are not trapped
+                                                  // ST:  0b0 => No Secure EL1 access to CNTPS_TVAL_EL1, CNTS_CTL_EL1, and CNTPS_CVAL_EL1 registers
+                                                  // RW:  0b1 => The next lower level (EL2) is AArch64
+                                                  // SIF: 0b0 => Secure state instruction fetches from Non-secure memory are permitted
+                                                  // HCE: 0b0 => The HVC instruction is undefined at all exception levels
+                                                  // SMD: 0b0 => The SMC instruction is enabled at EL1, EL2, and EL3
+                                                  // EA:  0b0 => External Abort and SError at EL0-EL2 are not taken in EL3
+                                                  // FIQ: 0b0 => Physical FIQ at EL0-EL2 are not taken in EL3
+                                                  // IRQ: 0b0 => Physical IRQ at EL0-EL2 are not taken in EL3
+                                                  // NS:  0b1 => EL0 and EL1 are in Non-secure state
   msr     scr_el3, x0
 
                                                   // +=============================================+
@@ -284,22 +283,22 @@ _start:
                                                   // = bic ~0x000000070040ffbf
                                                   // => clear bits 0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 22, 32, 33, 34
 # orr     x0, x0, x1
-                                                  // => set bits 2, 3, 4, 8, 10, 12, 13, 14, 23, 32
-                                                  // => remaining cleared bits are 0, 1, 5, 7, 9, 11, 15, 22, 33, 34
-                                                  // => T0SZ [5:0] = 0b011100 = 28 => region size = 2^(64-28) = 2^36 bytes = 64 GB
-                                                  // => EPD0 [7] = 0 => perform walk on a miss
-                                                  // => IRGN0 [9:8] = 0b01 => Normal memory, Inner Write-Back Read-Allocate Write-Allocate Cacheable.
-                                                  // => ORGN0 [11:10] = 0b01 => Normal memory, Outer Write-Back Read-Allocate Write-Allocate Cacheable.
-                                                  // => SH0 [13:12] = 0b11 => Inner Shareable
-                                                  // => TG0 [15:14] = 0b01 => Granule size 64KB
-                                                  // => T1SZ [21:16] = <unchanged>
-                                                  // => A1 [22] = 0 => TTBR0_EL1.ASID defines the ASID
-                                                  // => EPD1 [23] = 1 => A TLB miss on an address that is translated using TTBR1_EL1 generates a Translation fault. No translation table walk is performed
-                                                  // => IRGN1 [25:24] = <unchanged>
-                                                  // => ORGN1 [27:26] = <unchanged>
-                                                  // => SH1 [29:28] = <unchanged>
-                                                  // => TG1 [31:30] = <unchanged> (Granule size for TTBR1_EL1)
                                                   // => IPS [34:32] = 1 => Intermediate Physical Address size = 36 bits, 64GB.
+                                                  // => TG1 [31:30] = <unchanged> (Granule size for TTBR1_EL1)
+                                                  // => SH1 [29:28] = <unchanged>
+                                                  // => ORGN1 [27:26] = <unchanged>
+                                                  // => IRGN1 [25:24] = <unchanged>
+                                                  // => EPD1 [23] = 1 => A TLB miss on an address that is translated using TTBR1_EL1 generates a Translation fault. No translation table walk is performed
+                                                  // => A1 [22] = 0 => TTBR0_EL1.ASID defines the ASID
+                                                  // => T1SZ [21:16] = <unchanged>
+                                                  // => TG0 [15:14] = 0b01 => Granule size 64KB
+                                                  // => SH0 [13:12] = 0b11 => Inner Shareable
+                                                  // => ORGN0 [11:10] = 0b01 => Normal memory, Outer Write-Back Read-Allocate Write-Allocate Cacheable.
+                                                  // => IRGN0 [9:8] = 0b01 => Normal memory, Inner Write-Back Read-Allocate Write-Allocate Cacheable.
+                                                  // => EPD0 [7] = 0 => perform walk on a miss
+                                                  // => T0SZ [5:0] = 0b011100 = 28 => region size = 2^(64-28) = 2^36 bytes = 64 GB
+                                                  // => remaining cleared bits are 0, 1, 5, 7, 9, 11, 15, 22, 33, 34
+                                                  // => set bits 2, 3, 4, 8, 10, 12, 13, 14, 23, 32
                                                   //
                                                   //                                           O  I                   O  I
                                                   //                                           R  R  E                R  R  E
@@ -313,20 +312,20 @@ _start:
   ldr     x0, =0x00000001801c001c                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 011100 00 00 00 00 0 0 011100 // spectrum4 value
 # ldr     x0, =0x000000010080751c                 // 0b00000000000000000000000000000 001 00 00 00 00 1 0 000000 01 11 01 01 0 0 011100 // circle actual value
                                                   //
-                                                  // => T0SZ [5:0] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
-                                                  // => EPD0 [7] = 0b0 = 0 => perform walk on a miss
-                                                  // => IRGN0 [9:8] = 0b00 => Normal memory, Inner Non-cacheable.
-                                                  // => ORGN0 [11:10] = 0b00 => Normal memory, Outer Non-cacheable.
-                                                  // => SH0 [13:12] = 0b00 => Non-shareable
-                                                  // => TG0 [15:14] = 0b00 => 4KB
-                                                  // => T1SZ [21:16] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
-                                                  // => A1 [22] = 0b => TTRB0_EL1.ASID defines the ASID
-                                                  // => EPD1 [23] = 0b (Perform translation table walks using TTBR1_EL1 on TLB miss)
-                                                  // => IRGN1 [25:24] = 0b00 (Normal memory, Inner Non-cacheable.)
-                                                  // => ORGN1 [27:26] = 0b00 (Normal memory, Outer Non-cacheable.)
-                                                  // => SH1 [29:28] = 0b00 (Non-shareable.)
-                                                  // => TG1 [31:30] = 0b10 => 4KB Granule size for the TTBR1_EL1.
                                                   // => IPS [34:32] = 0b001 => Intermediate Physical Address size = 36 bits, 64GB
+                                                  // => TG1 [31:30] = 0b10 => 4KB Granule size for the TTBR1_EL1.
+                                                  // => SH1 [29:28] = 0b00 (Non-shareable.)
+                                                  // => ORGN1 [27:26] = 0b00 (Normal memory, Outer Non-cacheable.)
+                                                  // => IRGN1 [25:24] = 0b00 (Normal memory, Inner Non-cacheable.)
+                                                  // => EPD1 [23] = 0b (Perform translation table walks using TTBR1_EL1 on TLB miss)
+                                                  // => A1 [22] = 0b => TTRB0_EL1.ASID defines the ASID
+                                                  // => T1SZ [21:16] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
+                                                  // => TG0 [15:14] = 0b00 => 4KB
+                                                  // => SH0 [13:12] = 0b00 => Non-shareable
+                                                  // => ORGN0 [11:10] = 0b00 => Normal memory, Outer Non-cacheable.
+                                                  // => IRGN0 [9:8] = 0b00 => Normal memory, Inner Non-cacheable.
+                                                  // => EPD0 [7] = 0b0 = 0 => perform walk on a miss
+                                                  // => T0SZ [5:0] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
   msr     tcr_el1, x0
 
   ldr     x0, =0x000004ff

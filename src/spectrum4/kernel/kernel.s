@@ -94,39 +94,39 @@ _start:
   mov     x0, 0x80000000                          // 0b 0000/0000/0000/0000/0000/0000/0000/00 0 0/1 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/00 0 0/0 0 0 0/0 0 0 0
                                                   // 0x    0    0    0    0    0    0    0      0       8       0       0       0       0      0       0       0
                                                   //
-                                                  // VM:    0b0 => Disable second stage MMU address translation
-                                                  // SWIO:  0b0 => DC ISW is not treated as DC CISW in AArch64 state
-                                                  // PTW:   0b0 => Protected table walk; doesn't apply since VM = 0b0
-                                                  // FMO:   0b0 => Physical FIQ are not taken to EL2
-                                                  // IMO:   0b0 => Physical IRQ are not taken to EL2
-                                                  // AMO:   0b0 => Async external Aborts and SError interrupts not taken to EL2
-                                                  // VF:    0b0 => Virtual FIQ not pending
-                                                  // VI:    0b0 => Virtual IRQ not pending
-                                                  // VSE:   0b0 => Virtual Async Abort / SError not pending
-                                                  // FB:    0b0 => Do not broadcast instructions within Inner Sharable domain
-                                                  // BSU:   0b0 => Barrier sharability disabled
-                                                  // DC:    0b0 =>
-                                                  // TWI:   0b0 =>
-                                                  // TWE:   0b0 =>
-                                                  // TID0:  0b0 =>
-                                                  // TID1:  0b0 =>
-                                                  // TID2:  0b0 =>
-                                                  // TID3:  0b0 =>
-                                                  // TSC:   0b0 =>
-                                                  // TIDCP: 0b0 =>
-                                                  // TACR:  0b0 =>
-                                                  // TSW:   0b0 =>
-                                                  // TPC:   0b0 =>
-                                                  // TPU:   0b0 =>
-                                                  // TTLB:  0b0 =>
-                                                  // TVM:   0b0 =>
-                                                  // TGE:   0b0 =>
-                                                  // TDZ:   0b0 =>
-                                                  // HCD:   0b0 =>
-                                                  // TRVM:  0b0 =>
-                                                  // RW:    0b1 => EL1 is AArch64, not AArch32
-                                                  // CD:    0b0 =>
-                                                  // ID:    0b0 =>
+                                                  // VM:    0b0  => Disable second stage MMU address translation
+                                                  // SWIO:  0b0  => DC ISW is not treated as DC CISW in AArch64 state
+                                                  // PTW:   0b0  => Protected table walk; doesn't apply since VM = 0b0
+                                                  // FMO:   0b0  => Physical FIQ are not taken to EL2
+                                                  // IMO:   0b0  => Physical IRQ are not taken to EL2
+                                                  // AMO:   0b0  => Async external Aborts and SError interrupts not taken to EL2
+                                                  // VF:    0b0  => Virtual FIQ not pending
+                                                  // VI:    0b0  => Virtual IRQ not pending
+                                                  // VSE:   0b0  => Virtual Async Abort / SError not pending
+                                                  // FB:    0b0  => Do not broadcast instructions within Inner Sharable domain
+                                                  // BSU:   0b00 => Barrier sharability disabled
+                                                  // DC:    0b0  =>
+                                                  // TWI:   0b0  =>
+                                                  // TWE:   0b0  =>
+                                                  // TID0:  0b0  =>
+                                                  // TID1:  0b0  =>
+                                                  // TID2:  0b0  =>
+                                                  // TID3:  0b0  =>
+                                                  // TSC:   0b0  =>
+                                                  // TIDCP: 0b0  =>
+                                                  // TACR:  0b0  =>
+                                                  // TSW:   0b0  =>
+                                                  // TPC:   0b0  =>
+                                                  // TPU:   0b0  =>
+                                                  // TTLB:  0b0  =>
+                                                  // TVM:   0b0  =>
+                                                  // TGE:   0b0  =>
+                                                  // TDZ:   0b0  =>
+                                                  // HCD:   0b0  =>
+                                                  // TRVM:  0b0  =>
+                                                  // RW:    0b1  => EL1 is AArch64, not AArch32
+                                                  // CD:    0b0  =>
+                                                  // ID:    0b0  =>
   msr     hcr_el2, x0
 
   mrs     x0, currentel
@@ -170,14 +170,52 @@ _start:
 
   msr     scr_el3, x0
 
-  mov     x0, 0x000001c5
-  msr     spsr_el3, x0                            // Update "Saved Program Status Register (EL3)":
-                                                  //   set bit 0 => dedicated stack pointer selected on EL switch to/from EL3
-                                                  //   set bit 2 (and clear bit 3) => drop to EL1 on eret
-                                                  //   set bit 6 => mask (disable) error (SError) interrupts
-                                                  //   set bit 7 => mask (disable) regular (IRQ) interrupts
-                                                  //   set bit 8 => mask (disable) fast (FIQ) interrupts
-  adr     x0, 2f
+                                                  // +=============================================+
+                                                  // | SPSR_EL3 Saved Program Status Register, EL3 |
+                                                  // +=============================================+
+                                                  //
+                                                  // rpi3b/rpi4b: https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/SPSR-EL3--Saved-Program-Status-Register--EL3-?lang=en
+                                                  //
+                                                  //                                          E                                    A                  M
+                                                  //                                          X P                                  L   B              [
+                                                  //                                      U P L P                                  L S T            M 3
+                                                  //                                      I A O E              T D U P             I S Y            [ :
+                                                  //                                      N C C N P            C I A A S I         N B P            4 0
+                                                  //    0000 0000 0000 0000 0000 0000 000 J M K D M N Z C V 00 O T O N S L 0000 00 T S E  D A I F 0 ] ]
+                                                  //
+                                                  //    6666 5555 5555 5544 4444 4444 333 3 3 3 3 3 3 3 2 2 22 2 2 2 2 2 2 1111 11 1 1 11
+                                                  //    3210 9876 5432 1098 7654 3210 987 6 5 4 3 2 1 0 9 8 76 5 4 3 2 1 0 9876 54 3 2 10 9 8 7 6 5 4 3210
+                                                  //
+  mov     x0, 0x000001c5                          // 0b 0000/0000/0000/0000/0000/0000/000 0/0 0 0 0/0 0 0 0/00 0 0/0 0 0 0/0000/00 0 0/00 0 1/1 1 0 0/0101
+                                                  // 0x    0    0    0    0    0    0     0       0       0      0       0    0      0      1       c    5
+                                                  //
+                                                  // UINJ:    0b0     => RES0 since FEAT_UINJ was first optional in Armv9.0 (Undefined Instruction Injection)
+                                                  // PACM:    0b0     => RES0 since FEAT_PAuth_LR was first optional in Armv9.4 (Pointer authentication instructions that allow signing of LR using SP and PC as diversifiers)
+                                                  // EXLOCK:  0b0     => RES0 since FEAT_GCS was first optional in Armv9.3 (Guarded Control Stack Extension)
+                                                  // PPEND:   0b0     => RES0 since FEAT_SEBEP was first optional in Armv9.3 (Synchronous Exception-based Event Profiling)
+                                                  // PM:      0b0     => RES0 since FEAT_EBEP was first optional in Armv9.3 (Exception-based Event Profiling)
+                                                  // N:       0b0     => set PSTATE.N to 0b0 after next eret
+                                                  // Z:       0b0     => set PSTATE.Z to 0b0 after next eret
+                                                  // C:       0b0     => set PSTATE.C to 0b0 after next eret
+                                                  // V:       0b0     => set PSTATE.V to 0b0 after next eret
+                                                  // TCO:     0b0     => RES0 since FEAT_MTE4 was first optional in Armv8.7 (Enhanced Memory Tagging Extension)
+                                                  // DIT:     0b0     => RES0 since FEAT_DIT was first optional in Armv8.3 (Data Independent Timing)
+                                                  // UAO:     0b0     => RES0 since FEAT_UAO was first optional in Armv8.1 (Unprivileged Access Override)
+                                                  // PAN:     0b0     => RES0 since FEAT_PAN is optional but not present in Cortex-A53/Cortex-A72 (ID_AA64MMFR1_EL1 = 0x0) (Privileged Access Never)
+                                                  // SS:      0b0     => conditially set PSTATE.SS to 0b0 after next eret (not sure what condition)
+                                                  // IL:      0b0     => set PSTATE.IL to 0b0 after next eret
+                                                  // ALLINT:  0b0     => RES0 since FEAT_NMI was first optional in Armv8.7 (Non-maskable Interrupts)
+                                                  // SSBS:    0b0     => RES0 since FEAT_SSBS is optional but not present in Cortex-A53/Cortex-A72 (ID_AA64PFR1_EL1 = 0x0) (Speculative Store Bypass Safe)
+                                                  // BTYPE:   0b0     => RES0 since FEAT_BTI was first optional in Armv8.4 (Branch Target Identification)
+                                                  // D:       0b0     => set PSTATE.D to 0b0 after next eret
+                                                  // A:       0b1     => set PSTATE.A to 0b1 after next eret => after eret mask (disable) error (SError) interrupts
+                                                  // I:       0b1     => set PSTATE.I to 0b1 after next eret => after eret mask (disable) regular (IRQ) interrupts
+                                                  // F:       0b1     => set PSTATE.F to 0b1 after next eret => after eret mask (disable) fast (FIQ) interrupts
+                                                  // M[4]:    0b0     => set PSTATE.nRW to 0b0 after next eret => after eret remain in AArch64 execution state
+                                                  // M[3:0]:  0b0101  => after next eret enter EL1 directly (i.e. skip EL2) with dedicated stack pointer SP=SP_EL1 (EL1h)
+  msr     spsr_el3, x0
+
+  adr     x0, 1f
   msr     elr_el3, x0                             // Update Exception Link Register (EL3):
                                                   //   set to return address after next `eret`
   eret
@@ -282,19 +320,19 @@ _start:
                                                   // => SH1 [29:28] = <unchanged>
                                                   // => TG1 [31:30] = <unchanged> (Granule size for TTBR1_EL1)
                                                   // => IPS [34:32] = 1 => Intermediate Physical Address size = 36 bits, 64GB.
-
+                                                  //
                                                   //                                           O  I                   O  I
                                                   //                                           R  R  E                R  R  E
                                                   //                                     T  S  G  G  P          T  S  G  G  P
                                                   //                                     G  H  N  N  D A        G  H  N  N  D
                                                   //                                 IPS 1  1  1  1  1 1 T1SZ   0  0  0  0  0   T0SZ
-
+                                                  //
                                                   //   66665555555555444444444433333 333 33 22 22 22 2 2 221111 11 11 11
                                                   //   32109876543210987654321098765 432 10 98 76 54 3 2 109876 54 32 10 98 7 6 543210
-
+                                                  //
   ldr     x0, =0x00000001801c001c                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 011100 00 00 00 00 0 0 011100 // spectrum4 value
 # ldr     x0, =0x000000010080751c                 // 0b00000000000000000000000000000 001 00 00 00 00 1 0 000000 01 11 01 01 0 0 011100 // circle actual value
-
+                                                  //
                                                   // => T0SZ [5:0] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
                                                   // => EPD0 [7] = 0b0 = 0 => perform walk on a miss
                                                   // => IRGN0 [9:8] = 0b00 => Normal memory, Inner Non-cacheable.

@@ -99,27 +99,27 @@ _start:
   mov     x0, 0x80000000                          // 0b 0000/0000/0000/0000/0000/0000/0000/00 0 0/1 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/00 0 0/0 0 0 0/0 0 0 0
                                                   // 0x    0    0    0    0    0    0    0      0       8       0       0       0       0      0       0       0
                                                   //
-                                                  // ID:    0b0  =>
-                                                  // CD:    0b0  =>
+                                                  // ID:    0b0  => VM=0b0 so has no effect on stage 2 EL1/EL0 translation regime for instruction accesses
+                                                  // CD:    0b0  => VM=0b0 so has no effect on stage 2 EL1/EL0 translation regime for data access or translation table walks
                                                   // RW:    0b1  => EL1 is AArch64, not AArch32
-                                                  // TRVM:  0b0  =>
-                                                  // HCD:   0b0  =>
-                                                  // TDZ:   0b0  =>
-                                                  // TGE:   0b0  =>
-                                                  // TVM:   0b0  =>
-                                                  // TTLB:  0b0  =>
-                                                  // TPU:   0b0  =>
-                                                  // TPC:   0b0  =>
-                                                  // TSW:   0b0  =>
-                                                  // TACR:  0b0  =>
-                                                  // TIDCP: 0b0  =>
-                                                  // TSC:   0b0  =>
-                                                  // TID3:  0b0  =>
-                                                  // TID2:  0b0  =>
-                                                  // TID1:  0b0  =>
-                                                  // TID0:  0b0  =>
-                                                  // TWE:   0b0  =>
-                                                  // TWI:   0b0  =>
+                                                  // TRVM:  0b0  => Non-secure EL1 memory reads are not trapped
+                                                  // HCD:   0b0  => RES0 (Do not disable HYP call)
+                                                  // TDZ:   0b0  => DC ZVA is not trapped
+                                                  // TGE:   0b0  => Do not trap general exceptions
+                                                  // TVM:   0b0  => Do not trap access to virtual memory registers
+                                                  // TTLB:  0b0  => Do not trap TLB maintenance instructions
+                                                  // TPU:   0b0  => Do not trap cache maintenance instructions to Point of Unification
+                                                  // TPC:   0b0  => Do not trap data/unified cache maintenance operations to Point of Coherency
+                                                  // TSW:   0b0  => Do not trap Data/Unified Cache maintenance operations by Set/Way
+                                                  // TACR:  0b0  => Do not trap accesses to ACTLR_EL1
+                                                  // TIDCP: 0b0  => Do not trap Implementation Dependent functionality
+                                                  // TSC:   0b0  => Do not trap SMC instruction
+                                                  // TID3:  0b0  => Do not trap ID Group 3 registers
+                                                  // TID2:  0b0  => Do not trap ID Group 2 registers
+                                                  // TID1:  0b0  => Do not trap ID Group 1 registers
+                                                  // TID0:  0b0  => Do not trap ID Group 0 registers
+                                                  // TWE:   0b0  => Do not trap WFE instruction
+                                                  // TWI:   0b0  => Do not trap WFI instruction
                                                   // DC:    0b0  => Don't enable Default Cachable behaviour
                                                   // BSU:   0b00 => Barrier sharability disabled
                                                   // FB:    0b0  => Do not broadcast instructions within Inner Sharable domain
@@ -276,56 +276,61 @@ _start:
                                                   // point, the program counter is using a physical address. On rpi3 this
                                                   // instruction seems not to be needed, for whatever reason.
 
-# mrs     x0, tcr_el1
-# ldr     x2, =0xfffffff8ffbf0040
-# ldr     x1, =0x000000010080751c
-# and     x0, x0, x2
-                                                  // = bic ~0x000000070040ffbf
-                                                  // => clear bits 0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 13, 14, 15, 22, 32, 33, 34
-# orr     x0, x0, x1
-                                                  // => IPS [34:32] = 1 => Intermediate Physical Address size = 36 bits, 64GB.
-                                                  // => TG1 [31:30] = <unchanged> (Granule size for TTBR1_EL1)
-                                                  // => SH1 [29:28] = <unchanged>
-                                                  // => ORGN1 [27:26] = <unchanged>
-                                                  // => IRGN1 [25:24] = <unchanged>
-                                                  // => EPD1 [23] = 1 => A TLB miss on an address that is translated using TTBR1_EL1 generates a Translation fault. No translation table walk is performed
-                                                  // => A1 [22] = 0 => TTBR0_EL1.ASID defines the ASID
-                                                  // => T1SZ [21:16] = <unchanged>
-                                                  // => TG0 [15:14] = 0b01 => Granule size 64KB
-                                                  // => SH0 [13:12] = 0b11 => Inner Shareable
-                                                  // => ORGN0 [11:10] = 0b01 => Normal memory, Outer Write-Back Read-Allocate Write-Allocate Cacheable.
-                                                  // => IRGN0 [9:8] = 0b01 => Normal memory, Inner Write-Back Read-Allocate Write-Allocate Cacheable.
-                                                  // => EPD0 [7] = 0 => perform walk on a miss
-                                                  // => T0SZ [5:0] = 0b011100 = 28 => region size = 2^(64-28) = 2^36 bytes = 64 GB
-                                                  // => remaining cleared bits are 0, 1, 5, 7, 9, 11, 15, 22, 33, 34
-                                                  // => set bits 2, 3, 4, 8, 10, 12, 13, 14, 23, 32
+                                                  // +===========================================+
+                                                  // | TCR_EL1 Translation Control Register, EL1 |
+                                                  // +===========================================+
                                                   //
-                                                  //                                           O  I                   O  I
-                                                  //                                           R  R  E                R  R  E
-                                                  //                                     T  S  G  G  P          T  S  G  G  P
-                                                  //                                     G  H  N  N  D A        G  H  N  N  D
-                                                  //                                 IPS 1  1  1  1  1 1 T1SZ   0  0  0  0  0   T0SZ
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/Translation-Control-Register--EL1?lang=en
+                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/Translation-Control-Register--EL1?lang=en
                                                   //
-                                                  //   66665555555555444444444433333 333 33 22 22 22 2 2 221111 11 11 11
-                                                  //   32109876543210987654321098765 432 10 98 76 54 3 2 109876 54 32 10 98 7 6 543210
+                                                  //                                                      O  I                    O  I
+                                                  //                                    T T               R  R  E                 R  R  E
+                                                  //                                    B B         T  S  G  G  P           T  S  G  G  P
+                                                  //                                    I I A       G  H  N  N  D A         G  H  N  N  D
+                                                  //    0000 0000 0000 0000 0000 0000 0 1 0 S 0 IPS 1  1  1  1  1 1 T1SZ___ 0  0  0  0  0 0 T0SZ___
                                                   //
-  ldr     x0, =0x00000001801c001c                 // 0b00000000000000000000000000000 001 10 00 00 00 0 0 011100 00 00 00 00 0 0 011100 // spectrum4 value
-# ldr     x0, =0x000000010080751c                 // 0b00000000000000000000000000000 001 00 00 00 00 1 0 000000 01 11 01 01 0 0 011100 // circle actual value
+                                                  //    6666 5555 5555 5544 4444 4444 3 3 3 3 3 333 33 22 22 22 2 2 22 1111 11 11 11
+                                                  //    3210 9876 5432 1098 7654 3210 9 8 7 6 5 432 10 98 76 54 3 2 10 9876 54 32 10 98 7 6 54 3210
                                                   //
-                                                  // => IPS [34:32] = 0b001 => Intermediate Physical Address size = 36 bits, 64GB
-                                                  // => TG1 [31:30] = 0b10 => 4KB Granule size for the TTBR1_EL1.
-                                                  // => SH1 [29:28] = 0b00 (Non-shareable.)
-                                                  // => ORGN1 [27:26] = 0b00 (Normal memory, Outer Non-cacheable.)
-                                                  // => IRGN1 [25:24] = 0b00 (Normal memory, Inner Non-cacheable.)
-                                                  // => EPD1 [23] = 0b (Perform translation table walks using TTBR1_EL1 on TLB miss)
-                                                  // => A1 [22] = 0b => TTRB0_EL1.ASID defines the ASID
-                                                  // => T1SZ [21:16] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
-                                                  // => TG0 [15:14] = 0b00 => 4KB
-                                                  // => SH0 [13:12] = 0b00 => Non-shareable
-                                                  // => ORGN0 [11:10] = 0b00 => Normal memory, Outer Non-cacheable.
-                                                  // => IRGN0 [9:8] = 0b00 => Normal memory, Inner Non-cacheable.
-                                                  // => EPD0 [7] = 0b0 = 0 => perform walk on a miss
-                                                  // => T0SZ [5:0] = 0b011100 = 28 = region size = 2^(64-28) = 2^36 bytes = 64GB
+  ldr     x0, =0x00000001801c001c                 // 0b 0000/0000/0000/0000/0000/0000/0 0 0 0/0 001/10 00/00 00/0 0 01/1100/00 00/00 00/0 0 01/1100 // spectrum4 value
+                                                  // 0x    0    0    0    0    0    0       0     1     8     0      1    c     0     0      1    c
+                                                  // 0b 0000/0000/0000/0000/0000/0000/0 0 0 0/0 001/00 00/00 00/1 0 00/0000/01 11/01 01/0 0 01/1100 // circle value
+                                                  // 0x    0    0    0    0    0    0       0     1     0     0      8    0     7     5      1    c
+                                                  //
+                                                  //
+                                                  // Spectrum +4 values
+                                                  // ==================
+                                                  //
+                                                  // TBI1:    0b0      => top byte of input address used for address match for the TTBR1_EL1 region
+                                                  // TBI0:    0b0      => top byte of input address used for address match for the TTBR0_EL1 region
+                                                  // AS:      0b0      => ASID size is 8 bit (not 16 bit)
+                                                  // IPS:     0b001    => Intermediate Physical Address size = 36 bits, 64GB
+                                                  // TG1:     0b10     => 4KB granule size for the TTBR1_EL1 region
+                                                  // SH1:     0b00     => Non-shareable memory for memory associated with TTBR1_EL1 translation table walks
+                                                  // ORGN1:   0b00     => Normal memory, Outer Non-cacheable for memory associated with TTBR1_EL1 translation table walks
+                                                  // IRGN1:   0b00     => Normal memory, Inner Non-cacheable for memory associated with TTBR1_EL1 translation table walks
+                                                  // EPD1:    0b0      => perform translation table walks using TTBR1_EL1 on TLB miss
+                                                  // A1:      0b0      => TTRB0_EL1.ASID defines the ASID (not TTBR1_EL1.ASID)
+                                                  // T1SZ:    0b011100 => TTBR1_EL1 region size = 2^(64-28) = 2^36 bytes = 64GB
+                                                  // TG0:     0b00     => 4KB granule size for the TTBR0_EL1 region
+                                                  // SH0:     0b00     => Non-shareable memory for memory associated with TTBR0_EL1 translation table walks
+                                                  // ORGN0:   0b00     => Normal memory, Outer Non-cacheable for memory associated with TTBR0_EL1 translation table walks
+                                                  // IRGN0:   0b00     => Normal memory, Inner Non-cacheable for memory associated with TTBR0_EL1 translation table walks
+                                                  // EPD0:    0b0      => perform translation table walks using TTBR0_EL1 on TLB miss
+                                                  // T0SZ:    0b011100 => TTBR0_EL1 region size = 2^(64-28) = 2^36 bytes = 64GB
+                                                  //
+                                                  //
+                                                  // Circle differences
+                                                  // ==================
+                                                  // https://github.com/rsta2/circle/blob/41f6eb3eaac6f249c5bf3b7f7407cecd9fe5955d/lib/memory64.cpp#L168-L190
+                                                  //
+                                                  // TG1:     0b00     => Uninitialised
+                                                  // EPD0:    0b1      => disable TTBR1_EL1 translation table walks; a TLB miss on TTBR1_EL1 generates a translation fault
+                                                  // T1SZ:    0b000000 => Uninitialised
+                                                  // TG0:     0b01     => 64KB granule size for the TTBR0_EL1 region
+                                                  // SH0:     0b11     => Inner shareable memory for memory associated with TTBR0_EL1 translation table walks
+                                                  // ORGN0:   0b01     => Normal memory, Outer Write-Back Write-Allocate Cacheable for memory associated with TTBR0_EL1 translation table walks
+                                                  // IRGN0:   0b01     => Normal memory, Inner Write-Back Write-Allocate Cacheable for memory associated with TTBR0_EL1 translation table walks
   msr     tcr_el1, x0
 
   ldr     x0, =0x000004ff

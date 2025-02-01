@@ -43,10 +43,15 @@ new:                                     // L019D
   bl      uart_newline
 
 # Register logging
+  logarm  AIDR_EL1
+  logarm  CCSIDR_EL1
+  logarm  CLIDR_EL1
   logarm  CNTFRQ_EL0
+  logarm  CSSELR_EL1
   logarm  CTR_EL0
   logarm  CurrentEL
   logarm  DAIF
+  logarm  DCZID_EL0
   logarm  ID_AA64AFR0_EL1
   logarm  ID_AA64AFR1_EL1
   logarm  ID_AA64DFR0_EL1
@@ -75,6 +80,7 @@ new:                                     // L019D
   logarm  ID_PFR1_EL1
   logarm  MAIR_EL1
   logarm  MIDR_EL1
+  logarm  MPIDR_EL1
   logarm  NZCV
   logarm  REVIDR_EL1
   logarm  SCTLR_EL1

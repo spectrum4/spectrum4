@@ -28,10 +28,15 @@
 .text
 .align 2
 _start:
+
+  mrs     x0, currentel
+  and     x0, x0, #0x0c                           // Check if in EL3
+  cmp     x0, #0x0c
+  b.ne    sleep                                   // If not in EL3, halt - nothing more we can do.
+
   mrs     x0, mpidr_el1                           // x0 = Multiprocessor Affinity Register value.
   ands    x0, x0, #0x3                            // x0 = core number.
   b.ne    sleep                                   // Put all cores except core 0 to sleep.
-
 
                                                   // +========================================+
                                                   // | SCTLR_EL1 System Control Register, EL1 |
@@ -129,11 +134,6 @@ _start:
                                                   // ID:    0b0  =>
   msr     hcr_el2, x0
 
-  mrs     x0, currentel
-  and     x0, x0, #0x0c
-  cmp     x0, #0x0c
-  b.ne    1f
-
 ##################################################
 # We are in EL3
 # Move from EL3 to EL1 directly (skip EL2)
@@ -223,26 +223,6 @@ _start:
 ##################################################
 
 1:
-##################################################
-# We are in EL2 - this shouldn't happen
-# Move from EL2 to EL1
-  mov     x0, 0x000001c5
-  msr     spsr_el2, x0                            // Update "Saved Program Status Register (EL2)":
-                                                  //   set bit 0 => dedicated stack pointer selected on EL switch to/from EL2
-                                                  //   set bit 2 (and clear bit 3) => drop to EL1 on eret
-                                                  //   set bit 6 => mask (disable) error (SError) interrupts
-                                                  //   set bit 7 => mask (disable) regular (IRQ) interrupts
-                                                  //   set bit 8 => mask (disable) fast (FIQ) interrupts
-  adr     x0, 2f
-  msr     elr_el2, x0                             // Update Exception Link Register (EL2):
-                                                  //   set to return address after next `eret`
-  eret
-# Move from EL2 to EL1 completed
-##################################################
-
-2:
-# We are in EL1
-
   bl      set_peripherals_addresses
   bl      set_clocks
 
@@ -255,27 +235,27 @@ _start:
   add     x1, x0, x1
   ldr     x3, peripherals_end
   lsr     x2, x3, #30
-  3:
+  2:
     str     x1, [x0], #8                          // [pg_dir + i*8] = pg_dir + 0x1003 + i*0x1000. PUD table complete for 0 - peripherals end.
     add     x1, x1, #0x1000
     subs    x2, x2, #0x1
-    b.ne    3b
+    b.ne    2b
   adrp    x0, (pg_dir+0x1000)
   mov     x1, #0x401                              // bit 10: AF=1, bits 2-4: mair attr index = 0 (normal), bits 0-1: 1 (block descriptor)
   ldr     x2, peripherals_start
-  4:                                              // creates 2016 entries for 0x00000000 - 0xfc000000
+  3:                                              // creates 2016 entries for 0x00000000 - 0xfc000000
     str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = 0x401 + i*0x200000. PMD table entries complete for 0 - peripherals start address.
     add     x1, x1, #0x200000
     cmp     x1, x2
-    b.lt    4b
+    b.lt    3b
   add     x1, x1, #0x4                            // bits 2-4: mair attr index = 1 (device)
-  5:                                              // creates 32 entries for 0xfc000000 - 0x100000000
+  4:                                              // creates 32 entries for 0xfc000000 - 0x100000000
     str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = 0x405 + i*0x200000. PMD table entries complete for peripherals start to peripherals end address.
     add     x1, x1, #0x200000
     cmp     x1, x3
-    b.lt    5b
+    b.lt    4b
   ldr     x0, pcie_init                           // Is PCIe available?
-  cbz     x0, 7f                                  // Skip mapping xHCI region if no PCIe
+  cbz     x0, 6f                                  // Skip mapping xHCI region if no PCIe
   adrp    x0, pg_dir
   adrp    x1, (pg_dir+0x5000)
   orr     x2, x1, #0b11                           // bit 0 = 1 => valid descriptor. bit 1 = 1 => table descriptor
@@ -283,12 +263,12 @@ _start:
   mov     x2, 0x600000000                         // x2 = xHCI start (24GB)
   orr     x3, x2, 0x4000000                       // x3 = xHCI end (64MB higher) (0x604000000) - so we don't fill entire table, only first 32/512 entries
   add     x2, x2, #0x409                          // bit 10: AF=1, bits 2-4: mair attr index = 2 (coherent), bits 0-1: 1 (block descriptor)
-  6:                                              // creates 32 entries for xHCI addresses 0x600000000 - 0x604000000
+  5:                                              // creates 32 entries for xHCI addresses 0x600000000 - 0x604000000
     str     x2, [x1], #8                          // [pg_dir + 0x6000 + i*8] = 0x409 + i*0x200000. PMD table entries complete for xHCI region.
     add     x2, x2, #0x200000
     cmp     x2, x3
-    b.lt    6b
-7:
+    b.lt    5b
+6:
   adrp    x0, pg_dir
   msr     ttbr1_el1, x0                           // Configure page tables for virtual addresses with 1's in first 28 bits
   msr     ttbr0_el1, x0                           // Configure page tables for virtual addresses with 0's in first 28 bits
@@ -351,13 +331,13 @@ _start:
 
   ldr     x0, =0x000004ff
   msr     mair_el1, x0                            // mair_el1 = 0x00000000000004ff => attr index 0 => normal, attr index 1 => device, attr index 2 => coherent
-  ldr     x2, =8f                                 // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)
+  ldr     x2, =7f                                 // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)
 
   mrs     x0, sctlr_el1                           // fetch System Control Register (EL1)
   orr     x0, x0, #0x1                            // enable MMU
   msr     sctlr_el1, x0                           // update System Control Register (EL1)
   br      x2                                      // jump to next instruction so that program counter starts using virtual address
-8:
+7:
   msr     ttbr0_el1, xzr                          // Ensure only ttbr1_el1 is used from now on
   adrp    x28, sysvars
   add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
@@ -381,9 +361,9 @@ _start:
   dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
   bl      enable_irq
   ldr     x0, pcie_init
-  cbz     x0, 9f
+  cbz     x0, 8f
   blr     x0
-9:
+8:
   bl      fill_memory_with_junk
   bl      run_tests
 .endif

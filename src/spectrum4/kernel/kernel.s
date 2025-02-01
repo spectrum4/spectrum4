@@ -47,13 +47,13 @@ _start:
                                                   //           U   E      W T   T U D        U S I H B S
                                                   //           C E 0      X W   W T Z        M E T E E A S
                                                   //    0011 0 I E E 1101 N E 0 I C E 0 I 10 A D D E N 0 A C A M
-
+                                                  //
                                                   //    3322/2 2 2 2/2222/1 1 1 1/1 1 1 1/11
                                                   //    1098/7 6 5 4/3210/9 8 7 6/5 4 3 2/10 9 8/7 6 5 4/3 2 1 0
-
+                                                  //
   ldr     x0, =0x30d0088a                         // 0b 0011/0 0 0 0/1101/0 0 0 0/0 0 0 0/10 0 0/1 0 0 0/1 0 1 0
                                                   // 0x    3       0    d       0       0      8       8       a
-
+                                                  //
                                                   // UCI:     0b0 => EL0 access to DC CVAU, DC CIVAC, DC CVAC and IC IVAU disabled
                                                   // EE:      0b0 => Translation tables are little endian
                                                   // E0E:     0b0 => Data access are little endian
@@ -87,16 +87,16 @@ _start:
                                                   //                                                R H T T T T T T T A D T I I I I T T   B    V     A I F P W
                                                   //                                          I C R V C D G V L P P S C C S D D D D W W D S  F S V V M M M T I V
                                                   //    0000 0000 0000 0000 0000 0000 0000 00 D D W M D Z E M B U C W R P C 3 2 1 0 E I C U  B E I F O O O W O M
-
+                                                  //
                                                   //    6666/5555/5555/5544/4444/4444/3333/33 3 3/3 3 2 2/2 2 2 2/2 2 2 2/1 1 1 1/1 1 1 1/11
                                                   //    3210/9876/5432/1098/7654/3210/9876/54 3 2/1 0 9 8/7 6 5 4/3 2 1 0/9 8 7 6/5 4 3 2/10 9 8/7 6 5 4/3 2 1 0
-
+                                                  //
   mov     x0, 0x80000000                          // 0b 0000/0000/0000/0000/0000/0000/0000/00 0 0/1 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/00 0 0/0 0 0 0/0 0 0 0
                                                   // 0x    0    0    0    0    0    0    0      0       8       0       0       0       0      0       0       0
-
+                                                  //
                                                   // VM:    0b0 => Disable second stage MMU address translation
                                                   // SWIO:  0b0 => DC ISW is not treated as DC CISW in AArch64 state
-                                                  // PTW:   0b0 => Protected Table Walk; doesn't apply since VM = 0b0
+                                                  // PTW:   0b0 => Protected table walk; doesn't apply since VM = 0b0
                                                   // FMO:   0b0 => Physical FIQ are not taken to EL2
                                                   // IMO:   0b0 => Physical IRQ are not taken to EL2
                                                   // AMO:   0b0 => Async external Aborts and SError interrupts not taken to EL2
@@ -137,11 +137,38 @@ _start:
 ##################################################
 # We are in EL3
 # Move from EL3 to EL1 directly (skip EL2)
-  mov     x0, 0x00000431
-  msr     scr_el3, x0                             // Update "Secure Configuration Register":
-                                                  //   set bit 0 => EL0 and EL1 are in non-secure state
-                                                  //   set RES:1 bits 4, 5
-                                                  //   set bit 10 => EL2 is aarch64, EL2 controls EL1 and EL0 behaviors
+
+
+                                                  // +============================================+
+                                                  // | SCR_EL3 Secure Configuration Register, EL3 |
+                                                  // +============================================+
+                                                  //
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/Secure-Configuration-Register?lang=en
+                                                  // rpi4b: ???
+                                                  //
+                                                  //                           T T     S H S       F I
+                                                  //                           W W S R I C M     E I R N
+                                                  //    0000 0000 0000 0000 00 E I T W F E D 011 A Q Q S
+                                                  //
+                                                  //    3322/2222/2222/1111/11 1 1/1 1
+                                                  //    1098/7654/3210/9876/54 3 2/1 0 9 8/7 654/3 2 1 0
+                                                  //
+  mov     x0, 0x00000431                          // 0b 0000/0000/0000/0000/00 0 0/0 1 0 0/0 011/0 0 0 1
+                                                  // 0x    0    0    0    0      0       4     3       1
+                                                  //
+                                                  // NS:  0b1 => EL0 and EL1 are in Non-secure state
+                                                  // IRQ: 0b0 => Physical IRQ at EL0-EL2 are not taken in EL3
+                                                  // FIQ: 0b0 => Physical FIQ at EL0-EL2 are not taken in EL3
+                                                  // EA:  0b0 => External Abort and SError at EL0-EL2 are not taken in EL3
+                                                  // SMD: 0b0 => The SMC instruction is enabled at EL1, EL2, and EL3
+                                                  // HCE: 0b0 => The HVC instruction is undefined at all exception levels
+                                                  // SIF: 0b0 => Secure state instruction fetches from Non-secure memory are permitted
+                                                  // RW:  0b1 => The next lower level (EL2) is AArch64
+                                                  // ST:  0b0 => No Secure EL1 access to CNTPS_TVAL_EL1, CNTS_CTL_EL1, and CNTPS_CVAL_EL1 registers
+                                                  // TWI: 0b0 => WFI instructions are not trapped
+                                                  // TWE: 0b0 => WFE instructions are not trapped
+
+  msr     scr_el3, x0
 
   mov     x0, 0x000001c5
   msr     spsr_el3, x0                            // Update "Saved Program Status Register (EL3)":

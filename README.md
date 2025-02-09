@@ -4,200 +4,169 @@ Licencing information can be found in the LICENCE file
 (C) 2021 Spectrum +4 Authors. All rights reserved.
 -->
 
-# ZX Spectrum +4
+# Spectrum +4
 
-A modern-day ZX Spectrum OS rewritten from scratch in ARM assembly (aarch64) to
-run natively on Raspberry Pi 400. Based on the Spectrum 128K.
+A reimagined ZX Spectrum, rewritten from scratch in ARM assembly (aarch64), to
+run natively on the Raspberry Pi 400. Based on the ZX Spectrum 128K.
 
-Originally targetted at the Raspberry Pi 3 Model B, with the introduction of
-the Raspberry Pi 400, the author decided to adapt the project to target the
-newer model. The USB hardware is easier to work with, and requires support for
-only a single keyboard.
+Originally targeted at the Raspberry Pi 3 Model B, the introduction of the
+Raspberry Pi 400 led to an adaptation of the project for the newer model. The
+USB hardware is easier to work with and requires support for only a single
+keyboard.
 
-For now, the code continues to work on a Raspberry Pi 3 Model B, however, the
-keyboard interpretation routines will not work on this model when they are
-written. The unit tests are designed to run under QEMU in the CI, which only
-supports the Raspberry Pi 3 Model B (`qemu-system-aarch64 -M raspi3b`). If at
-some point QEMU starts supporting the Raspberry Pi 400 or Raspberry Pi 4 Model
-B, the CI may be adapted to use it, and support removed for the Raspberry Pi 3
-Model B.
+For now, the code remains compatible with the Raspberry Pi 3 Model B, primarily
+to support unit testing under QEMU. QEMU provides insufficient emulation of
+Raspberry Pi 400 peripherals for the Spectrum +4 unit tests. Should the
+support improve sufficiently, the unit tests may be migrated, and Raspberry Pi
+3 Model B support discontinued.
 
-In addition to the Raspberry Pi 400, it is likely (although not tested by the
-author) due to hardware similarity, that the ZX Spectrum +4 will also run on
-the Raspberry Pi 4 Model B, together with the standard Raspberry Pi USB
-Keyboard.
+Due to hardware similarity, the Spectrum +4 is also likely to run on the
+Raspberry Pi 4 Model B, together with the standard Raspberry Pi USB Keyboard,
+although this arrangement is untested.
 
-If you are not familiar with the ZX Spectrum computer from the 1980's, there
-are some excellent emulators around, such as [Retro Virtual
-Machine](http://www.retrovirtualmachine.org/), and even some very good online
-emulators that you can run directly in your browser.
+If you are unfamiliar with the ZX Spectrum computer from the 1980s, there are
+excellent emulators available, such as [Retro Virtual
+Machine](http://www.retrovirtualmachine.org/), as well as high-quality online
+emulators that can be run directly in your browser.
 
 For more information about the history and development of this project, see
-<https://github.com/spectrum4/notes>.
+[https://github.com/spectrum4/notes](https://github.com/spectrum4/notes).
 
-__Please note this project is very much in its infancy.__
+**Please note this project is in its early stages.**
 
-__Only a handful of routines have been ported/implemented so far.__
+**Only a handful of routines have been ported/implemented so far.**
 
-## Variations from the Spectrum 128K
+## Why "Spectrum +4"?
 
-The Spectrum +4 is intentionally incompatible with the original Spectrum. If
-you wish to run original ZX Spectrum software, there are some excellent
-emulators available such as [Retro Virtual
-Machine](https://www.retrovirtualmachine.org/en/), or for the Raspberry Pi see
-[ZXBaremulator](http://zxmini.speccy.org/en/index.html), as well as new
-[compatible hardware](https://www.specnext.com/shop/).
+The name "Spectrum +4" imagines what Sinclair/Amstrad might have developed
+as a successor to the [ZX Spectrum
++3](https://sinclair.wiki.zxnet.co.uk/wiki/ZX_Spectrum_%2B2A/2B,_%2B3/3B) had
+Raspberry Pi 400 hardware been available at the time. Rather than merely
+replicating the original system, this project aims to evolve the platform while
+maintaining its spirit. The development process also serves as an opportunity
+to learn bare-metal programming and aarch64 assembly.
 
-The idea behind this project is to imagine what Sinclair/Amstrad might have
-developed for their next Spectrum, if Raspberry Pi 400 hardware had been
-available at the time, rather than to reproduce what they already had.
+## Variations from the ZX Spectrum 128K
 
-It is also an excuse for me to learn bare metal programming and aarch64
-assembly. :-)
+Spectrum +4 is intentionally incompatible with the original ZX Spectrum. For
+running original ZX Spectrum software, consider using an emulator such as
+[Retro Virtual Machine](https://www.retrovirtualmachine.org/en/) or
+[ZXBaremulator](http://zxmini.speccy.org/en/index.html). Alternatively, modern
+compatible hardware is available, such as the [ZX Spectrum
+Next](https://www.specnext.com/shop/).
 
-With that in mind, the following sections outline the differences between
-Spectrum +4 and the original ZX Spectrum 128K.
+The following sections outline key differences between Spectrum +4 and the
+original ZX Spectrum 128K.
 
 ## Graphics
 
 ![Screen loading demo](animated.gif)
 
-In order to retain the spirit of the original Spectrum computers, the video
-display preserves many of the original Spectrum principles:
+To retain the spirit of the original ZX Spectrum computers, the video display
+preserves many of the original design principles:
 
-  * The original colour palette
-  * The original character cell restrictions
-    * Each character cell is limited to a single 3 bit paper and 3 bit ink
-      colour
-    * Each character cell may be `BRIGHT` or not
-    * Each character cell may `FLASH` or not
-  * A solid border colour around the edges of the display
+- The original colour palette
+- Character cell restrictions:
+  - Each cell is limited to a single 3-bit paper and 3-bit ink colour
+  - Each cell may be `BRIGHT` or not
+  - Each cell may `FLASH` or not
+- A solid border colour around the edges of the display
 
-However, the screen geometry has changed a little:
+With the increased screen estate now available to modern displays:
 
-  * Each character cell is now 16x16 pixels, rather than 8x8 pixels
-  * The screen now is 108 character cells wide instead of 32
-  * The screen now is 60 character cells high instead of 24
+- Each character cell is now **16x16 pixels** instead of 8x8 pixels
+- The screen is now **108 characters wide** instead of 32
+- The screen is now **60 characters high** instead of 24
 
-The border thickness is equivalent to the original Spectrum 128K in terms of
-equivalent character cell counts:
+### Border Size
 
-  * Left border: 6 characters wide
-  * Right border: 6 characters wide
-  * Top border: 8 characters high
-  * Bottom border: 7 characters high
+- **Left border**: 6 characters wide
+- **Right border**: 6 characters wide
+- **Top border**: 8 characters high
+- **Bottom border**: 7 characters high
 
-This matches the original screen geometry (which had 8 pixels per character):
+This preserves the original screen geometry:
 
-  * <http://www.zxdesign.info/vidparam.shtml>
-
-In order to enforce the video restrictions, updates to the display file and
-attributes file explicitly call the `poke_address` routine, which syncs the
-VideoCore IV GPU firmware framebuffer with the display file and attributes
-file. I believe it should be possible to trap memory writes directly to the
-display file and attributes file, and call `poke_address` from the exception
-handler. Some information about trapping memory writes is
-[here](https://www.cnblogs.com/pengdonglin137/p/14091950.html). This particular
-guide is focussed on EL2 handling of EL1 memory accesses, but the same
-principles should apply with EL1 handling of EL0 memory accesses. The MMU
-is enabled, and so are interrupts. At the moment the interrupt routine doesn't
-do anything. It is fired by a timer.
-
-The display file and attributes file differ from the Spectrum 128K as follows:
-
-  * Each vertical screen third is now 20 character cells high rather than 8
-  * Each cell now has 16 pixel rows instead of 8
-  * A single pixel row of a character cell now requires 2 bytes instead of 1
-
-The mechanics of converting memory addresses to `(x, y)` coordinates is no
-longer a matter of simple bit manipulation. This is a consequence of the
-dimensions no longer being powers of 2. However, sequencially updating bytes in
-the display and attributes file simulates the original screen loading
-mechanics, which is nice to have preserved.
+- [http://www.zxdesign.info/vidparam.shtml](http://www.zxdesign.info/vidparam.shtml)
 
 ## Memory
 
-The Raspberry Pi 400 has 4GB RAM, which is considerably more than the Spectrum
-128K.  Using the 64 bit instruction set means that most of the memory paging
-routines in the original Spectrum can be mostly ignored and don't require
-translation. It also means that there is much more space available for BASIC
-programs, machine code routines, and RAM disk storage.
+The Raspberry Pi 400 features **4GB of RAM**, vastly more than the ZX Spectrum
+128K. The 64-bit instruction set eliminates most of the memory paging routines
+from the original ZX Spectrum, making more space available for BASIC programs,
+machine code routines, and RAM disk storage.
 
-  * Spectrum +4 is loaded at physical ARM address 0x00000000
-  * The RAM Disk is initially set to 256MB
-  * The HEAP is initially set to 256MB
+- **Spectrum +4 is loaded at**: Physical ARM address `0x00000000`
+- **RAM Disk size**: Initially set to **256MB**
+- **Heap size**: Initially set to **256MB**
 
-## Execution context
+## Execution Context
 
-  * Spectrum +4 runs at EL1
-  * MMU is enabled
-  * Kernel virtual addresses map 1:1 with physical addresses, but with upper 28
-    bits set (leaving a 36 bit adddress range)
-  * EL1 data cache is enabled
-  * EL1 instruction cache is enabled
-  * Timer interrupts configured and enabled, but keyboard routines not yet written
+- **Privilege Level**: Runs at EL1
+- **Memory Management**: MMU enabled
+- **Address Mapping**: Kernel virtual addresses map 1:1 with physical
+  addresses, with upper 28 bits set (leaving a 36-bit address range)
+- **Caching**:
+  - EL1 data cache enabled
+  - EL1 instruction cache enabled
+- **Interrupts**: Configured and enabled (though keyboard routines are not yet
+  implemented)
 
-## Code organisation
+## Code Organisation
 
-  * All Spectrum +4 routines are written in aarch64 assembly (GNU assembler
-  syntax).
-  * The Spectrum +4 source code is under the `/src/spectrum4` directory.
-  * The build and test directives live in the various `Tup*` files scattered
-  throughout the repository (tup build system is used - see
-  [Building](#building))
-  * As much as possible, the naming of system variables and routines, and the
-  ordering of routines, match the disassembly in the
-  `src/spectrum128k/roms/romX.s` files.
-  * Each ported routine contains a comment giving the label of the associated
-  Spectrum 128K routine that it was ported from. The label is an `L` followed
-  by the 16 bit hexadecimal address of the original Spectrum 128K routine.
+- All Spectrum +4 routines are written in **aarch64 assembly (GNU assembler
+  syntax)**.
+- The **source code** is located in `/src/spectrum4`.
+- Build and test directives reside in various `Tup*` files throughout the
+  repository (tup build system is used - see [Building](#building)).
+- Naming conventions for system variables and routines match the disassembly in
+  `src/spectrum128k/roms/romX.s`.
+- Each ported routine includes a comment referencing the original ZX Spectrum
+  128K routine it was derived from, using its 16-bit hexadecimal address.
 
 ## Building
 
-To build/test everything, simply run `./tup-under-docker.sh`. This requires
-that [`docker`](https://www.docker.com/) is installed on your system. It simply
-calls [`tup`](http://gittup.org/tup/index.html) inside a docker container that
-contains all required build/test dependencies. Run `./tup-under-docker.sh -h`
-to see additional options.
+To build and test everything, run:
 
-If you prefer to use a native toolchain, or cannot run docker containers on
-your host then see [Building Without Docker](dev-setup/README.md).
+```bash ./tup-under-docker.sh ```
+
+This requires [`docker`](https://www.docker.com/) to be installed. The script
+runs [`tup`](http://gittup.org/tup/index.html) inside a Docker container that
+contains all required dependencies. Run `./tup-under-docker.sh -h` for
+additional options.
+
+If you prefer a native toolchain or cannot run Docker containers, see [Building
+Without Docker](dev-setup/README.md).
 
 ## Running
 
-After building using one of the methods above, the following distribution
-files/directories will be updated:
+After building, the following directories/files will be updated:
 
-  * Directory `src/spectrum4/dist` contains a debug and release version of
-    Spectrum +4. The debug version is the same as the release version, but
-    additionally logs debug messages to Mini UART, and performs a short demo on
-    start up.
-  * Directory `src/spectrum128k/tests` contains Spectrum 128K casette tape images
-    (*.tzx files) and casette tape audio samples (*.wav files) for running the
-    Spectrum 128K unit tests under a Spectrum 128K emulator (such as FUSE or
-    Retro Virtual Machine) or on a real Spectrum 128K machine.
-  * Directory `src/spectrum4/targets` contains Raspberry Pi kernel images for
-    running individual test suites, e.g. under QEMU, or on a real Raspberry Pi.
+- `src/spectrum4/dist/`: Contains debug and release builds
+- `src/spectrum128k/tests/`: Contains ZX Spectrum 128K tape images (`.tzx` and
+  `.wav` files) for running tests under an emulator or on real hardware
+- `src/spectrum4/targets/`: Contains Raspberry Pi kernel images for running
+  test suites (QEMU or real Raspberry Pi)
 
-In order to run the debug and/or release builds of Spectrum +4 on an actual
-Raspbery Pi, either copy the contents of the given distribution directory to a
-formatted SD card, or serve the directory contents over TFTP to a suitably
-configured Raspberry Pi that has been configured to network boot. The
-[github.com/spectrum4/notes](https://github.com/spectrum4/notes#5-rpi-3b-bootloading)
-project has some information about that type of setup, if you are interested.
+### Running on a Raspberry Pi
 
-Alternatively, to run Spectrum +4 under QEMU instead of a real Raspberry Pi,
-run something like:
+To run Spectrum +4 on an actual Raspberry Pi:
 
-```bash
-$ qemu-system-aarch64 -full-screen -M raspi3b -kernel \
-src/spectrum4/targets/debug.elf -serial null -serial stdio
-```
+- Copy the contents of the relevant distribution directory to a formatted SD
+  card, **or**
+- Serve the directory over **TFTP** to a network-boot-configured Raspberry Pi
+  ([setup details](https://github.com/spectrum4/notes#5-rpi-3b-bootloading)).
 
-At the time of writing, `qemu-system-aarch64` does not have Rasperry Pi 4 Model
-B / Raspberry Pi 400 target.
+### Running under QEMU
 
-Note, __you will likely need QEMU version 5.2.0 or later__. Also note that the `.elf`
-file is passed to the `-kernel` option, rather than the `.img` file, in order that
-QEMU loads the kernel at address 0x0 rather than 0x80000, which seems not to be
-possible when passing the `.img` file directly.
+To run Spectrum +4 in QEMU:
+
+```bash qemu-system-aarch64 -full-screen -M raspi3b -kernel \
+src/spectrum4/targets/debug.elf -serial null -serial stdio ```
+
+**Note:**
+
+- **QEMU version 5.2.0 or later is required**.
+- Use the `.elf` file for `-kernel` instead of `.img` to ensure it loads at
+  address `0x0` rather than `0x80000`, which is not possible when using `.img`
+  directly.

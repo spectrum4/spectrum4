@@ -6,7 +6,8 @@
 
 ################################################################################
 # Run this script, after tagging the HEAD commit with a version beginning with
-# "v", e.g. `git tag v0.0.1`. This script will then create the files:
+# "v", e.g. `git tag -s v0.0.1 -m "Release information..."`. This script will
+# then create the files:
 #   * spectrum4-${release_version}-debug.img
 #   * spectrum4-${release_version}-release.img
 #   * spectrum4-${release_version}-tests.img

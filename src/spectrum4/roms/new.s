@@ -41,6 +41,19 @@ new:                                     // L019D
   ldr     w0, rpi_revision
   bl      uart_x0
   bl      uart_newline
+  adr     x0, msg_framebuffer_start
+  bl      uart_puts
+  ldr     w0, framebuffer
+  bl      uart_x0
+  bl      uart_newline
+  adr     x0, msg_framebuffer_end
+  bl      uart_puts
+  ldr     w0, framebuffer
+  ldr     w1, (framebuffer + 4)
+  add     w0, w0, w1
+  sub     w0, w0, #1
+  bl      uart_x0
+  bl      uart_newline
 
 # Register logging
   logarm  AIDR_EL1
@@ -360,5 +373,11 @@ msg_vid_did:
 
 msg_header_type:
   .asciz "Header type: "
+
+msg_framebuffer_start:
+  .asciz "Framebuffer start address: "
+
+msg_framebuffer_end:
+  .asciz "Framebuffer end address: "
 
 .endif

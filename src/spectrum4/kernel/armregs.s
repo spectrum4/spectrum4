@@ -217,6 +217,7 @@ msgreg  RMR_EL3
 msgreg  RVBAR_EL1
 msgreg  RVBAR_EL2
 msgreg  RVBAR_EL3
+msgreg  S3_1_C11_C0_2
 msgreg  SCR_EL3
 msgreg  SCTLR_EL1
 msgreg  SCTLR_EL2

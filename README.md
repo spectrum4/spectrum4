@@ -132,8 +132,8 @@ programs, machine code routines, and RAM disk storage.
   * Spectrum +4 runs at EL1
   * MMU is enabled
   * Kernel virtual addresses map 1:1 with physical addresses, but with upper 16 bits set
-  * EL3 data cache is enabled
-  * EL3 instruction cache is enabled
+  * EL1 data cache is enabled
+  * EL1 instruction cache is enabled
   * Timer interrupts configured and enabled, but keyboard routines not yet written
 
 ## Code organisation

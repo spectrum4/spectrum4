@@ -22,6 +22,7 @@ handle_timer_irq:
   bl      timer_init                              // [0x3f003010] += [0x3f003004] + 200000 (rpi3) /  [0xfe003010] += [0xfe003004] + 200000 (rpi4)
   mov     w1, #0x02
   str     w1, [x0]                                // [0x3f003000] = 2 (rpi3) / [0xfe003000] = 2 (rpi4)
+  dsb     sy
   bl      timed_interrupt
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret

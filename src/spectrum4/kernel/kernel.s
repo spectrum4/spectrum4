@@ -263,6 +263,8 @@ _start:
 1:
   bl      set_peripherals_addresses
   bl      set_clocks
+  bl      init_rpi_model                          // Fetch raspberry pi model identifier into system variable rpi_model.
+  bl      init_framebuffer                        // Allocate a frame buffer with chosen screen settings.
 
 # Configure page tables
   adrp    x0, pg_dir                              // x0 = pg_dir (page aligned, so no additional add needed)
@@ -307,6 +309,7 @@ _start:
     cmp     x2, x3
     b.lt    5b
 6:
+  dsb     sy                                      // Data Sync Barrier
   adrp    x0, pg_dir
   msr     ttbr1_el1, x0                           // Configure page tables for virtual addresses with 1's in first 28 bits
   msr     ttbr0_el1, x0                           // Configure page tables for virtual addresses with 0's in first 28 bits
@@ -331,54 +334,37 @@ _start:
                                                   //    6666 5555 5555 5544 4444 4444 3 3 3 3 3 333 33 22 22 22 2 2 22 1111 11 11 11
                                                   //    3210 9876 5432 1098 7654 3210 9 8 7 6 5 432 10 98 76 54 3 2 10 9876 54 32 10 98 7 6 54 3210
                                                   //
-  ldr     x0, =0x00000001801c001c                 // 0b 0000/0000/0000/0000/0000/0000/0 0 0 0/0 001/10 00/00 00/0 0 01/1100/00 00/00 00/0 0 01/1100 // spectrum4 value
-                                                  // 0x    0    0    0    0    0    0       0     1     8     0      1    c     0     0      1    c
-                                                  // 0b 0000/0000/0000/0000/0000/0000/0 0 0 0/0 001/00 00/00 00/1 0 00/0000/01 11/01 01/0 0 01/1100 // circle value
-                                                  // 0x    0    0    0    0    0    0       0     1     0     0      8    0     7     5      1    c
-                                                  //
-                                                  //
-                                                  // Spectrum +4 values
-                                                  // ==================
+  ldr     x0, =0x00000001b51c351c                 // 0b 0000/0000/0000/0000/0000/0000/0 0 0 0/0 001/10 11/01 01/0 0 01/1100/00 11/01 01/0 0 01/1100
+                                                  // 0x    0    0    0    0    0    0       0     1     b     5      1    c     3     5      1    c
                                                   //
                                                   // TBI1:    0b0      => top byte of input address used for address match for the TTBR1_EL1 region
                                                   // TBI0:    0b0      => top byte of input address used for address match for the TTBR0_EL1 region
                                                   // AS:      0b0      => ASID size is 8 bit (not 16 bit)
                                                   // IPS:     0b001    => Intermediate Physical Address size = 36 bits, 64GB
                                                   // TG1:     0b10     => 4KB granule size for the TTBR1_EL1 region
-                                                  // SH1:     0b00     => Non-shareable memory for memory associated with TTBR1_EL1 translation table walks
-                                                  // ORGN1:   0b00     => Normal memory, Outer Non-cacheable for memory associated with TTBR1_EL1 translation table walks
-                                                  // IRGN1:   0b00     => Normal memory, Inner Non-cacheable for memory associated with TTBR1_EL1 translation table walks
+                                                  // SH1:     0b11     => Inner shareable memory for memory associated with TTBR1_EL1 translation table walks
+                                                  // ORGN1:   0b01     => Normal memory, Outer Write-Back Write-Allocate Cacheable for memory associated with TTBR1_EL1 translation table walks
+                                                  // IRGN1:   0b01     => Normal memory, Inner Write-Back Write-Allocate Cacheable for memory associated with TTBR1_EL1 translation table walks
                                                   // EPD1:    0b0      => perform translation table walks using TTBR1_EL1 on TLB miss
                                                   // A1:      0b0      => TTRB0_EL1.ASID defines the ASID (not TTBR1_EL1.ASID)
                                                   // T1SZ:    0b011100 => TTBR1_EL1 region size = 2^(64-28) = 2^36 bytes = 64GB
                                                   // TG0:     0b00     => 4KB granule size for the TTBR0_EL1 region
-                                                  // SH0:     0b00     => Non-shareable memory for memory associated with TTBR0_EL1 translation table walks
-                                                  // ORGN0:   0b00     => Normal memory, Outer Non-cacheable for memory associated with TTBR0_EL1 translation table walks
-                                                  // IRGN0:   0b00     => Normal memory, Inner Non-cacheable for memory associated with TTBR0_EL1 translation table walks
-                                                  // EPD0:    0b0      => perform translation table walks using TTBR0_EL1 on TLB miss
-                                                  // T0SZ:    0b011100 => TTBR0_EL1 region size = 2^(64-28) = 2^36 bytes = 64GB
-                                                  //
-                                                  //
-                                                  // Circle differences
-                                                  // ==================
-                                                  // https://github.com/rsta2/circle/blob/41f6eb3eaac6f249c5bf3b7f7407cecd9fe5955d/lib/memory64.cpp#L168-L190
-                                                  //
-                                                  // TG1:     0b00     => Uninitialised
-                                                  // EPD0:    0b1      => disable TTBR1_EL1 translation table walks; a TLB miss on TTBR1_EL1 generates a translation fault
-                                                  // T1SZ:    0b000000 => Uninitialised
-                                                  // TG0:     0b01     => 64KB granule size for the TTBR0_EL1 region
                                                   // SH0:     0b11     => Inner shareable memory for memory associated with TTBR0_EL1 translation table walks
                                                   // ORGN0:   0b01     => Normal memory, Outer Write-Back Write-Allocate Cacheable for memory associated with TTBR0_EL1 translation table walks
                                                   // IRGN0:   0b01     => Normal memory, Inner Write-Back Write-Allocate Cacheable for memory associated with TTBR0_EL1 translation table walks
+                                                  // EPD0:    0b0      => perform translation table walks using TTBR0_EL1 on TLB miss
+                                                  // T0SZ:    0b011100 => TTBR0_EL1 region size = 2^(64-28) = 2^36 bytes = 64GB
   msr     tcr_el1, x0
 
   ldr     x0, =0x000004ff
   msr     mair_el1, x0                            // mair_el1 = 0x00000000000004ff => attr index 0 => normal, attr index 1 => device, attr index 2 => coherent
   ldr     x2, =7f                                 // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)
-
   mrs     x0, sctlr_el1                           // fetch System Control Register (EL1)
-  orr     x0, x0, #0x1                            // enable MMU
+  mov     x1, #0x1005
+  orr     x0, x0, x1                              // enable MMU (0x1), data cache (0x4) and instruction cache (0x1000)
   msr     sctlr_el1, x0                           // update System Control Register (EL1)
+  dsb     sy
+  isb
   br      x2                                      // jump to next instruction so that program counter starts using virtual address
 7:
   msr     ttbr0_el1, xzr                          // Ensure only ttbr1_el1 is used from now on
@@ -387,8 +373,6 @@ _start:
 .if UART_DEBUG
   bl      uart_init                               // Initialise UART interface.
 .endif
-  bl      init_rpi_model                          // Fetch raspberry pi model identifier into system variable rpi_model.
-  bl      init_framebuffer                        // Allocate a frame buffer with chosen screen settings.
   ldr     x0, rand_init
   blr     x0
 .if TESTS_AUTORUN
@@ -396,12 +380,9 @@ _start:
   orr     x0, x0, 0xfffffff000000000              // Convert to virtual address
   and     sp, x0, #~0xf                           // Set stack pointer at top of ARM memory
   bl      irq_vector_init
-  dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
   bl      timer_init
-  dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
   ldr     x0, enable_ic
   blr     x0
-  dsb     sy                                      // TODO: Not sure if this is needed at all, or if a less aggressive barrier can be used
   bl      enable_irq
   ldr     x0, pcie_init
   cbz     x0, 8f
@@ -417,8 +398,11 @@ _start:
 .endif
 
 sleep:
+  msr     daifset, #0x3
+1:
+  dsb     sy
   wfi                                             // Sleep until woken.
-  b       sleep                                   // Go to sleep; it has been a long day.
+  b       1b
 
 
 init_rpi_model:
@@ -573,7 +557,10 @@ fb_req_end:
 #   x12 corrupted
 .align 2
 mbox_call:
-  ldr     x9, mailbox_base                        // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0xffff00003f00b880 (rpi3) or 0xffff0000fe00b880 (rpi4)
+  dsb     sy                                      // Data Sync Barrier, probably not needed since we always pass statically initialised data
+  ldr     x9, mailbox_base                        // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0xfffffff03f00b880 (rpi3) or 0xfffffff0fe00b880 (rpi4)
+  lsr     x12, x0, #36                            // Copy upper 28 bits from x0 to x9 since kernel might be high or low depending on whether
+  bfi     x9, x12, #36, #28                       // MMU has been enabled already or not.
 1:                                                // Wait for mailbox FULL flag to be clear.
   ldr     w10, [x9, #0x18]                        // w10 = mailbox status.
   tbnz    w10, 31, 1b                             // If FULL flag set (bit 31), try again...
@@ -586,6 +573,7 @@ mbox_call:
   ldr     w12, [x9]                               // w12 = message request address + channel number.
   cmp     w11, w12                                // See if the message is for us.
   b.ne    2b                                      // If not, try again.
+  dmb     sy                                      // Data Memory Barrier
   ret
 
 
@@ -738,6 +726,7 @@ wait_cycles:
 #   x3 corrupted
 # ------------------------------------------------------------------------------
 wait_usec:
+  isb                                             // Instruction Sync Barrier - Circle has this, not sure why
   mrs     x1, cntpct_el0                          // Physical count value in all 64 bits
   ldr     x2, =0x431bde82d7b634db                 // 4835703278458516699
   ldr     w3, cntfrq                              // We don't use https://github.com/raspberrypi/tools/blob/master/armstubs/armstub8.S

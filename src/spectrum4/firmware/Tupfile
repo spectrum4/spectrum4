@@ -7,4 +7,4 @@
 firmware_revision = 13691cee95902d76bc88a3f658abeb37b3c90b03
 
 # Download firmware
-: |> for file in %o; do curl -s -L "https://github.com/raspberrypi/firmware/blob/$(firmware_revision)/boot/${file}?raw=true" > "${file}"; done |> LICENCE.broadcom bootcode.bin start.elf start4.elf
+: |> for file in %o; do curl -s -L "https://github.com/raspberrypi/firmware/blob/$(firmware_revision)/boot/${file}?raw=true" > "${file}"; done |> LICENCE.broadcom bootcode.bin start.elf start4.elf fixup.dat fixup4.dat

@@ -34,6 +34,10 @@ disable_commandline_tags=1
 # setting a larger GPU memory split.
 gpu_mem=64
 
+# Disable initial turbo since it affects Mini UART timing.
+# See https://github.com/raspberrypi/firmware/issues/1945
+initial_turbo=0
+
 # Load the kernel at memory address 0x0.
 kernel_old=1
 

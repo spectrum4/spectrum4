@@ -5,7 +5,7 @@
 .gitignore
 
 # Move files into place
-: foreach ../kernel/config.txt ../firmware/LICENCE.broadcom ../firmware/bootcode.bin ../firmware/start.elf ../firmware/start4.elf |> ln -s ../%f %1o; ln -s ../%f %2o; ln -s ../%f %3o |> debug/%b release/%b tests/%b
+: foreach ../kernel/config.txt ../firmware/LICENCE.broadcom ../firmware/bootcode.bin ../firmware/start.elf ../firmware/start4.elf ../firmware/fixup.dat ../firmware/fixup4.dat |> ln -s ../%f %1o; ln -s ../%f %2o; ln -s ../%f %3o |> debug/%b release/%b tests/%b
 : ../../../LICENCE |> ln -s ../%f %1o; ln -s ../%f %2o |> debug/%b.spectrum4 release/%b.spectrum4
 : ../targets/release.img |> ln -s ../%f %o |> release/spectrum4.img
 : ../targets/debug.img |> ln -s ../%f %o |> debug/spectrum4.img

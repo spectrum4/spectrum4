@@ -228,7 +228,7 @@ _start:
                                                   // 0x    0    0    0    0    0    0     0       0       0      0       0    0      0      1       c    5
                                                   //
                                                   // UINJ:    0b0     => RES0 since FEAT_UINJ was first optional in Armv9.0 (Undefined Instruction Injection)
-                                                  // PACM:    0b0     => RES0 since FEAT_PAuth_LR was first optional in Armv9.4 (Pointer authentication instructions that allow signing of LR using SP and PC as diversifiers)
+                                                  // PACM:    0b0     => RES0 since FEAT_PAuth_LR was first optional in Armv9.4 (Pointer authentication instructions allowing signing of LR using SP and PC)
                                                   // EXLOCK:  0b0     => RES0 since FEAT_GCS was first optional in Armv9.3 (Guarded Control Stack Extension)
                                                   // PPEND:   0b0     => RES0 since FEAT_SEBEP was first optional in Armv9.3 (Synchronous Exception-based Event Profiling)
                                                   // PM:      0b0     => RES0 since FEAT_EBEP was first optional in Armv9.3 (Exception-based Event Profiling)
@@ -241,11 +241,11 @@ _start:
                                                   // UAO:     0b0     => RES0 since FEAT_UAO was first optional in Armv8.1 (Unprivileged Access Override)
                                                   // PAN:     0b0     => RES0 since FEAT_PAN is optional but not present in Cortex-A53/Cortex-A72 (ID_AA64MMFR1_EL1 = 0x0) (Privileged Access Never)
                                                   // SS:      0b0     => conditially set PSTATE.SS to 0b0 after next eret (not sure what condition)
-                                                  // IL:      0b0     => set PSTATE.IL to 0b0 after next eret
+                                                  // IL:      0b0     => set PSTATE.IL to 0b0 after next eret (clear illegal execution exception state)
                                                   // ALLINT:  0b0     => RES0 since FEAT_NMI was first optional in Armv8.7 (Non-maskable Interrupts)
                                                   // SSBS:    0b0     => RES0 since FEAT_SSBS is optional but not present in Cortex-A53/Cortex-A72 (ID_AA64PFR1_EL1 = 0x0) (Speculative Store Bypass Safe)
                                                   // BTYPE:   0b0     => RES0 since FEAT_BTI was first optional in Armv8.4 (Branch Target Identification)
-                                                  // D:       0b0     => set PSTATE.D to 0b0 after next eret
+                                                  // D:       0b0     => set PSTATE.D to 0b0 after next eret => after eret mask (disable) debug interrupts
                                                   // A:       0b1     => set PSTATE.A to 0b1 after next eret => after eret mask (disable) error (SError) interrupts
                                                   // I:       0b1     => set PSTATE.I to 0b1 after next eret => after eret mask (disable) regular (IRQ) interrupts
                                                   // F:       0b1     => set PSTATE.F to 0b1 after next eret => after eret mask (disable) fast (FIQ) interrupts
@@ -452,10 +452,59 @@ rpi_model:
   .word 0x00010002                                // Tag 1 - Get board revision
   .word 4                                         //   value buffer size (response > request, so use response size)
   .word 0                                         //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
-// Possible values documented at:
-//   * https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#new-style-revision-codes-in-use
-// On my Raspberry Pi 3 Model B, rpi_revision = 0x00a02082
-// On my Raspberry Pi 400, rpi_revision = 0x00c03130
+
+
+                                                  // +=============================+
+                                                  // | Raspberry Pi Revision Codes |
+                                                  // +=============================+
+                                                  //
+                                                  // https://www.raspberrypi.com/documentation/computers/raspberry-pi.html#new-style-revision-codes-in-use
+                                                  //
+                                                  //
+                                                  // My Raspberry Pi 3 Model B
+                                                  // =========================
+                                                  //
+                                                  //    N O Q 0 00 W 0 F M__ C___ P___ T________ R___
+                                                  //
+                                                  //    3 3 2 2 22 2 2 2 222 1111 1111 11
+                                                  //    1 0 9 8 76 5 4 3 210 9876 5432 1098 7654 3210
+                                                  //
+                                                  // 0b 0 0 0 0/00 0 0/1 010/0000/0010/0000/1000/0010
+                                                  // 0x       0      0     a    0    2    0    8    2
+                                                  //
+                                                  // N: 0b0         => Overvoltage allowed
+                                                  // O: 0b0         => OTP programming allowed
+                                                  // Q: 0b0         => OTP reading allowed
+                                                  // W: 0b0         => Warranty is intact
+                                                  // F: 0b1         => New style revision code
+                                                  // M: 0b010       => Memory size 1GB (0x10000000 << 0b010)
+                                                  // C: 0b0000      => Manufacturer: Sony UK
+                                                  // P: 0b0010      => Processor: BCM2837
+                                                  // T: 0b0000 1000 => Type: 3B
+                                                  // R: 0b0010      => Revision: 2
+                                                  //
+                                                  //
+                                                  // My Raspberry Pi 400, 4GB
+                                                  // ========================
+                                                  //
+                                                  //    N O Q 0 00 W 0 F M__ C___ P___ T________ R___
+                                                  //
+                                                  //    3 3 2 2 22 2 2 2 222 1111 1111 11
+                                                  //    1 0 9 8 76 5 4 3 210 9876 5432 1098 7654 3210
+                                                  //
+                                                  // 0b 0 0 0 0/00 0 0/1 100/0000/0011/0001/0011/0000
+                                                  // 0x       0      0     c    0    3    1    3    0
+                                                  //
+                                                  // N: 0b0         => Overvoltage allowed
+                                                  // O: 0b0         => OTP programming allowed
+                                                  // Q: 0b0         => OTP reading allowed
+                                                  // W: 0b0         => Warranty is intact
+                                                  // F: 0b1         => New style revision code
+                                                  // M: 0b100       => Memory size 4GB (0x10000000 << 0b100)
+                                                  // C: 0b0000      => Manufacturer: Sony UK
+                                                  // P: 0b0011      => Processor: BCM2711
+                                                  // T: 0b0001 0011 => Type: 400
+                                                  // R: 0b0000      => Revision: 0
 rpi_revision:
   .word 0                                         //   request: padding              response: revision identifier
   .word 0                                         // End Tags
@@ -944,8 +993,18 @@ set_peripherals_addresses:
 # which seems to be important for the frequency at which ARM register cntpct_el0 increments (used by wait_usec)
 set_clocks:
   ldr     x0, local_control
+                                                  // +=======================+
+                                                  // | BCM ARM LOCAL CONTROL |
+                                                  // +=======================+
+                                                  //
+                                                  // rpi3: https://datasheets.raspberrypi.com/bcm2836/bcm2836-peripherals.pdf page 9
+                                                  // rpi4: https://datasheets.raspberrypi.com/bcm2711/bcm2711-peripherals.pdf page 93
+                                                  //
+                                                  // TIMER_INCREMENT [8] = 0b0 => main timer increments by 1 (not 2)
+                                                  // PROC_CLK_TIMER  [7] = 0b0 => main timer driven by fixed frequency crystal clock reference
+                                                  // AXIERRIRQ_EN    [6] = 0b0 => main timer driven by fixed frequency crystal clock reference
   str     wzr, [x0]
-  mov     w1, 0x80000000
+  mov     w1, #0x80000000
   str     w1, [x0, 8]
   ret
 

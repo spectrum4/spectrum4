@@ -38,6 +38,45 @@ _start:
   ands    x0, x0, #0x3                            // x0 = core number.
   b.ne    sleep                                   // Put all cores except core 0 to sleep.
 
+  mrs     x0, s3_1_c11_c0_2                       // L2CTLR_EL1
+
+                                                  // +=====================================+
+                                                  // | L2CTLR_EL1 L2 Control Register, EL1 |
+                                                  // +=====================================+
+                                                  //
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/L2-Control-Register?lang=en
+                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/L2-Control-Register--EL1?lang=en
+  mov     x1, #0x22
+  orr     x0, x0, x1
+  msr     s3_1_c11_c0_2, x0                       // set L2 read/write cache latency to 3
+
+                                                  // +=================================================+
+                                                  // | CPUECTLR_EL1 CPU Extended Control Register, EL1 |
+                                                  // +=================================================+
+                                                  //
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/CPU-Extended-Control-Register--EL1?lang=en
+                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/CPU-Extended-Control-Register--EL1?lang=en
+                                                  //
+                                                  //                                    D   L     L
+                                                  //                                    T   2     2                                  S
+                                                  //                                    W   I     L                                  M      P
+                                                  //                                    D   F     D                                  P      D
+                                                  //                                    A   P     P                                  E      R
+                                                  //    0000 0000 0000 0000 0000 0000 0 P 0 D   0 D  0000 0000 0000 0000 0000 0000 0 N 00 0 C
+                                                  //
+                                                  //    6666/5555/5555/5544/4444/4444/3 3 3 3/3 3 33/3322/2222/2222/1111/1111/11
+                                                  //    3210/9876/5432/1098/7654/3210/9 8 7 6/5 4 32/1098/7654/3210/9876/5432/1098/7 6 54/3 210
+                                                  //
+  mov     x0, 0x40                                // 0b 0000/0000/0000/0000/0000/0000/0 0 0 0/0 0 00/0000/0000/0000/0000/0000/0000/0 1 00/0 000
+                                                  // 0x    0    0    0    0    0    0       0      0    0    0    0    0    0    0      4     0
+                                                  //
+                                                  // DTWDAP: 0b0   => Enable table walk descriptor access prefetch
+                                                  // L2IFPD: 0b00  => L2 instruction fetch prefetch distance 0 requests (disables instruction prefetch)
+                                                  // L2LDPD: 0b00  => L2 load data prefetch distance 16 requests
+                                                  // SMPEN:  0b1   => Enables data coherency with other cores in the cluster (required also for single core)
+                                                  // PDRC:   0b000 => Processor dynamic retention disabled
+  msr     s3_1_c15_c2_1, x0
+
                                                   // +========================================+
                                                   // | SCTLR_EL1 System Control Register, EL1 |
                                                   // +========================================+

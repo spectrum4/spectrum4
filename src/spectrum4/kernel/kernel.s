@@ -280,7 +280,7 @@ _start:
     b.ne    2b
   adrp    x0, (pg_dir+0x1000)
   mov     x1, #0x401                              // bit 10: AF=1, bits 2-4: mair attr index = 0 (normal), bits 0-1: 1 (block descriptor)
-  ldr     x2, peripherals_start
+  ldr     w2, arm_size
   3:                                              // creates 2016 entries for 0x00000000 - 0xfc000000
     str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = 0x401 + i*0x200000. PMD table entries complete for 0 - peripherals start address.
     add     x1, x1, #0x200000

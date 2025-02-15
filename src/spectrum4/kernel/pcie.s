@@ -157,6 +157,17 @@ pcie_init_bcm2711:
   and     w6, w6, #~0x1f                          // clear bits 0-4 (RC_BAR3_CONFIG_LO_SIZE)
   strwi   w6, x4, #0x3c                           // of [0xfd50403c] (PCIE_MISC_RC_BAR3_CONFIG_LO)
 
+  // At this point, Circle configures interrupts (but Linux uses MSI instead)
+  //
+  // 00:00:01.73 bcmpciehostbridge: write32 [fd504308] = ffffffff
+  // 00:00:01.73 bcmpciehostbridge: read32 [fd504308] = 0
+  // 00:00:01.74 bcmpciehostbridge: write32 [fd504310] = ffffffff
+  // 00:00:01.74 bcmpciehostbridge: read32 [fd504310] = 0
+  // 00:00:01.75 bcmpciehostbridge: read32 [fd5000b8] = 655c12
+  // 00:00:01.75 bcmpciehostbridge: read16 [fd5000dc] = 2
+  // 00:00:01.76 bcmpciehostbridge: write32 [fd5000b8] = 655c12
+  // 00:00:01.76 bcmpciehostbridge: write16 [fd5000dc] = 2
+
   // Unassert the fundamental reset
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L965-L966
   //
@@ -206,12 +217,16 @@ pcie_init_bcm2711:
   // Set the pcie start address
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L433-L435
 
+  // Note, Circle sets pcie start to 0x0000 0000 f800 0000 instead
+
   mov     w0, 0xc0000000                          // PCI address of outbound window
   strwi   w0, x4, #0xc                            // [0xfd50400c] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO) =0xc0000000 (low 32 bits of pcie start)
   strwi   wzr, x4, #0x10                          // [0xfd504010] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI) =0x00000000 (high 32 bits of pcie start)
 
   // Set bits 20-31 of cpu start address and bits 20-31 of cpu end address
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L437-L446
+
+  // Note, Circle sets LIMIT to 0x03f not 0x3ff
 
   ldrwi   w0, x4, #0x70
   and     w0, w0, #0x000f000f                     // Clear bits 4-15 (BASE) and bits 20-31 (LIMIT)
@@ -235,6 +250,8 @@ pcie_init_bcm2711:
   //
   // Updates registers:
   //   * PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT
+
+  // Note, Circle seems to skip this step
 
   ldrwi   w0, x10, #0x4dc
   orr     w0, w0, #0xc00                          // Set bits 10 (ASPM power mode L0s), 11 (ASPM power mode L1)
@@ -267,6 +284,8 @@ pcie_init_bcm2711:
   // Updates registers:
   //   * MDIO register SET_ADDR
   //   * MDIO register SSC_CNTL
+
+  // Note, Circle seems to skip this
 
   mov     w6, wzr                                 // 0 SSC initialisation steps completed
   mov     w0, 0x1f                                // MDIO register offset for SET_ADDR
@@ -319,6 +338,8 @@ pcie_init_bcm2711:
   // Updates registers:
   //   * PCIE_MISC_HARD_PCIE_HARD_DEBUG
 
+  // Note, Circle does not clear bit 21 (CLKREQ_L1SS_ENABLE_MASK)
+
   ldrwi   w0, x4, #0x204
   and     w0, w0, #~0x200000                      // clear bit 21 (CLKREQ_L1SS_ENABLE_MASK)
   orr     w0, w0, #0x2                            //   and set bit 1 (CLKREQ_DEBUG_ENABLE)
@@ -331,6 +352,19 @@ pcie_init_bcm2711:
   ldrwi   w2, x10, #0x0                           // x2 bits 0-15: did, bits 16-31: vid
   ldrbi   w3, x10, #0xe                           // w3 = header type
   stp     w2, w3, [x7, #0x18]                     // store did/vid and header type on heap
+
+  // Note, instead of the following two MSI sections, Circle does the following
+
+  // 00:00:02.01 bcmpciehostbridge: write8 [fd50000c] = 10
+  // 00:00:02.01 bcmpciehostbridge: write8 [fd500019] = 1
+  // 00:00:02.02 bcmpciehostbridge: write8 [fd50001a] = 1
+  // 00:00:02.02 bcmpciehostbridge: write16 [fd500020] = f800
+  // 00:00:02.03 bcmpciehostbridge: write16 [fd500022] = f800
+  // 00:00:02.03 bcmpciehostbridge: write8 [fd50003e] = 1
+  // 00:00:02.04 bcmpciehostbridge: read8 [fd5000ac] = 10
+  // 00:00:02.04 bcmpciehostbridge: write8 [fd5000c8] = 10
+  // 00:00:02.05 bcmpciehostbridge: write16 [fd500004] = 146
+
 
   // MSI initisalisation
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L623-L641
@@ -372,23 +406,42 @@ pcie_init_bcm2711:
   mov     x0, #1000                               // sleep 200-1000us
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
   mov     w0, #0x00100000                         // bus 1, slot 0, func 0, where 0
+
+  // Note, Linux kernel seems to perform the next store operation 163 times!
+
   strwi   w0, x14, #0                             // directs VL805 to use extended config space for bus 1 (same config space used for all buses)
+
+  // this should return w2 = 0x0c033001 but returns 0xffffffff
+
   ldrwi   w2, x13, #0x8                           // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)
-                                                  //   class should be 0x0c0330
+                                                  //   class should be 0x0c0330, revision should be 0x01
+
+  // this should return w3 = 0x0 but returns 0xff
+
   ldrbi   w3, x13, #0xe                           // w3 = bus 1 header type
+
   stp     w2, w3, [x7, #0x20]                     // store bus 1 class, revision and header type on heap
   mov     x2, #0x10                               // 64/4 (pci cache line size - get this value from cache config instead?)
   strbi   w2, x13, #0xc                           // set pci cache line size
-  ldr     w3, =0xf8000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type)
+
+  // Note, Circle sets it to 0xf8000004
+
+  ldr     w3, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type)
   strwi   w3, x13, #0x10                          // apply
   strwi   wzr, x13, #0x14                         // upper 32 address bits = 0
 .if UART_DEBUG
   ldrbi   w3, x13, #0x3d                          // inspect PCI interrupt pin (just for logging purposes, we will replace value below)
 .endif
   mov     w3, #0x1                                // prepare INTA enable
+
+  // Note, the following line seems to be needed, because the current value is 0xff even though on Linux it is 0x01 but updating it below makes it consistent with Linux
+
   strbi   w3, x13, #0x3d                          // update PCI interrupt pin (might have already been enabled)
   mov     w2, 0x0146                              // prepare PCI command config: memory | master | parity | serr
   strhi   w2, x13, #0x4                           // apply
+
+  // Note, the following section all seems to be wrong... Need to go through Circle logs, to see where it is reading from.
+
   ldr     x0, =(0x600000000 + _start)             // x0 = pcie start address
   ldrhi   w1, x0, #0x2                            // w1 = [XHCI_REG_CAP_HCIVERSION]
   strhi   w1, x7, #0x2c                           // store [XHCI_REG_CAP_HCIVERSION] on heap (should be 0x0110)

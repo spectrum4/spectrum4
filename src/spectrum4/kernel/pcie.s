@@ -214,10 +214,12 @@ pcie_init_bcm2711:
   //   * PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI
   //   * PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI
 
-  // Set the pcie start address
+  // Set the pcie start address (rc bar2 offset)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L433-L435
 
-  // Note, Circle sets pcie start to 0x0000 0000 f800 0000 instead
+  // Circle sets pcie start (rc bar2 offset) to 0x0000 0000 f800 0000 instead, unless MEM_PCIE_RANGE_PCIE_START is manually modified.
+  // See:
+  //   * https://github.com/rsta2/circle/discussions/544
 
   mov     w0, 0xc0000000                          // PCI address of outbound window
   strwi   w0, x4, #0xc                            // [0xfd50400c] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO) =0xc0000000 (low 32 bits of pcie start)
@@ -226,11 +228,12 @@ pcie_init_bcm2711:
   // Set bits 20-31 of cpu start address and bits 20-31 of cpu end address
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L437-L446
 
-  // Note, Circle sets LIMIT to 0x03f not 0x3ff
+  // Circle sets LIMIT to 0x03f (64MB window) not 0x3ff (1GB window) unless MEM_PCIE_RANGE_SIZE is manually modified.
+  // This means PCIE range is from 0x6 0000 0000 to 0x6 0400 0000 instead of from 0x6 0000 0000 to 0x6 4000 0000 like Linux.
 
   ldrwi   w0, x4, #0x70
   and     w0, w0, #0x000f000f                     // Clear bits 4-15 (BASE) and bits 20-31 (LIMIT)
-  orr     w0, w0, #0x3ff00000                     //   then set bits 20-31 (LIMIT) to 0x3ff
+  orr     w0, w0, #0x3ff00000                     //   then set bits 20-31 (LIMIT) to 0x3ff and bits 4-15 (BASE) to 0x000
   strwi   w0, x4, #0x70                           // of [0xfd504070] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT)
 
   // Set bits 32-39 of cpu start address and bits 32-39 of cpu end address
@@ -358,8 +361,8 @@ pcie_init_bcm2711:
   // 00:00:02.01 bcmpciehostbridge: write8 [fd50000c] = 10
   // 00:00:02.01 bcmpciehostbridge: write8 [fd500019] = 1
   // 00:00:02.02 bcmpciehostbridge: write8 [fd50001a] = 1
-  // 00:00:02.02 bcmpciehostbridge: write16 [fd500020] = f800
-  // 00:00:02.03 bcmpciehostbridge: write16 [fd500022] = f800
+  // 00:00:02.02 bcmpciehostbridge: write16 [fd500020] = f800 (or c000 if rc bar2 udated to match linux)
+  // 00:00:02.03 bcmpciehostbridge: write16 [fd500022] = f800 (or c000 if rc bar2 udated to match linux)
   // 00:00:02.03 bcmpciehostbridge: write8 [fd50003e] = 1
   // 00:00:02.04 bcmpciehostbridge: read8 [fd5000ac] = 10
   // 00:00:02.04 bcmpciehostbridge: write8 [fd5000c8] = 10

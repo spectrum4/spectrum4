@@ -462,41 +462,23 @@ pcie_init_bcm2711:
 # 0xfd509000
 
 
-  mov     w1, #0x400
-  strhi   w1, x10, #0x4                           // PCI_COMMAND = 0x400
   strhi   wzr, x10, #0x4                          // PCI_COMMAND = 0x0
-  mov     w1, #0xffffffff
-  strwi   w1, x10, #0x10                          // PCI_BASE_ADDRESS_0 = 0xffffffff
   strwi   wzr, x10, #0x10                         // PCI_BASE_ADDRESS_0 = 0x0
-  strwi   w1, x10, #0x14                          // PCI_BASE_ADDRESS_1 = 0xffffffff
   strwi   wzr, x10, #0x14                         // PCI_BASE_ADDRESS_1 = 0x0
-  mov     w1, #0xfffff800
-  strwi   w1, x10, #0x38                          // PCI_ROM_ADDRESS1 = 0xfffff800
   strwi   wzr, x10, #0x38                         // PCI_ROM_ADDRESS1 = 0x0
-  mov     w1, #0xe0f0
-  strhi   w1, x10, #0x1c                          // PCI_MEMORY_BASE = 0xe0f0
   strhi   wzr, x10, #0x1c                         // PCI_MEMORY_BASE = 0x0
-  mov     w1, #0xffffffff
-  strwi   w1, x10, #0x28                          // PCI_PREF_BASE_UPPER32 = 0xffffffff
   strwi   wzr, x10, #0x28                         // PCI_PREF_BASE_UPPER32 = 0x0
   mov     w1, #0x400
   strhi   w1, x10, #0xd4
   mov     w1, #0x2
-  strhi   w1, x10, #0x3e
+  strhi   w1, x10, #0x3e                          // Enable SERR# forwarding on bridge so that it forwards ERR_ messages coming from an endpoint
   mov     w1, #0xa008
   strhi   w1, x10, #0x4c
-  mov     w1, #0x2
-  strhi   w1, x10, #0x3e
   mov     w1, #0x10
   strhi   w1, x10, #0xc8
   strwi   wzr, x10, #0x18
-  mov     w1, #0x2
-  strhi   w1, x10, #0x3e
-  strhi   w1, x10, #0x3e
-  mov     w1, #0x10
-  strhi   w1, x10, #0xc8
   mov     w1, #0xffff
-  strhi   w1, x10, #0x6
+  strhi   w1, x10, #0x6                           // PCI_STATUS = 0xffff
   ldr     w1, =0xff0100
   strwi   w1, x10, #0x18
   mov     w1, #0x100000

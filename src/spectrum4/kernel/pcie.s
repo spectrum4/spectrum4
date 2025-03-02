@@ -462,131 +462,120 @@ pcie_init_bcm2711:
 # 0xfd509000
 
 
-  ldr     x1, =0x400
+  mov     w1, #0x400
   strhi   w1, x10, #0x4                           // PCI_COMMAND = 0x400
   strhi   wzr, x10, #0x4                          // PCI_COMMAND = 0x0
-  ldr     x1, =0xffffffff
+  mov     w1, #0xffffffff
   strwi   w1, x10, #0x10                          // PCI_BASE_ADDRESS_0 = 0xffffffff
   strwi   wzr, x10, #0x10                         // PCI_BASE_ADDRESS_0 = 0x0
-  ldr     x1, =0xffffffff
   strwi   w1, x10, #0x14                          // PCI_BASE_ADDRESS_1 = 0xffffffff
   strwi   wzr, x10, #0x14                         // PCI_BASE_ADDRESS_1 = 0x0
-  ldr     x1, =0xfffff800
+  mov     w1, #0xfffff800
   strwi   w1, x10, #0x38                          // PCI_ROM_ADDRESS1 = 0xfffff800
   strwi   wzr, x10, #0x38                         // PCI_ROM_ADDRESS1 = 0x0
-  ldr     x1, =0xe0f0
+  mov     w1, #0xe0f0
   strhi   w1, x10, #0x1c                          // PCI_MEMORY_BASE = 0xe0f0
   strhi   wzr, x10, #0x1c                         // PCI_MEMORY_BASE = 0x0
-  ldr     x1, =0xffffffff
+  mov     w1, #0xffffffff
   strwi   w1, x10, #0x28                          // PCI_PREF_BASE_UPPER32 = 0xffffffff
   strwi   wzr, x10, #0x28                         // PCI_PREF_BASE_UPPER32 = 0x0
-  ldr     x1, =0x400
+  mov     w1, #0x400
   strhi   w1, x10, #0xd4
-  ldr     x1, =0x2
+  mov     w1, #0x2
   strhi   w1, x10, #0x3e
-  ldr     x1, =0xa008
+  mov     w1, #0xa008
   strhi   w1, x10, #0x4c
-  ldr     x1, =0x2
+  mov     w1, #0x2
   strhi   w1, x10, #0x3e
-  ldr     x1, =0x10
+  mov     w1, #0x10
   strhi   w1, x10, #0xc8
   strwi   wzr, x10, #0x18
-  ldr     x1, =0x2
+  mov     w1, #0x2
   strhi   w1, x10, #0x3e
-  ldr     x1, =0x2
   strhi   w1, x10, #0x3e
-  ldr     x1, =0x10
+  mov     w1, #0x10
   strhi   w1, x10, #0xc8
-  ldr     x1, =0xffff
+  mov     w1, #0xffff
   strhi   w1, x10, #0x6
-  ldr     x1, =0xff0100
+  ldr     w1, =0xff0100
   strwi   w1, x10, #0x18
-
-  ldr     x1, =0x100000
+  mov     w1, #0x100000
   strwi   w1, x14, #0x0
-
-  ldr     x1, =0x400
+  mov     w1, #0x400
   strhi   w1, x13, #0x4
   strhi   wzr, x13, #0x4
-  ldr     x1, =0xffffffff
+  mov     w1, #0xffffffff
   strwi   w1, x13, #0x10
-  ldr     x1, =0x4
+  mov     w1, #0x4
   strwi   w1, x13, #0x10
-  ldr     x1, =0xffffffff
+  mov     w1, #0xffffffff
   strwi   w1, x13, #0x14
   strwi   wzr, x13, #0x14
-  ldr     x1, =0xffffffff
   strwi   w1, x13, #0x18
   strwi   wzr, x13, #0x18
-  ldr     x1, =0xffffffff
   strwi   w1, x13, #0x1c
   strwi   wzr, x13, #0x1c
-  ldr     x1, =0xffffffff
   strwi   w1, x13, #0x20
   strwi   wzr, x13, #0x20
-  ldr     x1, =0xffffffff
   strwi   w1, x13, #0x24
   strwi   wzr, x13, #0x24
-  ldr     x1, =0xfffff800
+  mov     w1, #0xfffff800
   strwi   w1, x13, #0x30
   strwi   wzr, x13, #0x30
-  ldr     x1, =0x8000
+  mov     w1, #0x8000
   strhi   w1, x13, #0x84
-  ldr     x1, =0x43
+  mov     w1, #0x43
   strhi   w1, x13, #0xd4
-  ldr     x1, =0x40
+  mov     w1, #0x40
   strhi   w1, x10, #0xbc
-  ldr     x1, =0x60
+  mov     w1, #0x60
   strhi   w1, x10, #0xbc
-  ldr     x1, =0x40
+  mov     w1, #0x40
   strhi   w1, x13, #0xd4
-  ldr     x1, =0x40
   strhi   w1, x10, #0xbc
-  ldr     x1, =0x1
+  mov     w1, #0x1
   strbi   w1, x10, #0x1a
-  ldr     x1, =0x2
+  mov     w1, #0x2
   strhi   w1, x10, #0x3e
   strhi   wzr, x13, #0x4
-  ldr     x1, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type)
+  ldr     w1, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type)
   strwi   w1, x13, #0x10
   strwi   wzr, x13, #0x14                         // upper 32 address bits = 0
   strhi   wzr, x13, #0x4
-  ldr     x1, =0xffff
+  mov     w1, #0xffff
   strwi   w1, x10, #0x30
-  ldr     x1, =0xf0
+  mov     w1, #0xf0
   strhi   w1, x10, #0x1c
   strwi   wzr, x10, #0x30
-  ldr     x1, =0xc000c000
+  mov     w1, #0xc000c000
   strwi   w1, x10, #0x20
   strwi   wzr, x10, #0x2c
-  ldr     x1, =0xfff0
+  mov     w1, #0xfff0
   strwi   w1, x10, #0x24
   strwi   wzr, x10, #0x28
   strwi   wzr, x10, #0x2c
-  ldr     x1, =0x2
+  mov     w1, #0x2
   strhi   w1, x10, #0x3e
-  ldr     x1, =0x3e
+  mov     w1, #0x3e
   strbi   w1, x13, #0x3c
-  ldr     x1, =0x2
+  mov     w1, #0x2
   strhi   w1, x10, #0x4
-  ldr     x1, =0x6
+  mov     w1, #0x6
   strhi   w1, x10, #0x4
-  ldr     x1, =0x10
+  mov     w1, #0x10
   strbi   w1, x13, #0xc                           // PCI cache line size = 0x10 (64/4)
-  ldr     x1, =0x156
+  mov     w1, #0x156
   strhi   w1, x13, #0x4
-  ldr     x1, =0x84
+  mov     w1, #0x84
   strhi   w1, x13, #0x92
-  ldr     x1, =0x84
-  strhi   w1, x13, #0x92
-  ldr     x1, =0xfffffffc
+  mov     w1, #0xfffffffc
   strwi   w1, x13, #0x94
   strwi   wzr, x13, #0x98
-  ldr     x1, =0x6540
+  mov     w1, #0x6540
   strhi   w1, x13, #0x9c
-  ldr     x1, =0x546
+  mov     w1, #0x546
   strhi   w1, x13, #0x4                           // PCI command config: response in memory space | bus mastering | parity checking | SERR | INTx emulation disable
-  ldr     x1, =0x85
+  mov     w1, #0x85
   strhi   w1, x13, #0x92
 
   ldrwi   w2, x13, #0x8                           // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)

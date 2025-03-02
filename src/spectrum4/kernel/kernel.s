@@ -301,9 +301,9 @@ _start:
   orr     x2, x1, #0b11                           // bit 0 = 1 => valid descriptor. bit 1 = 1 => table descriptor
   str     x2, [x0, 0xc0]                          // [pg_dir+0x10c0] = pg_dir+0x6003. PUD table entry for xHCI region (entry 0x600000000-0x640000000 covers more than xHCI).
   mov     x2, 0x600000000                         // x2 = xHCI start (24GB)
-  orr     x3, x2, 0x4000000                       // x3 = xHCI end (64MB higher) (0x604000000) - so we don't fill entire table, only first 32/512 entries
+  orr     x3, x2, 0x40000000                      // x3 = xHCI end (1GB higher) (0x640000000) - so we will fill entire table, i.e. all 512 entries
   add     x2, x2, #0x409                          // bit 10: AF=1, bits 2-4: mair attr index = 2 (coherent), bits 0-1: 1 (block descriptor)
-  5:                                              // creates 32 entries for xHCI addresses 0x600000000 - 0x604000000
+  5:                                              // creates 512 entries for xHCI addresses 0x600000000 - 0x640000000
     str     x2, [x1], #8                          // [pg_dir + 0x6000 + i*8] = 0x409 + i*0x200000. PMD table entries complete for xHCI region.
     add     x2, x2, #0x200000
     cmp     x2, x3

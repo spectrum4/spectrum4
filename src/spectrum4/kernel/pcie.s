@@ -214,10 +214,12 @@ pcie_init_bcm2711:
   //   * PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_HI
   //   * PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI
 
-  // Set the pcie start address
+  // Set the pcie start address (rc bar2 offset)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L433-L435
 
-  // Note, Circle sets pcie start to 0x0000 0000 f800 0000 instead
+  // Circle sets pcie start (rc bar2 offset) to 0x0000 0000 f800 0000 instead, unless MEM_PCIE_RANGE_PCIE_START is manually modified.
+  // See:
+  //   * https://github.com/rsta2/circle/discussions/544
 
   mov     w0, 0xc0000000                          // PCI address of outbound window
   strwi   w0, x4, #0xc                            // [0xfd50400c] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO) =0xc0000000 (low 32 bits of pcie start)
@@ -226,11 +228,12 @@ pcie_init_bcm2711:
   // Set bits 20-31 of cpu start address and bits 20-31 of cpu end address
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L437-L446
 
-  // Note, Circle sets LIMIT to 0x03f not 0x3ff
+  // Circle sets LIMIT to 0x03f (64MB window) not 0x3ff (1GB window) unless MEM_PCIE_RANGE_SIZE is manually modified.
+  // This means PCIE range is from 0x6 0000 0000 to 0x6 0400 0000 instead of from 0x6 0000 0000 to 0x6 4000 0000 like Linux.
 
   ldrwi   w0, x4, #0x70
   and     w0, w0, #0x000f000f                     // Clear bits 4-15 (BASE) and bits 20-31 (LIMIT)
-  orr     w0, w0, #0x3ff00000                     //   then set bits 20-31 (LIMIT) to 0x3ff
+  orr     w0, w0, #0x3ff00000                     //   then set bits 20-31 (LIMIT) to 0x3ff and bits 4-15 (BASE) to 0x000
   strwi   w0, x4, #0x70                           // of [0xfd504070] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT)
 
   // Set bits 32-39 of cpu start address and bits 32-39 of cpu end address
@@ -301,6 +304,8 @@ pcie_init_bcm2711:
   orr     w1, w1, 0xc000                          // set bits 14 (OVRD_VAL) and 15 (OVRD_EN)
   bl      mdio_write                              // [SSC_CNTL] |= (OVRD_VAL | OVRD_EN)
   tbnz    w1, #31, 3f                             // abort SSC setup due to failed MDIO write operation
+  mov     x0, #1000
+  bl      wait_usec                               // wait 1ms
   mov     w6, #0x03                               // 3 SSC initialisation steps completed
   mov     w0, 0x01                                // MDIO register offset SSC_STATUS
   bl      mdio_read                               // w1=[SSC_STATUS]
@@ -338,7 +343,8 @@ pcie_init_bcm2711:
   // Updates registers:
   //   * PCIE_MISC_HARD_PCIE_HARD_DEBUG
 
-  // Note, Circle does not clear bit 21 (CLKREQ_L1SS_ENABLE_MASK)
+  // Note, Circle does not clear bit 21 (CLKREQ_L1SS_ENABLE_MASK) presumably
+  // since it did not enable ASPM power modes L0s and L1 above.
 
   ldrwi   w0, x4, #0x204
   and     w0, w0, #~0x200000                      // clear bit 21 (CLKREQ_L1SS_ENABLE_MASK)
@@ -358,8 +364,8 @@ pcie_init_bcm2711:
   // 00:00:02.01 bcmpciehostbridge: write8 [fd50000c] = 10
   // 00:00:02.01 bcmpciehostbridge: write8 [fd500019] = 1
   // 00:00:02.02 bcmpciehostbridge: write8 [fd50001a] = 1
-  // 00:00:02.02 bcmpciehostbridge: write16 [fd500020] = f800
-  // 00:00:02.03 bcmpciehostbridge: write16 [fd500022] = f800
+  // 00:00:02.02 bcmpciehostbridge: write16 [fd500020] = f800 (or c000 if rc bar2 udated to match linux)
+  // 00:00:02.03 bcmpciehostbridge: write16 [fd500022] = f800 (or c000 if rc bar2 udated to match linux)
   // 00:00:02.03 bcmpciehostbridge: write8 [fd50003e] = 1
   // 00:00:02.04 bcmpciehostbridge: read8 [fd5000ac] = 10
   // 00:00:02.04 bcmpciehostbridge: write8 [fd5000c8] = 10
@@ -403,50 +409,219 @@ pcie_init_bcm2711:
   //   https://github.com/rsta2/circle/blob/c21f2efdad86c1062f255fbf891135a2a356713e/lib/usb/xhcidevice.cpp#L124-L130
   adr     x0, vl805_reset_req                     // x0 = memory block pointer for mailbox call to reset VL805 firmware
   bl      mbox_call
+
+  // corrupted by mbox_call above, so need to set again
+  adrp    x10, 0xfd500000 + _start                // x10 = VL805 internal registers (pcie_base)
+
   mov     x0, #1000                               // sleep 200-1000us
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
-  mov     w0, #0x00100000                         // bus 1, slot 0, func 0, where 0
 
-  // Note, Linux kernel seems to perform the next store operation 163 times!
 
-  strwi   w0, x14, #0                             // directs VL805 to use extended config space for bus 1 (same config space used for all buses)
+# PCIe MMIO register writes
+# See:
+#  * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/include/uapi/linux/pci_regs.h
+# 0xfd500004 PCI_COMMAND
+# 0xfd500006 PCI_STATUS
+# 0xfd500010 PCI_BASE_ADDRESS_0
+# 0xfd500014 PCI_BASE_ADDRESS_1
+# 0xfd500018 PCI_BASE_ADDRESS_2      / PCI_PRIMARY_BUS
+# 0xfd50001a                         / PCI_SUBORDINATE_BUS
+# 0xfd50001c PCI_BASE_ADDRESS_3      / PCI_IO_BASE
+# 0xfd500020 PCI_BASE_ADDRESS_4      / PCI_MEMORY_BASE
+# 0xfd500024 PCI_BASE_ADDRESS_5      / PCI_PREF_MEMORY_BASE
+# 0xfd500028 PCI_CARDBUS_CIS         / PCI_PREF_BASE_UPPER32
+# 0xfd50002c PCI_SUBSYSTEM_VENDOR_ID / PCI_PREF_LIMIT_UPPER32
+# 0xfd500030 PCI_ROM_ADDRESSA        / PCI_IO_BASE_UPPER16
+# 0xfd500038                         / PCI_ROM_ADDRESS1
+# 0xfd50003e PCI_MIN_GNT             / PCI_BRIDGE_CONTROL
+# 0xfd50004c
+# 0xfd5000bc
+# 0xfd5000c8
+# 0xfd5000d4
+# 0xfd504044
+# 0xfd504048
+# 0xfd50404c
+# 0xfd504508
+# 0xfd504514
+# 0xfd508004
+# 0xfd50800c
+# 0xfd508010
+# 0xfd508014
+# 0xfd508018
+# 0xfd50801c
+# 0xfd508020
+# 0xfd508024
+# 0xfd508030
+# 0xfd50803c
+# 0xfd508084
+# 0xfd508092
+# 0xfd508094
+# 0xfd508098
+# 0xfd50809c
+# 0xfd5080d4
+# 0xfd509000
 
-  // this should return w2 = 0x0c033001 but returns 0xffffffff
+
+  ldr     x1, =0x400
+  strhi   w1, x10, #0x4                           // PCI_COMMAND = 0x400
+  ldr     x1, =0x0
+  strhi   w1, x10, #0x4                           // PCI_COMMAND = 0x0
+  ldr     x1, =0xffffffff
+  strwi   w1, x10, #0x10                          // PCI_BASE_ADDRESS_0 = 0xffffffff
+  ldr     x1, =0x0
+  strwi   w1, x10, #0x10                          // PCI_BASE_ADDRESS_0 = 0x0
+  ldr     x1, =0xffffffff
+  strwi   w1, x10, #0x14                          // PCI_BASE_ADDRESS_1 = 0xffffffff
+  ldr     x1, =0x0
+  strwi   w1, x10, #0x14                          // PCI_BASE_ADDRESS_1 = 0x0
+  ldr     x1, =0xfffff800
+  strwi   w1, x10, #0x38                          // PCI_ROM_ADDRESS1 = 0xfffff800
+  ldr     x1, =0x0
+  strwi   w1, x10, #0x38                          // PCI_ROM_ADDRESS1 = 0x0
+  ldr     x1, =0xe0f0
+  strhi   w1, x10, #0x1c                          // PCI_MEMORY_BASE = 0xe0f0
+  ldr     x1, =0x0
+  strhi   w1, x10, #0x1c                          // PCI_MEMORY_BASE = 0x0
+  ldr     x1, =0xffffffff
+  strwi   w1, x10, #0x28                          // PCI_PREF_BASE_UPPER32 = 0xffffffff
+  ldr     x1, =0x0
+  strwi   w1, x10, #0x28                          // PCI_PREF_BASE_UPPER32 = 0x0
+  ldr     x1, =0x400
+  strhi   w1, x10, #0xd4
+  ldr     x1, =0x2
+  strhi   w1, x10, #0x3e
+  ldr     x1, =0xa008
+  strhi   w1, x10, #0x4c
+  ldr     x1, =0x2
+  strhi   w1, x10, #0x3e
+  ldr     x1, =0x10
+  strhi   w1, x10, #0xc8
+  ldr     x1, =0x0
+  strwi   w1, x10, #0x18
+  ldr     x1, =0x2
+  strhi   w1, x10, #0x3e
+  ldr     x1, =0x2
+  strhi   w1, x10, #0x3e
+  ldr     x1, =0x10
+  strhi   w1, x10, #0xc8
+  ldr     x1, =0xffff
+  strhi   w1, x10, #0x6
+  ldr     x1, =0xff0100
+  strwi   w1, x10, #0x18
+
+  ldr     x1, =0x100000
+  strwi   w1, x14, #0x0
+
+  ldr     x1, =0x400
+  strhi   w1, x13, #0x4
+  ldr     x1, =0x0
+  strhi   w1, x13, #0x4
+  ldr     x1, =0xffffffff
+  strwi   w1, x13, #0x10
+  ldr     x1, =0x4
+  strwi   w1, x13, #0x10
+  ldr     x1, =0xffffffff
+  strwi   w1, x13, #0x14
+  ldr     x1, =0x0
+  strwi   w1, x13, #0x14
+  ldr     x1, =0xffffffff
+  strwi   w1, x13, #0x18
+  ldr     x1, =0x0
+  strwi   w1, x13, #0x18
+  ldr     x1, =0xffffffff
+  strwi   w1, x13, #0x1c
+  ldr     x1, =0x0
+  strwi   w1, x13, #0x1c
+  ldr     x1, =0xffffffff
+  strwi   w1, x13, #0x20
+  ldr     x1, =0x0
+  strwi   w1, x13, #0x20
+  ldr     x1, =0xffffffff
+  strwi   w1, x13, #0x24
+  ldr     x1, =0x0
+  strwi   w1, x13, #0x24
+  ldr     x1, =0xfffff800
+  strwi   w1, x13, #0x30
+  ldr     x1, =0x0
+  strwi   w1, x13, #0x30
+  ldr     x1, =0x8000
+  strhi   w1, x13, #0x84
+  ldr     x1, =0x43
+  strhi   w1, x13, #0xd4
+  ldr     x1, =0x40
+  strhi   w1, x10, #0xbc
+  ldr     x1, =0x60
+  strhi   w1, x10, #0xbc
+  ldr     x1, =0x40
+  strhi   w1, x13, #0xd4
+  ldr     x1, =0x40
+  strhi   w1, x10, #0xbc
+  ldr     x1, =0x1
+  strbi   w1, x10, #0x1a
+  ldr     x1, =0x2
+  strhi   w1, x10, #0x3e
+  ldr     x1, =0x0
+  strhi   w1, x13, #0x4
+  ldr     x1, =0xc0000004
+  strwi   w1, x13, #0x10
+  ldr     x1, =0x0
+  strwi   w1, x13, #0x14
+  ldr     x1, =0x0
+  strhi   w1, x13, #0x4
+  ldr     x1, =0xffff
+  strwi   w1, x10, #0x30
+  ldr     x1, =0xf0
+  strhi   w1, x10, #0x1c
+  ldr     x1, =0x0
+  strwi   w1, x10, #0x30
+  ldr     x1, =0xc000c000
+  strwi   w1, x10, #0x20
+  ldr     x1, =0x0
+  strwi   w1, x10, #0x2c
+  ldr     x1, =0xfff0
+  strwi   w1, x10, #0x24
+  ldr     x1, =0x0
+  strwi   w1, x10, #0x28
+  ldr     x1, =0x0
+  strwi   w1, x10, #0x2c
+  ldr     x1, =0x2
+  strhi   w1, x10, #0x3e
+  ldr     x1, =0x3e
+  strbi   w1, x13, #0x3c
+  ldr     x1, =0x2
+  strhi   w1, x10, #0x4
+  ldr     x1, =0x6
+  strhi   w1, x10, #0x4
+  ldr     x1, =0x10
+  strbi   w1, x13, #0xc
+  ldr     x1, =0x156
+  strhi   w1, x13, #0x4
+  ldr     x1, =0x84
+  strhi   w1, x13, #0x92
+  ldr     x1, =0x84
+  strhi   w1, x13, #0x92
+  ldr     x1, =0xfffffffc
+  strwi   w1, x13, #0x94
+  ldr     x1, =0x0
+  strwi   w1, x13, #0x98
+  ldr     x1, =0x6540
+  strhi   w1, x13, #0x9c
+  ldr     x1, =0x546
+  strhi   w1, x13, #0x4
+  ldr     x1, =0x85
+  strhi   w1, x13, #0x92
 
   ldrwi   w2, x13, #0x8                           // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)
                                                   //   class should be 0x0c0330, revision should be 0x01
 
-  // this should return w3 = 0x0 but returns 0xff
-
   ldrbi   w3, x13, #0xe                           // w3 = bus 1 header type
-
   stp     w2, w3, [x7, #0x20]                     // store bus 1 class, revision and header type on heap
-  mov     x2, #0x10                               // 64/4 (pci cache line size - get this value from cache config instead?)
-  strbi   w2, x13, #0xc                           // set pci cache line size
-
-  // Note, Circle sets it to 0xf8000004
-
-  ldr     w3, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type)
-  strwi   w3, x13, #0x10                          // apply
-  strwi   wzr, x13, #0x14                         // upper 32 address bits = 0
-.if UART_DEBUG
-  ldrbi   w3, x13, #0x3d                          // inspect PCI interrupt pin (just for logging purposes, we will replace value below)
-.endif
-  mov     w3, #0x1                                // prepare INTA enable
-
-  // Note, the following line seems to be needed, because the current value is 0xff even though on Linux it is 0x01 but updating it below makes it consistent with Linux
-
-  strbi   w3, x13, #0x3d                          // update PCI interrupt pin (might have already been enabled)
-  mov     w2, 0x0146                              // prepare PCI command config: memory | master | parity | serr
-  strhi   w2, x13, #0x4                           // apply
-
-  // Note, the following section all seems to be wrong... Need to go through Circle logs, to see where it is reading from.
 
   ldr     x0, =(0x600000000 + _start)             // x0 = pcie start address
   ldrhi   w1, x0, #0x2                            // w1 = [XHCI_REG_CAP_HCIVERSION]
   strhi   w1, x7, #0x2c                           // store [XHCI_REG_CAP_HCIVERSION] on heap (should be 0x0110)
 
-  // init MMIO
+  // init spectrum4 MMIO data structure
   adr     x2, xhci_mmio
   str     x0, [x2], #8                            // [xhci_mmio] = 0x600000000 (pcie base)
   ldrbi   w1, x0, #0x0                            // w1 = capabilities length

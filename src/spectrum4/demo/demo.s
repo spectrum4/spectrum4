@@ -87,9 +87,9 @@ display_memory:
   add     x21, x21, #1                            // x21 = first data line screen line
 1:
   mov     x1, sp                                  // address to write text string to
-  strh    w23, [x1], #2                           // write '  ' to screen line buffer on stack
+  strb    w23, [x1], #1                           // write ' ' to screen line buffer on stack
   mov     x0, x19                                 // x0 = dump address
-  mov     x2, #32
+  mov     x2, #36
   bl      hex_x0                                  // append to screen line buffer and update x1
   mov     x22, #0x20                              // 32 values to print
 2:

@@ -203,23 +203,30 @@ new:                                     // L019D
 5:
 // Display pcie memory region
   adrp    x0, 0xfd500000 + _start                 // start address
-  mov     x1, #54                                 // number of rows to print
+  mov     x1, #32                                 // number of rows to print
   mov     x2, #0                                  // screen line to start at
   bl      display_memory
-  mov     w0, 0x400000
+  mov     w0, 0x100000
   bl      wait_usec
-// Display MMU tables
+  adrp    x0, 0xfd504000 + _start                 // start address
+  mov     x1, #32                                 // number of rows to print
+  mov     x2, #0                                  // screen line to start at
+  bl      display_memory
+  mov     w0, 0x100000
+  bl      wait_usec
+  adrp    x0, 0xfd508000 + _start                 // start address
+  mov     x1, #32                                 // number of rows to print
+  mov     x2, #0                                  // screen line to start at
+  bl      display_memory
+  mov     w0, 0x100000
+  bl      wait_usec
+  ldr     x0, =(0x600000000 + _start)             // start address
+  mov     x1, #32                                 // number of rows to print
+  mov     x2, #0                                  // screen line to start at
+  bl      display_memory
+  mov     w0, 0x100000
+  bl      wait_usec
 6:
-  adrp    x19, pg_dir                             // start address
-  mov     x20, #25
-  7:
-    mov     x0, x19
-    mov     x1, #32                               // number of rows to print
-    mov     x2, #0                                // screen line to start at
-    bl      display_memory
-    add     x19, x19, #0x400
-    subs    x20, x20, #1
-    b.ne    7b
 .endif
 
   ldrb    w1, [x28, FLAGS-sysvars]                // w1 = [FLAGS].

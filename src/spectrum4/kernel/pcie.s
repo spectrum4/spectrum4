@@ -1,4 +1,3 @@
-# This file is part of the Spectrum +4 Project.
 # Licencing information can be found in the LICENCE file
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
@@ -157,17 +156,6 @@ pcie_init_bcm2711:
   and     w6, w6, #~0x1f                          // clear bits 0-4 (RC_BAR3_CONFIG_LO_SIZE)
   strwi   w6, x4, #0x3c                           // of [0xfd50403c] (PCIE_MISC_RC_BAR3_CONFIG_LO)
 
-  // At this point, Circle configures interrupts (but Linux uses MSI instead)
-  //
-  // 00:00:01.73 bcmpciehostbridge: write32 [fd504308] = ffffffff
-  // 00:00:01.73 bcmpciehostbridge: read32 [fd504308] = 0
-  // 00:00:01.74 bcmpciehostbridge: write32 [fd504310] = ffffffff
-  // 00:00:01.74 bcmpciehostbridge: read32 [fd504310] = 0
-  // 00:00:01.75 bcmpciehostbridge: read32 [fd5000b8] = 655c12
-  // 00:00:01.75 bcmpciehostbridge: read16 [fd5000dc] = 2
-  // 00:00:01.76 bcmpciehostbridge: write32 [fd5000b8] = 655c12
-  // 00:00:01.76 bcmpciehostbridge: write16 [fd5000dc] = 2
-
   // Unassert the fundamental reset
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L965-L966
   //
@@ -217,19 +205,12 @@ pcie_init_bcm2711:
   // Set the pcie start address (rc bar2 offset)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L433-L435
 
-  // Circle sets pcie start (rc bar2 offset) to 0x0000 0000 f800 0000 instead, unless MEM_PCIE_RANGE_PCIE_START is manually modified.
-  // See:
-  //   * https://github.com/rsta2/circle/discussions/544
-
   mov     w0, 0xc0000000                          // PCI address of outbound window
   strwi   w0, x4, #0xc                            // [0xfd50400c] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LO) =0xc0000000 (low 32 bits of pcie start)
   strwi   wzr, x4, #0x10                          // [0xfd504010] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_HI) =0x00000000 (high 32 bits of pcie start)
 
   // Set bits 20-31 of cpu start address and bits 20-31 of cpu end address
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L437-L446
-
-  // Circle sets LIMIT to 0x03f (64MB window) not 0x3ff (1GB window) unless MEM_PCIE_RANGE_SIZE is manually modified.
-  // This means PCIE range is from 0x6 0000 0000 to 0x6 0400 0000 instead of from 0x6 0000 0000 to 0x6 4000 0000 like Linux.
 
   ldrwi   w0, x4, #0x70
   and     w0, w0, #0x000f000f                     // Clear bits 4-15 (BASE) and bits 20-31 (LIMIT)
@@ -253,8 +234,6 @@ pcie_init_bcm2711:
   //
   // Updates registers:
   //   * PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT
-
-  // Note, Circle seems to skip this step
 
   ldrwi   w0, x10, #0x4dc
   orr     w0, w0, #0xc00                          // Set bits 10 (ASPM power mode L0s), 11 (ASPM power mode L1)
@@ -287,8 +266,6 @@ pcie_init_bcm2711:
   // Updates registers:
   //   * MDIO register SET_ADDR
   //   * MDIO register SSC_CNTL
-
-  // Note, Circle seems to skip this
 
   mov     w6, wzr                                 // 0 SSC initialisation steps completed
   mov     w0, 0x1f                                // MDIO register offset for SET_ADDR
@@ -343,9 +320,6 @@ pcie_init_bcm2711:
   // Updates registers:
   //   * PCIE_MISC_HARD_PCIE_HARD_DEBUG
 
-  // Note, Circle does not clear bit 21 (CLKREQ_L1SS_ENABLE_MASK) presumably
-  // since it did not enable ASPM power modes L0s and L1 above.
-
   ldrwi   w0, x4, #0x204
   and     w0, w0, #~0x200000                      // clear bit 21 (CLKREQ_L1SS_ENABLE_MASK)
   orr     w0, w0, #0x2                            //   and set bit 1 (CLKREQ_DEBUG_ENABLE)
@@ -358,19 +332,6 @@ pcie_init_bcm2711:
   ldrwi   w2, x10, #0x0                           // x2 bits 0-15: did, bits 16-31: vid
   ldrbi   w3, x10, #0xe                           // w3 = header type
   stp     w2, w3, [x7, #0x18]                     // store did/vid and header type on heap
-
-  // Note, instead of the following two MSI sections, Circle does the following
-
-  // 00:00:02.01 bcmpciehostbridge: write8 [fd50000c] = 0x10
-  // 00:00:02.01 bcmpciehostbridge: write8 [fd500019] = 0x01
-  // 00:00:02.02 bcmpciehostbridge: write8 [fd50001a] = 0x01
-  // 00:00:02.02 bcmpciehostbridge: write16 [fd500020] = 0xf800 (or 0xc000 if rc bar2 udated to match linux)
-  // 00:00:02.03 bcmpciehostbridge: write16 [fd500022] = 0xf800 (or 0xc000 if rc bar2 udated to match linux)
-  // 00:00:02.03 bcmpciehostbridge: write8 [fd50003e] = 0x01
-  // 00:00:02.04 bcmpciehostbridge: read8 [fd5000ac] = 0x10
-  // 00:00:02.04 bcmpciehostbridge: write8 [fd5000c8] = 0x10
-  // 00:00:02.05 bcmpciehostbridge: write16 [fd500004] = 0x0146
-
 
   // MSI initisalisation
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L623-L641
@@ -406,170 +367,154 @@ pcie_init_bcm2711:
 4:
   // reset VL805 firmware (the USB Host Controller chip)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L26-L66
-  //   https://github.com/rsta2/circle/blob/c21f2efdad86c1062f255fbf891135a2a356713e/lib/usb/xhcidevice.cpp#L124-L130
   adr     x0, vl805_reset_req                     // x0 = memory block pointer for mailbox call to reset VL805 firmware
   bl      mbox_call
 
   // corrupted by mbox_call above, so need to set again
   adrp    x10, 0xfd500000 + _start                // x10 = VL805 internal registers (pcie_base)
 
-  mov     x0, #1000                               // sleep 200-1000us
+  mov     x0, #200                                // sleep 200-1000us
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
 
+  mov     w1, #0x0400
+  strhi   w1, x10, #0xd4                          // was 0x0000
 
-# PCIe MMIO register writes
-# See:
-#  * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/include/uapi/linux/pci_regs.h
-# 0xfd500004 PCI_COMMAND
-# 0xfd500006 PCI_STATUS
-# 0xfd500010 PCI_BASE_ADDRESS_0
-# 0xfd500014 PCI_BASE_ADDRESS_1
-# 0xfd500018 PCI_PRIMARY_BUS
-# 0xfd50001a PCI_SUBORDINATE_BUS
-# 0xfd50001c PCI_IO_BASE
-# 0xfd500020 PCI_MEMORY_BASE
-# 0xfd500024 PCI_PREF_MEMORY_BASE
-# 0xfd500028 PCI_PREF_BASE_UPPER32
-# 0xfd50002c PCI_PREF_LIMIT_UPPER32
-# 0xfd500030 PCI_IO_BASE_UPPER16
-# 0xfd500038 PCI_ROM_ADDRESS1
-# 0xfd50003e PCI_BRIDGE_CONTROL
-# 0xfd50004c
-# 0xfd5000bc
-# 0xfd5000c8
-# 0xfd5000d4
-# 0xfd504044
-# 0xfd504048
-# 0xfd50404c
-# 0xfd504508
-# 0xfd504514
-# 0xfd508004
-# 0xfd50800c
-# 0xfd508010
-# 0xfd508014
-# 0xfd508018
-# 0xfd50801c
-# 0xfd508020
-# 0xfd508024
-# 0xfd508030
-# 0xfd50803c
-# 0xfd508084
-# 0xfd508092
-# 0xfd508094
-# 0xfd508098
-# 0xfd50809c
-# 0xfd5080d4
-# 0xfd509000
+  // Set PCI bridge control,
+  //   set bit 1 => Enable SERR forwarding on secondary interface
+  // In contrast, cirlce sets bit 0 (i.e. sets to 0x0001) => Enable parity detection on secondary interface
+  mov     w1, #0x0002
+  strhi   w1, x10, #0x3e                          // was 0x0000
 
-
-#  strhi   wzr, x10, #0x4                          // PCI_COMMAND = 0x0
-#  strwi   wzr, x10, #0x10                         // PCI_BASE_ADDRESS_0 = 0x0
-#  strwi   wzr, x10, #0x14                         // PCI_BASE_ADDRESS_1 = 0x0
-#  strwi   wzr, x10, #0x38                         // PCI_ROM_ADDRESS1 = 0x0
-#  strhi   wzr, x10, #0x1c                         // PCI_MEMORY_BASE = 0x0
-#  strwi   wzr, x10, #0x28                         // PCI_PREF_BASE_UPPER32 = 0x0
-  mov     w1, #0x400
-  strhi   w1, x10, #0xd4
-  mov     w1, #0x2
-  strhi   w1, x10, #0x3e                          // Enable SERR# forwarding on bridge so that it forwards ERR_ messages coming from an endpoint
+  // Seems to be ineffective, since in memory dump value is stil 0x2008
   mov     w1, #0xa008
-  strhi   w1, x10, #0x4c
-  mov     w1, #0x10
-  strhi   w1, x10, #0xc8
-#  strwi   wzr, x10, #0x18
+  strhi   w1, x10, #0x4c                          // was 0x2008
+
+  mov     w1, #0x0010
+  strhi   w1, x10, #0xc8                          // was 0x0000
+
+  // Set PCI status
   mov     w1, #0xffff
-  strhi   w1, x10, #0x6                           // PCI_STATUS = 0xffff
-  ldr     w1, =0xff0100
-  strwi   w1, x10, #0x18
-  mov     w1, #0x100000
-  strwi   w1, x14, #0x0
+  strhi   w1, x10, #0x6                           // PCI_STATUS = 0xffff (was 0x0010)
+
+  // Set PCI Primary Bus, Secondary Bus, Subordinate Bus (Highest bus number behind bridge), Latency timer for secondary interface
+  ldr     w1, =0x00010100
+  strwi   w1, x10, #0x18                          // was 0x00000000
+
+  mov     w1, #0x00100000
+  strwi   w1, x14, #0x0                           // was 0x00000000
+
+  // Set PCI command?
+  //   set bit 10 => INTx Emulation Disable
+  //   clear all other bits => everything disabled, since all the bits are enable bits
   mov     w1, #0x400
-# strhi   w1, x13, #0x4
-# strhi   wzr, x13, #0x4
-  mov     w1, #0xffffffff
-  strwi   w1, x13, #0x10
-  mov     w1, #0x4
-  strwi   w1, x13, #0x10
-  mov     w1, #0xffffffff
-# strwi   w1, x13, #0x14
-# strwi   wzr, x13, #0x14
-# strwi   w1, x13, #0x18
-# strwi   wzr, x13, #0x18
-# strwi   w1, x13, #0x1c
-# strwi   wzr, x13, #0x1c
-# strwi   w1, x13, #0x20
-# strwi   wzr, x13, #0x20
-# strwi   w1, x13, #0x24
-# strwi   wzr, x13, #0x24
-# mov     w1, #0xfffff800
-# strwi   w1, x13, #0x30
-# strwi   wzr, x13, #0x30
+  strwi   w1, x13, #0x4                           // was 0x0000
+
   mov     w1, #0x8000
-  strhi   w1, x13, #0x84
-# mov     w1, #0x43
-# strhi   w1, x13, #0xd4
-# mov     w1, #0x40
-# strhi   w1, x10, #0xbc
-# mov     w1, #0x60
-# strhi   w1, x10, #0xbc
+  strhi   w1, x13, #0x84                          // was 0x0000
+
   mov     w1, #0x40
-  strhi   w1, x13, #0xd4
-  strhi   w1, x10, #0xbc
-  mov     w1, #0x1
-  strbi   w1, x10, #0x1a
-# mov     w1, #0x2
-# strhi   w1, x10, #0x3e
-# strhi   wzr, x13, #0x4
-  ldr     w1, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type)
+  strhi   w1, x13, #0xd4                          // was 0x0043
+  strhi   w1, x10, #0xbc                          // was 0x0000
+
+  ldr     w1, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type) (was 0x00000004)
   strwi   w1, x13, #0x10
-# strwi   wzr, x13, #0x14                         // upper 32 address bits = 0
-# strhi   wzr, x13, #0x4
-# mov     w1, #0xffff
-# strwi   w1, x10, #0x30
+  strwi   wzr, x13, #0x14                         // upper 32 address bits = 0 (not technically needed, already 0, but nice to keep)
+
+  // Set PCI I/O Base
   mov     w1, #0xf0
-  strhi   w1, x10, #0x1c
-# strwi   wzr, x10, #0x30
+  strhi   w1, x10, #0x1c                          // was 0x0000
+
+  // Set PCI Memory Base
   mov     w1, #0xc000c000
-  strwi   w1, x10, #0x20
-# strwi   wzr, x10, #0x2c
-  mov     w1, #0xfff0
-  strwi   w1, x10, #0x24
-  strwi   wzr, x10, #0x28
-  strwi   wzr, x10, #0x2c
-  mov     w1, #0x2
-  strhi   w1, x10, #0x3e
+  strwi   w1, x10, #0x20                          // was 0xf800f800 - perhaps from previous circle run that uses this alternative value?
+
+  // Set PCI Pref Memory Base
+  mov     w1, #0x0000fff0
+  strwi   w1, x10, #0x24                          // was 0x0001fff1
+
+  // Interrupt line 0x3c ?
   mov     w1, #0x3e
-  strbi   w1, x13, #0x3c
-  mov     w1, #0x2
-  strhi   w1, x10, #0x4
-  mov     w1, #0x6
-  strhi   w1, x10, #0x4
+  strbi   w1, x13, #0x3c                          // was 0x00
+
+  // Set PCI Command
+  mov     w1, #0x0006
+  strhi   w1, x10, #0x4                           // was 0x0000
+
+  // PCI cache line size
   mov     w1, #0x10
-  strbi   w1, x13, #0xc                           // PCI cache line size = 0x10 (64/4)
-  mov     w1, #0x156
-  strhi   w1, x13, #0x4
-  mov     w1, #0x84
-  strhi   w1, x13, #0x92
+  strbi   w1, x13, #0xc                           // PCI cache line size = 0x10 (64/4) (was 0x00)
+
   mov     w1, #0xfffffffc
-  strwi   w1, x13, #0x94
-  strwi   wzr, x13, #0x98
+  strwi   w1, x13, #0x94                          // was 0x00000000
+
   mov     w1, #0x6540
-  strhi   w1, x13, #0x9c
+  strhi   w1, x13, #0x9c                          // was 0x0000
+
+  // PCI command config: response in memory space | bus mastering | parity checking | SERR | INTx emulation disable (was 0x0000)
   mov     w1, #0x546
-  strhi   w1, x13, #0x4                           // PCI command config: response in memory space | bus mastering | parity checking | SERR | INTx emulation disable
+  strhi   w1, x13, #0x4                           // Cicle does not disable INTx emulation
+
   mov     w1, #0x85
-  strhi   w1, x13, #0x92
+  strhi   w1, x13, #0x92                          // was 0x0084
 
 
   //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
   //  fd500000 e4 14 11 27 06 00 10 00 20 00 04 06 00 00 01 00 00 00 00 00 00 00 00 00 00 01 01 00 00 00 00 20
   //  fd500020 00 c0 00 c0 f1 ff 01 00 00 00 00 00 00 00 00 00 00 00 00 00 48 00 00 00 00 00 00 00 00 01 02 00
+  //
+  //  fd500000: 0x14e4     Vendor ID (Broadcom Inc. and subsidiaries)
+  //  fd500002: 0x2711     Device ID (BCM2711 PCIe Bridge)
+  //  fd500004: 0x0006     Command
+  //  fd500006: 0x0010     Status
+  //  fd500008: 0x20       Revision ID
+  //  fd500009: 0x060400   Class Code
+  //  fd50000c: 0x00       Cache Line Size
+  //  fd50000d: 0x00       Latency Timer
+  //  fd50000e: 0x01       Header Type
+  //  fd50000f: 0x00       BIST
+  //  fd500010: 0x00000000 Base Address 0
+  //  fd500014: 0x00000000 Base Address 1
+  //  fd500018: 0x00       Primary Bus Number
+  //  fd500019: 0x01       Secondary Bus Number
+  //  fd50001a: 0x01       Subordinate Bus Number
+  //  fd50001b: 0x00       Secondary Latency Timer
+  //  fd50001c: 0x00       I/O Base
+  //  fd50001d: 0x00       I/O Limit
+  //  fd50001e: 0x2000     Secondary Status
+  //  fd500020: 0xc000     Memory Base
+  //  fd500022: 0xc000     Memory Limit
+  //  fd500024: 0xfff1     Prefetchable Memory Base
+  //  fd500026: 0x0001     Prefetchable Memory Limit
+  //  fd500028: 0x00000000 Prefetchable Base upper 32 bits
+  //  fd50002c: 0x00000000 Prefetchable Limit upper 32 bits
+  //  fd500030: 0x0000     I/O Base upper 16 bits
+  //  fd500032: 0x0000     I/O Limit upper 16 bits
+  //  fd500034: 0x48       Capabilities Pointer
+  //  fd500035: 0x000000   Reserved
+  //  fd500038: 0x00000000 Expansion ROM Base Address
+  //  fd50003c: 0x00       Interrupt Line
+  //  fd50003d: 0x01       Interrupt Pin
+  //  fd50003e: 0x0002     Bridge Control
+  //
+  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
   //  fd500040 00 00 00 00 00 00 00 00 01 ac 13 48 08 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd500060 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd500080 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd5000a0 00 00 00 00 00 00 00 00 00 00 00 00 10 00 42 00 02 80 00 00 10 2c 00 00 12 cc 64 00 40 00 12 d0
   //  fd5000c0 00 00 00 00 00 00 40 00 10 00 01 00 00 00 00 00 1f 08 08 00 00 04 00 00 06 00 00 80 02 00 00 00
   //  fd5000e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //
+  //  Unknown purpose
+  //
+  //  fd500040: 0x00000000 ????
+  //  fd500044: 0x00000000 ????
+  //
+  //  Capabilities
+  //
+  //  fd500048: 0x01 Power Management (13 48 08 20 00...)
+  //  fd5000ac: 0x10 PCI Express (42 00 02 80 00 00 10 2c 00 00 12 cc 64 00 40 00 12 d0 00 00 00 00 00 00 40 00 10 00 01 00 00 00 00 00 1f 08 08 00 00 04 00 00 06 00 00 80 02 00...)
+  //
+  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
   //  fd500100 01 00 01 18 00 00 00 00 00 00 00 00 30 20 06 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00
   //  fd500120 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd500140 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -616,40 +561,6 @@ pcie_init_bcm2711:
   //  fd500660 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd500680 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd5006a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //
-  //  fd500000: 0x14e4     Vendor ID (Broadcom Inc. and subsidiaries)
-  //  fd500002: 0x2711     Device ID (BCM2711 PCIe Bridge)
-  //  fd500004: 0x0006     Command
-  //  fd500006: 0x0010     Status
-  //  fd500008: 0x20       Revision ID
-  //  fd500009: 0x060400   Class Code
-  //  fd50000c: 0x00       Cache Line Size
-  //  fd50000d: 0x00       Latency Timer
-  //  fd50000e: 0x01       Header Type
-  //  fd50000f: 0x00       BIST
-  //  fd500010: 0x00000000 Base Address 0
-  //  fd500014: 0x00000000 Base Address 1
-  //  fd500018: 0x00       Primary Bus Number
-  //  fd500019: 0x01       Secondary Bus Number
-  //  fd50001a: 0x01       Subordinate Bus Number
-  //  fd50001b: 0x00       Secondary Latency Timer
-  //  fd50001c: 0x00       I/O Base
-  //  fd50001d: 0x00       I/O Limit
-  //  fd50001e: 0x2000     Secondary Status
-  //  fd500020: 0xc000     Memory Base
-  //  fd500022: 0xc000     Memory Limit
-  //  fd500024: 0xfff1     Prefetchable Memory Base
-  //  fd500026: 0x0001     Prefetchable Memory Limit
-  //  fd500028: 0x00000000 Prefetchable Base upper 32 bits
-  //  fd50002c: 0x00000000 Prefetchable Limit upper 32 bits
-  //  fd500030: 0x0000     I/O Base upper 16 bits
-  //  fd500032: 0x0000     I/O Limit upper 16 bits
-  //  fd500034: 0x48       Capabilities Pointer
-  //  fd500035: 0x000000   Reserved
-  //  fd500038: 0x00000000 Expansion ROM Base Address
-  //  fd50003c: 0x00       Interrupt Line
-  //  fd50003d: 0x01       Interrupt Pin
-  //  fd50003e: 0x0002     Bridge Control
 
 
   ldrwi   w2, x13, #0x8                           // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)

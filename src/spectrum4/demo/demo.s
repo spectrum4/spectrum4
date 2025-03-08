@@ -118,6 +118,25 @@ display_memory:
   ret
 
 
+display_page:
+  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                                 // Update frame pointer to new stack location.
+  mov     x19, x0
+  mov     x20, #0x4
+  1:
+    mov     x0, x19
+    mov     x1, #32                               // number of rows to print
+    mov     x2, #0                                // screen line to start at
+    bl      display_memory
+    mov     w0, 0x100000
+    bl      wait_usec
+    add     x19, x19, 0x400
+    sub     x20, x20, #0x1
+    cbnz    x20, 1b
+  ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
+  ret
+
+
 display_zx_screen:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

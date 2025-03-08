@@ -203,29 +203,13 @@ new:                                     // L019D
 5:
 // Display pcie memory region
   adrp    x0, 0xfd500000 + _start                 // start address
-  mov     x1, #32                                 // number of rows to print
-  mov     x2, #0                                  // screen line to start at
-  bl      display_memory
-  mov     w0, 0x100000
-  bl      wait_usec
+  bl      display_page
   adrp    x0, 0xfd504000 + _start                 // start address
-  mov     x1, #32                                 // number of rows to print
-  mov     x2, #0                                  // screen line to start at
-  bl      display_memory
-  mov     w0, 0x100000
-  bl      wait_usec
+  bl      display_page
   adrp    x0, 0xfd508000 + _start                 // start address
-  mov     x1, #32                                 // number of rows to print
-  mov     x2, #0                                  // screen line to start at
-  bl      display_memory
-  mov     w0, 0x100000
-  bl      wait_usec
+  bl      display_page
   ldr     x0, =(0x600000000 + _start)             // start address
-  mov     x1, #32                                 // number of rows to print
-  mov     x2, #0                                  // screen line to start at
-  bl      display_memory
-  mov     w0, 0x100000
-  bl      wait_usec
+  bl      display_page
 6:
 .endif
 

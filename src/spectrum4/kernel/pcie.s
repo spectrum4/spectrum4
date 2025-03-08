@@ -361,15 +361,15 @@ pcie_init_bcm2711:
 
   // Note, instead of the following two MSI sections, Circle does the following
 
-  // 00:00:02.01 bcmpciehostbridge: write8 [fd50000c] = 10
-  // 00:00:02.01 bcmpciehostbridge: write8 [fd500019] = 1
-  // 00:00:02.02 bcmpciehostbridge: write8 [fd50001a] = 1
-  // 00:00:02.02 bcmpciehostbridge: write16 [fd500020] = f800 (or c000 if rc bar2 udated to match linux)
-  // 00:00:02.03 bcmpciehostbridge: write16 [fd500022] = f800 (or c000 if rc bar2 udated to match linux)
-  // 00:00:02.03 bcmpciehostbridge: write8 [fd50003e] = 1
-  // 00:00:02.04 bcmpciehostbridge: read8 [fd5000ac] = 10
-  // 00:00:02.04 bcmpciehostbridge: write8 [fd5000c8] = 10
-  // 00:00:02.05 bcmpciehostbridge: write16 [fd500004] = 146
+  // 00:00:02.01 bcmpciehostbridge: write8 [fd50000c] = 0x10
+  // 00:00:02.01 bcmpciehostbridge: write8 [fd500019] = 0x01
+  // 00:00:02.02 bcmpciehostbridge: write8 [fd50001a] = 0x01
+  // 00:00:02.02 bcmpciehostbridge: write16 [fd500020] = 0xf800 (or 0xc000 if rc bar2 udated to match linux)
+  // 00:00:02.03 bcmpciehostbridge: write16 [fd500022] = 0xf800 (or 0xc000 if rc bar2 udated to match linux)
+  // 00:00:02.03 bcmpciehostbridge: write8 [fd50003e] = 0x01
+  // 00:00:02.04 bcmpciehostbridge: read8 [fd5000ac] = 0x10
+  // 00:00:02.04 bcmpciehostbridge: write8 [fd5000c8] = 0x10
+  // 00:00:02.05 bcmpciehostbridge: write16 [fd500004] = 0x0146
 
 
   // MSI initisalisation

@@ -616,7 +616,40 @@ pcie_init_bcm2711:
   //  fd500660 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd500680 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd5006a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
+  //
+  //  fd500000: 0x14e4     Vendor ID (Broadcom Inc. and subsidiaries)
+  //  fd500002: 0x2711     Device ID (BCM2711 PCIe Bridge)
+  //  fd500004: 0x0006     Command
+  //  fd500006: 0x0010     Status
+  //  fd500008: 0x20       Revision ID
+  //  fd500009: 0x060400   Class Code
+  //  fd50000c: 0x00       Cache Line Size
+  //  fd50000d: 0x00       Latency Timer
+  //  fd50000e: 0x01       Header Type
+  //  fd50000f: 0x00       BIST
+  //  fd500010: 0x00000000 Base Address 0
+  //  fd500014: 0x00000000 Base Address 1
+  //  fd500018: 0x00       Primary Bus Number
+  //  fd500019: 0x01       Secondary Bus Number
+  //  fd50001a: 0x01       Subordinate Bus Number
+  //  fd50001b: 0x00       Secondary Latency Timer
+  //  fd50001c: 0x00       I/O Base
+  //  fd50001d: 0x00       I/O Limit
+  //  fd50001e: 0x2000     Secondary Status
+  //  fd500020: 0xc000     Memory Base
+  //  fd500022: 0xc000     Memory Limit
+  //  fd500024: 0xfff1     Prefetchable Memory Base
+  //  fd500026: 0x0001     Prefetchable Memory Limit
+  //  fd500028: 0x00000000 Prefetchable Base upper 32 bits
+  //  fd50002c: 0x00000000 Prefetchable Limit upper 32 bits
+  //  fd500030: 0x0000     I/O Base upper 16 bits
+  //  fd500032: 0x0000     I/O Limit upper 16 bits
+  //  fd500034: 0x48       Capabilities Pointer
+  //  fd500035: 0x000000   Reserved
+  //  fd500038: 0x00000000 Expansion ROM Base Address
+  //  fd50003c: 0x00       Interrupt Line
+  //  fd50003d: 0x01       Interrupt Pin
+  //  fd50003e: 0x0002     Bridge Control
 
 
   ldrwi   w2, x13, #0x8                           // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)

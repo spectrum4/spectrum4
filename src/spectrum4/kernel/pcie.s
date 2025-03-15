@@ -33,10 +33,10 @@
 pcie_init_bcm2711:
 
   mov     x5, x30
-  adrp    x10, 0xfd500000 + _start                // x10 = VL805 internal registers (pcie_base)
-  adrp    x4, 0xfd504000 + _start
-  adrp    x13, 0xfd508000 + _start                // x13 = VL805 extended config space data
-  adrp    x14, 0xfd509000 + _start                // x14 = VL805 extended config space index
+  adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address
+  adrp    x4, 0xfd504000 + _start                 // x4 = VL805 USB Host controller registers
+  adrp    x13, 0xfd508000 + _start                // x13 = USB Controller config space base address
+  adrp    x14, 0xfd509000 + _start                // x14 = PCI bridge registers
   adrp    x7, heap
   add     x7, x7, :lo12:heap                      // x7 = heap
 
@@ -570,7 +570,7 @@ pcie_init_bcm2711:
   ldrbi   w3, x13, #0xe                           // w3 = bus 1 header type
   stp     w2, w3, [x7, #0x20]                     // store bus 1 class, revision and header type on heap
 
-  ldr     x0, =(0x600000000 + _start)             // x0 = pcie start address
+  ldr     x0, =(0x600000000 + _start)             // x0 = pcie start address = VL805 USB Host Controller Capability Registers
   ldrhi   w1, x0, #0x2                            // w1 = [XHCI_REG_CAP_HCIVERSION]
   strhi   w1, x7, #0x2c                           // store [XHCI_REG_CAP_HCIVERSION] on heap (should be 0x0110)
 

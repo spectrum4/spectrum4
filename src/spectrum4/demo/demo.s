@@ -128,8 +128,6 @@ display_page:
     mov     x1, #32                               // number of rows to print
     mov     x2, #0                                // screen line to start at
     bl      display_memory
-    mov     w0, 0x100000
-    bl      wait_usec
     add     x19, x19, 0x400
     sub     x20, x20, #0x1
     cbnz    x20, 1b

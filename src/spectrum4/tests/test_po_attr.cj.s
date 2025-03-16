@@ -194,7 +194,8 @@ po_attr_cjs_effects_regs:
   mov     x6, #0
   mov     x7, #0xff0000
   mov     x8, #0
-  adr     x9, fb_req
+  adrp    x9, fb_req
+  add     x9, x9, :lo12:fb_req
   mov     x10, #4
   movl    w11, 0x20f61
   mov     x12, #108

@@ -377,57 +377,32 @@ pcie_init_bcm2711:
   mov     x0, #200                                // sleep 200-1000us
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
 
-  // [    1.102299]  pci_generic_config_write+0x74/0xe0
-  // [    1.102310]  pci_bus_write_config_word+0x64/0xa0
-  // [    1.102320]  pcie_capability_write_word+0x84/0xa0
-  // [    1.102330]  pcie_capability_clear_and_set_word+0x84/0x8c
-  // [    1.102340]  pci_device_add+0x258/0x51c
-  // [    1.102351]  pci_scan_single_device+0x10c/0x140
-  // [    1.102363]  pci_scan_slot+0x44/0x120
-  // [    1.102373]  pci_scan_child_bus_extend+0x58/0x2dc
-  // [    1.102385]  pci_scan_root_bus_bridge+0x68/0xdc
-  // [    1.102398]  pci_host_probe+0x1c/0xc4
+  // Set LTR Enable bit in PCI Express Device Control 2 register (PCI_EXP_DEVCTL2) of the root complex, i.e. turn LTR on.
+  // PCI Express capability starts at offset 0xac, and PCI_EXP_DEVCTL2 register has offset 0x28 from start of capability,
+  // i.e. offset is 0xac + 0x28 = 0xd4
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2166-L2177
   mov     w1, #0x0400
   strhi   w1, x10, #0xd4                          // [0xfd5000d4] = 0x0400 (was 0x0000)
 
-  // Set PCI bridge control,
-  //   set bit 1 => Enable SERR forwarding on secondary interface
-  // In contrast, cirlce sets bit 0 (i.e. sets to 0x0001) => Enable parity detection on secondary interface
+  // Set SERR forwarding bit (bit 1) in PCI bridge control of root complex.
+  // In contrast, Cirlce sets bit 0 instead which enables parity detection on secondary interface.
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2207-L2223
   mov     w1, #0x0002
   strhi   w1, x10, #0x3e                          // [0xfd50003e] = 0x0002 (was 0x0000)
 
-  // Seems to be ineffective, since in memory dump value is stil 0x2008
-  // [    1.117602]  pci_generic_config_write+0x74/0xe0
-  // [    1.117612]  pci_bus_write_config_word+0x64/0xa0
-  // [    1.117622]  pci_write_config_word+0x34/0x4c
-  // [    1.117631]  pci_pme_active+0xd8/0x1d0
-  // [    1.117646]  pci_pm_init+0x278/0x294
-  // [    1.117655]  pci_device_add+0x138/0x51c
-  // [    1.117667]  pci_scan_single_device+0x10c/0x140
-  // [    1.117678]  pci_scan_slot+0x44/0x120
-  // [    1.117689]  pci_scan_child_bus_extend+0x58/0x2dc
-  // [    1.117700]  pci_scan_root_bus_bridge+0x68/0xdc
-  // [    1.117712]  pci_host_probe+0x1c/0xc4
-  mov     w1, #0xa008
-  strhi   w1, x10, #0x4c                          // [0xfd50004c] = 0xa008 (was 0x2008)
+  // Disable Power Management (clear bit 8) and clear Power Management Status (by setting bit 15) of PCI_PM_CTRL register of root complex.
+  // Power Management capability starts at offset 0x48, and PCI_PM_CTRL has offset 0x04 from start of capability,
+  // i.e. offset is 0x48 + 0x04 = 0x4c
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pci.c#L2354-L2368
+  ldrhi   w1, x10, #0x4c                          // w1 = [0xfd50004c] (=0x2008) = current value of PCI_PM_CTRL for root complex
+  and     w1, w1, #~0x0100                        // clear bit 8 (PCI_PM_CTRL_PME_ENABLE)
+  orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
+  strhi   w1, x10, #0x4c                          // of [0xfd50004c] (PCI_PM_CTRL)
 
-  // [    1.128325]  pci_generic_config_write+0x74/0xe0
-  // [    1.128335]  pci_bus_write_config_word+0x64/0xa0
-  // [    1.128345]  pcie_capability_write_word+0x84/0xa0
-  // [    1.128355]  pcie_capability_clear_and_set_word+0x84/0x8c
-  // [    1.128366]  pci_scan_bridge_extend+0x324/0x5d0
-  // [    1.128378]  pci_scan_child_bus_extend+0x160/0x2dc   *****
-  // [    1.128390]  pci_scan_root_bus_bridge+0x68/0xdc
-  // [    1.128402]  pci_host_probe+0x1c/0xc4
-  // and then
-  // [    1.131013]  pci_generic_config_write+0x74/0xe0
-  // [    1.131023]  pci_bus_write_config_word+0x64/0xa0
-  // [    1.131033]  pcie_capability_write_word+0x84/0xa0
-  // [    1.131043]  pcie_capability_clear_and_set_word+0x84/0x8c
-  // [    1.131054]  pci_scan_bridge_extend+0x324/0x5d0
-  // [    1.131066]  pci_scan_child_bus_extend+0x1f8/0x2dc   *****
-  // [    1.131077]  pci_scan_root_bus_bridge+0x68/0xdc
-  // [    1.131090]  pci_host_probe+0x1c/0xc4
+  // Enable CRS Software Visibility (set bit 4) of PCI_EXP_RTCTL (Root Control)
+  // PCI Express capability starts at offset 0xac, and PCI_EXP_RTCTL register has offset 0x1c from start of capability,
+  // i.e. offset is 0xac + 0x1c = 0xc8
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1150-L1159
   mov     w1, #0x0010
   strhi   w1, x10, #0xc8                          // [0xfd5000c8] = 0x0010 (was 0x0000)
 
@@ -533,7 +508,7 @@ pcie_init_bcm2711:
   //  fd500038: 0x00000000 Expansion ROM Base Address
   //  fd50003c: 0x00       Interrupt Line
   //  fd50003d: 0x01       Interrupt Pin
-  //  fd50003e: 0x0002     Bridge Control
+  //  fd50003e: 0x0002     Bridge Control (set by us)
   //
   //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
   //  fd500040 00 00 00 00 00 00 00 00 01 ac 13 48 08 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -551,8 +526,9 @@ pcie_init_bcm2711:
   //  Capabilities
   //
   //  fd500048: 0x01 Power Management (13 48 08 20 00...)
+  //                                         ^^^^^
   //  fd5000ac: 0x10 PCI Express (42 00 02 80 00 00 10 2c 00 00 12 cc 64 00 40 00 12 d0 00 00 00 00 00 00 40 00 10 00 01 00 00 00 00 00 1f 08 08 00 00 04 00 00 06 00 00 80 02 00...)
-  //
+  //                                                                                                            ^^^^^                               ^^^^^
   //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
   //  fd500100 01 00 01 18 00 00 00 00 00 00 00 00 30 20 06 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00
   //  fd500120 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00

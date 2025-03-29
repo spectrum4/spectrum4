@@ -366,12 +366,12 @@ pcie_init_bcm2711:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L639-L640
 
 4:
-  // reset VL805 firmware (the USB Host Controller chip)
+  // Reset VL805 firmware (the USB Host Controller chip)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L26-L66
   adr     x0, vl805_reset_req                     // x0 = memory block pointer for mailbox call to reset VL805 firmware
   bl      mbox_call
 
-  // corrupted by mbox_call above, so need to set again
+  // Corrupted by mbox_call above, so need to set again
   adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address
 
   mov     x0, #200                                // sleep 200-1000us
@@ -400,31 +400,56 @@ pcie_init_bcm2711:
   strhi   w1, x10, #0x4c                          // of [0xfd50004c] (PCI_PM_CTRL)
 
   // Enable CRS Software Visibility (set bit 4) of PCI_EXP_RTCTL (Root Control)
+  // CRS = Configuration Request Retry Status, directing devices to
+  // return a vendor id of 0x0001 if they are not ready after a reset
+  //   https://blog.linuxplumbersconf.org/2017/ocw/system/presentations/4732/original/crs.pdf
   // PCI Express capability starts at offset 0xac, and PCI_EXP_RTCTL register has offset 0x1c from start of capability,
   // i.e. offset is 0xac + 0x1c = 0xc8
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1150-L1159
   mov     w1, #0x0010
   strhi   w1, x10, #0xc8                          // [0xfd5000c8] = 0x0010 (was 0x0000)
 
-  // Set PCI status
+  // Clear errors on root complex
+  // Write 0xffff to clear all status bits (e.g., parity errors, aborts)
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1332-L1333
   mov     w1, #0xffff
   strhi   w1, x10, #0x6                           // PCI_STATUS = 0xffff (was 0x0010)
 
-  // Set PCI Primary Bus, Secondary Bus, Subordinate Bus (Highest bus number behind bridge), Latency timer for secondary interface
+  // Configure bus numbers in root complex and latency timer
+  // 0x18: PCI Primary Bus = 0x00
+  // 0x19: Secondary Bus = 0x01
+  // 0x1a: Subordinate Bus (Highest bus number behind bridge) = 0x01
+  // 0x1b: Latency timer for secondary interface = 0x00
   ldr     w1, =0x00010100
   strwi   w1, x10, #0x18                          // was 0x00000000
 
+  // PCIe RC ECAM Index Register (offset 0x9000 from base, x14 + 0x0)
+  // Mounts VL805 (bus 1, device 0, function 0, offset 0) configuration space at physical address [0xfd58000] (x13)
+  // 0b0000 bbbb bbbb dddd dfff oooo oooo oooo (b = bus, d = device, f = function, o = offset)
+  // 0b0000 0000 0001 0000 0000 0000 0000 0000
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L707-L722
   mov     w1, #0x00100000
   strwi   w1, x14, #0x0                           // was 0x00000000
 
-  // Set PCI command?
-  //   set bit 10 => INTx Emulation Disable
-  //   clear all other bits => everything disabled, since all the bits are enable bits
-  mov     w1, #0x400
-  strwi   w1, x13, #0x4                           // was 0x0000
+  // VL805: Set PCI command
+  // 0b0000 0101 0100 0110
+  // set bit 1  => Enable response in Memory space
+  // set bit 2  => Enable bus mastering
+  // set bit 6  => Enable parity checking
+  // set bit 8  => Enable SERR
+  // set bit 10 => INTx Emulation Disable
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/include/uapi/linux/pci_regs.h#L40-L51
+  mov     w1, #0x546
+  strhi   w1, x13, #0x4                           // was 0x0000
 
-  mov     w1, #0x8000
-  strhi   w1, x13, #0x84                          // was 0x0000
+  // VL805: Disable Power Management (clear bit 8) and clear Power Management Status (by setting bit 15) of PCI_PM_CTRL register.
+  // Power Management capability starts at offset 0x80, and PCI_PM_CTRL has offset 0x04 from start of capability,
+  // i.e. offset is 0x80 + 0x04 = 0x84
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pci.c#L2354-L2368
+  ldrhi   w1, x13, #0x84                          // w1 = [0xfd50004c] (=0x2008) = current value of PCI_PM_CTRL for root complex
+  and     w1, w1, #~0x0100                        // clear bit 8 (PCI_PM_CTRL_PME_ENABLE)
+  orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
+  strhi   w1, x13, #0x84                          // of [0xfd50004c] (PCI_PM_CTRL)
 
   mov     w1, #0x40
   strhi   w1, x13, #0xd4                          // was 0x0043
@@ -488,10 +513,10 @@ pcie_init_bcm2711:
   //  fd50000f: 0x00       BIST
   //  fd500010: 0x00000000 Base Address 0
   //  fd500014: 0x00000000 Base Address 1
-  //  fd500018: 0x00       Primary Bus Number
-  //  fd500019: 0x01       Secondary Bus Number
-  //  fd50001a: 0x01       Subordinate Bus Number
-  //  fd50001b: 0x00       Secondary Latency Timer
+  //  fd500018: 0x00       Primary Bus Number (set by us)
+  //  fd500019: 0x01       Secondary Bus Number (set by us)
+  //  fd50001a: 0x01       Subordinate Bus Number (set by us)
+  //  fd50001b: 0x00       Secondary Latency Timer (set by us)
   //  fd50001c: 0x00       I/O Base
   //  fd50001d: 0x00       I/O Limit
   //  fd50001e: 0x2000     Secondary Status
@@ -576,6 +601,58 @@ pcie_init_bcm2711:
   //  fd500660 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd500680 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd5006a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+
+  // VL805 configuration space
+
+  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
+  //  fd508000 06 11 83 34 46 05 10 00 01 30 03 0c 10 00 00 00 04 00 00 c0 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508020 00 00 00 00 00 00 00 00 00 00 00 00 06 11 83 34 00 00 00 00 80 00 00 00 00 00 00 00 3e 01 00 00
+
+
+
+  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
+  //  fd508040 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 11 83 34
+  //  fd508060 30 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+  // VL805 Capabilities
+
+  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
+  //  fd508080 01 90 03 48 00 00 00 00 00 00 00 00 00 00 00 00 05 c4 85 00 fc ff ff ff 00 00 00 00 40 65 00 00
+  //  fd5080a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd5080c0 00 20 00 00 10 00 02 00 01 80 00 00 10 28 19 00 12 5c 06 00 40 00 12 10 00 00 00 00 00 00 00 00
+  //  fd5080e0 00 00 00 00 00 00 00 00 12 00 00 00 00 00 00 00 00 00 00 00 22 00 01 00 00 00 00 00 00 00 00 00
+
+  //  fd508080: 0x01 Power Management (03 48 00 00 00 00 00 00 00 00 00 00 00 00)
+  //  fd508090: 0x05 Message Signalled Interrupts
+  //  fd5080c4: 0x10 PCI Express
+
+
+  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
+  //  fd508100 01 00 01 00 00 00 10 00 00 00 00 00 31 20 06 00 00 20 00 00 00 20 00 00 14 00 00 00 00 00 00 00
+  //  fd508120 00 00 00 01 03 00 00 00 01 00 00 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508140 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508160 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508180 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd5081a0 43 20 50 64 ff 03 c2 00 00 00 00 00 00 00 00 00 00 00 41 81 07 00 a1 0b 00 00 06 09 3a 09 0e 57
+  //  fd5081c0 05 e0 a7 8a 04 00 00 00 00 00 00 00 00 cf 18 00 d8 20 07 28 01 00 00 00 00 00 00 00 00 00 00 00
+  //  fd5081e0 01 12 22 21 00 80 c3 01 01 00 00 00 00 00 00 00 00 00 20 06 00 00 66 01 00 00 00 00 00 00 00 00
+  //  fd508200 00 00 00 00 00 00 00 00 00 03 3c 3e 00 00 00 00 00 00 00 22 22 00 00 00 95 db 22 00 00 00 00 00
+  //  fd508220 00 11 11 00 94 00 00 00 00 00 c0 ff 24 45 45 65 13 65 03 24 0d 0d 00 00 00 00 00 00 ff ff ff ff
+  //  fd508240 00 00 ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 3f 1f 00 00 00 00 00 00 00 00 00
+  //  fd508260 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508280 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd5082a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd5082c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd5082e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508300 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508320 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508340 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508360 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508380 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd5083a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd5083c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd5083e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
 
   ldrwi   w2, x13, #0x8                           // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)

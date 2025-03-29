@@ -33,10 +33,12 @@
 pcie_init_bcm2711:
 
   mov     x5, x30
-  adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address
-  adrp    x4, 0xfd504000 + _start                 // x4 = VL805 USB Host controller registers
-  adrp    x13, 0xfd508000 + _start                // x13 = USB Controller config space base address
-  adrp    x14, 0xfd509000 + _start                // x14 = PCI bridge registers
+
+  adrp    x10, 0xfd500000 + _start                // x10 = PCIe RC config space base (0xfd500000 physical)
+  adrp    x4,  0xfd504000 + _start
+  adrp    x13, 0xfd508000 + _start                // x13 = VL805 USB controller config space (bus 1, dev 0, fn 0)
+  adrp    x14, 0xfd509000 + _start                // x14 = PCIe RC ECAM index register (0xfd500000 + PCIE_EXT_CFG_INDEX)
+
   adrp    x7, heap
   add     x7, x7, :lo12:heap                      // x7 = heap
 
@@ -380,83 +382,118 @@ pcie_init_bcm2711:
   mov     w1, #0x0400
   strhi   w1, x10, #0xd4                          // was 0x0000
 
-  // Set PCI bridge control,
-  //   set bit 1 => Enable SERR forwarding on secondary interface
-  // In contrast, cirlce sets bit 0 (i.e. sets to 0x0001) => Enable parity detection on secondary interface
+  // PCIe RC Bridge Control (offset 0x3e)
+  //   Bit 1 (0x0002): Enable SERR forwarding (PCI_BRIDGE_CTL_SERR)
   mov     w1, #0x0002
-  strhi   w1, x10, #0x3e                          // was 0x0000
+  strhi   w1, x10, #0x3e                          // Bridge Control = 0x0002 (was 0x0000)
 
-  // Seems to be ineffective, since in memory dump value is stil 0x2008
+  // PCIe RC Unknown Register (offset 0x4c)
   mov     w1, #0xa008
-  strhi   w1, x10, #0x4c                          // was 0x2008
+  strhi   w1, x10, #0x4c                          // Ineffective (remains 0x2008; read-only?)
 
+  // PCIe RC Unknown Register (offset 0xc8)
   mov     w1, #0x0010
-  strhi   w1, x10, #0xc8                          // was 0x0000
+  strhi   w1, x10, #0xc8                          // Unknown purpose (was 0x0000)
 
-  // Set PCI status
+  // PCIe RC Status Register (offset 0x06)
+  //   Write 0xffff to clear all status bits (e.g., parity errors, aborts)
   mov     w1, #0xffff
   strhi   w1, x10, #0x6                           // PCI_STATUS = 0xffff (was 0x0010)
 
-  // Set PCI Primary Bus, Secondary Bus, Subordinate Bus (Highest bus number behind bridge), Latency timer for secondary interface
+  // PCIe RC Bus Numbers and Latency Timer (offset 0x18)
+  //   [23:16] Subordinate Bus Number (0x01): Highest bus downstream
+  //   [15:8]  Secondary Bus Number (0x01): VL805 on bus 1
+  //   [7:0]   Primary Bus Number (0x00): RC on bus 0
   ldr     w1, =0x00010100
-  strwi   w1, x10, #0x18                          // was 0x00000000
+  strwi   w1, x10, #0x18                          // Bus config = 0x00010100 (was 0x00000000)
 
+  // PCIe RC ECAM Index Register (offset 0x9000 from base, x14 + 0x0)
+  //   Sets BDF for VL805: bus 1, device 0, function 0
+  //   PCIE_ECAM_OFFSET(1, PCI_DEVFN(0, 0), 0) = 0x00100000
   mov     w1, #0x00100000
-  strwi   w1, x14, #0x0                           // was 0x00000000
+  strwi   w1, x14, #0x0                           // PCIE_EXT_CFG_INDEX = 0x00100000 (was 0x00000000)
 
-  // Set PCI command?
-  //   set bit 10 => INTx Emulation Disable
-  //   clear all other bits => everything disabled, since all the bits are enable bits
+  // VL805 Command Register (offset 0x04, accessed via ECAM at 0xfd508000)
+  //   Bit 10 (0x400): Interrupt Disable (VL805 datasheet pg. 11)
   mov     w1, #0x400
-  strwi   w1, x13, #0x4                           // was 0x0000
+  strwi   w1, x13, #0x4                           // Command = 0x0400 (was 0x0000)
 
+  // VL805 Power Management Control/Status (offset 0x84)
+  //   Bit 15 (0x8000): PME Status (VL805 datasheet pg. 16)
   mov     w1, #0x8000
-  strhi   w1, x13, #0x84                          // was 0x0000
+  strhi   w1, x13, #0x84                          // PM Control/Status = 0x8000 (was 0x0000)
 
+  // Unknown Registers (offset 0xd4 in VL805, 0xbc in RC)
   mov     w1, #0x40
-  strhi   w1, x13, #0xd4                          // was 0x0043
-  strhi   w1, x10, #0xbc                          // was 0x0000
+  strhi   w1, x13, #0xd4                          // VL805 unknown (was 0x0043)
+  strhi   w1, x10, #0xbc                          // RC unknown (was 0x0000)
 
-  ldr     w1, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type) (was 0x00000004)
-  strwi   w1, x13, #0x10
-  strwi   wzr, x13, #0x14                         // upper 32 address bits = 0 (not technically needed, already 0, but nice to keep)
+  // VL805 BAR0 (offsets 0x10-0x14)
+  //   [31:0]  0xc0000004: Lower 32 bits (64-bit, prefetchable, 0xc0000000 PCIe-side)
+  //   [63:32] 0x00000000: Upper 32 bits (maps to 0x600000000 ARM physical)
+  ldr     w1, =0xc0000004
+  strwi   w1, x13, #0x10                          // BAR0 lower (was 0x00000004)
+  strwi   wzr, x13, #0x14                         // BAR0 upper = 0 (was 0x00000000)
 
-  // Set PCI I/O Base
+  // PCIe RC I/O Base and Limit (offset 0x1c)
+  //   [15:8] I/O Limit (0x00): Upper bound
+  //   [7:4]  I/O Base (0xf): Lower bound (0xf000)
   mov     w1, #0xf0
-  strhi   w1, x10, #0x1c                          // was 0x0000
+  strhi   w1, x10, #0x1c                          // I/O Base = 0xf0 (was 0x0000)
 
-  // Set PCI Memory Base
+  // PCIe RC Memory Base and Limit (offset 0x20)
+  //   [31:16] Memory Limit (0xc000): 0xc0000000-0xc000ffff
+  //   [15:4]  Memory Base (0xc000): Matches VL805 BAR0
   mov     w1, #0xc000c000
-  strwi   w1, x10, #0x20                          // was 0xf800f800 - perhaps from previous circle run that uses this alternative value?
+  strwi   w1, x10, #0x20                          // Memory window = 0xc000c000 (was 0xf800f800)
 
-  // Set PCI Pref Memory Base
+  // PCIe RC Prefetchable Memory Base and Limit (offset 0x24)
+  //   [31:16] Prefetchable Limit (0xfff0): Large window
+  //   [15:4]  Prefetchable Base (0x0000): Starts at 0
   mov     w1, #0x0000fff0
-  strwi   w1, x10, #0x24                          // was 0x0001fff1
+  strwi   w1, x10, #0x24                          // Prefetchable window (was 0x0001fff1)
 
-  // Interrupt line 0x3c ?
+  // VL805 Interrupt Line (offset 0x3c)
+  //   Set to 0x3e (IRQ 62, VL805 datasheet pg. 14)
   mov     w1, #0x3e
-  strbi   w1, x13, #0x3c                          // was 0x00
+  strbi   w1, x13, #0x3c                          // Interrupt Line = 0x3e (was 0x00)
 
-  // Set PCI Command
+  // PCIe RC Command Register (offset 0x04)
+  //   Bit 2 (0x0004): Bus Master Enable
+  //   Bit 1 (0x0002): Memory Space Enable
   mov     w1, #0x0006
-  strhi   w1, x10, #0x4                           // was 0x0000
+  strhi   w1, x10, #0x4                           // Command = 0x0006 (was 0x0000)
 
-  // PCI cache line size
+  // VL805 Cache Line Size (offset 0x0c)
+  //   Set to 0x10 (64 bytes, VL805 datasheet pg. 12)
   mov     w1, #0x10
-  strbi   w1, x13, #0xc                           // PCI cache line size = 0x10 (64/4) (was 0x00)
+  strbi   w1, x13, #0xc                           // Cache Line Size = 0x10 (was 0x00)
 
+  // VL805 MSI Message Address Low (offset 0x94)
+  //   Matches driver’s BRCM_MSI_TARGET_ADDR_LT_4GB (0xfffffffc)
   mov     w1, #0xfffffffc
-  strwi   w1, x13, #0x94                          // was 0x00000000
+  strwi   w1, x13, #0x94                          // MSI Address Low = 0xfffffffc (was 0x00000000)
 
+  // VL805 MSI Message Data (offset 0x9c)
+  //   0x6540: Matches driver’s PCIE_MISC_MSI_DATA_CONFIG_VAL_32 (0xffe06540)
   mov     w1, #0x6540
-  strhi   w1, x13, #0x9c                          // was 0x0000
+  strhi   w1, x13, #0x9c                          // MSI Data = 0x6540 (was 0x0000)
 
-  // PCI command config: response in memory space | bus mastering | parity checking | SERR | INTx emulation disable (was 0x0000)
+  // VL805 Command Register (offset 0x04, updated)
+  //   Bit 10 (0x400): Interrupt Disable
+  //   Bit 9  (0x100): SERR Enable
+  //   Bit 2  (0x004): Bus Master Enable
+  //   Bit 1  (0x002): Memory Space Enable
   mov     w1, #0x546
-  strhi   w1, x13, #0x4                           // Cicle does not disable INTx emulation
+  strhi   w1, x13, #0x4                           // Command = 0x0546 (was 0x0400)
 
+  // VL805 MSI Control (offset 0x92)
+  //   Bit 7 (0x0080): 64-bit capable
+  //   Bit 0 (0x0001): MSI Enable
   mov     w1, #0x85
-  strhi   w1, x13, #0x92                          // was 0x0084
+  strhi   w1, x13, #0x92                          // MSI Control = 0x0085 (was 0x0084)
+
+
 
 
   //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f

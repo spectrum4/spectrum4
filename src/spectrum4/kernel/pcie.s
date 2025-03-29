@@ -451,9 +451,14 @@ pcie_init_bcm2711:
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
   strhi   w1, x13, #0x84                          // of [0xfd50004c] (PCI_PM_CTRL)
 
+  // Spec 2.0 suggests all functions should be configured the
+  // same setting for ASPM. Enabling ASPM L1 should be done in
+  // upstream component first and then downstream, and vice
+  // versa for disabling ASPM L1. Spec doesn't mention L0S.
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L778-L783
   mov     w1, #0x40
-  strhi   w1, x13, #0xd4                          // was 0x0043
   strhi   w1, x10, #0xbc                          // was 0x0000
+  strhi   w1, x13, #0xd4                          // was 0x0043
 
   ldr     w1, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type) (was 0x00000004)
   strwi   w1, x13, #0x10
@@ -624,9 +629,8 @@ pcie_init_bcm2711:
   //  fd5080e0 00 00 00 00 00 00 00 00 12 00 00 00 00 00 00 00 00 00 00 00 22 00 01 00 00 00 00 00 00 00 00 00
 
   //  fd508080: 0x01 Power Management (03 48 00 00 00 00 00 00 00 00 00 00 00 00)
-  //  fd508090: 0x05 Message Signalled Interrupts
-  //  fd5080c4: 0x10 PCI Express
-
+  //  fd508090: 0x05 Message Signalled Interrupts (85 00 fc ff ff ff 00 00 00 00 40 65 00 00 ....)
+  //  fd5080c4: 0x10 PCI Express (02 00 01 80 00 00 10 28 19 00 12 5c 06 00 40 00 12 10 00 00 00 00 00 00 00 00 ...)
 
   //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
   //  fd508100 01 00 01 00 00 00 10 00 00 00 00 00 31 20 06 00 00 20 00 00 00 20 00 00 14 00 00 00 00 00 00 00

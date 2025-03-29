@@ -372,26 +372,64 @@ pcie_init_bcm2711:
   bl      mbox_call
 
   // corrupted by mbox_call above, so need to set again
-  adrp    x10, 0xfd500000 + _start                // x10 = VL805 internal registers (pcie_base)
+  adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address
 
   mov     x0, #200                                // sleep 200-1000us
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
 
+  // [    1.102299]  pci_generic_config_write+0x74/0xe0
+  // [    1.102310]  pci_bus_write_config_word+0x64/0xa0
+  // [    1.102320]  pcie_capability_write_word+0x84/0xa0
+  // [    1.102330]  pcie_capability_clear_and_set_word+0x84/0x8c
+  // [    1.102340]  pci_device_add+0x258/0x51c
+  // [    1.102351]  pci_scan_single_device+0x10c/0x140
+  // [    1.102363]  pci_scan_slot+0x44/0x120
+  // [    1.102373]  pci_scan_child_bus_extend+0x58/0x2dc
+  // [    1.102385]  pci_scan_root_bus_bridge+0x68/0xdc
+  // [    1.102398]  pci_host_probe+0x1c/0xc4
   mov     w1, #0x0400
-  strhi   w1, x10, #0xd4                          // was 0x0000
+  strhi   w1, x10, #0xd4                          // [0xfd5000d4] = 0x0400 (was 0x0000)
 
   // Set PCI bridge control,
   //   set bit 1 => Enable SERR forwarding on secondary interface
   // In contrast, cirlce sets bit 0 (i.e. sets to 0x0001) => Enable parity detection on secondary interface
   mov     w1, #0x0002
-  strhi   w1, x10, #0x3e                          // was 0x0000
+  strhi   w1, x10, #0x3e                          // [0xfd50003e] = 0x0002 (was 0x0000)
 
   // Seems to be ineffective, since in memory dump value is stil 0x2008
+  // [    1.117602]  pci_generic_config_write+0x74/0xe0
+  // [    1.117612]  pci_bus_write_config_word+0x64/0xa0
+  // [    1.117622]  pci_write_config_word+0x34/0x4c
+  // [    1.117631]  pci_pme_active+0xd8/0x1d0
+  // [    1.117646]  pci_pm_init+0x278/0x294
+  // [    1.117655]  pci_device_add+0x138/0x51c
+  // [    1.117667]  pci_scan_single_device+0x10c/0x140
+  // [    1.117678]  pci_scan_slot+0x44/0x120
+  // [    1.117689]  pci_scan_child_bus_extend+0x58/0x2dc
+  // [    1.117700]  pci_scan_root_bus_bridge+0x68/0xdc
+  // [    1.117712]  pci_host_probe+0x1c/0xc4
   mov     w1, #0xa008
-  strhi   w1, x10, #0x4c                          // was 0x2008
+  strhi   w1, x10, #0x4c                          // [0xfd50004c] = 0xa008 (was 0x2008)
 
+  // [    1.128325]  pci_generic_config_write+0x74/0xe0
+  // [    1.128335]  pci_bus_write_config_word+0x64/0xa0
+  // [    1.128345]  pcie_capability_write_word+0x84/0xa0
+  // [    1.128355]  pcie_capability_clear_and_set_word+0x84/0x8c
+  // [    1.128366]  pci_scan_bridge_extend+0x324/0x5d0
+  // [    1.128378]  pci_scan_child_bus_extend+0x160/0x2dc   *****
+  // [    1.128390]  pci_scan_root_bus_bridge+0x68/0xdc
+  // [    1.128402]  pci_host_probe+0x1c/0xc4
+  // and then
+  // [    1.131013]  pci_generic_config_write+0x74/0xe0
+  // [    1.131023]  pci_bus_write_config_word+0x64/0xa0
+  // [    1.131033]  pcie_capability_write_word+0x84/0xa0
+  // [    1.131043]  pcie_capability_clear_and_set_word+0x84/0x8c
+  // [    1.131054]  pci_scan_bridge_extend+0x324/0x5d0
+  // [    1.131066]  pci_scan_child_bus_extend+0x1f8/0x2dc   *****
+  // [    1.131077]  pci_scan_root_bus_bridge+0x68/0xdc
+  // [    1.131090]  pci_host_probe+0x1c/0xc4
   mov     w1, #0x0010
-  strhi   w1, x10, #0xc8                          // was 0x0000
+  strhi   w1, x10, #0xc8                          // [0xfd5000c8] = 0x0010 (was 0x0000)
 
   // Set PCI status
   mov     w1, #0xffff

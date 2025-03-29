@@ -451,13 +451,24 @@ pcie_init_bcm2711:
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
   strhi   w1, x13, #0x84                          // of [0xfd50004c] (PCI_PM_CTRL)
 
-  // Spec 2.0 suggests all functions should be configured the
-  // same setting for ASPM. Enabling ASPM L1 should be done in
-  // upstream component first and then downstream, and vice
-  // versa for disabling ASPM L1. Spec doesn't mention L0S.
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L778-L783
-  mov     w1, #0x40
+  // Retrain link and set common clock configuration
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L201-L203
+  mov     w1, #0x60                               // PCI_EXP_LNKCTL_RL 0x0020: Retrain Link
+                                                  // PCI_EXP_LNKCTL_CCC 0x0040: Common Clock Configuration
   strhi   w1, x10, #0xbc                          // was 0x0000
+
+  // Wait for link training to complete
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L214-L221
+  mov     w8, #1000                               // 1000 attempts
+  5:
+    cbz     w8, 6f                                // exit loop with failure if 1000 iterations have completed
+    sub     w8, w8, #1
+    mov     x0, #1000
+    bl      wait_usec                             // sleep 1ms
+    ldrhi   w0, x10, #0xbc                        // check current value
+    tbnz    w0, #5, 5b                            // repeat loop if bit 5 is set (PCI_EXP_LNKSTA_LT) - implies link training still in progress
+
+  mov     w1, #0x40                               // PCI_EXP_LNKCTL_CCC 0x0040: Common Clock Configuration
   strhi   w1, x13, #0xd4                          // was 0x0043
 
   ldr     w1, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type) (was 0x00000004)

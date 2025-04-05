@@ -234,11 +234,11 @@ pcie_init_bcm2711:
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1002-L1009
   //
   // Updates registers:
-  //   * PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT
+  //   * PCIE_RC_CFG_PRIV1_LINK_CAPABILITY
 
   ldrwi   w0, x10, #0x4dc
   orr     w0, w0, #0xc00                          // Set bits 10 (ASPM power mode L0s), 11 (ASPM power mode L1)
-  strwi   w0, x10, #0x4dc                         // of [0xfd5004dc] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_BASE_LIMIT)
+  strwi   w0, x10, #0x4dc                         // of [0xfd5004dc] (PCIE_RC_CFG_PRIV1_LINK_CAPABILITY)
 
   // For config space accesses on the RC, show the right class for a PCIe-PCIe bridge
   // Linux source code says the default setting is EP mode, but my rpi400 already

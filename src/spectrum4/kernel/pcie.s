@@ -376,62 +376,6 @@ pcie_init_bcm2711:
   mov     x0, #200                                // sleep 200-1000us
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
 
-
-
-
-
-// [    1.087208] drivers/pci/access.c:112 Write 16 bits [0xffffffc009980004]=0x400
-ldr     x1, =0x400
-strhi   w1, x10, #0x4
-
-// [    1.087909] drivers/pci/access.c:112 Write 16 bits [0xffffffc009980004]=0x0
-ldr     x1, =0x0
-strhi   w1, x10, #0x4
-
-// [    1.089753] drivers/pci/access.c:114 Write 32 bits [0xffffffc009980010]=0xffffffff
-ldr     x1, =0xffffffff
-strwi   w1, x10, #0x10
-
-// [    1.090505] drivers/pci/access.c:114 Write 32 bits [0xffffffc009980010]=0x0
-ldr     x1, =0x0
-strwi   w1, x10, #0x10
-
-// [    1.091630] drivers/pci/access.c:114 Write 32 bits [0xffffffc009980014]=0xffffffff
-ldr     x1, =0xffffffff
-strwi   w1, x10, #0x14
-
-// [    1.092378] drivers/pci/access.c:114 Write 32 bits [0xffffffc009980014]=0x0
-ldr     x1, =0x0
-strwi   w1, x10, #0x14
-
-// [    1.093508] drivers/pci/access.c:114 Write 32 bits [0xffffffc009980038]=0xfffff800
-ldr     x1, =0xfffff800
-strwi   w1, x10, #0x38
-
-// [    1.094257] drivers/pci/access.c:114 Write 32 bits [0xffffffc009980038]=0x0
-ldr     x1, =0x0
-strwi   w1, x10, #0x38
-
-// [    1.094983] drivers/pci/access.c:112 Write 16 bits [0xffffffc00998001c]=0xe0f0
-ldr     x1, =0xe0f0
-strhi   w1, x10, #0x1c
-
-// [    1.095686] drivers/pci/access.c:112 Write 16 bits [0xffffffc00998001c]=0x0
-ldr     x1, =0x0
-strhi   w1, x10, #0x1c
-
-// [    1.096744] drivers/pci/access.c:114 Write 32 bits [0xffffffc009980028]=0xffffffff
-ldr     x1, =0xffffffff
-strwi   w1, x10, #0x28
-
-// [    1.097454] drivers/pci/access.c:114 Write 32 bits [0xffffffc009980028]=0x0
-ldr     x1, =0x0
-strwi   w1, x10, #0x28
-
-
-
-
-
   // Set LTR Enable bit in PCI Express Device Control 2 register (PCI_EXP_DEVCTL2) of the root complex, i.e. turn LTR on.
   // PCI Express capability starts at offset 0xac, and PCI_EXP_DEVCTL2 register has offset 0x28 from start of capability,
   // i.e. offset is 0xac + 0x28 = 0xd4
@@ -506,10 +450,12 @@ strwi   w1, x10, #0x28
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
   strhi   w1, x13, #0x84                          // of [0xfd50004c] (PCI_PM_CTRL)
 
-  // Retrain link and set common clock configuration
+  // Retrain link and set common clock configuration and enable L0s/L1
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L201-L203
-  mov     w1, #0x60                               // PCI_EXP_LNKCTL_RL 0x0020: Retrain Link
-                                                  // PCI_EXP_LNKCTL_CCC 0x0040: Common Clock Configuration
+  mov     w1, #0x63                               // PCI_EXP_LNKCTL_ASPM_L0S 0x0001: L0s Enable
+                                                  // PCI_EXP_LNKCTL_ASPM_L1  0x0002: L1 Enable
+                                                  // PCI_EXP_LNKCTL_RL       0x0020: Retrain Link
+                                                  // PCI_EXP_LNKCTL_CCC      0x0040: Common Clock Configuration
   strhi   w1, x10, #0xbc                          // was 0x0000
 
   // Wait for link training to complete

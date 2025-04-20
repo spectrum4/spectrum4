@@ -42,78 +42,156 @@ pcie_init_bcm2711:
 
   // Reset the PCI bridge
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L881-L885
-  //
-  // Updates registers:
-  //   * RGR1_SW_INIT_1
 
-  ldrwi   w6, x14, #0x210
-  orr     w6, w6, #3                              // set bits 0 (PCIE_RGR1_SW_INIT_1_PERST) and 1 (RGR1_SW_INIT_1_INIT_GENERIC)
-                                                  //   bit 0 (PCIE_RGR1_SW_INIT_1_PERST):
-                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L882
-                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L771-L778
-                                                  //   bit 1 (RGR1_SW_INIT_1_INIT_GENERIC):
-                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L883
-                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L730-L738
-  strwi   w6, x14, #0x210                         //   of [0xfd509210] (RGR1_SW_INIT_1)
-  mov     x0, #100
-  bl      wait_usec                               // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L885
+                                                  // +=============================+
+  ldrwi   w6, x14, #0x210                         // | RGR1_SW_INIT_1 [0xfd509210] |
+                                                  // +=============================+
+                                                  //
+                                                  //                                          G
+                                                  //                                          E
+                                                  //                                          N P
+                                                  //                                          E E
+                                                  //                                          R R
+                                                  //                                          I S
+                                                  //    ---- ---- ---- ---- ---- ---- ---- -- C T
+                                                  //
+                                                  //    3322/2222/2222/1111/1111/11
+                                                  //    1098/7654/3210/9876/5432/1098/7654/32 1 0
+                                                  //
+                                                  // 0b ----/----/----/----/----/----/----/-- - -  CLEAR BITS
+                                                  // 0x    0    0    0    0    0    0    0      0
+                                                  //
+                                                  // 0b ----/----/----/----/----/----/----/-- 1 1  SET BITS
+  orr     w6, w6, #3                              // 0x    0    0    0    0    0    0    0      3
+                                                  //
+                                                  // PERST = 0b1:
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L882
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L771-L778
+                                                  //
+                                                  // GENERIC = 0b1:
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L883
+  strwi   w6, x14, #0x210                         //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L730-L738
+
+  mov     x0, #100                                // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
+  bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L885
                                                   //   https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
 
   // Take the PCI bridge out of reset
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L887-L892
-  //
-  // Updates registers:
-  //   * RGR1_SW_INIT_1
-  //   * PCIE_MISC_HARD_PCIE_HARD_DEBUG
 
-  and     w6, w6, #~0x2                           // clear bit 1 (RGR1_SW_INIT_1_INIT_GENERIC)
-  strwi   w6, x14, #0x210                         //   of [0xfd509210] (RGR1_SW_INIT_1)
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L888
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L730-L738
-  ldrwi   w6, x4, #0x204
-  and     w6, w6, #~0x08000000                    // clear bit 27 (HARD_DEBUG_SERDES_IDDQ)
-  strwi   w6, x4, #0x204                          //   of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L890-L892
+  and     w6, w6, #~0x2                           //   GENERIC = 0b0:
+  strwi   w6, x14, #0x210                         //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L888
+                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L730-L738
+
+                                                  // +=============================================+
+  ldrwi   w6, x4, #0x204                          // | PCIE_MISC_HARD_PCIE_HARD_DEBUG [0xfd504204] |
+                                                  // +=============================================+
+                                                  //
+                                                  //                                               C
+                                                  //                          R                    L
+                                                  //                          E                    K
+                                                  //                          F                    R
+                                                  //                    R     C                    E
+                                                  //                    E     L                    Q
+                                                  //                    F     K                    _
+                                                  //                    C     _                P   D
+                                                  //         S        L L     O                E   E
+                                                  //         E        1 K     V                R   B
+                                                  //         R        S _     R                S   U
+                                                  //         D        S O     D                T   G
+                                                  //         E        _ V     _                _   _
+                                                  //         S        E R     E                A   E
+                                                  //         _        N D     N                S   N
+                                                  //         I        A _     A                S   A
+                                                  //         D        B O     B                E   B
+                                                  //         D        L U     L                R   L
+                                                  //    ---- Q --- -- E T --- E ---- ---- ---- T - E -
+                                                  //
+                                                  //    3322/2 222/22 2 2/111 1/1111/11
+                                                  //    1098/7 654/32 1 0/987 6/5432/1098/7654/3 2 1 0
+                                                  //
+                                                  // 0b ----/0 ---/-- - -/--- -/----/----/----/- - - - CLEAR BITS
+  and     w6, w6, #~0x08000000                    // 0x    0     8      0     0    0    0    0       0
+                                                  //
+                                                  // 0b ----/- ---/-- - -/--- -/----/----/----/- - - - SET BITS
+                                                  // 0x    0     0      0     0    0    0    0       0
+                                                  //
+                                                  // SERDES_IDDQ = 0b0
+  strwi   w6, x4, #0x204                          //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L890-L892
 
   // Wait for SerDes (Serializer/Deserializer) to be stable
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L893-L894
 
-  mov     x0, #100
-  bl      wait_usec                               // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L894
+  mov     x0, #100                                // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
+  bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L894
                                                   //   https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
 
-  // Set SCB_MAX_BURST_SIZE, CFG_READ_UR_MODE, SCB_ACCESS_EN
+  // Update PCIE_MISC_MISC_CTRL
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L896-L913
-  // and SCB0_SIZE (note, we perform these updates in a different order to Linux to reduce code footprint)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L927-L938
   //
-  // Updates registers:
-  //   * PCIE_MISC_MISC_CTRL
+  // Note, we perform these updates in a different order to Linux to reduce code footprint
 
-  // Note, the entire following section could probably be simplified to just write
-  // a hardcoded value to [0xfd504008] (PCIE_MISC_MISC_CTRL) but for now mirroring
-  // what Linux does (although combining and reordering updates).
-  //
-  // Note, SCB_MAX_BURST_SIZE is a two bit field. For BCM2711 it is encoded as:
-  //   0b00 => 128 bytes
-  //   0b01 => 256 bytes
-  //   0b10 => 512 bytes
-  //   0b11 => Reserved value
-
-  ldrwi   w6, x4, #0x8
-  orr     w6, w6, #0x3000                         // set bits 12 (SCB_ACCESS_EN), 13 (CFG_READ_UR_MODE)
-                                                  //   bit 12 (SCB_ACCESS_EN):
-                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L910
-                                                  //   bit 13 (CFG_READ_UR_MODE):
-                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L911
-  and     w6, w6, #~0x300000                      //   and clear bits 20, 21 (=> SCB_MAX_BURST_SIZE = 128 bytes)
+                                                  // +==================================+
+  ldrwi   w6, x4, #0x8                            // | PCIE_MISC_MISC_CTRL [0xfd504008] |
+                                                  // +==================================+
+                                                  //
+                                                  //                  S
+                                                  //                  C                P    P
+                                                  //                  B          C     C    C
+                                                  //                  _          F     I    I
+                                                  //                  M          G     E    E
+                                                  //                  A          _ S   _    _
+                                                  //                  X          R C   R    R
+                                                  //                  _          E B   C    C
+                                                  //                  B          A _   B    B
+                                                  //    S      S      U          D A   _    _    S
+                                                  //    C      C      R          _ C   M    6    C
+                                                  //    B      B      S          U C   P    4    B
+                                                  //    0      1      T          R E   S    B    2
+                                                  //    _      _      _          _ S   _    _    _
+                                                  //    S      S      S          M S   M    M    S
+                                                  //    I      I      I          O _   O    O    I
+                                                  //    Z      Z      Z          D E   D    D    Z
+                                                  //    E      E      E  ---- -- E N - E -- E -- E
+                                                  //
+                                                  //    3322/2 222/22 22/1111/11 1 1/1 1
+                                                  //    1098/7 654/32 10/9876/54 3 2/1 0 98/7 65 4/3210
+                                                  //
+                                                  // 0b -000/- ---/-- 00/----/-- - -/- - --/- -- -/---- CLEAR BITS
+  mov     w8, #~0x70300000                        // 0x    7     0     3    0      0      0      0    0
+  and     w6, w6, w8                              //
+                                                  // 0b 1---/1 ---/-- --/----/-- 1 1/- 1 --/1 -- -/---- SET BITS
+  ldr     w8, =0x88003480                         // 0x    8     8     0    0      3      4      8    0
+  orr     w6, w6, w8                              //
+                                                  // SCB0_SIZE = 0b10001 = 17 (number of bits required to address bus - 15)
+                                                  //   => System Control Bus size is > 2GB, and <= 4GB
+                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L932
+                                                  //
+                                                  // SCB_MAX_BURST_SIZE = 0b00
+                                                  //   Probably maximum size for burst transactions on internal system control bus
+                                                  //     0b00 => 128 bytes
+                                                  //     0b01 => 256 bytes
+                                                  //     0b10 => 512 bytes
+                                                  //     0b11 => Reserved value
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L901-L902
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L912
-  mov     w8, 0b10001                             //   and bits 27-31 (SCB0_SIZE) write as 0b10001 = 17 (4GB)
-  bfi     w6, w8, #27, #5                         //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L932
-  strwi   w6, x4, #0x8                            //   of [0xfd504008] (PCIE_MISC_MISC_CTRL)
+                                                  //
+                                                  // CFG_READ_UR_MODE = 0b1
+                                                  //   Probably determines behaviour when attempting to read from an unconnected slot (Unsupported Request completions)
+                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L911
+                                                  //
+                                                  // SCB_ACCESS_EN = 0b1
+                                                  //   Enable access to internal system control bus of PCIe controller?
+                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L910
+                                                  //
+                                                  // PCIE_RCB_MPS_MODE = 0b1
+                                                  //   Configures whether receive completion boundary is aligned to max payload size?
+                                                  //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1430
+                                                  //
+                                                  // PCIE_RCB_64B_MODE = 0b1
+                                                  //   64 byte alignment for receive completion boundaries?
+  strwi   w6, x5, #0x8                            //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1431
 
   // Configure *CPU inbound* memory view (address range on PCIe bus for PCIe devices to access system memory)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L915-L925

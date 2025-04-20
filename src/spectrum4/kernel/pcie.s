@@ -191,7 +191,7 @@ pcie_init_bcm2711:
                                                   //
                                                   // PCIE_RCB_64B_MODE = 0b1
                                                   //   64 byte alignment for receive completion boundaries?
-  strwi   w6, x5, #0x8                            //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1431
+  strwi   w6, x4, #0x8                            //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1431
 
   // Configure *CPU inbound* memory view (address range on PCIe bus for PCIe devices to access system memory)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L915-L925

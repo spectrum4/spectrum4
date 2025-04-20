@@ -253,6 +253,17 @@ pcie_init_bcm2711:
 
   tbz     w0, #7, 4f                              // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 4:
 
+  // Enable ASPM power modes L0s and L1
+  // My rpi400 already had them enabled after a reset, so this might be unnecessary
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1002-L1009
+  //
+  // Updates registers:
+  //   * PCIE_RC_CFG_PRIV1_LINK_CAPABILITY
+
+  ldrwi   w0, x10, #0x4dc
+  orr     w0, w0, #0xc00                          // Set bits 10 (ASPM power mode L0s), 11 (ASPM power mode L1)
+  strwi   w0, x10, #0x4dc                         // of [0xfd5004dc] (PCIE_RC_CFG_PRIV1_LINK_CAPABILITY)
+
   // Configure *CPU outbound* memory view (address range in system memory for CPU to access PCIe bus addresses)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L985-L1000
   //
@@ -292,17 +303,6 @@ pcie_init_bcm2711:
   ldrwi   w6, x4, #0x84                           // Update [0xfd504084] (PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI) lower 8 bits
   bfi     w6, w8, #0, #8                          //   to cpu limit address bits 32-39 (=0x06)
   strwi   w6, x4, #0x84                           //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L462
-
-  // Enable ASPM power modes L0s and L1
-  // My rpi400 already had them enabled after a reset, so this might be unnecessary
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1002-L1009
-  //
-  // Updates registers:
-  //   * PCIE_RC_CFG_PRIV1_LINK_CAPABILITY
-
-  ldrwi   w0, x10, #0x4dc
-  orr     w0, w0, #0xc00                          // Set bits 10 (ASPM power mode L0s), 11 (ASPM power mode L1)
-  strwi   w0, x10, #0x4dc                         // of [0xfd5004dc] (PCIE_RC_CFG_PRIV1_LINK_CAPABILITY)
 
   // For config space accesses on the RC, show the right class for a PCIe-PCIe bridge
   // Linux source code says the default setting is EP mode, but my rpi400 already

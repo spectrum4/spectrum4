@@ -193,7 +193,10 @@ pcie_init_bcm2711:
                                                   //   64 byte alignment for receive completion boundaries?
   strwi   w6, x4, #0x8                            //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1431
 
-  // Configure *CPU inbound* memory view (address range on PCIe bus for PCIe devices to access system memory)
+  strwi   wzr, x4, #0x2c                          // Disable first inbound window (RC1)
+  strwi   wzr, x4, #0x30                          //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1191-L1199
+
+  // Configure RC2 *CPU inbound* memory view (address range on PCIe bus for PCIe devices to access system memory)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L915-L925
   //
   //   rc bar2 size:  0x0000 0001 0000 0000 (4GB)
@@ -215,25 +218,8 @@ pcie_init_bcm2711:
   strwi   w6, x4, #0x38                           // [0xfd504038] (PCIE_MISC_RC_BAR2_CONFIG_HI) = 0x4
                                                   // => RC BAR2 offset = 16GB
 
-  // Disable the PCIe->GISB (Global Incoherent System Bus) memory window
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L952-L955
-  //
-  // Updates registers:
-  //   * PCIE_MISC_RC_BAR1_CONFIG_LO
-
-  ldrwi   w6, x4, #0x2c
-  and     w6, w6, #~0x1f                          // clear bits 0-4 (RC_BAR1_CONFIG_LO_SIZE)
-  strwi   w6, x4, #0x2c                           // of [0xfd50402c] (PCIE_MISC_RC_BAR1_CONFIG_LO)
-
-  // Disable the PCIe->SCB memory window
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L957-L960
-  //
-  // Updates registers:
-  //   * PCIE_MISC_RC_BAR3_CONFIG_LO
-
-  ldrwi   w6, x4, #0x3c
-  and     w6, w6, #~0x1f                          // clear bits 0-4 (RC_BAR3_CONFIG_LO_SIZE)
-  strwi   w6, x4, #0x3c                           // of [0xfd50403c] (PCIE_MISC_RC_BAR3_CONFIG_LO)
+  strwi   wzr, x4, #0x3c                          // Disable third inbound window (RC3)
+  strwi   wzr, x4, #0x40                          //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1302-L1306
 
   // Unassert the fundamental reset
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L965-L966

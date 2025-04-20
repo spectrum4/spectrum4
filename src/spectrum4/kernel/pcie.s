@@ -7,7 +7,7 @@
 ##########################################################################
 # Information gleaned from the following sources:
 #   * Linux Kernel:
-#     + https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c
+#     + https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c
 #   * Raspberry Pi Forums:
 #     + https://forums.raspberrypi.com/viewtopic.php?p=1675084
 #     + https://forums.raspberrypi.com/viewtopic.php?p=2087624
@@ -33,15 +33,15 @@
 pcie_init_bcm2711:
 
   mov     x5, x30
-  adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address
-  adrp    x4, 0xfd504000 + _start                 // x4 = VL805 USB Host controller registers
+  adrp    x10, 0xfd500000 + _start                // x10 = RC config space base address
+  adrp    x4, 0xfd504000 + _start                 // x4 = Broadcom PCIe Set Top Box registers
   adrp    x13, 0xfd508000 + _start                // x13 = USB Controller config space base address
-  adrp    x14, 0xfd509000 + _start                // x14 = PCI bridge registers
+  adrp    x14, 0xfd509000 + _start                // x14 = ECAM Index register
   adrp    x7, heap
   add     x7, x7, :lo12:heap                      // x7 = heap
 
   // Reset the PCI bridge
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L881-L885
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1378-L1390
 
                                                   // +=============================+
   ldrwi   w6, x14, #0x210                         // | RGR1_SW_INIT_1 [0xfd509210] |
@@ -65,23 +65,25 @@ pcie_init_bcm2711:
   orr     w6, w6, #3                              // 0x    0    0    0    0    0    0    0      3
                                                   //
                                                   // PERST = 0b1:
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L882
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L771-L778
+                                                  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1383-L1390
+                                                  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1018-L1027
                                                   //
                                                   // GENERIC = 0b1:
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L883
-  strwi   w6, x14, #0x210                         //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L730-L738
+                                                  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1378-L1381
+                                                  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L2228
+  strwi   w6, x14, #0x210                         //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L950-L974
 
   mov     x0, #100                                // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
-  bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L885
+  bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1392
                                                   //   https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
 
   // Take the PCI bridge out of reset
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L887-L892
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1394-L1397
 
   and     w6, w6, #~0x2                           //   GENERIC = 0b0:
-  strwi   w6, x14, #0x210                         //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L888
-                                                  //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L730-L738
+  strwi   w6, x14, #0x210                         //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1395
+                                                  //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L2228
+                                                  //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L950-L974
 
                                                   // +=============================================+
   ldrwi   w6, x4, #0x204                          // | PCIE_MISC_HARD_PCIE_HARD_DEBUG [0xfd504204] |

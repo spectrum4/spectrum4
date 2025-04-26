@@ -339,31 +339,6 @@ pcie_init_bcm2711:
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  // Unassert the fundamental reset
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L965-L966
-  //
-  // Updates registers:
-  //   * RGR1_SW_INIT_1
-
-  ldrwi   w6, x14, #0x210                         // note, if we can assume the value hasn't changed, we could cache current value in a register and avoid this extra ldr instruction
-  and     w6, w6, #~0x1                           // clear bit 0 (PCIE_RGR1_SW_INIT_1_PERST)
-  strwi   w6, x14, #0x210                         // of [0xfd509210] (RGR1_SW_INIT_1)
-
   // Give the RC/EP time to wake up, before trying to configure RC.
   // Poll status until ready, every 1ms, up to maximum of 100 times
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L968-L973
@@ -507,6 +482,26 @@ pcie_init_bcm2711:
   // 0x1b: Latency timer for secondary interface = 0x00
   ldr     w1, =0x00010100
   strwi   w1, x10, #0x18                          // was 0x00000000
+
+
+
+
+
+
+
+  // Unassert the fundamental reset
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L965-L966
+  //
+  // Updates registers:
+  //   * RGR1_SW_INIT_1
+
+  ldrwi   w6, x14, #0x210                         // note, if we can assume the value hasn't changed, we could cache current value in a register and avoid this extra ldr instruction
+  and     w6, w6, #~0x1                           // clear bit 0 (PCIE_RGR1_SW_INIT_1_PERST)
+  strwi   w6, x14, #0x210                         // of [0xfd509210] (RGR1_SW_INIT_1)
+
+
+
+
 
   // PCIe RC ECAM Index Register (offset 0x9000 from base, x14 + 0x0)
   // Mounts VL805 (bus 1, device 0, function 0, offset 0) configuration space at physical address [0xfd58000] (x13)

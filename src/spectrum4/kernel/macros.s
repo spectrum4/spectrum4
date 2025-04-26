@@ -239,7 +239,7 @@
 .macro strbi val, base, offset
 .if UART_DEBUG
   str     \val, [sp, #-16]!
-  read_write_immediate ldrb, msg_read, 8, \val, \base, \offset
+# read_write_immediate ldrb, msg_read, 8, \val, \base, \offset
   ldr     \val, [sp], #16
 .endif
   read_write_immediate strb, msg_write, 8, \val, \base, \offset
@@ -249,7 +249,7 @@
 .macro strhi val, base, offset
 .if UART_DEBUG
   str     \val, [sp, #-16]!
-  read_write_immediate ldrh, msg_read, 16, \val, \base, \offset
+# read_write_immediate ldrh, msg_read, 16, \val, \base, \offset
   ldr     \val, [sp], #16
 .endif
   read_write_immediate strh, msg_write, 16, \val, \base, \offset
@@ -259,7 +259,7 @@
 .macro strwi val, base, offset
 .if UART_DEBUG
   str     \val, [sp, #-16]!
-  read_write_immediate ldr, msg_read, 32, \val, \base, \offset
+# read_write_immediate ldr, msg_read, 32, \val, \base, \offset
   ldr     \val, [sp], #16
 .endif
   read_write_immediate str, msg_write, 32, \val, \base, \offset
@@ -269,7 +269,7 @@
 .macro strxi val, base, offset
 .if UART_DEBUG
   str     \val, [sp, #-16]!
-  read_write_immediate ldr, msg_read, 64, \val, \base, \offset
+# read_write_immediate ldr, msg_read, 64, \val, \base, \offset
   ldr     \val, [sp], #16
 .endif
   read_write_immediate str, msg_write, 64, \val, \base, \offset

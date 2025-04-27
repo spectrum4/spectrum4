@@ -302,6 +302,10 @@ pcie_init_bcm2711:
   and     w0, w0, #~0xc                           // Clear bits 2, 3 (ENDIAN_MODE_BAR2) => little endian
   strwi   w0, x10, #0x188                         // of [0xfd500188] (PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1)
 
+  // Preserve revision number, on the heap
+  ldrwi   w0, x4, #0x6c                           // w0 = [0xfd50406c] (PCIE_MISC_REVISION)
+  strwi   w0, x7, #0x14                           // store revision number on heap
+
   // MSI initisalisation
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L623-L641
   //
@@ -368,11 +372,10 @@ pcie_init_bcm2711:
 //  orr     w0, w0, #0x2                            //   and set bit 1 (CLKREQ_DEBUG_ENABLE)
 //  strwi   w0, x4, #0x204                          // of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
 
-  // Preserve revision number, device id, vendor id and header type on the heap
 
-  ldrwi   w0, x4, #0x6c                           // w0 = [0xfd50406c] (PCIE_MISC_REVISION)
-  strwi   w0, x7, #0x14                           // store revision number on heap
+  // Preserve device id, vendor id on the heap
   ldrwi   w2, x10, #0x0                           // x2 bits 0-15: did, bits 16-31: vid
+  // Preserve header type on the heap
   ldrbi   w3, x10, #0xe                           // w3 = header type
   stp     w2, w3, [x7, #0x18]                     // store did/vid and header type on heap
 4:
@@ -409,14 +412,6 @@ pcie_init_bcm2711:
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
   strhi   w1, x10, #0x4c                          // of [0xfd50004c] (PCI_PM_CTRL)
 
-  ldrhi   w1, x10, #0xb6                          // Read PCIe Capability's Device Status
-  strhi   w1, x10, #0xb6                          // Clear set bits (don't clear already cleared bits, since they may be reserved)
-  ldrhi   w1, x10, #0xc8                          // Read Root Control register
-  and     w1, w1, #~0x7                           // Clear bits:
-                                                  //   0: PCI_EXP_RTCTL_SECEE   Disable correctable error reporting
-                                                  //   1: PCI_EXP_RTCTL_SENFEE  Disable non-fatal error reporting
-                                                  //   2: PCI_EXP_RTCTL_SEFEE   Disable fatal error reporting
-  strhi   w1, x10, #0xc8                          // and update value
   // Clear AER status registers
   // For RC it appears as the first extended capability at 0x100 offset
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/probe.c#L2586
@@ -562,7 +557,14 @@ pcie_init_bcm2711:
   strhi   w1, x10, #0x4                           // was 0x0000
 
   // Enable AER Correctable Error Reporting, Non-Fatal Error Reporting, Fatal Error Reporting on RC
-  // TODO
+  ldrhi   w1, x10, #0xb6                          // Read PCIe Capability's Device Status
+  strhi   w1, x10, #0xb6                          // Clear set bits (don't clear already cleared bits, since they may be reserved)
+  ldrhi   w1, x10, #0xc8                          // Read Root Control register
+  and     w1, w1, #~0x7                           // Clear bits:
+                                                  //   0: PCI_EXP_RTCTL_SECEE   Disable correctable error reporting
+                                                  //   1: PCI_EXP_RTCTL_SENFEE  Disable non-fatal error reporting
+                                                  //   2: PCI_EXP_RTCTL_SEFEE   Disable fatal error reporting
+  strhi   w1, x10, #0xc8                          // and update value
 
   // ASPM: Retrain link and set common clock configuration and enable L1
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L201-L203

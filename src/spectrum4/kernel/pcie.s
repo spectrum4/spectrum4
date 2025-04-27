@@ -555,6 +555,24 @@ pcie_init_bcm2711:
   mov     w1, #0x40                               // PCI_EXP_LNKCTL_CCC 0x0040: Common Clock Configuration
   strhi   w1, x13, #0xd4                          // was 0x0043
 
+  // ASPM: Retrain link and set common clock configuration and enable L1
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L201-L203
+  mov     w1, #0x62                               // PCI_EXP_LNKCTL_ASPM_L1  0x0002: L1 Enable
+                                                  // PCI_EXP_LNKCTL_RL       0x0020: Retrain Link
+                                                  // PCI_EXP_LNKCTL_CCC      0x0040: Common Clock Configuration
+  strhi   w1, x10, #0xbc                          // was 0x0000
+
+  // Wait for link training to complete
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L214-L221
+  mov     w8, #1000                               // 1000 attempts
+  5:
+    cbz     w8, 6f                                // exit loop with failure if 1000 iterations have completed
+    sub     w8, w8, #1
+    mov     x0, #1000
+    bl      wait_usec                             // sleep 1ms
+    ldrhi   w0, x10, #0xbc                        // check current value
+    tbnz    w0, #5, 5b                            // repeat loop if bit 5 is set (PCI_EXP_LNKSTA_LT) - implies link training still in progress
+
   ldr     w1, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type) (was 0x00000004)
   strwi   w1, x13, #0x10
   strwi   wzr, x13, #0x14                         // upper 32 address bits = 0 (not technically needed, already 0, but nice to keep)
@@ -596,24 +614,6 @@ pcie_init_bcm2711:
                                                   //   1: PCI_ERR_ROOT_CMD_NONFATAL_EN  Enable non-fatal error reporting
                                                   //   2: PCI_ERR_ROOT_CMD_FATAL_EN     Enable fatal error reporting
   strwi   w1, x10, #0x12c                         // and update value
-
-  // ASPM: Retrain link and set common clock configuration and enable L1
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L201-L203
-  mov     w1, #0x62                               // PCI_EXP_LNKCTL_ASPM_L1  0x0002: L1 Enable
-                                                  // PCI_EXP_LNKCTL_RL       0x0020: Retrain Link
-                                                  // PCI_EXP_LNKCTL_CCC      0x0040: Common Clock Configuration
-  strhi   w1, x10, #0xbc                          // was 0x0000
-
-  // Wait for link training to complete
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L214-L221
-  mov     w8, #1000                               // 1000 attempts
-  5:
-    cbz     w8, 6f                                // exit loop with failure if 1000 iterations have completed
-    sub     w8, w8, #1
-    mov     x0, #1000
-    bl      wait_usec                             // sleep 1ms
-    ldrhi   w0, x10, #0xbc                        // check current value
-    tbnz    w0, #5, 5b                            // repeat loop if bit 5 is set (PCI_EXP_LNKSTA_LT) - implies link training still in progress
 
   // PCI cache line size
   mov     w1, #0x10

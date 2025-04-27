@@ -386,6 +386,14 @@ pcie_init_bcm2711:
   ldrwi   w1, x10, #0x104                         // Read uncorrectable error status
   strwi   w1, x10, #0x104                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
 
+  // Enable PCIe error reporting
+  ldrwi   w1, x10, #0xb4                          // PCI_EXP_DEVCTL (offset 0x8 from 0xac where PCIe device capability starts)
+  orr     w1, w1, #0xf                            //  PCI_EXP_DEVCTL_CERE    0x0001    Correctable Error Reporting Enable
+                                                  //  PCI_EXP_DEVCTL_NFERE   0x0002    Non-Fatal Error Reporting Enable
+                                                  //  PCI_EXP_DEVCTL_FERE    0x0004    Fatal Error Reporting Enable
+                                                  //  PCI_EXP_DEVCTL_URRE    0x0008    Unsupported Request Reporting Enable
+  strwi   w1, x10, #0xb4
+
   // Enable CRS Software Visibility (set bit 4) of PCI_EXP_RTCTL (Root Control)
   // CRS = Configuration Request Retry Status, directing devices to
   // return a vendor id of 0x0001 if they are not ready after a reset

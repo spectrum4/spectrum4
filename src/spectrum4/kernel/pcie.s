@@ -345,14 +345,6 @@ pcie_init_bcm2711:
   ldrbi   w3, x10, #0xe                           // w3 = header type
   stp     w2, w3, [x7, #0x18]                     // store did/vid and header type on heap
 4:
-  // Reset VL805 firmware (the USB Host Controller chip)
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L26-L66
-  adr     x0, vl805_reset_req                     // x0 = memory block pointer for mailbox call to reset VL805 firmware
-  bl      mbox_call
-
-  // Corrupted by mbox_call above, so need to set again
-  adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address
-
   mov     x0, #200                                // sleep 200-1000us
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
 
@@ -624,6 +616,14 @@ pcie_init_bcm2711:
   // Now enable L1
   mov     w1, #0x42                               // PCI_EXP_LNKCTL_ASPM_L1  0x0002: L1 Enable
   strhi   w1, x10, #0xbc
+
+  // Reset VL805 firmware (the USB Host Controller chip)
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L26-L66
+  adr     x0, vl805_reset_req                     // x0 = memory block pointer for mailbox call to reset VL805 firmware
+  bl      mbox_call
+
+  // Corrupted by mbox_call above, so need to set again
+  adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address
 
   // PCI cache line size
   mov     w1, #0x10

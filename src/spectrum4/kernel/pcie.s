@@ -422,14 +422,6 @@ pcie_init_bcm2711:
   ldrwi   w1, x10, #0x104                         // Read uncorrectable error status
   strwi   w1, x10, #0x104                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
 
-  // Enable Root Port's interrupt in response to error messages
-  ldrwi   w1, x10, #0x12c                         // Read PCI_ERR_ROOT_COMMAND
-  orr     w1, w1, #0x7                            // Set bits:
-                                                  //   0: PCI_ERR_ROOT_CMD_COR_EN       Enable correctable error reporting
-                                                  //   1: PCI_ERR_ROOT_CMD_NONFATAL_EN  Enable non-fatal error reporting
-                                                  //   2: PCI_ERR_ROOT_CMD_FATAL_EN     Enable fatal error reporting
-  strwi   w1, x10, #0x12c                         // and update value
-
   // Enable CRS Software Visibility (set bit 4) of PCI_EXP_RTCTL (Root Control)
   // CRS = Configuration Request Retry Status, directing devices to
   // return a vendor id of 0x0001 if they are not ready after a reset
@@ -573,6 +565,14 @@ pcie_init_bcm2711:
                                                   //   1: PCI_EXP_RTCTL_SENFEE  Disable non-fatal error reporting
                                                   //   2: PCI_EXP_RTCTL_SEFEE   Disable fatal error reporting
   strhi   w1, x10, #0xc8                          // and update value
+
+  // Enable Root Port's interrupt in response to error messages
+  ldrwi   w1, x10, #0x12c                         // Read PCI_ERR_ROOT_COMMAND
+  orr     w1, w1, #0x7                            // Set bits:
+                                                  //   0: PCI_ERR_ROOT_CMD_COR_EN       Enable correctable error reporting
+                                                  //   1: PCI_ERR_ROOT_CMD_NONFATAL_EN  Enable non-fatal error reporting
+                                                  //   2: PCI_ERR_ROOT_CMD_FATAL_EN     Enable fatal error reporting
+  strwi   w1, x10, #0x12c                         // and update value
 
   // ASPM: Retrain link and set common clock configuration and enable L1
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L201-L203

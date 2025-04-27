@@ -409,6 +409,14 @@ pcie_init_bcm2711:
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
   strhi   w1, x10, #0x4c                          // of [0xfd50004c] (PCI_PM_CTRL)
 
+  ldrwi   w1, x10, #0xb6                          // Read PCIe Capability's Device Status
+  strwi   w1, x10, #0xb6                          // Clear set bits (don't clear already cleared bits, since they may be reserved)
+  ldrhi   w1, x10, #0xc8                          // Read Root Control register
+  and     w1, w1, #~0x7                           // Clear bits:
+                                                  //   0: PCI_EXP_RTCTL_SECEE   Disable correctable error reporting
+                                                  //   1: PCI_EXP_RTCTL_SENFEE  Disable non-fatal error reporting
+                                                  //   2: PCI_EXP_RTCTL_SEFEE   Disable fatal error reporting
+  strhi   w1, x10, #0xc8                          // and update value
   // Clear AER status registers
   // For RC it appears as the first extended capability at 0x100 offset
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/probe.c#L2586
@@ -571,6 +579,9 @@ pcie_init_bcm2711:
   // Set PCI Command
   mov     w1, #0x0006
   strhi   w1, x10, #0x4                           // was 0x0000
+
+  // Enable AER Correctable Error Reporting, Non-Fatal Error Reporting, Fatal Error Reporting on RC
+
 
   // PCI cache line size
   mov     w1, #0x10

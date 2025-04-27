@@ -411,10 +411,14 @@ pcie_init_bcm2711:
   strwi   w1, x10, #0x18                          // was 0x00000000
 
   // Broadcom PCIe Stats Trigger
-  //   0->1 transition on CTRL_EN is required to clear counters and start capture
-  //   microseconds count of 0 starts continuous gathering
-  ldrwi   w6, x10, #0x1940                        // clear bit 0 (PCIE_RC_PL_STATS_CTRL_EN_MASK) and
-  and     w6, w6, #~0xfffffff1                    // bits 4-31 (PCIE_RC_PL_STATS_CTRL_LEN_MASK)
+  // 0->1 transition on CTRL_EN is required to clear counters and start capture
+  // microseconds count of 0 starts continuous gathering
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1627-L1645
+  ldrwi   w6, x10, #0x1940
+  and     w6, w6, #~0x1                           // clear bit 0 (PCIE_RC_PL_STATS_CTRL_EN_MASK) and
+  strwi   w6, x10, #0x1940                        // of [0xfd501940] (PCIE_RC_PL_STATS_CTRL)
+  and     w6, w6, #~0xfffffff0                    // clear bits 4-31 (PCIE_RC_PL_STATS_CTRL_LEN_MASK) and
+  orr     w6, w6, #0x1                            // set bit 0 (PCIE_RC_PL_STATS_CTRL_EN_MASK)
   strwi   w6, x10, #0x1940                        // of [0xfd501940] (PCIE_RC_PL_STATS_CTRL)
 
   // Unassert the fundamental reset

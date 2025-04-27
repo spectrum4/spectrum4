@@ -387,22 +387,12 @@ pcie_init_bcm2711:
   strwi   w1, x10, #0x104                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
 
   // Enable PCIe error reporting
-  ldrwi   w1, x10, #0xb4                          // PCI_EXP_DEVCTL (offset 0x8 from 0xac where PCIe device capability starts)
-  orr     w1, w1, #0xf                            //  PCI_EXP_DEVCTL_CERE    0x0001    Correctable Error Reporting Enable
-                                                  //  PCI_EXP_DEVCTL_NFERE   0x0002    Non-Fatal Error Reporting Enable
-                                                  //  PCI_EXP_DEVCTL_FERE    0x0004    Fatal Error Reporting Enable
-                                                  //  PCI_EXP_DEVCTL_URRE    0x0008    Unsupported Request Reporting Enable
-  strwi   w1, x10, #0xb4
-
-  // Enable CRS Software Visibility (set bit 4) of PCI_EXP_RTCTL (Root Control)
-  // CRS = Configuration Request Retry Status, directing devices to
-  // return a vendor id of 0x0001 if they are not ready after a reset
-  //   https://blog.linuxplumbersconf.org/2017/ocw/system/presentations/4732/original/crs.pdf
-  // PCI Express capability starts at offset 0xac, and PCI_EXP_RTCTL register has offset 0x1c from start of capability,
-  // i.e. offset is 0xac + 0x1c = 0xc8
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1150-L1159
-  mov     w1, #0x0010
-  strhi   w1, x10, #0xc8                          // [0xfd5000c8] = 0x0010 (was 0x0000)
+  ldrhi   w1, x10, #0xb4                          // PCI_EXP_DEVCTL (offset 0x8 from 0xac where PCIe device capability starts)
+  orr     w1, w1, #0xf                            //  PCI_EXP_DEVCTL_CERE    0x01    Correctable Error Reporting Enable
+                                                  //  PCI_EXP_DEVCTL_NFERE   0x02    Non-Fatal Error Reporting Enable
+                                                  //  PCI_EXP_DEVCTL_FERE    0x04    Fatal Error Reporting Enable
+                                                  //  PCI_EXP_DEVCTL_URRE    0x08    Unsupported Request Reporting Enable
+  strhi   w1, x10, #0xb4
 
   // Clear errors on root complex
   // Write 0xffff to clear all status bits (e.g., parity errors, aborts)
@@ -522,6 +512,16 @@ pcie_init_bcm2711:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1028-L1033
 
   strhi   w0, x7, #0x12                           // store w0 on heap to record link capabilities register
+
+  // Enable CRS Software Visibility (set bit 4) of PCI_EXP_RTCTL (Root Control)
+  // CRS = Configuration Request Retry Status, directing devices to
+  // return a vendor id of 0x0001 if they are not ready after a reset
+  //   https://blog.linuxplumbersconf.org/2017/ocw/system/presentations/4732/original/crs.pdf
+  // PCI Express capability starts at offset 0xac, and PCI_EXP_RTCTL register has offset 0x1c from start of capability,
+  // i.e. offset is 0xac + 0x1c = 0xc8
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1150-L1159
+  mov     w1, #0x0010
+  strhi   w1, x10, #0xc8                          // [0xfd5000c8] = 0x0010 (was 0x0000)
 
   // PCIe RC ECAM Index Register (offset 0x9000 from base, x14 + 0x0)
   // Mounts VL805 (bus 1, device 0, function 0, offset 0) configuration space at physical address [0xfd58000] (x13)

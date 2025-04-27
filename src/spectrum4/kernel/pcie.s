@@ -459,6 +459,16 @@ pcie_init_bcm2711:
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
   strhi   w1, x10, #0x4c                          // of [0xfd50004c] (PCI_PM_CTRL)
 
+  // Clear AER status registers
+  // For RC it appears as the first extended capability at 0x100 offset
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/probe.c#L2586
+  ldrwi   w1, x10, #0x130                         // Read root error status
+  strwi   w1, x10, #0x130                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
+  ldrwi   w1, x10, #0x110                         // Read correctable error status
+  strwi   w1, x10, #0x110                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
+  ldrwi   w1, x10, #0x104                         // Read uncorrectable error status
+  strwi   w1, x10, #0x104                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
+
   // Enable CRS Software Visibility (set bit 4) of PCI_EXP_RTCTL (Root Control)
   // CRS = Configuration Request Retry Status, directing devices to
   // return a vendor id of 0x0001 if they are not ready after a reset

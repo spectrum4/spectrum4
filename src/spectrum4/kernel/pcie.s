@@ -333,12 +333,6 @@ pcie_init_bcm2711:
   strwi   w0, x4, #0x4c                           // [0xfd50404c] (PCIE_MISC_MSI_DATA_CONFIG) = 0xffe06540 ("PCIE_MISC_MSI_DATA_CONFIG_VAL_32")
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L639-L640
 
-
-
-
-
-
-
   // Give the RC/EP time to wake up, before trying to configure RC.
   // Poll status until ready, every 1ms, up to maximum of 100 times
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L968-L973
@@ -361,50 +355,6 @@ pcie_init_bcm2711:
 
 //  tbz     w0, #7, 4f                              // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 4:
 
-  // Enable SSC (spread spectrum clocking) steps
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L372-L409
-  //
-  // Perhaps the MDIO register updates are only needed for ethernet, since MDIO seems to relate only to ethernet:
-  //   https://en.wikipedia.org/wiki/Management_Data_Input/Output
-  //
-  // Updates registers:
-  //   * MDIO register SET_ADDR
-  //   * MDIO register SSC_CNTL
-
-  mov     w6, wzr                                 // 0 SSC initialisation steps completed
-  mov     w0, 0x1f                                // MDIO register offset for SET_ADDR
-  mov     w1, 0x1100                              // SSC_REGS_ADDR
-  bl      mdio_write                              // [SET_ADDR]=SSC_REGS_ADDR
-  tbnz    w1, #31, 3f                             // abort SSC setup due to failed MDIO write operation
-  mov     w6, #0x01                               // 1 SSC initialisation steps completed
-  mov     w0, #0x02                               // MDIO register offset for SSC_CNTL
-  bl      mdio_read                               // w1=[SSC_CNTL]
-  tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
-  mov     w6, #0x02                               // 2 SSC initialisation steps completed
-  mov     w0, #0x02                               // set w0 again for SSC_CNTL (w0 was corrupted by mdio_read)
-  orr     w1, w1, 0xc000                          // set bits 14 (OVRD_VAL) and 15 (OVRD_EN)
-  bl      mdio_write                              // [SSC_CNTL] |= (OVRD_VAL | OVRD_EN)
-  tbnz    w1, #31, 3f                             // abort SSC setup due to failed MDIO write operation
-  mov     x0, #1000
-  bl      wait_usec                               // wait 1ms
-  mov     w6, #0x03                               // 3 SSC initialisation steps completed
-  mov     w0, 0x01                                // MDIO register offset SSC_STATUS
-  bl      mdio_read                               // w1=[SSC_STATUS]
-  tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
-  mov     w6, #0x04                               // 4 SSC initialisation steps completed
-  strwi   w1, x7, #0x28                           // store [SSC_STATUS] on heap
-  tbz     w1, #10, 3f                             // abort SSC setup since bit 10 (SSC_STATUS_SSC) is clear
-  mov     w6, #0x05                               // 5 SSC initialisation steps completed
-  tbz     w1, #11, 3f                             // abort SSC setup since bit 11 (SSC_STATUS_PLL_LOCK) is clear
-  mov     w6, #0x06                               // 6 SSC initialisation steps completed
-3:
-  strhi   w6, x7, #0x10                           // store w6 on heap to record which configuration stage SSC reached
-
-  ldrhi   w0, x10, #0xbe                          // Query link capabilities
-                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1028-L1033
-
-  strhi   w0, x7, #0x12                           // store w0 on heap to record link capabilities register
-
   // Refclk from RC should be gated with CLKREQ# input when
   // ASPM L0s,L1 is enabled => setting the CLKREQ_DEBUG_ENABLE
   // field to 1 and CLKREQ_L1SS_ENABLE field to 0
@@ -413,10 +363,10 @@ pcie_init_bcm2711:
   // Updates registers:
   //   * PCIE_MISC_HARD_PCIE_HARD_DEBUG
 
-  ldrwi   w0, x4, #0x204
-  and     w0, w0, #~0x200000                      // clear bit 21 (CLKREQ_L1SS_ENABLE_MASK)
-  orr     w0, w0, #0x2                            //   and set bit 1 (CLKREQ_DEBUG_ENABLE)
-  strwi   w0, x4, #0x204                          // of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
+//  ldrwi   w0, x4, #0x204
+//  and     w0, w0, #~0x200000                      // clear bit 21 (CLKREQ_L1SS_ENABLE_MASK)
+//  orr     w0, w0, #0x2                            //   and set bit 1 (CLKREQ_DEBUG_ENABLE)
+//  strwi   w0, x4, #0x204                          // of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
 
   // Preserve revision number, device id, vendor id and header type on the heap
 
@@ -493,12 +443,6 @@ pcie_init_bcm2711:
   ldr     w1, =0x00010100
   strwi   w1, x10, #0x18                          // was 0x00000000
 
-
-
-
-
-
-
   // Unassert the fundamental reset
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L965-L966
   //
@@ -509,9 +453,49 @@ pcie_init_bcm2711:
   and     w6, w6, #~0x1                           // clear bit 0 (PCIE_RGR1_SW_INIT_1_PERST)
   strwi   w6, x14, #0x210                         // of [0xfd509210] (RGR1_SW_INIT_1)
 
+  // Enable SSC (spread spectrum clocking) steps
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L372-L409
+  //
+  // Perhaps the MDIO register updates are only needed for ethernet, since MDIO seems to relate only to ethernet:
+  //   https://en.wikipedia.org/wiki/Management_Data_Input/Output
+  //
+  // Updates registers:
+  //   * MDIO register SET_ADDR
+  //   * MDIO register SSC_CNTL
 
+  mov     w6, wzr                                 // 0 SSC initialisation steps completed
+  mov     w0, 0x1f                                // MDIO register offset for SET_ADDR
+  mov     w1, 0x1100                              // SSC_REGS_ADDR
+  bl      mdio_write                              // [SET_ADDR]=SSC_REGS_ADDR
+  tbnz    w1, #31, 3f                             // abort SSC setup due to failed MDIO write operation
+  mov     w6, #0x01                               // 1 SSC initialisation steps completed
+  mov     w0, #0x02                               // MDIO register offset for SSC_CNTL
+  bl      mdio_read                               // w1=[SSC_CNTL]
+  tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
+  mov     w6, #0x02                               // 2 SSC initialisation steps completed
+  mov     w0, #0x02                               // set w0 again for SSC_CNTL (w0 was corrupted by mdio_read)
+  orr     w1, w1, 0xc000                          // set bits 14 (OVRD_VAL) and 15 (OVRD_EN)
+  bl      mdio_write                              // [SSC_CNTL] |= (OVRD_VAL | OVRD_EN)
+  tbnz    w1, #31, 3f                             // abort SSC setup due to failed MDIO write operation
+  mov     x0, #1000
+  bl      wait_usec                               // wait 1ms
+  mov     w6, #0x03                               // 3 SSC initialisation steps completed
+  mov     w0, 0x01                                // MDIO register offset SSC_STATUS
+  bl      mdio_read                               // w1=[SSC_STATUS]
+  tbz     w1, #31, 3f                             // abort SSC setup due to failed MDIO read operation
+  mov     w6, #0x04                               // 4 SSC initialisation steps completed
+  strwi   w1, x7, #0x28                           // store [SSC_STATUS] on heap
+  tbz     w1, #10, 3f                             // abort SSC setup since bit 10 (SSC_STATUS_SSC) is clear
+  mov     w6, #0x05                               // 5 SSC initialisation steps completed
+  tbz     w1, #11, 3f                             // abort SSC setup since bit 11 (SSC_STATUS_PLL_LOCK) is clear
+  mov     w6, #0x06                               // 6 SSC initialisation steps completed
+3:
+  strhi   w6, x7, #0x10                           // store w6 on heap to record which configuration stage SSC reached
 
+  ldrhi   w0, x10, #0xbe                          // Query link capabilities
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1028-L1033
 
+  strhi   w0, x7, #0x12                           // store w0 on heap to record link capabilities register
 
   // PCIe RC ECAM Index Register (offset 0x9000 from base, x14 + 0x0)
   // Mounts VL805 (bus 1, device 0, function 0, offset 0) configuration space at physical address [0xfd58000] (x13)

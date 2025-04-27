@@ -555,10 +555,9 @@ pcie_init_bcm2711:
   mov     w1, #0x40                               // PCI_EXP_LNKCTL_CCC 0x0040: Common Clock Configuration
   strhi   w1, x13, #0xd4                          // was 0x0043
 
-  // ASPM: Retrain link and set common clock configuration and enable L1
+  // ASPM: Retrain link and set common clock configuration
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L201-L203
-  mov     w1, #0x62                               // PCI_EXP_LNKCTL_ASPM_L1  0x0002: L1 Enable
-                                                  // PCI_EXP_LNKCTL_RL       0x0020: Retrain Link
+  mov     w1, #0x60                               // PCI_EXP_LNKCTL_RL       0x0020: Retrain Link
                                                   // PCI_EXP_LNKCTL_CCC      0x0040: Common Clock Configuration
   strhi   w1, x10, #0xbc                          // was 0x0000
 
@@ -614,6 +613,10 @@ pcie_init_bcm2711:
                                                   //   1: PCI_ERR_ROOT_CMD_NONFATAL_EN  Enable non-fatal error reporting
                                                   //   2: PCI_ERR_ROOT_CMD_FATAL_EN     Enable fatal error reporting
   strwi   w1, x10, #0x12c                         // and update value
+
+  // Now enable L1
+  mov     w1, #0x42                               // PCI_EXP_LNKCTL_ASPM_L1  0x0002: L1 Enable
+  strhi   w1, x10, #0xbc
 
   // PCI cache line size
   mov     w1, #0x10

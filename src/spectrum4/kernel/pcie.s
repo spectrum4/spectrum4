@@ -467,6 +467,11 @@ pcie_init_bcm2711:
 
 //  tbz     w0, #7, 4f                              // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 4:
 
+  // Extends the timeout period for an access to an internal bus to 4s
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1537-L1554
+  ldr     w1, =4*216000000                        // 4s @ 216MHz
+  strwi   w1, x14, #0x208
+
   // Provides L0s, L1, and L1SS, but not compliant to provide Clock Power
   // Management; specifically, may not be able to meet the Tclron max timing of
   // 400ns as specified in "Dynamic Clock Control", section 3.2.5.2.2 of the
@@ -480,11 +485,6 @@ pcie_init_bcm2711:
   ldrwi   w0, x4, #0x204
   orr     w0, w0, #0x200000                       // set bit 21 (L1SS_ENABLE)
   strwi   w0, x4, #0x204                          // of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
-
-  // Extends the timeout period for an access to an internal bus to 4s
-  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1537-L1554
-  ldr     w1, =4*216000000                        // 4s @ 216MHz
-  strwi   w1, x14, #0x208
 
   // Enable SSC (spread spectrum clocking) steps
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L372-L409

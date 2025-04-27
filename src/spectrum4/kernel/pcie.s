@@ -409,8 +409,8 @@ pcie_init_bcm2711:
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
   strhi   w1, x10, #0x4c                          // of [0xfd50004c] (PCI_PM_CTRL)
 
-  ldrwi   w1, x10, #0xb6                          // Read PCIe Capability's Device Status
-  strwi   w1, x10, #0xb6                          // Clear set bits (don't clear already cleared bits, since they may be reserved)
+  ldrhi   w1, x10, #0xb6                          // Read PCIe Capability's Device Status
+  strhi   w1, x10, #0xb6                          // Clear set bits (don't clear already cleared bits, since they may be reserved)
   ldrhi   w1, x10, #0xc8                          // Read Root Control register
   and     w1, w1, #~0x7                           // Clear bits:
                                                   //   0: PCI_EXP_RTCTL_SECEE   Disable correctable error reporting

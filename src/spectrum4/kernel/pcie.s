@@ -410,6 +410,14 @@ pcie_init_bcm2711:
   mov     w1, #0xffff
   strhi   w1, x10, #0x6                           // PCI_STATUS = 0xffff (was 0x0010)
 
+  // Configure bus numbers in root complex and latency timer
+  // 0x18: PCI Primary Bus = 0x00
+  // 0x19: Secondary Bus = 0x01
+  // 0x1a: Subordinate Bus (Highest bus number behind bridge) = 0x01
+  // 0x1b: Latency timer for secondary interface = 0x00
+  ldr     w1, =0x00010100
+  strwi   w1, x10, #0x18                          // was 0x00000000
+
   // Broadcom PCIe Stats Trigger
   // 0->1 transition on CTRL_EN is required to clear counters and start capture
   // microseconds count of 0 starts continuous gathering
@@ -606,13 +614,6 @@ pcie_init_bcm2711:
     bl      wait_usec                             // sleep 1ms
     ldrhi   w0, x10, #0xbc                        // check current value
     tbnz    w0, #5, 5b                            // repeat loop if bit 5 is set (PCI_EXP_LNKSTA_LT) - implies link training still in progress
-  // Configure bus numbers in root complex and latency timer
-  // 0x18: PCI Primary Bus = 0x00
-  // 0x19: Secondary Bus = 0x01
-  // 0x1a: Subordinate Bus (Highest bus number behind bridge) = 0x01
-  // 0x1b: Latency timer for secondary interface = 0x00
-  ldr     w1, =0x00010100
-  strwi   w1, x10, #0x18                          // was 0x00000000
 
   // PCI cache line size
   mov     w1, #0x10

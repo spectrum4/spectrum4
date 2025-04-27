@@ -120,20 +120,20 @@ pcie_init_bcm2711:
                                                   // 0x    0     0      0     0    0    0    0       0
                                                   //
                                                   // SERDES_IDDQ = 0b0
-  strwi   w6, x4, #0x204                          //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L890-L892
+  strwi   w6, x4, #0x204                          //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1403
 
   // Wait for SerDes (Serializer/Deserializer) to be stable
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1405-L1406
 
   mov     x0, #100                                // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
-  bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L894
-                                                  //   https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
+  bl      wait_usec                               //   https://www.kernel.org/doc/Documentation/timers/timers-howto.txt
 
   // Update PCIE_MISC_MISC_CTRL
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L896-L913
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L927-L938
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1408-L1432
+  //     *plus*
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1445-L1456
   //
-  // Note, we perform these updates in a different order to Linux to reduce code footprint
+  // Note, unlike the Linux driver, we combine these updates (to reduce code footprint)
 
                                                   // +==================================+
   ldrwi   w6, x4, #0x8                            // | PCIE_MISC_MISC_CTRL [0xfd504008] |

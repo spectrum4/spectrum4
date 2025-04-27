@@ -84,6 +84,8 @@ pcie_init_bcm2711:
                                                   //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L2228
                                                   //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L950-L974
 
+  // Clear SERDES_IDDQ, i.e. put the PCIe Serializer/Deserializer PHY into IDDQ (deep power-down mode)
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1399-L1404
                                                   // +=============================================+
   ldrwi   w6, x4, #0x204                          // | PCIE_MISC_HARD_PCIE_HARD_DEBUG [0xfd504204] |
                                                   // +=============================================+
@@ -121,7 +123,7 @@ pcie_init_bcm2711:
   strwi   w6, x4, #0x204                          //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L890-L892
 
   // Wait for SerDes (Serializer/Deserializer) to be stable
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L893-L894
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1405-L1406
 
   mov     x0, #100                                // sleep 0.1ms (Linux kernel sleeps 0.1-0.2ms) with sleep_range:
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L894

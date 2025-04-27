@@ -398,12 +398,6 @@ pcie_init_bcm2711:
                                                   //  PCI_EXP_DEVCTL_URRE    0x08    Unsupported Request Reporting Enable
   strhi   w1, x10, #0xb4
 
-  // Clear errors on root complex
-  // Write 0xffff to clear all status bits (e.g., parity errors, aborts)
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1332-L1333
-  mov     w1, #0xffff
-  strhi   w1, x10, #0x6                           // PCI_STATUS = 0xffff (was 0x0010)
-
   // Configure bus numbers in root complex and latency timer
   // 0x18: PCI Primary Bus = 0x00
   // 0x19: Secondary Bus = 0x01
@@ -411,6 +405,12 @@ pcie_init_bcm2711:
   // 0x1b: Latency timer for secondary interface = 0x00
   ldr     w1, =0x00010100
   strwi   w1, x10, #0x18                          // was 0x00000000
+
+  // Clear errors on root complex
+  // Write 0xffff to clear all status bits (e.g., parity errors, aborts)
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1332-L1333
+  mov     w1, #0xffff
+  strhi   w1, x10, #0x6                           // PCI_STATUS = 0xffff (was 0x0010)
 
   // Broadcom PCIe Stats Trigger
   // 0->1 transition on CTRL_EN is required to clear counters and start capture

@@ -413,7 +413,7 @@ pcie_init_bcm2711:
   strhi   w1, x10, #0x4c                          // of [0xfd50004c] (PCI_PM_CTRL)
 
   // Clear AER status registers
-  // For RC it appears as the first extended capability at 0x100 offset
+  // For RC, AER is the first extended capability at 0x100 offset
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/probe.c#L2586
   ldrwi   w1, x10, #0x130                         // Read root error status
   strwi   w1, x10, #0x130                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
@@ -421,6 +421,14 @@ pcie_init_bcm2711:
   strwi   w1, x10, #0x110                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
   ldrwi   w1, x10, #0x104                         // Read uncorrectable error status
   strwi   w1, x10, #0x104                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
+
+  // Enable Root Port's interrupt in response to error messages
+  ldrwi   w1, x10, #0x12c                         // Read PCI_ERR_ROOT_COMMAND
+  orr     w1, w1, #0x7                            // Set bits:
+                                                  //   0: PCI_ERR_ROOT_CMD_COR_EN       Enable correctable error reporting
+                                                  //   1: PCI_ERR_ROOT_CMD_NONFATAL_EN  Enable non-fatal error reporting
+                                                  //   2: PCI_ERR_ROOT_CMD_FATAL_EN     Enable fatal error reporting
+  strwi   w1, x10, #0x12c                         // and update value
 
   // Enable CRS Software Visibility (set bit 4) of PCI_EXP_RTCTL (Root Control)
   // CRS = Configuration Request Retry Status, directing devices to

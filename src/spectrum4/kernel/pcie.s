@@ -337,42 +337,6 @@ pcie_init_bcm2711:
   strwi   w0, x4, #0x4c                           // [0xfd50404c] (PCIE_MISC_MSI_DATA_CONFIG) = 0xffe06540 ("PCIE_MISC_MSI_DATA_CONFIG_VAL_32")
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L639-L640
 
-  // Give the RC/EP time to wake up, before trying to configure RC.
-  // Poll status until ready, every 1ms, up to maximum of 100 times
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L968-L973
-
-//   mov     w8, #100                                // 100 attempts
-//   1:
-//     cbz     w8, 2f                                // exit loop if 100 iterations have completed
-//     sub     w8, w8, #1                            // note, linux kernel checks only every 5ms, but we check every 1ms
-//     mov     x0, #1000
-//     bl      wait_usec                             // sleep 1ms
-//     ldrwi   w0, x4, #0x68
-//     tbz     w0, #4, 1b                            // repeat loop if bit 4 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP)
-//     tbz     w0, #5, 1b                            // repeat loop if bit 5 is clear (PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE)
-// 2:
-//   stp     w0, w8, [x7]                            // store last read status register value and number of 1ms on heap
-//   cbz     w8, 4f                                  // exit early if failed to wake up
-
-  // Exit early if in endpoint mode, not in root complex mode => implies PCIe misconfiguration
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L980-L983
-
-//  tbz     w0, #7, 4f                              // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 4:
-
-  // Refclk from RC should be gated with CLKREQ# input when
-  // ASPM L0s,L1 is enabled => setting the CLKREQ_DEBUG_ENABLE
-  // field to 1 and CLKREQ_L1SS_ENABLE field to 0
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1041-L1060
-  //
-  // Updates registers:
-  //   * PCIE_MISC_HARD_PCIE_HARD_DEBUG
-
-//  ldrwi   w0, x4, #0x204
-//  and     w0, w0, #~0x200000                      // clear bit 21 (CLKREQ_L1SS_ENABLE_MASK)
-//  orr     w0, w0, #0x2                            //   and set bit 1 (CLKREQ_DEBUG_ENABLE)
-//  strwi   w0, x4, #0x204                          // of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
-
-
   // Preserve device id, vendor id on the heap
   ldrwi   w2, x10, #0x0                           // x2 bits 0-15: did, bits 16-31: vid
   // Preserve header type on the heap
@@ -446,6 +410,13 @@ pcie_init_bcm2711:
   ldr     w1, =0x00010100
   strwi   w1, x10, #0x18                          // was 0x00000000
 
+  // Broadcom PCIe Stats Trigger
+  //   0->1 transition on CTRL_EN is required to clear counters and start capture
+  //   microseconds count of 0 starts continuous gathering
+  ldrwi   w6, x10, #0x1940                        // clear bit 0 (PCIE_RC_PL_STATS_CTRL_EN_MASK) and
+  and     w6, w6, #~0xfffffff1                    // bits 4-31 (PCIE_RC_PL_STATS_CTRL_LEN_MASK)
+  strwi   w6, x10, #0x1940                        // of [0xfd501940] (PCIE_RC_PL_STATS_CTRL)
+
   // Unassert the fundamental reset
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L965-L966
   //
@@ -455,6 +426,46 @@ pcie_init_bcm2711:
   ldrwi   w6, x14, #0x210                         // note, if we can assume the value hasn't changed, we could cache current value in a register and avoid this extra ldr instruction
   and     w6, w6, #~0x1                           // clear bit 0 (PCIE_RGR1_SW_INIT_1_PERST)
   strwi   w6, x14, #0x210                         // of [0xfd509210] (RGR1_SW_INIT_1)
+
+  // Wait for 100ms after PERST# deassertion; see PCIe CEM specification
+  // sections 2.2, PCIe r5.0, 6.6.1.
+  ldr     x0, =100000
+  bl      wait_usec                               // sleep 100,000us = 100ms
+
+  // Give the RC/EP even more time to wake up, before trying to configure RC.
+  // Poll status until ready, every 1ms, up to maximum of 100 times
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1800-L1806
+   mov     w8, #100                               // 100 attempts
+   1:
+     cbz     w8, 2f                               // exit loop if 100 iterations have completed
+     sub     w8, w8, #1                           // note, linux kernel checks only every 5ms, but we check every 1ms
+     mov     x0, #1000
+     bl      wait_usec                            // sleep 1ms
+     ldrwi   w0, x4, #0x68
+     tbz     w0, #4, 1b                           // repeat loop if bit 4 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PHYLINKUP)
+     tbz     w0, #5, 1b                           // repeat loop if bit 5 is clear (PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE)
+ 2:
+   stp     w0, w8, [x7]                           // store last read status register value and number of 1ms on heap
+// cbz     w8, 4f                                  // exit early if failed to wake up
+
+  // Exit early if in endpoint mode, not in root complex mode => implies PCIe misconfiguration
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L980-L983
+
+//  tbz     w0, #7, 4f                              // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 4:
+
+  // Refclk from RC should be gated with CLKREQ# input when
+  // ASPM L0s,L1 is enabled => setting the CLKREQ_DEBUG_ENABLE
+  // field to 1 and CLKREQ_L1SS_ENABLE field to 0
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1041-L1060
+  //
+  // Updates registers:
+  //   * PCIE_MISC_HARD_PCIE_HARD_DEBUG
+
+//  ldrwi   w0, x4, #0x204
+//  and     w0, w0, #~0x200000                      // clear bit 21 (CLKREQ_L1SS_ENABLE_MASK)
+//  orr     w0, w0, #0x2                            //   and set bit 1 (CLKREQ_DEBUG_ENABLE)
+//  strwi   w0, x4, #0x204                          // of [0xfd504204] (PCIE_MISC_HARD_PCIE_HARD_DEBUG)
+
 
   // Enable SSC (spread spectrum clocking) steps
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L372-L409

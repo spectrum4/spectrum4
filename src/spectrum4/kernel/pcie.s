@@ -346,25 +346,6 @@ pcie_init_bcm2711:
   stp     w2, w3, [x7, #0x18]                     // store did/vid and header type on heap
 4:
 
-  // Enable:
-  //   PCI_EXP_RTCTL_RRS_SVE    0x0010     Config RRS Software Visibility Enable
-  //
-  // CRS = Configuration Request Retry Status, directing devices to
-  // return a vendor id of 0x0001 if they are not ready after a reset
-  //   https://blog.linuxplumbersconf.org/2017/ocw/system/presentations/4732/original/crs.pdf
-  //
-  // Disable:
-  //   PCI_EXP_RTCTL_SECEE      0x0001     System Error on Correctable Error
-  //   PCI_EXP_RTCTL_SENFEE     0x0002     System Error on Non-Fatal Error
-  //   PCI_EXP_RTCTL_SEFEE      0x0004     System Error on Fatal Error
-  //   PCI_EXP_RTCTL_PMEIE      0x0008     PME Interrupt
-  //
-  // PCI Express capability starts at offset 0xac, and PCI_EXP_RTCTL register has offset 0x1c from start of capability,
-  // i.e. offset is 0xac + 0x1c = 0xc8
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1150-L1159
-  mov     w1, #0x0010
-  strhi   w1, x10, #0xc8                          // [0xfd5000c8] = 0x0010 (was 0x0000)
-
   // Set LTR Enable bit in PCI Express Device Control 2 register (PCI_EXP_DEVCTL2) of the root complex, i.e. turn LTR on.
   // PCI Express capability starts at offset 0xac, and PCI_EXP_DEVCTL2 register has offset 0x28 from start of capability,
   // i.e. offset is 0xac + 0x28 = 0xd4
@@ -528,6 +509,25 @@ pcie_init_bcm2711:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1028-L1033
 
   strhi   w0, x7, #0x12                           // store w0 on heap to record link capabilities register
+
+  // Enable:
+  //   PCI_EXP_RTCTL_RRS_SVE    0x0010     Config RRS Software Visibility Enable
+  //
+  // CRS = Configuration Request Retry Status, directing devices to
+  // return a vendor id of 0x0001 if they are not ready after a reset
+  //   https://blog.linuxplumbersconf.org/2017/ocw/system/presentations/4732/original/crs.pdf
+  //
+  // Disable:
+  //   PCI_EXP_RTCTL_SECEE      0x0001     System Error on Correctable Error
+  //   PCI_EXP_RTCTL_SENFEE     0x0002     System Error on Non-Fatal Error
+  //   PCI_EXP_RTCTL_SEFEE      0x0004     System Error on Fatal Error
+  //   PCI_EXP_RTCTL_PMEIE      0x0008     PME Interrupt
+  //
+  // PCI Express capability starts at offset 0xac, and PCI_EXP_RTCTL register has offset 0x1c from start of capability,
+  // i.e. offset is 0xac + 0x1c = 0xc8
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1150-L1159
+  mov     w1, #0x0010
+  strhi   w1, x10, #0xc8                          // [0xfd5000c8] = 0x0010 (was 0x0000)
 
   // PCIe RC ECAM Index Register (offset 0x9000 from base, x14 + 0x0)
   // Mounts VL805 (bus 1, device 0, function 0, offset 0) configuration space at physical address [0xfd58000] (x13)

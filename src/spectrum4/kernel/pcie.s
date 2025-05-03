@@ -35,7 +35,7 @@ pcie_init_bcm2711:
   mov     x5, x30
   adrp    x10, 0xfd500000 + _start                // x10 = RC config space base address
   adrp    x4, 0xfd504000 + _start                 // x4 = Broadcom PCIe Set Top Box registers
-  adrp    x13, 0xfd508000 + _start                // x13 = USB Controller config space base address
+  adrp    x13, 0xfd508000 + _start                // x13 = VL805 USB Controller config space base address
   adrp    x14, 0xfd509000 + _start                // x14 = ECAM Index register
   adrp    x7, heap
   add     x7, x7, :lo12:heap                      // x7 = heap
@@ -345,13 +345,20 @@ pcie_init_bcm2711:
   ldrbi   w3, x10, #0xe                           // w3 = header type
   stp     w2, w3, [x7, #0x18]                     // store did/vid and header type on heap
 4:
-  mov     x0, #200                                // sleep 200-1000us
-  bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L58
 
-  // Enable CRS Software Visibility (set bit 4) of PCI_EXP_RTCTL (Root Control)
+  // Enable:
+  //   PCI_EXP_RTCTL_RRS_SVE    0x0010     Config RRS Software Visibility Enable
+  //
   // CRS = Configuration Request Retry Status, directing devices to
   // return a vendor id of 0x0001 if they are not ready after a reset
   //   https://blog.linuxplumbersconf.org/2017/ocw/system/presentations/4732/original/crs.pdf
+  //
+  // Disable:
+  //   PCI_EXP_RTCTL_SECEE      0x0001     System Error on Correctable Error
+  //   PCI_EXP_RTCTL_SENFEE     0x0002     System Error on Non-Fatal Error
+  //   PCI_EXP_RTCTL_SEFEE      0x0004     System Error on Fatal Error
+  //   PCI_EXP_RTCTL_PMEIE      0x0008     PME Interrupt
+  //
   // PCI Express capability starts at offset 0xac, and PCI_EXP_RTCTL register has offset 0x1c from start of capability,
   // i.e. offset is 0xac + 0x1c = 0xc8
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1150-L1159
@@ -605,11 +612,19 @@ pcie_init_bcm2711:
   // Enable AER Correctable Error Reporting, Non-Fatal Error Reporting, Fatal Error Reporting on RC
   ldrhi   w1, x10, #0xb6                          // Read PCIe Capability's Device Status
   strhi   w1, x10, #0xb6                          // Clear set bits (don't clear already cleared bits, since they may be reserved)
+
+  // Initialise PME on root port
+  // Note:
+  //   1) PME interrupts were already disabled earlier
+  //   2) TODO: register an interrupt handler for PME events
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/pme.c#L322-L361
   ldrhi   w1, x10, #0xc8                          // Read Root Control register
-  and     w1, w1, #~0x7                           // Clear bits:
+  and     w1, w1, #~0x7                           // Clear bits - not really needed as we set these bits explicitly to 0 earlier...
                                                   //   0: PCI_EXP_RTCTL_SECEE   Disable correctable error reporting
                                                   //   1: PCI_EXP_RTCTL_SENFEE  Disable non-fatal error reporting
                                                   //   2: PCI_EXP_RTCTL_SEFEE   Disable fatal error reporting
+  orr     w1, w1, #0x8                            // Enable bits:
+                                                  //   3: PCI_EXP_RTCTL_PMEIE   PME Interrupt Enable
   strhi   w1, x10, #0xc8                          // and update value
 
   // Enable Root Port's interrupt in response to error messages
@@ -627,7 +642,9 @@ pcie_init_bcm2711:
   // Reset VL805 firmware (the USB Host Controller chip)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L26-L66
   adr     x0, vl805_reset_req                     // x0 = memory block pointer for mailbox call to reset VL805 firmware
-  bl      mbox_call
+  bl      mbox_call                               //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/reset/reset-raspberrypi.c#L52-L53
+  mov     x0, #200                                // sleep 200-1000us
+  bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/reset/reset-raspberrypi.c#L57-L58
 
   // Corrupted by mbox_call above, so need to set again
   adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address

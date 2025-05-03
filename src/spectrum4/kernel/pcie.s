@@ -346,20 +346,20 @@ pcie_init_bcm2711:
   stp     w2, w3, [x7, #0x18]                     // store did/vid and header type on heap
 4:
 
-  // Set LTR Enable bit in PCI Express Device Control 2 register (PCI_EXP_DEVCTL2) of the root complex, i.e. turn LTR on.
+  // RC: Set LTR Enable bit in PCI Express Device Control 2 register (PCI_EXP_DEVCTL2) of the root complex, i.e. turn LTR on.
   // PCI Express capability starts at offset 0xac, and PCI_EXP_DEVCTL2 register has offset 0x28 from start of capability,
   // i.e. offset is 0xac + 0x28 = 0xd4
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2166-L2177
   mov     w1, #0x0400
   strhi   w1, x10, #0xd4                          // [0xfd5000d4] = 0x0400 (was 0x0000)
 
-  // Set SERR forwarding bit (bit 1) in PCI bridge control of root complex.
+  // RC: Set SERR forwarding bit (bit 1) in PCI bridge control of root complex.
   // In contrast, Cirlce sets bit 0 instead which enables parity detection on secondary interface.
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2207-L2223
   mov     w1, #0x0002
   strhi   w1, x10, #0x3e                          // [0xfd50003e] = 0x0002 (was 0x0000)
 
-  // Disable Power Management (clear bit 8) and clear Power Management Status (by setting bit 15) of PCI_PM_CTRL register of root complex.
+  // RC: Disable Power Management (clear bit 8) and clear Power Management Status (by setting bit 15) of PCI_PM_CTRL register of root complex.
   // Power Management capability starts at offset 0x48, and PCI_PM_CTRL has offset 0x04 from start of capability,
   // i.e. offset is 0x48 + 0x04 = 0x4c
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pci.c#L2354-L2368
@@ -368,7 +368,7 @@ pcie_init_bcm2711:
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
   strhi   w1, x10, #0x4c                          // of [0xfd50004c] (PCI_PM_CTRL)
 
-  // Clear AER status registers
+  // RC: Clear AER status registers
   // For RC, AER is the first extended capability at 0x100 offset
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/probe.c#L2586
   ldrwi   w1, x10, #0x130                         // Read root error status
@@ -378,7 +378,7 @@ pcie_init_bcm2711:
   ldrwi   w1, x10, #0x104                         // Read uncorrectable error status
   strwi   w1, x10, #0x104                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
 
-  // Enable PCIe error reporting
+  // RC: Enable PCIe error reporting
   ldrhi   w1, x10, #0xb4                          // PCI_EXP_DEVCTL (offset 0x8 from 0xac where PCIe device capability starts)
   orr     w1, w1, #0xf                            //  PCI_EXP_DEVCTL_CERE    0x01    Correctable Error Reporting Enable
                                                   //  PCI_EXP_DEVCTL_NFERE   0x02    Non-Fatal Error Reporting Enable
@@ -386,7 +386,7 @@ pcie_init_bcm2711:
                                                   //  PCI_EXP_DEVCTL_URRE    0x08    Unsupported Request Reporting Enable
   strhi   w1, x10, #0xb4
 
-  // Configure bus numbers in root complex and latency timer
+  // RC: Configure bus numbers and latency timer
   // 0x18: PCI Primary Bus = 0x00
   // 0x19: Secondary Bus = 0x01
   // 0x1a: Subordinate Bus (Highest bus number behind bridge) = 0x01
@@ -394,7 +394,7 @@ pcie_init_bcm2711:
   ldr     w1, =0x00010100
   strwi   w1, x10, #0x18                          // was 0x00000000
 
-  // Clear errors on root complex
+  // RC: Clear errors
   // Write 0xffff to clear all status bits (e.g., parity errors, aborts)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L1332-L1333
   mov     w1, #0xffff
@@ -510,14 +510,14 @@ pcie_init_bcm2711:
 
   strhi   w0, x7, #0x12                           // store w0 on heap to record link capabilities register
 
-  // Enable:
+  // RC Enable:
   //   PCI_EXP_RTCTL_RRS_SVE    0x0010     Config RRS Software Visibility Enable
   //
   // CRS = Configuration Request Retry Status, directing devices to
   // return a vendor id of 0x0001 if they are not ready after a reset
   //   https://blog.linuxplumbersconf.org/2017/ocw/system/presentations/4732/original/crs.pdf
   //
-  // Disable:
+  // RC Disable:
   //   PCI_EXP_RTCTL_SECEE      0x0001     System Error on Correctable Error
   //   PCI_EXP_RTCTL_SENFEE     0x0002     System Error on Non-Fatal Error
   //   PCI_EXP_RTCTL_SEFEE      0x0004     System Error on Fatal Error
@@ -550,13 +550,13 @@ pcie_init_bcm2711:
   mov     w1, #0x40                               // PCI_EXP_LNKCTL_CCC 0x0040: Common Clock Configuration
   strhi   w1, x13, #0xd4                          // was 0x0043
 
-  // ASPM: Retrain link and set common clock configuration
+  // RC ASPM: Retrain link and set common clock configuration
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L201-L203
   mov     w1, #0x60                               // PCI_EXP_LNKCTL_RL       0x0020: Retrain Link
                                                   // PCI_EXP_LNKCTL_CCC      0x0040: Common Clock Configuration
   strhi   w1, x10, #0xbc                          // was 0x0000
 
-  // Wait for link training to complete
+  // RC: Wait for link training to complete
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pci.c#L4663-L4691
   mov     w8, #1000                               // 1000 attempts
   5:
@@ -567,26 +567,27 @@ pcie_init_bcm2711:
     ldrhi   w0, x10, #0xbe                        // check link status
     tbnz    w0, #5, 5b                            // repeat loop if bit 5 is set (PCI_EXP_LNKSTA_LT) - implies link training still in progress
 
-  // Clear LBMS (Link Bandwidth Management Status) after a manual retrain so
+  // RC: Clear LBMS (Link Bandwidth Management Status) after a manual retrain so
   // that the bit can be used to track link speed or width changes made by
   // hardware itself in attempt to correct unreliable link operation.
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pci.c#L4732-L4737
   mov     w1, #0x4000                             // PCI_EXP_LNKSTA_LBMS
   strhi   w1, x10, #0xbe                          // Update link status register
 
+  // VL805:
   ldr     w1, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type) (was 0x00000004)
   strwi   w1, x13, #0x10
   strwi   wzr, x13, #0x14                         // upper 32 address bits = 0 (not technically needed, already 0, but nice to keep)
 
-  // Set PCI I/O Base
+  // RC: Set PCI I/O Base
   mov     w1, #0xf0
   strhi   w1, x10, #0x1c                          // was 0x0000
 
-  // Set PCI Memory Base
+  // RC: Set PCI Memory Base
   mov     w1, #0xc000c000
   strwi   w1, x10, #0x20                          // was 0xf800f800 - perhaps from previous circle run that uses this alternative value?
 
-  // Set PCI Pref Memory Base
+  // RC: Set PCI Pref Memory Base
   mov     w1, #0x0000fff0
   strwi   w1, x10, #0x24                          // was 0x0001fff1
 
@@ -594,15 +595,18 @@ pcie_init_bcm2711:
   mov     w1, #0x1b
   strbi   w1, x10, #0x3c
 
-  // Set PCI Command
+  // RC: Set PCI Command
+  // 0b0000 0000 0000 0110
+  // set bit 1  => Enable response in Memory space
+  // set bit 2  => Enable bus mastering
   mov     w1, #0x0006
   strhi   w1, x10, #0x4                           // was 0x0000
 
-  // Enable AER Correctable Error Reporting, Non-Fatal Error Reporting, Fatal Error Reporting on RC
+  // RC: Enable AER Correctable Error Reporting, Non-Fatal Error Reporting, Fatal Error Reporting on RC
   ldrhi   w1, x10, #0xb6                          // Read PCIe Capability's Device Status
   strhi   w1, x10, #0xb6                          // Clear set bits (don't clear already cleared bits, since they may be reserved)
 
-  // Initialise PME on root port
+  // RC: Initialise PME on root port
   // Note:
   //   1) PME interrupts were already disabled earlier
   //   2) TODO: register an interrupt handler for PME events
@@ -616,7 +620,7 @@ pcie_init_bcm2711:
                                                   //   3: PCI_EXP_RTCTL_PMEIE   PME Interrupt Enable
   strhi   w1, x10, #0xc8                          // and update value
 
-  // Enable Root Port's interrupt in response to error messages
+  // RC: Enable interrupt in response to error messages
   ldrwi   w1, x10, #0x12c                         // Read PCI_ERR_ROOT_COMMAND
   orr     w1, w1, #0x7                            // Set bits:
                                                   //   0: PCI_ERR_ROOT_CMD_COR_EN       Enable correctable error reporting
@@ -624,11 +628,11 @@ pcie_init_bcm2711:
                                                   //   2: PCI_ERR_ROOT_CMD_FATAL_EN     Enable fatal error reporting
   strwi   w1, x10, #0x12c                         // and update value
 
-  // Interrupt line for VL805 to match value linux assigned - probably not needed
+  // VL805: Interrupt line to match value linux assigned - probably not needed
   mov     w1, #0x1b
   strbi   w1, x13, #0x3c                          // was 0x00
 
-  // Now enable L1
+  // RC: Enable L1
   mov     w1, #0x42                               // PCI_EXP_LNKCTL_ASPM_L1  0x0002: L1 Enable
   strhi   w1, x10, #0xbc
 
@@ -638,17 +642,18 @@ pcie_init_bcm2711:
   bl      mbox_call                               //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/reset/reset-raspberrypi.c#L52-L53
   mov     x0, #200                                // sleep 200-1000us
   bl      wait_usec                               //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/reset/reset-raspberrypi.c#L57-L58
-
   // Corrupted by mbox_call above, so need to set again
   adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address
 
-  // PCI cache line size
+  // VL805: PCI cache line size
   mov     w1, #0x10
   strbi   w1, x13, #0xc                           // PCI cache line size = 0x10 (64/4) (was 0x00)
 
+  // VL805:
   mov     w1, #0xfffffffc
   strwi   w1, x13, #0x94                          // was 0x00000000
 
+  // VL805:
   mov     w1, #0x6540
   strhi   w1, x13, #0x9c                          // was 0x0000
 
@@ -663,6 +668,7 @@ pcie_init_bcm2711:
   mov     w1, #0x546
   strhi   w1, x13, #0x4                           // was 0x0000 (note, circle does not disable INTx emulation)
 
+  // VL805:
   mov     w1, #0x85
   strhi   w1, x13, #0x92                          // was 0x0084
 

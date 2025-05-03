@@ -537,17 +537,6 @@ pcie_init_bcm2711:
   mov     w1, #0x00100000
   strwi   w1, x14, #0x0                           // was 0x00000000
 
-  // VL805: Set PCI command
-  // 0b0000 0101 0100 0110
-  // set bit 1  => Enable response in Memory space
-  // set bit 2  => Enable bus mastering
-  // set bit 6  => Enable parity checking
-  // set bit 8  => Enable SERR
-  // set bit 10 => INTx Emulation Disable
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/include/uapi/linux/pci_regs.h#L40-L51
-  mov     w1, #0x546
-  strhi   w1, x13, #0x4                           // was 0x0000
-
   // VL805: Disable Power Management (clear bit 8) and clear Power Management Status (by setting bit 15) of PCI_PM_CTRL register.
   // Power Management capability starts at offset 0x80, and PCI_PM_CTRL has offset 0x04 from start of capability,
   // i.e. offset is 0x80 + 0x04 = 0x84
@@ -663,9 +652,16 @@ pcie_init_bcm2711:
   mov     w1, #0x6540
   strhi   w1, x13, #0x9c                          // was 0x0000
 
-  // PCI command config: response in memory space | bus mastering | parity checking | SERR | INTx emulation disable (was 0x0000)
+  // VL805: Set PCI command
+  // 0b0000 0101 0100 0110
+  // set bit 1  => Enable response in Memory space
+  // set bit 2  => Enable bus mastering
+  // set bit 6  => Enable parity checking
+  // set bit 8  => Enable SERR
+  // set bit 10 => INTx Emulation Disable
+  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/include/uapi/linux/pci_regs.h#L40-L51
   mov     w1, #0x546
-  strhi   w1, x13, #0x4                           // Cicle does not disable INTx emulation
+  strhi   w1, x13, #0x4                           // was 0x0000 (note, circle does not disable INTx emulation)
 
   mov     w1, #0x85
   strhi   w1, x13, #0x92                          // was 0x0084

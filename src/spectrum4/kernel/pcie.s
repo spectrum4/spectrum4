@@ -561,15 +561,22 @@ pcie_init_bcm2711:
   strhi   w1, x10, #0xbc                          // was 0x0000
 
   // Wait for link training to complete
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pcie/aspm.c#L214-L221
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pci.c#L4663-L4691
   mov     w8, #1000                               // 1000 attempts
   5:
     cbz     w8, 6f                                // exit loop with failure if 1000 iterations have completed
     sub     w8, w8, #1
     mov     x0, #1000
     bl      wait_usec                             // sleep 1ms
-    ldrhi   w0, x10, #0xbc                        // check current value
+    ldrhi   w0, x10, #0xbe                        // check link status
     tbnz    w0, #5, 5b                            // repeat loop if bit 5 is set (PCI_EXP_LNKSTA_LT) - implies link training still in progress
+
+  // Clear LBMS (Link Bandwidth Management Status) after a manual retrain so
+  // that the bit can be used to track link speed or width changes made by
+  // hardware itself in attempt to correct unreliable link operation.
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pci.c#L4732-L4737
+  mov     w1, #0x4000                             // PCI_EXP_LNKSTA_LBMS
+  strhi   w1, x10, #0xbe                          // Update link status register
 
   ldr     w1, =0xc0000004                         // lower 32 bits of MEM_PCIE_RANGE_PCIE_START (pcie side address) | 0b100 (64 bit memory type) (was 0x00000004)
   strwi   w1, x13, #0x10

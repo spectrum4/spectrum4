@@ -601,9 +601,9 @@ pcie_init_bcm2711:
   mov     w1, #0x0000fff0
   strwi   w1, x10, #0x24                          // was 0x0001fff1
 
-  // Interrupt line 0x3c ?
-  mov     w1, #0x3e
-  strbi   w1, x13, #0x3c                          // was 0x00
+  // Interrupt line for RC to match value linux assigned - probably not needed
+  mov     w1, #0x1b
+  strbi   w1, x10, #0x3c
 
   // Set PCI Command
   mov     w1, #0x0006
@@ -634,6 +634,10 @@ pcie_init_bcm2711:
                                                   //   1: PCI_ERR_ROOT_CMD_NONFATAL_EN  Enable non-fatal error reporting
                                                   //   2: PCI_ERR_ROOT_CMD_FATAL_EN     Enable fatal error reporting
   strwi   w1, x10, #0x12c                         // and update value
+
+  // Interrupt line for VL805 to match value linux assigned - probably not needed
+  mov     w1, #0x1b
+  strbi   w1, x13, #0x3c                          // was 0x00
 
   // Now enable L1
   mov     w1, #0x42                               // PCI_EXP_LNKCTL_ASPM_L1  0x0002: L1 Enable

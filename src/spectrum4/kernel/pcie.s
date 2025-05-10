@@ -370,7 +370,7 @@ pcie_init_bcm2711:
 
   // RC: Clear AER status registers
   // For RC, AER is the first extended capability at 0x100 offset
-  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/probe.c#L2586
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/aer.c#L1413-L1419
   ldrwi   w1, x10, #0x130                         // Read root error status
   strwi   w1, x10, #0x130                         // Clear set bits (don't clear already cleared bits, since they may be reserved)
   ldrwi   w1, x10, #0x110                         // Read correctable error status
@@ -510,18 +510,18 @@ pcie_init_bcm2711:
 
   strhi   w0, x7, #0x12                           // store w0 on heap to record link capabilities register
 
-  // RC Enable:
-  //   PCI_EXP_RTCTL_RRS_SVE    0x0010     Config RRS Software Visibility Enable
-  //
-  // CRS = Configuration Request Retry Status, directing devices to
-  // return a vendor id of 0x0001 if they are not ready after a reset
-  //   https://blog.linuxplumbersconf.org/2017/ocw/system/presentations/4732/original/crs.pdf
-  //
   // RC Disable:
   //   PCI_EXP_RTCTL_SECEE      0x0001     System Error on Correctable Error
   //   PCI_EXP_RTCTL_SENFEE     0x0002     System Error on Non-Fatal Error
   //   PCI_EXP_RTCTL_SEFEE      0x0004     System Error on Fatal Error
   //   PCI_EXP_RTCTL_PMEIE      0x0008     PME Interrupt
+  //
+  // CRS = Configuration Request Retry Status, directing devices to
+  // return a vendor id of 0x0001 if they are not ready after a reset
+  //   https://blog.linuxplumbersconf.org/2017/ocw/system/presentations/4732/original/crs.pdf
+  //
+  // RC Enable:
+  //   PCI_EXP_RTCTL_RRS_SVE    0x0010     Config RRS Software Visibility Enable
   //
   // PCI Express capability starts at offset 0xac, and PCI_EXP_RTCTL register has offset 0x1c from start of capability,
   // i.e. offset is 0xac + 0x1c = 0xc8
@@ -595,29 +595,39 @@ pcie_init_bcm2711:
   mov     w1, #0x1b
   strbi   w1, x10, #0x3c
 
-  // RC: Set PCI Command
+  // RC: PCI Set Master (Update PCI Command)
   // 0b0000 0000 0000 0110
   // set bit 1  => Enable response in Memory space
   // set bit 2  => Enable bus mastering
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/portdrv.c#L696
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/portdrv.c#L342
+  //   https://github.com/raspberrypi/linux/blob/rpi-6.12.y/drivers/pci/pci.c#L4292-L4307 and something else
   mov     w1, #0x0006
   strhi   w1, x10, #0x4                           // was 0x0000
 
-  // RC: Enable AER Correctable Error Reporting, Non-Fatal Error Reporting, Fatal Error Reporting on RC
+  // AER enable root port
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/aer.c#L1392-L1422
+  // 1) Clear PCIe Capability's Device Status
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/aer.c#L1405-L1407
   ldrhi   w1, x10, #0xb6                          // Read PCIe Capability's Device Status
   strhi   w1, x10, #0xb6                          // Clear set bits (don't clear already cleared bits, since they may be reserved)
 
-  // RC: Initialise PME on root port
-  // Note:
-  //   1) PME interrupts were already disabled earlier
-  //   2) TODO: register an interrupt handler for PME events
+  // RC: Initialise PME (pcie_pme_probe)
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/pme.c#L322-L361
+  // Note:
+  //   *) PME interrupts were already disabled earlier
+  //   *) TODO: register an interrupt handler for PME events
+  // 1) clear root PME status
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/pme.c#L348
+  mov     w1, 0x10000
+  strwi   w1, x10, #0xcc
+  // 2) update Root Control register
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/pme.c#L347
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/pme.c#L359
   ldrhi   w1, x10, #0xc8                          // Read Root Control register
-  and     w1, w1, #~0x7                           // Clear bits - not really needed as we set these bits explicitly to 0 earlier...
-                                                  //   0: PCI_EXP_RTCTL_SECEE   Disable correctable error reporting
-                                                  //   1: PCI_EXP_RTCTL_SENFEE  Disable non-fatal error reporting
-                                                  //   2: PCI_EXP_RTCTL_SEFEE   Disable fatal error reporting
   orr     w1, w1, #0x8                            // Enable bits:
                                                   //   3: PCI_EXP_RTCTL_PMEIE   PME Interrupt Enable
+                                                  //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/pme.c#L57-L58
   strhi   w1, x10, #0xc8                          // and update value
 
   // RC: Enable interrupt in response to error messages

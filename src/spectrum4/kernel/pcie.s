@@ -667,6 +667,41 @@ pcie_init_bcm2711:
   mov     w1, #0x6540
   strhi   w1, x13, #0x9c                          // was 0x0000
 
+  // VL805: configure MSI
+  //   Configure Queue size: 0b010 (log2 => 4)
+  //   Disable MSI enable, if enabled
+
+                                                  // +=================================+
+                                                  // | PCI_MSI_FLAGS (Message Control) |
+                                                  // +=================================+
+                                                  //
+                                                  //             P 6 C
+                                                  //             E 4 O   A
+                                                  //             R B N   V
+                                                  //             _ I F   A   M
+                                                  //             V T I   I   S
+                                                  //             E _ G   L   I
+                                                  //             C C _   _   _
+                                                  //             T A Q   Q   E
+                                                  //             O P _   _   N
+                                                  //             R A S   S   A
+                                                  //             _ B I   I   B
+                                                  //             M L Z   Z   L
+                                                  //    0000 000 A E E-- E-- E
+                                                  //
+                                                  //    1111/11
+                                                  //    5432/109 8/7 654/321 0
+                                                  //
+                                                  // 0b ----/--- -/- 0-0/--- 0  CLEAR BITS
+                                                  // 0x    0     0     5     1
+                                                  //
+                                                  // 0b ----/--- -/1 -1-/--- -  SET BITS
+                                                  // 0x    0     0     a     0
+
+
+  mov     w1, #0x00a4
+  strhi   w1, x13, #0x92
+
   // VL805: Set PCI command
   // 0b0000 0101 0100 0110
   // set bit 1  => Enable response in Memory space
@@ -678,9 +713,9 @@ pcie_init_bcm2711:
   mov     w1, #0x546
   strhi   w1, x13, #0x4                           // was 0x0000 (note, circle does not disable INTx emulation)
 
-  // VL805:
-  mov     w1, #0x85
-  strhi   w1, x13, #0x92                          // was 0x0084
+  // Enable MSI bit in PCI_MSI_FLAGS
+  mov     w1, #0x00a5
+  strhi   w1, x13, #0x92
 
 
   //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f

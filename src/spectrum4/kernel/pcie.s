@@ -573,7 +573,7 @@ pcie_init_bcm2711:
     mov     x0, #1000
     bl      wait_usec                             // sleep 1ms
     ldrhi   w0, x10, #0xbe                        // check link status
-    tbnz    w0, #5, 5b                            // repeat loop if bit 5 is set (PCI_EXP_LNKSTA_LT) - implies link training still in progress
+    tbnz    w0, #11, 5b                           // repeat loop if bit 11 is set (PCI_EXP_LNKSTA_LT) - implies link training still in progress
 
   // RC: Clear LBMS (Link Bandwidth Management Status) after a manual retrain so
   // that the bit can be used to track link speed or width changes made by
@@ -613,13 +613,6 @@ pcie_init_bcm2711:
   mov     w1, #0x0006
   strhi   w1, x10, #0x4                           // was 0x0000
 
-  // AER enable root port
-  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/aer.c#L1392-L1422
-  // 1) Clear PCIe Capability's Device Status
-  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/aer.c#L1405-L1407
-  ldrhi   w1, x10, #0xb6                          // Read PCIe Capability's Device Status
-  strhi   w1, x10, #0xb6                          // Clear set bits (don't clear already cleared bits, since they may be reserved)
-
   // RC: Initialise PME (pcie_pme_probe)
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/pme.c#L322-L361
   // Note:
@@ -638,6 +631,13 @@ pcie_init_bcm2711:
                                                   //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/pme.c#L57-L58
   strhi   w1, x10, #0xc8                          // and update value
 
+  // AER enable root port
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/aer.c#L1392-L1422
+  // 1) Clear PCIe Capability's Device Status
+  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/pcie/aer.c#L1405-L1407
+  ldrhi   w1, x10, #0xb6                          // Read PCIe Capability's Device Status
+  strhi   w1, x10, #0xb6                          // Clear set bits (don't clear already cleared bits, since they may be reserved)
+
   // RC: Enable interrupt in response to error messages
   ldrwi   w1, x10, #0x12c                         // Read PCI_ERR_ROOT_COMMAND
   orr     w1, w1, #0x7                            // Set bits:
@@ -651,8 +651,16 @@ pcie_init_bcm2711:
   strbi   w1, x13, #0x3c                          // was 0x00
 
   // RC: Enable L1
-  mov     w1, #0x42                               // PCI_EXP_LNKCTL_ASPM_L1  0x0002: L1 Enable
+  mov     w1, #0x0042                             // PCI_EXP_LNKCTL_ASPM_L1    0x0002: L1 Enable
+                                                  // PCI_EXP_LNKCTL_CCC        0x0040: Common Clock Configuration
   strhi   w1, x10, #0xbc
+
+  // VL805: Enable L1
+  mov     x1, #0x0142                             // PCI_EXP_LNKCTL_ASPM_L1    0x0002: L1 Enable
+                                                  // PCI_EXP_LNKCTL_CCC        0x0040: Common Clock Configuration
+                                                  // PCI_EXP_LNKCTL_CLKREQ_EN  0x0100: Enable ClkReq
+
+  strhi   w1, x13, #0xd4
 
   // Reset VL805 firmware (the USB Host Controller chip)
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L26-L66
@@ -666,14 +674,6 @@ pcie_init_bcm2711:
   // VL805: PCI cache line size
   mov     w1, #0x10
   strbi   w1, x13, #0xc                           // PCI cache line size = 0x10 (64/4) (was 0x00)
-
-  // VL805:
-  mov     w1, #0xfffffffc
-  strwi   w1, x13, #0x94                          // was 0x00000000
-
-  // VL805:
-  mov     w1, #0x6540
-  strhi   w1, x13, #0x9c                          // was 0x0000
 
   // VL805: configure MSI
   //   Configure Queue size: 0b010 (log2 => 4)
@@ -709,6 +709,14 @@ pcie_init_bcm2711:
 
   mov     w1, #0x00a4
   strhi   w1, x13, #0x92
+
+  // VL805:
+  mov     w1, #0xfffffffc
+  strwi   w1, x13, #0x94                          // was 0x00000000
+
+  // VL805:
+  mov     w1, #0x6540
+  strhi   w1, x13, #0x9c                          // was 0x0000
 
   // VL805: Set PCI command
   // 0b0000 0101 0100 0110

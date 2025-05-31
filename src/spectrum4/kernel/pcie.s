@@ -846,11 +846,22 @@ pcie_init_bcm2711:
   //  fd508000 06 11 83 34 46 05 10 00 01 30 03 0c 10 00 00 00 04 00 00 c0 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd508020 00 00 00 00 00 00 00 00 00 00 00 00 06 11 83 34 00 00 00 00 80 00 00 00 00 00 00 00 3e 01 00 00
 
-
+  // VL805 legacy data
 
   //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
-  //  fd508040 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 06 11 83 34
-  //  fd508060 30 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //  fd508040 00 00 00 00 00 01 00 00 09 00 00 0e 04 00 00 00 c0 38 01 00 00 00 00 00 00 00 00 00 06 11 83 34
+  //  fd508060 30 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 00 03 00 01 00 00 18
+
+  //  fd508048: Mirror of xHCI Command Ring Control Register lower 32 bits (0x0e000009)
+  //    Bits 31:6 (address) = 0x0e000000 → Command Ring 64 byte aligned Base Address lower 32 bits
+  //    Bits 5:0 (flags) = 0x09 → 0b001001
+  //      Bit 5: CRCS (Command Ring Cycle State) → 0
+  //      Bit 4: CA (Command Abort) → 0
+  //      Bit 3: CRR (Command Ring Running) → 1
+  //      Bit 2: Reserved → 0
+  //      Bit 1: Reserved → 0
+  //      Bit 0: RCS (Ring Cycle State) → 1
+  //  fd508050: Firmware version 0x000138c0
 
   // VL805 Capabilities
 

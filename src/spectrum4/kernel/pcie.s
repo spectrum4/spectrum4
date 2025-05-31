@@ -546,10 +546,6 @@ pcie_init_bcm2711:
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
   strhi   w1, x13, #0x84                          // of [0xfd50004c] (PCI_PM_CTRL)
 
-
-  mov     w1, #0x40                               // PCI_EXP_LNKCTL_CCC 0x0040: Common Clock Configuration
-  strhi   w1, x13, #0xd4                          // was 0x0043
-
   // VL805: Enable PCIe error reporting
   ldrhi   w1, x13, #0xcc                          // PCI_EXP_DEVCTL (offset 0x8 from 0xac where PCIe device capability starts)
   orr     w1, w1, #0xf                            //  PCI_EXP_DEVCTL_CERE    0x01    Correctable Error Reporting Enable

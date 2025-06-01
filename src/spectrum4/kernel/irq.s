@@ -61,23 +61,30 @@ enable_ic_bcm283x:
 
 
 enable_ic_bcm2711:
+
+
+.if UART_DEBUG
+  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                                 // Update frame pointer to new stack location.
+.endif
+
+
   mov     w0, #0x00000002
   adrp    x1, 0xfe00b000 + _start
   str     w0, [x1, #0x210]                        // [0xfe00b210] = 0x00000002
-//   adrp    x2, 0xff841000 + _start                 // GIC Distributor
-//   adrp    x1, 0xff842000 + _start                 // GIC CPU Interface
-//   mov     w0, #0x000001e7
-//   str     w0, [x1]                                // Enable group 1 IRQs from CPU interface [GICC_CTLR]=[0xff841000]=0x000001e7
-//                                                   // See https://developer.arm.com/documentation/ihi0048/b/Programmers--Model/About-the-programmers--model/CPU-interface-register-map?lang=en
-//   mov     w0, #0x000000ff
-//   str     w0, [x1, #0x4]                          // priority mask [0xff841004]=0x000000ff
-//   add     x2, x2, #0x80                           // x2 = 0xff842080 + _start
-//   mov     x0, #0x20
-//   mov     w1, #~0                                 // group 1 all the things
-// 1:
-//   subs    x0, x0, #4                              // x0 = 0x1c, 0x18, 0x14, 0x10, 0x0c, 0x08, 0x04, 0x00
-//   str     w1, [x2, x0]                            // [0xff84209c] / [0xff82098] / [0xff82094] / [0xff82090] / [0xff8208c] / [0xff82088] / [0xff82084] / [0xff82080] = 0xffffffff
-//   b.ne    1b
+
+
+.if UART_DEBUG
+  adrp    x0, 0xff841000 + _start                 // start address
+  bl      display_page_32bit
+  adrp    x0, 0xff842000 + _start                 // start address
+  bl      display_page_32bit
+.endif
+.if UART_DEBUG
+  ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
+.endif
+
+
   ret
 
 

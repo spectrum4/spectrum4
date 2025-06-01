@@ -210,10 +210,6 @@ new:                                     // L019D
   bl      display_page
   ldr     x0, =(0x600000000 + _start)             // start address
   bl      display_page
-  adrp    x0, 0xff841000 + _start                 // start address
-  bl      display_page
-  adrp    x0, 0xff842000 + _start                 // start address
-  bl      display_page
 6:
 .endif
 

@@ -216,6 +216,11 @@ uart_puts:
 # On entry:
 #   x0 = value to write as a hex string to Mini UART.
 #   x2 = number of bits to print (multiple of 4)
+# On exit:
+#   x0 preserved
+#   x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
+#   x2 = 0
+#   x3 = [AUX_MU_LSR]
 uart_x0:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -235,6 +240,11 @@ uart_x0:
 # On entry:
 #   x0 = value to write as a hex string to Mini UART.
 #   x2 = number of lower bits of x0 to print (multiple of 4)
+# On exit:
+#   x0 preserved
+#   x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
+#   x2 = 0
+#   x3 = [AUX_MU_LSR]
 uart_x0_s:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -252,4 +262,27 @@ uart_x0_s:
   mov     x0, x19                                 // Restore x0
   ldp     x19, x20, [sp], #16                     // Restore x19, x20
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+display_page_32bit:
+  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                                 // Update frame pointer to new stack location.
+  add     x4, x0, #0x1000
+  1:
+    mov     x2, #36
+    bl      uart_x0_s
+    mov     x5, x0
+    mov     x0, ':'
+    bl      uart_send
+    mov     x0, ' '
+    bl      uart_send
+    ldr     w0, [x5], #0x4
+    mov     x2, #32
+    bl      uart_x0_s
+    bl      uart_newline
+    mov     x0, x5
+    cmp     x0, x4
+    b.lt    1b
+  ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret

@@ -102,8 +102,18 @@ enable_ic_bcm2711:
   str     w5, [x1, #0x1004]                       // [0xff842004]     = [GICC_PMR]         = 0x000000f0                                            => priority mask = 0xf0
   mov     w6, #0x261
   str     w6, [x1, #0x1000]                       // [0xff842000]     = [GICC_CTLR]        = 0x00000261                                            => EOImodeNS: 1, IRQBypDisGrp1: 1, FIQBypDisGrp1: 1, EnableGrp1: 1
-  mov     w4, #0x40000000
-  str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0x40000000                                            => enable interrupt 30 (0x1e) (non-secure physical timer)
+
+  mov     w4, #0x00000002
+  str     w4, [x1, #0x10c]                        // [0xff84110c]     = [GICD_ISENABLER0]  = 0x00000002                                            => enable interrupt 97 (0x61)
+# mov     w4, #0xffffffff
+# str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0xffffffff                                            => enable interrupts   0- 31 (0x00-0x1f)
+# str     w4, [x1, #0x104]                        // [0xff84110c]     = [GICD_ISENABLER1]  = 0xffffffff                                            => enable interrupts  32- 63 (0x20-0x3f)
+# str     w4, [x1, #0x104]                        // [0xff84110c]     = [GICD_ISENABLER2]  = 0xffffffff                                            => enable interrupts  64- 95 (0x40-0x5f)
+# str     w4, [x1, #0x10c]                        // [0xff84110c]     = [GICD_ISENABLER3]  = 0xffffffff                                            => enable interrupts  96-127 (0x60-0x7f)
+# str     w4, [x1, #0x110]                        // [0xff84110c]     = [GICD_ISENABLER4]  = 0xffffffff                                            => enable interrupts 128-159 (0x80-0x9f)
+# str     w4, [x1, #0x114]                        // [0xff84110c]     = [GICD_ISENABLER5]  = 0xffffffff                                            => enable interrupts 160-191 (0xa0-0xbf)
+# str     w4, [x1, #0x118]                        // [0xff84110c]     = [GICD_ISENABLER6]  = 0xffffffff                                            => enable interrupts 192-223 (0xc0-0xdf)
+# str     w4, [x1, #0x11c]                        // [0xff84110c]     = [GICD_ISENABLER7]  = 0xffffffff                                            => enable interrupts 224-255 (0xe0-0xff)
 
 .if UART_DEBUG
   adrp    x0, 0xff841000 + _start                 // log GICD_* registers
@@ -144,7 +154,7 @@ handle_irq_bcm2711:
   adrp    x8, 0xff842000 + _start
   ldr     w7, [x8, #0xc]                          // w7 = [0xff84200c] = [GICC_IAR]
   logreg  7
-  cmp     w7, #30                                 // IRQ 30 is Non-secure physical timer PPI
+  cmp     w7, #0x61                               // IRQ 0x61 (97) is Non-secure physical timer PPI
   b.ne    1f
   str     w7, [x8, #0x10]                         // [0xff842010] = [GICC_EOIR] = [GICC_IAR]
                                                   // Note: Writing to GICC_EOIR before servicing interrupt, which I believe means the

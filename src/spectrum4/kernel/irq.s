@@ -56,7 +56,7 @@ show_invalid_entry_message:
 enable_ic_bcm283x:
   mov     w0, #0x00000002
   adrp    x1, 0x3f00b000 + _start
-  str     w0, [x1, #0x210]                        // [0x3f00b210] = 0x00000002
+  strwi   w0, x1, #0x210                          // [0x3f00b210] = 0x00000002
   ret
 
 
@@ -105,6 +105,9 @@ enable_ic_bcm2711:
 
   mov     w4, #0x00200000
   str     w4, [x1, #0x104]                        // [0xff841104]     = [GICD_ISENABLER1]  = 0x00200000                                            => enable interrupt 53 (0x35)
+
+# enable all interrupts
+
 # mov     w4, #0xffffffff
 # str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0xffffffff                                            => enable interrupts   0- 31 (0x00-0x1f)
 # str     w4, [x1, #0x104]                        // [0xff841104]     = [GICD_ISENABLER1]  = 0xffffffff                                            => enable interrupts  32- 63 (0x20-0x3f)
@@ -120,8 +123,6 @@ enable_ic_bcm2711:
   bl      display_page_32bit
   adrp    x0, 0xff842000 + _start                 // log GICC_* registers
   bl      display_page_32bit
-.endif
-.if UART_DEBUG
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
 .endif
 
@@ -136,14 +137,10 @@ handle_irq_bcm283x:
   cmp     w0, #2
   b.ne    1f
   bl      handle_timer_irq
-.if UART_DEBUG
   b       2f
-.endif
 1:
-.if UART_DEBUG
-  bl      log_unknown_interrupt_value
+logreg 0
 2:
-.endif
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -154,47 +151,16 @@ handle_irq_bcm2711:
   adrp    x8, 0xff842000 + _start
   ldr     w7, [x8, #0xc]                          // w7 = [0xff84200c] = [GICC_IAR]
   logreg  7
-  cmp     w7, #0x61                               // IRQ 0x61 (97) is Non-secure physical timer PPI
-  b.ne    1f
-  str     w7, [x8, #0x10]                         // [0xff842010] = [GICC_EOIR] = [GICC_IAR]
+  strwi   w7, x8, #0x10                           // [0xff842010] = [GICC_EOIR] = [GICC_IAR]
                                                   // Note: Writing to GICC_EOIR before servicing interrupt, which I believe means the
                                                   // interrupt routine will be reentrant at this point. Writing to EOIR after
                                                   // handling timer may be safer.
   dsb     sy                                      // The GIC architecture specification requires that valid EOIR writes are ordered
                                                   // however probably not needed since device memory writes should already be ordered.
   bl      handle_timer_irq
-  str     w7, [x8, #0x1000]                       // [0xff843000] = [GICC_DIR]  = [GICC_IAR]
+  strwi   w7, x8, #0x1000                         // [0xff843000] = [GICC_DIR]  = [GICC_IAR]
                                                   // Note: Could set GICC_CTLR.EOImodeNS to 0 and not have separate GICC_EOIR and
                                                   // GICC_DIR writes, i.e. just write to GICC_EOIR after servicing interrupt.
-.if UART_DEBUG
-  b       2f
-.endif
-1:
-.if UART_DEBUG
-  mov     x0, x7
-  bl      log_unknown_interrupt_value
-2:
-.endif
 
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
-
-
-.if UART_DEBUG
-log_unknown_interrupt_value:
-  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                                 // Update frame pointer to new stack location.
-  adr     x1, msg_unknown_interrupt_value
-  mov     x2, #32
-  bl      hex_x0
-  adr     x0, msg_unknown_interrupt
-  bl      uart_puts
-  ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
-  ret
-
-
-msg_unknown_interrupt:
-  .ascii "Unknown interrupt: 0x"                  // concatenates with the string below
-msg_unknown_interrupt_value:
-  .asciz "........\r\n"                           // stops (.) are replaced with value in hex_x0 routine
-.endif

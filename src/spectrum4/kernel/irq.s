@@ -103,20 +103,23 @@ enable_ic_bcm2711:
   mov     w6, #0x261
   str     w6, [x1, #0x1000]                       // [0xff842000]     = [GICC_CTLR]        = 0x00000261                                            => EOImodeNS: 1, IRQBypDisGrp1: 1, FIQBypDisGrp1: 1, EnableGrp1: 1
 
-  mov     w4, #0x00200000
-  str     w4, [x1, #0x104]                        // [0xff841104]     = [GICD_ISENABLER1]  = 0x00200000                                            => enable interrupt 53 (0x35)
+# mov     w4, #0x40000000
+# str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0x40000000                                            => enable interrupt 30 (0x1e)
+
+# mov     w4, #0x00200000
+# str     w4, [x1, #0x104]                        // [0xff841104]     = [GICD_ISENABLER1]  = 0x00200000                                            => enable interrupt 53 (0x35)
 
 # enable all interrupts
 
-# mov     w4, #0xffffffff
-# str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0xffffffff                                            => enable interrupts   0- 31 (0x00-0x1f)
-# str     w4, [x1, #0x104]                        // [0xff841104]     = [GICD_ISENABLER1]  = 0xffffffff                                            => enable interrupts  32- 63 (0x20-0x3f)
-# str     w4, [x1, #0x108]                        // [0xff841108]     = [GICD_ISENABLER2]  = 0xffffffff                                            => enable interrupts  64- 95 (0x40-0x5f)
-# str     w4, [x1, #0x10c]                        // [0xff84110c]     = [GICD_ISENABLER3]  = 0xffffffff                                            => enable interrupts  96-127 (0x60-0x7f)
-# str     w4, [x1, #0x110]                        // [0xff841110]     = [GICD_ISENABLER4]  = 0xffffffff                                            => enable interrupts 128-159 (0x80-0x9f)
-# str     w4, [x1, #0x114]                        // [0xff841114]     = [GICD_ISENABLER5]  = 0xffffffff                                            => enable interrupts 160-191 (0xa0-0xbf)
-# str     w4, [x1, #0x118]                        // [0xff841118]     = [GICD_ISENABLER6]  = 0xffffffff                                            => enable interrupts 192-223 (0xc0-0xdf)
-# str     w4, [x1, #0x11c]                        // [0xff84111c]     = [GICD_ISENABLER7]  = 0xffffffff                                            => enable interrupts 224-255 (0xe0-0xff)
+  mov     w4, #0xffffffff
+  str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0xffffffff                                            => enable interrupts   0- 31 (0x00-0x1f)
+  str     w4, [x1, #0x104]                        // [0xff841104]     = [GICD_ISENABLER1]  = 0xffffffff                                            => enable interrupts  32- 63 (0x20-0x3f)
+  str     w4, [x1, #0x108]                        // [0xff841108]     = [GICD_ISENABLER2]  = 0xffffffff                                            => enable interrupts  64- 95 (0x40-0x5f)
+  str     w4, [x1, #0x10c]                        // [0xff84110c]     = [GICD_ISENABLER3]  = 0xffffffff                                            => enable interrupts  96-127 (0x60-0x7f)
+  str     w4, [x1, #0x110]                        // [0xff841110]     = [GICD_ISENABLER4]  = 0xffffffff                                            => enable interrupts 128-159 (0x80-0x9f)
+  str     w4, [x1, #0x114]                        // [0xff841114]     = [GICD_ISENABLER5]  = 0xffffffff                                            => enable interrupts 160-191 (0xa0-0xbf)
+  str     w4, [x1, #0x118]                        // [0xff841118]     = [GICD_ISENABLER6]  = 0xffffffff                                            => enable interrupts 192-223 (0xc0-0xdf)
+  str     w4, [x1, #0x11c]                        // [0xff84111c]     = [GICD_ISENABLER7]  = 0xffffffff                                            => enable interrupts 224-255 (0xe0-0xff)
 
 .if UART_DEBUG
   adrp    x0, 0xff841000 + _start                 // log GICD_* registers
@@ -139,7 +142,7 @@ handle_irq_bcm283x:
   bl      handle_timer_irq
   b       2f
 1:
-logreg 0
+logreg  0
 2:
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret

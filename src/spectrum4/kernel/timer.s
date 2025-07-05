@@ -15,7 +15,7 @@
 .align 2
 timer_init:
   mrs     x1, cntp_cval_el0
-  movl    w2, 200000                              // TODO: this value should be dependent on clock speed (different for rpi3/rpi4)
+  mov     x2, #0x2000000                          // TODO: this value should be dependent on clock speed (different for rpi3/rpi4)
   add     x1, x1, x2
   msr     cntp_cval_el0, x1
   mov     w2, #0x1
@@ -32,7 +32,7 @@ handle_timer_irq:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   mrs     x1, cntp_cval_el0
-  movl    w2, 200000                              // TODO: this value should be dependent on clock speed (different for rpi3/rpi4)
+  mov     x2, #0x2000000                          // TODO: this value should be dependent on clock speed (different for rpi3/rpi4)
   add     x1, x1, x2
   msr     cntp_cval_el0, x1
   dsb     sy

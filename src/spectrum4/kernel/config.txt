@@ -14,6 +14,9 @@ arm_boost=1
 # Dynamic frequency clocking minimum value needed for Mini UART to function correctly.
 core_freq_min=500
 
+# Use the Cortex A72 GIC-400 rather than legacy BCM interrupt controller
+enable_gic=1
+
 # The [all] section applies to all Raspberry Pi models.
 [all]
 

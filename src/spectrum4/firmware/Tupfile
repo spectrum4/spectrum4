@@ -4,8 +4,11 @@
 
 .gitignore
 
-# last working revision before src/spectrum4/dists/tests/spectrum.img started failing on rpi 3B
-# i.e. broken in next revision: b208f8c7ce1bc3279b8bb89a3ec47c11e87c09bf
+# Last working version (i.e. firmware broken in next revision:
+# b208f8c7ce1bc3279b8bb89a3ec47c11e87c09bf)
+#
+# See:
+#   * https://github.com/raspberrypi/firmware/issues/1979
 firmware_revision = a43df3a002f60c4c2243a416d045eb5937585e8b
 
 # Download firmware

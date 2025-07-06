@@ -58,15 +58,15 @@ uart_init:
   str     w2, [x4, #0x4]                          //   [GPFSEL1] = updated value => Enable UART 1.
   str     wzr, [x4, #0x94]                        //   [GPPUD] = 0x00000000 => GPIO Pull up/down = OFF
   mov     x5, #0x96                               // Wait 150 instruction cycles (as stipulated by datasheet).
-1:
-  subs    x5, x5, #0x1                            // x0 -= 1
-  b.ne    1b                                      // Repeat until x0 == 0.
+  1:
+    subs    x5, x5, #0x1                          // x0 -= 1
+    b.ne    1b                                    // Repeat until x0 == 0.
   mov     w2, #0xc000                             // w2 = 2^14 + 2^15
   str     w2, [x4, #0x98]                         //   [GPPUDCLK0] = 0x0000c000 => Control signal to lines 14, 15.
   mov     x0, #0x96                               // Wait 150 instruction cycles (as stipulated by datasheet).
-2:
-  subs    x0, x0, #0x1                            // x0 -= 1
-  b.ne    2b                                      // Repeat until x0 == 0.
+  2:
+    subs    x0, x0, #0x1                          // x0 -= 1
+    b.ne    2b                                    // Repeat until x0 == 0.
   str     wzr, [x4, #0x98]                        //   [GPPUDCLK0] = 0x00000000 => Remove control signal to lines 14, 15.
   str     w3, [x1, #0x60]                         //   [AUX_MU_CNTL] = 0x00000003 => Enable Mini UART Tx/Rx
 .if TESTS_INCLUDE
@@ -88,9 +88,9 @@ uart_init:
 uart_send:
   adr     x1, mailbox_base                        // x1 = mailbox_base
   ldr     x1, [x1, aux_base-mailbox_base]         // x1 = [aux_base] = 0x3f215000 (rpi3) or 0xfe215000 (rpi4)
-1:
-  ldr     w2, [x1, #0x54]                         // w2 = [AUX_MU_LSR]
-  tbz     x2, #5, 1b                              // Repeat last statement until bit 5 is set.
+  1:
+    ldr     w2, [x1, #0x54]                       // w2 = [AUX_MU_LSR]
+    tbz     x2, #5, 1b                            // Repeat last statement until bit 5 is set.
 
 /////////////////////
 // This following section allows us to disable UART output during testing but

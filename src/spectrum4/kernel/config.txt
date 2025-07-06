@@ -17,8 +17,11 @@ core_freq_min=500
 # The [all] section applies to all Raspberry Pi models.
 [all]
 
-# Stop start.elf from filling in ATAGS (memory from 0x100) before launching the
-# kernel.
+# Stop start(4).elf from filling in ATAGS (memory from 0x100) before launching
+# the kernel. Our kernel is located at physical address 0x0, so we don't want
+# this. Note, even if we located our kernel at a higher address, I believe not
+# having this setting would require a .dtb file to be present on the SD card,
+# which we don't have nor really want.
 disable_commandline_tags=1
 
 # GPU memory in megabytes, sets the memory split between the CPU and GPU; the

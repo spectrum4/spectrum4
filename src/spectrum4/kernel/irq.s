@@ -61,15 +61,7 @@ enable_ic_bcm283x:
 
 
 enable_ic_bcm2711:
-
-.if UART_DEBUG
-  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                                 // Update frame pointer to new stack location.
-.endif
-
-# GIC-400 interrupt controller
   adrp    x1, 0xff841000 + _start                 // x1 = GICD base address
-
   str     wzr, [x1]                               // [0xff841000]     = [GICD_CTLR]        = 0x00000000                                             => disable GIC distributor
   mov     w3, #0x8
   mov     w4, #0xffffffff
@@ -102,18 +94,8 @@ enable_ic_bcm2711:
   str     w5, [x1, #0x1004]                       // [0xff842004]     = [GICC_PMR]         = 0x000000f0                                            => priority mask = 0xf0
   mov     w6, #0x261
   str     w6, [x1, #0x1000]                       // [0xff842000]     = [GICC_CTLR]        = 0x00000261                                            => EOImodeNS: 1, IRQBypDisGrp1: 1, FIQBypDisGrp1: 1, EnableGrp1: 1
-
   mov     w4, #0x40000000
   str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0x40000000                                            => enable interrupt 30 (0x1e)
-
-# .if UART_DEBUG
-# adrp    x0, 0xff841000 + _start                 // log GICD_* registers
-# bl      display_page_32bit
-# adrp    x0, 0xff842000 + _start                 // log GICC_* registers
-# bl      display_page_32bit
-# ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
-# .endif
-
   ret
 
 
@@ -127,7 +109,7 @@ handle_irq_bcm283x:
   bl      handle_timer_irq
   b       2f
 1:
-logreg  0
+  logreg  0
 2:
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret

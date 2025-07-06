@@ -133,6 +133,7 @@
   ldp     x4, x5, [sp, #16]                       // restore these registers, in case they are being logged!
   ldp     x2, x3, [sp, #32]
   ldp     x0, x1, [sp, #48]
+  ldp     x29, x30, [sp, #64]
   mov     x0, x\index
   bl      uart_x0
   bl      uart_newline

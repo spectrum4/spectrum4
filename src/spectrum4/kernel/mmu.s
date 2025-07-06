@@ -11,7 +11,8 @@
 #
 # PUD table (maps 1/512 * 1GB entries)
 #   0x0000: [0x0000000000000000 - 0x000000003fffffff] (1GB) -> PMD table at 0x1000 || 0x3
-#   --- 511 missing entries ---
+#   0x0008: [0x0000000040000000 - 0x000000007fffffff] (1GB) -> PMD table at 0x2000 || 0x3
+#   --- 510 missing entries ---
 #
 # PMD table (maps 512/512 * 2MB entries = 1GB range)
 #   0x1000: [0x0000000000000000 - 0x00000000001fffff] (2MB) -> 0x0000000000000401
@@ -30,6 +31,9 @@
 #   0x1fe8: [0x000000003fa00000 - 0x000000003fbfffff] (2MB) -> 0x000000003fa00405
 #   0x1ff0: [0x000000003fc00000 - 0x000000003fdfffff] (2MB) -> 0x000000003fc00405
 #   0x1ff8: [0x000000003fe00000 - 0x000000003fffffff] (2MB) -> 0x000000003fe00405
+#
+# PMD table (maps 1/512 * 2MB entries)
+#   0x2000: [0x0000000040000000 - 0x00000000401fffff] (2MB) -> 0x0000000040000405
 
 
 # Raspberry Pi 4 Paging Tables

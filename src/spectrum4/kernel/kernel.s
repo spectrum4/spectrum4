@@ -173,6 +173,28 @@ _start:
                                                   // VM:    0b0  => Disable second stage MMU address translation
   msr     hcr_el2, x0
 
+  mrs     x0, midr_el1                            // See https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
+  ldr     x1, =0x00000000410fd083                 // value on my Raspberry Pi 400. TODO: Change this filter to match any rpi4/rpi400 model that has GIC-400.
+  cmp     x0, x1
+  b.ne    post_gic_setup                          // Skip GIC setup if not on rpi4/rpi400
+
+  adrp    x2, 0xff841000                          // GIC Distributor     note: physical, not virtual address (do not add _start to value!)
+  adrp    x1, 0xff842000                          // GIC CPU Interface   note: physical, not virtual address (do not add _start to value!)
+  mov     w0, #0x000001e7
+  str     w0, [x1]                                // Enable group 1 IRQs from CPU interface [GICC_CTLR]=[0xff841000]=0x000001e7 CPU Interface Control Register
+                                                  // See https://developer.arm.com/documentation/ihi0048/b/Programmers--Model/About-the-programmers--model/CPU-interface-register-map?lang=en
+  mov     w0, #0x000000ff
+  str     w0, [x1, #0x4]                          // priority mask [0xff841004]=0x000000ff [GICC_PMR]=0x000000ff Interrupt Priority Mask Register
+  add     x2, x2, #0x80                           // x2 = 0xff842080
+  mov     x0, #0x20
+  mov     w1, #~0                                 // group 1 all the things
+  gic_loop:
+    subs    x0, x0, #4                            // x0 = 0x1c, 0x18, 0x14, 0x10, 0x0c, 0x08, 0x04, 0x00
+    str     w1, [x2, x0]                          // [0xff84209c] / [0xff82098] / [0xff82094] / [0xff82090] / [0xff8208c] / [0xff82088] / [0xff82084] / [0xff82080] = 0xffffffff
+    b.ne    gic_loop                              // GICD_IGROUPR[0-7] Interrupt Group Registers
+post_gic_setup:
+
+
 ##################################################
 # We are in EL3
 # Move from EL3 to EL1 directly (skip EL2)

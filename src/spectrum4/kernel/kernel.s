@@ -1031,3 +1031,7 @@ memzero:
 .include "armregs.s"
 .include "font.s"
 .include "entry.s"
+
+.bss
+
+next_interrupt: .space 8

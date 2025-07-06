@@ -312,8 +312,6 @@ SFSPACE:        .space 8                          // L5B85: Number of bytes free
 CHARS:          .space 8                          // L5C36: 256 less than address of character set, which starts with ' ' and carries on to '©'.
 LIST_SP:        .space 8                          // Address of return address from automatic listing.
 
-next_interrupt: .space 8
-
 # Pointers to inside the HEAP
 VARS:           .space 8                          // L5C4B: Address of variables.
 # DEST:         .space 8                          // Address of variable in assignment.

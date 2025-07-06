@@ -98,7 +98,7 @@ new:                                     // L019D
   logarm  REVIDR_EL1
   logarm  S3_1_C11_C0_2
   logarm  SCTLR_EL1
-  logarm  SP_EL0
+# logarm  SP_EL0
   logarm  TCR_EL1
   logarm  TTBR0_EL1
   logarm  TTBR1_EL1

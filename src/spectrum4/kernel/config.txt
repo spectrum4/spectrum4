@@ -51,3 +51,5 @@ arm_64bit=1
 # Name of kernel image file. Let's customise it rather than have kernel8.img
 # to be all fancy (like RISC OS does).
 kernel=spectrum4.img
+
+enable_gic=1

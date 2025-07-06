@@ -199,18 +199,15 @@ new:                                     // L019D
 4:
   adr     x0, msg_no_pcie
   bl      uart_puts
-  b       6f
 5:
-// Display pcie memory region
-  adrp    x0, 0xfd500000 + _start                 // start address
-  bl      display_page
-  adrp    x0, 0xfd504000 + _start                 // start address
-  bl      display_page
-  adrp    x0, 0xfd508000 + _start                 // start address
-  bl      display_page
-  ldr     x0, =(0x600000000 + _start)             // start address
-  bl      display_page
-6:
+  // Dump MMU tables
+  adrp    x0, pg_dir
+  adrp    x21, pg_dir_end
+  7:
+    bl      display_page
+    mov     x0, x19
+    cmp     x0, x21
+    b.lt    7b
 .endif
 
   ldrb    w1, [x28, FLAGS-sysvars]                // w1 = [FLAGS].

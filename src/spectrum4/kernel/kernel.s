@@ -274,9 +274,11 @@ _start:
   mov     x1, #0x1003
   add     x1, x0, x1
   ldr     x3, peripherals_end
+  sub     x3, x3, #0x1
   lsr     x2, x3, #30
+  add     x2, x2, #0x1
   2:
-    str     x1, [x0], #8                          // [pg_dir + i*8] = pg_dir + 0x1003 + i*0x1000. PUD table complete for 0 - peripherals end.
+    str     x1, [x0], #8                          // [pg_dir + i*8] = pg_dir + 0x1003 + i*0x1000. PUD table complete for 0 - peripherals_end.
     add     x1, x1, #0x1000
     subs    x2, x2, #0x1
     b.ne    2b
@@ -284,13 +286,13 @@ _start:
   mov     x1, #0x401                              // bit 10: AF=1, bits 2-4: mair attr index = 0 (normal), bits 0-1: 1 (block descriptor)
   ldr     w2, arm_size
   3:                                              // creates 2016 entries for 0x00000000 - 0xfc000000
-    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = 0x401 + i*0x200000. PMD table entries complete for 0 - peripherals start address.
+    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = 0x401 + i*0x200000. PMD table entries complete for 0 - arm_size address.
     add     x1, x1, #0x200000
     cmp     x1, x2
     b.lt    3b
   add     x1, x1, #0x4                            // bits 2-4: mair attr index = 1 (device)
   4:                                              // creates 32 entries for 0xfc000000 - 0x100000000
-    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = 0x405 + i*0x200000. PMD table entries complete for peripherals start to peripherals end address.
+    str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = 0x405 + i*0x200000. PMD table entries complete for arm_size to peripherals_end address.
     add     x1, x1, #0x200000
     cmp     x1, x3
     b.lt    4b
@@ -882,7 +884,7 @@ base_rpi3:
 # rpi3 peripherals_start (physical address, not virtual)
   .quad     0x000000003f000000
 # rpi3 peripherals_end (physical address, not virtual)
-  .quad     0x0000000040000000
+  .quad     0x0000000040200000
 
 
 .align 2

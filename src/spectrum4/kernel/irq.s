@@ -56,7 +56,7 @@ show_invalid_entry_message:
 enable_ic_bcm283x:
   mov     w0, #0x00000002
   adrp    x1, 0x3f00b000 + _start
-  strwi   w0, x1, #0x210                          // [0x3f00b210] = 0x00000002
+  str     w0, [x1, #0x210]                        // [0x3f00b210] = 0x00000002
   ret
 
 
@@ -103,13 +103,13 @@ handle_irq_bcm283x:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adrp    x1, 0x3f00b000 + _start
-  ldr     w0, [x1, #0x204]                        // w0 = [0x3f00b204]
-  cmp     w0, #2
+  ldr     w0, [x1, #0x204]                        // w0 = [0x3f00b204] = [IRQ0_PENDING_1]
+  tst     w0, #0x40000000                         // Bit 30 = CNTPNSIRQ
   b.ne    1f
-  bl      handle_timer_irq
+  logreg  0                                       // Unexpected IRQ
   b       2f
 1:
-  logreg  0
+  bl      handle_timer_irq
 2:
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret

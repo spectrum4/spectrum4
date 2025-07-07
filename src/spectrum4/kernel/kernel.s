@@ -28,89 +28,262 @@
 .text
 .align 2
 _start:
-  mrs     x0, mpidr_el1                           // x0 = Multiprocessor Affinity Register value.
-  ands    x0, x0, #0x3                            // x0 = core number.
-  b.ne    sleep                                   // Put all cores except core 0 to sleep.
 
   mrs     x0, currentel
   and     x0, x0, #0x0c                           // Check if in EL3
   cmp     x0, #0x0c
   b.ne    sleep                                   // If not in EL3, halt - nothing more we can do.
 
+  mrs     x0, mpidr_el1                           // x0 = Multiprocessor Affinity Register value.
+  ands    x0, x0, #0x3                            // x0 = core number.
+  b.ne    sleep                                   // Put all cores except core 0 to sleep.
 
-  mov     sp, 0x00800000
+  mrs     x0, s3_1_c11_c0_2                       // L2CTLR_EL1
 
-
-
-  ldr     x0, =0x00308000                         // IRQ, FIQ and exception handler run in EL1h
-  msr     sp_el1, x0                              // init their stack
-
-
-
-  mov     x0, 0xff800000
-  str     wzr, [x0]
-  mov     w1, 0x80000000
-  str     w1, [x0, #8]
-  mrs     x0, s3_1_c11_c0_2
+                                                  // +=====================================+
+                                                  // | L2CTLR_EL1 L2 Control Register, EL1 |
+                                                  // +=====================================+
+                                                  //
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/L2-Control-Register?lang=en
+                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/L2-Control-Register--EL1?lang=en
   mov     x1, #0x22
   orr     x0, x0, x1
-  msr     s3_1_c11_c0_2, x0
-# ldr     x0, =54000000
-# msr     cntfrq_el0, x0
-  msr     cptr_el3, xzr
-  mov     x0, 0x00000431
-  msr     scr_el3, x0
-  mov     sp, 0x00800000
-  mov     x0, #0x40
-  msr     s3_1_c15_c2_1, x0
-  bl      setup_gic
-  ldr     x0, =0x30c50830
-  msr     sctlr_el2, x0
-  mov     x0, #0x3c9
-  msr     spsr_el3, x0
-  adr     x0, in_el2
-  msr     elr_el3, x0
-  eret
-in_el2:
+  msr     s3_1_c11_c0_2, x0                       // set L2 read/write cache latency to 3
 
-  mov     sp, 0x00800000
-
-  mrs     x0, cnthctl_el2                         // Initialize Generic Timers
-  orr     x0, x0, #0x3                            // Enable EL1 access to timers
-  msr     cnthctl_el2, x0
-  msr     cntvoff_el2, xzr
-  mrs     x0, midr_el1                            // Initilize MPID/MPIDR registers
-  mrs     x1, mpidr_el1
-  msr     vpidr_el2, x0
-  msr     vmpidr_el2, x1
-  mov     x0, #0x33ff                             // Disable coprocessor traps
-  msr     cptr_el2, x0                            // Disable coprocessor traps to EL2
-  msr     hstr_el2, xzr                           // Disable coprocessor traps to EL2
-  mov     x0, #0x300000
-  msr     cpacr_el1, x0                           // Enable FP/SIMD at EL1
-  mov     x0, #0x80000000                         // 64bit EL1
-  msr     hcr_el2, x0
-                                                  // SCTLR_EL1 initialization
+                                                  // +=================================================+
+                                                  // | CPUECTLR_EL1 CPU Extended Control Register, EL1 |
+                                                  // +=================================================+
                                                   //
-                                                  // setting RES1 bits (29,28,23,22,20,11) to 1
-                                                  // and RES0 bits (31,30,27,21,17,13,10,6) +
-                                                  // UCI,EE,EOE,WXN,nTWE,nTWI,UCT,DZE,I,UMA,SED,ITD,
-                                                  // CP15BEN,SA0,SA,C,A,M to 0
-  mov     x0, #0x800
-  movk    x0, #0x30d0, lsl #16
-  msr     sctlr_el1, x0                           // SCTLR_EL1 = 0x30d00800
-  mov     x0, #0x3c4                              // Return to the EL1_SP1 mode from EL2
-  msr     spsr_el2, x0                            // EL1_SP0 | D | A | I | F
-  adr     x0, el1_entry
-  msr     elr_el2, x0
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/CPU-Extended-Control-Register--EL1?lang=en
+                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/CPU-Extended-Control-Register--EL1?lang=en
+                                                  //
+                                                  //                                    D   L     L
+                                                  //                                    T   2     2                                  S
+                                                  //                                    W   I     L                                  M      P
+                                                  //                                    D   F     D                                  P      D
+                                                  //                                    A   P     P                                  E      R
+                                                  //    0000 0000 0000 0000 0000 0000 0 P 0 D   0 D  0000 0000 0000 0000 0000 0000 0 N 00 0 C
+                                                  //
+                                                  //    6666/5555/5555/5544/4444/4444/3 3 3 3/3 3 33/3322/2222/2222/1111/1111/11
+                                                  //    3210/9876/5432/1098/7654/3210/9 8 7 6/5 4 32/1098/7654/3210/9876/5432/1098/7 6 54/3 210
+                                                  //
+  mov     x0, 0x40                                // 0b 0000/0000/0000/0000/0000/0000/0 0 0 0/0 0 00/0000/0000/0000/0000/0000/0000/0 1 00/0 000
+                                                  // 0x    0    0    0    0    0    0       0      0    0    0    0    0    0    0      4     0
+                                                  //
+                                                  // DTWDAP: 0b0   => Enable table walk descriptor access prefetch
+                                                  // L2IFPD: 0b00  => L2 instruction fetch prefetch distance 0 requests (disables instruction prefetch)
+                                                  // L2LDPD: 0b00  => L2 load data prefetch distance 16 requests
+                                                  // SMPEN:  0b1   => Enables data coherency with other cores in the cluster (required also for single core)
+                                                  // PDRC:   0b000 => Processor dynamic retention disabled
+  msr     s3_1_c15_c2_1, x0
 
+                                                  // +========================================+
+                                                  // | SCTLR_EL1 System Control Register, EL1 |
+                                                  // +========================================+
+                                                  //
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/System-Control-Register--EL1?lang=en
+                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/System-Control-Register--EL1?lang=en
+                                                  //
+                                                  //                                                 C
+                                                  //                                                 P
+                                                  //                                                 1
+                                                  //                        n   n                  T 5
+                                                  //           U   E      W T   T U D        U S I H B S
+                                                  //           C E 0      X W   W T Z        M E T E E A S
+                                                  //    0011 0 I E E 1101 N E 0 I C E 0 I 10 A D D E N 0 A C A M
+                                                  //
+                                                  //    3322/2 2 2 2/2222/1 1 1 1/1 1 1 1/11
+                                                  //    1098/7 6 5 4/3210/9 8 7 6/5 4 3 2/10 9 8/7 6 5 4/3 2 1 0
+                                                  //
+  ldr     x0, =0x30d0088a                         // 0b 0011/0 0 0 0/1101/0 0 0 0/0 0 0 0/10 0 0/1 0 0 0/1 0 1 0
+                                                  // 0x    3       0    d       0       0      8       8       a
+                                                  //
+                                                  // UCI:     0b0 => EL0 access to DC CVAU, DC CIVAC, DC CVAC and IC IVAU disabled
+                                                  // EE:      0b0 => Translation tables are little endian
+                                                  // E0E:     0b0 => Data access are little endian
+                                                  // WXN:     0b0 => Writable memory regions can also be executed
+                                                  // nTWE:    0b0 => WFE instructions at EL0 are trapped (raise an exception)
+                                                  // nTWI:    0b0 => WFI instructions at EL0 are trapped (raise an exception)
+                                                  // UCT:     0b0 => Disables EL0 access to the CTR_EL0 register (cache information, read only) (security: side channel attacks)
+                                                  // DZE:     0b0 => Disables execution access to the DC ZVA instruction at EL0 (clearing cache lines)
+                                                  // I:       0b0 => Disable instruction cache
+                                                  // UMA:     0b0 => Disable access to the interrupt masks from EL0
+                                                  // SED:     0b0 => Disable SETEND instruction under aarch32 in EL0
+                                                  // ITD:     0b1 => Disable Thumb IT instruction at EL0
+                                                  // THEE:    0b0 => T32EE (Thumb big endian) not implemented on cortex-a53/cortex-a72 (effectively RES0)
+                                                  // CP15BEN: 0b0 => CP15 barrier operations disabled in aarch32 in EL0
+                                                  // SA0:     0b0 => Disable EL0 Stack Alignment (16 byte bounday) check
+                                                  // SA:      0b1 => Enable Stack Alignment (16 byte bounday) check
+                                                  // C:       0b0 => Data and unified caches disabled
+                                                  // A:       0b1 => Enable alignment fault checking
+                                                  // M:       0b0 => MMU disabled
+  msr     sctlr_el1, x0
+
+                                                  // +================================================+
+                                                  // | HCR_EL2 Hypervisor Configuration Register, EL2 |
+                                                  // +================================================+
+                                                  //
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/Hypervisor-Configuration-Register?lang=en
+                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/Hypervisor-Configuration-Register--EL2?lang=en
+                                                  //
+                                                  //                                                                    T
+                                                  //                                                T         T       T I   T T T T                          S
+                                                  //                                                R H T T T T T T T A D T I I I I T T   B    V     A I F P W
+                                                  //                                          I C R V C D G V L P P S C C S D D D D W W D S  F S V V M M M T I V
+                                                  //    0000 0000 0000 0000 0000 0000 0000 00 D D W M D Z E M B U C W R P C 3 2 1 0 E I C U  B E I F O O O W O M
+                                                  //
+                                                  //    6666/5555/5555/5544/4444/4444/3333/33 3 3/3 3 2 2/2 2 2 2/2 2 2 2/1 1 1 1/1 1 1 1/11
+                                                  //    3210/9876/5432/1098/7654/3210/9876/54 3 2/1 0 9 8/7 6 5 4/3 2 1 0/9 8 7 6/5 4 3 2/10 9 8/7 6 5 4/3 2 1 0
+                                                  //
+  mov     x0, 0x80000000                          // 0b 0000/0000/0000/0000/0000/0000/0000/00 0 0/1 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/0 0 0 0/00 0 0/0 0 0 0/0 0 0 0
+                                                  // 0x    0    0    0    0    0    0    0      0       8       0       0       0       0      0       0       0
+                                                  //
+                                                  // ID:    0b0  => VM=0b0 so has no effect on stage 2 EL1/EL0 translation regime for instruction accesses
+                                                  // CD:    0b0  => VM=0b0 so has no effect on stage 2 EL1/EL0 translation regime for data access or translation table walks
+                                                  // RW:    0b1  => EL1 is AArch64, not AArch32
+                                                  // TRVM:  0b0  => Non-secure EL1 memory reads are not trapped
+                                                  // HCD:   0b0  => RES0 (Do not disable HYP call)
+                                                  // TDZ:   0b0  => DC ZVA is not trapped
+                                                  // TGE:   0b0  => Do not trap general exceptions
+                                                  // TVM:   0b0  => Do not trap access to virtual memory registers
+                                                  // TTLB:  0b0  => Do not trap TLB maintenance instructions
+                                                  // TPU:   0b0  => Do not trap cache maintenance instructions to Point of Unification
+                                                  // TPC:   0b0  => Do not trap data/unified cache maintenance operations to Point of Coherency
+                                                  // TSW:   0b0  => Do not trap Data/Unified Cache maintenance operations by Set/Way
+                                                  // TACR:  0b0  => Do not trap accesses to ACTLR_EL1
+                                                  // TIDCP: 0b0  => Do not trap Implementation Dependent functionality
+                                                  // TSC:   0b0  => Do not trap SMC instruction
+                                                  // TID3:  0b0  => Do not trap ID Group 3 registers
+                                                  // TID2:  0b0  => Do not trap ID Group 2 registers
+                                                  // TID1:  0b0  => Do not trap ID Group 1 registers
+                                                  // TID0:  0b0  => Do not trap ID Group 0 registers
+                                                  // TWE:   0b0  => Do not trap WFE instruction
+                                                  // TWI:   0b0  => Do not trap WFI instruction
+                                                  // DC:    0b0  => Don't enable Default Cachable behaviour
+                                                  // BSU:   0b00 => Barrier sharability disabled
+                                                  // FB:    0b0  => Do not broadcast instructions within Inner Sharable domain
+                                                  // VSE:   0b0  => Virtual Async Abort / SError not pending
+                                                  // VI:    0b0  => Virtual IRQ not pending
+                                                  // VF:    0b0  => Virtual FIQ not pending
+                                                  // AMO:   0b0  => Async external Aborts and SError interrupts not taken to EL2
+                                                  // IMO:   0b0  => Physical IRQ are not taken to EL2
+                                                  // FMO:   0b0  => Physical FIQ are not taken to EL2
+                                                  // PTW:   0b0  => Protected table walk; doesn't apply since VM = 0b0
+                                                  // SWIO:  0b0  => DC ISW is not treated as DC CISW in AArch64 state
+                                                  // VM:    0b0  => Disable second stage MMU address translation
+  msr     hcr_el2, x0
+
+  mrs     x0, midr_el1                            // See https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
+  ldr     x1, =0x00000000410fd083                 // value on my Raspberry Pi 400. TODO: Change this filter to match any rpi4/rpi400 model that has GIC-400.
+  cmp     x0, x1
+  b.ne    post_gic_setup                          // Skip GIC setup if not on rpi4/rpi400
+
+  adrp    x2, 0xff841000                          // GIC Distributor     note: physical, not virtual address (do not add _start to value!)
+  adrp    x1, 0xff842000                          // GIC CPU Interface   note: physical, not virtual address (do not add _start to value!)
+  mov     w0, #0x000001e7
+  str     w0, [x1]                                // Enable group 1 IRQs from CPU interface [GICC_CTLR]=[0xff841000]=0x000001e7 CPU Interface Control Register
+                                                  // See https://developer.arm.com/documentation/ihi0048/b/Programmers--Model/About-the-programmers--model/CPU-interface-register-map?lang=en
+  mov     w0, #0x000000ff
+  str     w0, [x1, #0x4]                          // priority mask [0xff841004]=0x000000ff [GICC_PMR]=0x000000ff Interrupt Priority Mask Register
+  add     x2, x2, #0x80                           // x2 = 0xff842080
+  mov     x0, #0x20
+  mov     w1, #~0                                 // group 1 all the things
+  gic_loop:
+    subs    x0, x0, #4                            // x0 = 0x1c, 0x18, 0x14, 0x10, 0x0c, 0x08, 0x04, 0x00
+    str     w1, [x2, x0]                          // [0xff84209c] / [0xff82098] / [0xff82094] / [0xff82090] / [0xff8208c] / [0xff82088] / [0xff82084] / [0xff82080] = 0xffffffff
+    b.ne    gic_loop                              // GICD_IGROUPR[0-7] Interrupt Group Registers
+
+post_gic_setup:
+
+
+##################################################
+# We are in EL3
+# Move from EL3 to EL1 directly (skip EL2)
+
+
+                                                  // +============================================+
+                                                  // | SCR_EL3 Secure Configuration Register, EL3 |
+                                                  // +============================================+
+                                                  //
+                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/Secure-Configuration-Register?lang=en
+                                                  // rpi4b: ???
+                                                  //
+                                                  //                           T T     S H S       F I
+                                                  //                           W W S R I C M     E I R N
+                                                  //    0000 0000 0000 0000 00 E I T W F E D 011 A Q Q S
+                                                  //
+                                                  //    3322/2222/2222/1111/11 1 1/1 1
+                                                  //    1098/7654/3210/9876/54 3 2/1 0 9 8/7 654/3 2 1 0
+                                                  //
+  mov     x0, 0x00000431                          // 0b 0000/0000/0000/0000/00 0 0/0 1 0 0/0 011/0 0 0 1
+                                                  // 0x    0    0    0    0      0       4     3       1
+                                                  //
+                                                  // TWE: 0b0 => WFE instructions are not trapped
+                                                  // TWI: 0b0 => WFI instructions are not trapped
+                                                  // ST:  0b0 => No Secure EL1 access to CNTPS_TVAL_EL1, CNTS_CTL_EL1, and CNTPS_CVAL_EL1 registers
+                                                  // RW:  0b1 => The next lower level (EL2) is AArch64
+                                                  // SIF: 0b0 => Secure state instruction fetches from Non-secure memory are permitted
+                                                  // HCE: 0b0 => The HVC instruction is undefined at all exception levels
+                                                  // SMD: 0b0 => The SMC instruction is enabled at EL1, EL2, and EL3
+                                                  // EA:  0b0 => External Abort and SError at EL0-EL2 are not taken in EL3
+                                                  // FIQ: 0b0 => Physical FIQ at EL0-EL2 are not taken in EL3
+                                                  // IRQ: 0b0 => Physical IRQ at EL0-EL2 are not taken in EL3
+                                                  // NS:  0b1 => EL0 and EL1 are in Non-secure state
+  msr     scr_el3, x0
+
+                                                  // +=============================================+
+                                                  // | SPSR_EL3 Saved Program Status Register, EL3 |
+                                                  // +=============================================+
+                                                  //
+                                                  // rpi3b/rpi4b: https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/SPSR-EL3--Saved-Program-Status-Register--EL3-?lang=en
+                                                  //
+                                                  //                                          E                                    A                  M
+                                                  //                                          X P                                  L   B              [
+                                                  //                                      U P L P                                  L S T            M 3
+                                                  //                                      I A O E              T D U P             I S Y            [ :
+                                                  //                                      N C C N P            C I A A S I         N B P            4 0
+                                                  //    0000 0000 0000 0000 0000 0000 000 J M K D M N Z C V 00 O T O N S L 0000 00 T S E  D A I F 0 ] ]
+                                                  //
+                                                  //    6666 5555 5555 5544 4444 4444 333 3 3 3 3 3 3 3 2 2 22 2 2 2 2 2 2 1111 11 1 1 11
+                                                  //    3210 9876 5432 1098 7654 3210 987 6 5 4 3 2 1 0 9 8 76 5 4 3 2 1 0 9876 54 3 2 10 9 8 7 6 5 4 3210
+                                                  //
+  mov     x0, 0x000001c5                          // 0b 0000/0000/0000/0000/0000/0000/000 0/0 0 0 0/0 0 0 0/00 0 0/0 0 0 0/0000/00 0 0/00 0 1/1 1 0 0/0101
+                                                  // 0x    0    0    0    0    0    0     0       0       0      0       0    0      0      1       c    5
+                                                  //
+                                                  // UINJ:    0b0     => RES0 since FEAT_UINJ was first optional in Armv9.0 (Undefined Instruction Injection)
+                                                  // PACM:    0b0     => RES0 since FEAT_PAuth_LR was first optional in Armv9.4 (Pointer authentication instructions allowing signing of LR using SP and PC)
+                                                  // EXLOCK:  0b0     => RES0 since FEAT_GCS was first optional in Armv9.3 (Guarded Control Stack Extension)
+                                                  // PPEND:   0b0     => RES0 since FEAT_SEBEP was first optional in Armv9.3 (Synchronous Exception-based Event Profiling)
+                                                  // PM:      0b0     => RES0 since FEAT_EBEP was first optional in Armv9.3 (Exception-based Event Profiling)
+                                                  // N:       0b0     => set PSTATE.N to 0b0 after next eret
+                                                  // Z:       0b0     => set PSTATE.Z to 0b0 after next eret
+                                                  // C:       0b0     => set PSTATE.C to 0b0 after next eret
+                                                  // V:       0b0     => set PSTATE.V to 0b0 after next eret
+                                                  // TCO:     0b0     => RES0 since FEAT_MTE4 was first optional in Armv8.7 (Enhanced Memory Tagging Extension)
+                                                  // DIT:     0b0     => RES0 since FEAT_DIT was first optional in Armv8.3 (Data Independent Timing)
+                                                  // UAO:     0b0     => RES0 since FEAT_UAO was first optional in Armv8.1 (Unprivileged Access Override)
+                                                  // PAN:     0b0     => RES0 since FEAT_PAN is optional but not present in Cortex-A53/Cortex-A72 (ID_AA64MMFR1_EL1 = 0x0) (Privileged Access Never)
+                                                  // SS:      0b0     => conditially set PSTATE.SS to 0b0 after next eret (not sure what condition)
+                                                  // IL:      0b0     => set PSTATE.IL to 0b0 after next eret (clear illegal execution exception state)
+                                                  // ALLINT:  0b0     => RES0 since FEAT_NMI was first optional in Armv8.7 (Non-maskable Interrupts)
+                                                  // SSBS:    0b0     => RES0 since FEAT_SSBS is optional but not present in Cortex-A53/Cortex-A72 (ID_AA64PFR1_EL1 = 0x0) (Speculative Store Bypass Safe)
+                                                  // BTYPE:   0b0     => RES0 since FEAT_BTI was first optional in Armv8.4 (Branch Target Identification)
+                                                  // D:       0b0     => set PSTATE.D to 0b0 after next eret => after eret mask (disable) debug interrupts
+                                                  // A:       0b1     => set PSTATE.A to 0b1 after next eret => after eret mask (disable) error (SError) interrupts
+                                                  // I:       0b1     => set PSTATE.I to 0b1 after next eret => after eret mask (disable) regular (IRQ) interrupts
+                                                  // F:       0b1     => set PSTATE.F to 0b1 after next eret => after eret mask (disable) fast (FIQ) interrupts
+                                                  // M[4]:    0b0     => set PSTATE.nRW to 0b0 after next eret => after eret remain in AArch64 execution state
+                                                  // M[3:0]:  0b0101  => after next eret enter EL1 directly (i.e. skip EL2) with dedicated stack pointer SP=SP_EL1 (EL1h)
+  msr     spsr_el3, x0
+
+  adr     x0, 1f
+  msr     elr_el3, x0                             // Update Exception Link Register (EL3):
+                                                  //   set to return address after next `eret`
   eret
+# Move from EL3 to EL1 completed
+##################################################
 
-
-el1_entry:
-
-  mov     sp, 0x00800000
-
+1:
   bl      set_peripherals_addresses
   bl      set_clocks
   bl      init_rpi_model                          // Fetch raspberry pi model identifier into system variable rpi_model.
@@ -270,23 +443,6 @@ init_framebuffer:
   and     w11, w11, #0x3fffffff                   // Translate bus address to physical ARM address.
   str     w11, [x0, framebuffer-fb_req]           // Store framebuffer address in framebuffer system variable.
   ret     x27
-
-
-setup_gic:
-  ldr     x2, =0xff841000
-  add     x1, x2, #0x1000
-  mov     w0, #0x1e7
-  str     w0, [x1]
-  mov     w0, #0xff
-  str     w0, [x1, #4]
-  add     x2, x2, #0x80
-  mov     x0, #0x20
-  mov     w1, #0xffffffff
-  3:
-    subs    x0, x0, #0x4
-    str     w1, [x2, x0]
-    b.ne    3b
-  ret
 
 
 # Memory block for Raspberry Pi model identifier mailbox call

@@ -93,10 +93,7 @@ sync_invalid_el1t:
   handle_invalid_entry  0
 
 irq_invalid_el1t:
-  kernel_entry
-  ldr     x0, handle_irq
-  blr     x0
-  kernel_exit
+  handle_invalid_entry  1
 
 fiq_invalid_el1t:
   handle_invalid_entry  2

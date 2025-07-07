@@ -231,7 +231,7 @@ msgreg  SPSR_fiq
 msgreg  SPSR_irq
 msgreg  SPSR_und
 msgreg  SPSel
-# msgreg  SP_EL0
+msgreg  SP_EL0
 msgreg  SP_EL1
 msgreg  SP_EL2
 msgreg  TCR_EL1

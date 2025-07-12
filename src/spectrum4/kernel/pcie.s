@@ -842,11 +842,16 @@ pcie_init_bcm2711:
   //  fd508000 06 11 83 34 46 05 10 00 01 30 03 0c 10 00 00 00 04 00 00 c0 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd508020 00 00 00 00 00 00 00 00 00 00 00 00 06 11 83 34 00 00 00 00 80 00 00 00 00 00 00 00 3e 01 00 00
 
+  //  09-0b: 0c0330 => usb3 xhci (0c = serial bus controller, 0c = usb host controller, 30 = usb3 xhci)
+
   // VL805 legacy data
 
   //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
   //  fd508040 00 00 00 00 00 01 00 00 09 00 00 0e 04 00 00 00 c0 38 01 00 00 00 00 00 00 00 00 00 06 11 83 34
   //  fd508060 30 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 00 03 00 01 00 00 18
+
+  //  60: 30 => release 3.0 (not 3.1 or 3.2)
+  //  61: 20 (default) => SOF cycle time of 60000
 
   //  fd508048: Mirror of xHCI Command Ring Control Register lower 32 bits (0x0e000009)
   //    Bits 31:6 (address) = 0x0e000000 → Command Ring 64 byte aligned Base Address lower 32 bits
@@ -912,7 +917,7 @@ pcie_init_bcm2711:
   adr     x2, xhci_mmio
   str     x0, [x2], #8                            // [xhci_mmio] = 0x600000000 (pcie base)
   ldrbi   w1, x0, #0x0                            // w1 = capabilities length
-  add     x1, x1, x0                              // w1 = address of first byte after capabilities = op base
+  add     x1, x1, x0                              // x1 = address of first byte after capabilities = op base
   str     x1, [x2], #8                            // [xhci_mmio_op] = 0x600000000 + [0x600000000]
   ldrwi   w3, x0, #0x14                           // w3 = [XHCI_REG_CAP_DBOFF]
   and     w3, w3, 0xfffffffc
@@ -933,7 +938,114 @@ pcie_init_bcm2711:
   and     w7, w7, #0xffff0000
   add     x7, x0, x7, lsr #14                     // x7 = 0x600000000 + (([0x600000010] & 0xffff0000) << 14) = extended capabilities address
   str     x7, [x2], #8                            // [xhci_mmio_ec] = extended capabilities address
+
+// reset the Host Controller
+// wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 1)
+1:
+  ldrwi   w3, x1, #0x4                            // w3 = [USBSTS]
+  tbnz    w3, #11, 1b                             // loop while CNR != 0
+  tbz     w3, #0, 1b                              // loop while HCHalted == 0
+
+// set USBCMD.HCRST = 1
+ldrwi   w3, x1, #0x0                              // w3 = [USBCMD]
+orr     w3, w3, #0x2                              // set bit 1 (HCRST)
+strwi   w3, x1, #0x0
+
+// wait until (USBCMD.HCRST == 0)
+2:
+  ldrwi   w3, x1, #0x0                            // w3 = [USBCMD]
+  tbnz    w3, #0x1, 2b                            // loop while HCRST != 0
+
+// wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 0)
+3:
+  ldrwi   w3, x1, #0x4                            // w3 = USBSTS
+  tbnz    w3, #11, 3b                             // loop while CNR != 0
+#   tbz     w3, #11, 3b                           // loop while Halted == 0
+
+# // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
+# 4:
+# ldrwi   w3, x1, #0x0                            // w3 = [USBCMD]
+# orr     w3, w3, #0x1                            // set bit 0 (RUN_STOP)
+# orr     w3, w3, #0x4                            // set bit 2 (INTE)
+# strwi   w3, x1, #0x0
+
+# 4:
+#   ldrwi   w3, x1, #0x4                          // w3 = USBSTS
+#   tbnz    w3, #0, 4b                            // loop while HCHalted != 0
+
   ret     x5
+
+
+# https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+# page 381 (section 5.3 Host Controller Capability Registers)
+
+
+# Capability registers...
+#
+#           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
+# 600000000 20 00 00 01 20 04 00 05 31 00 00 fc 04 00 e7 00 eb 41 28 00 00 01 00 00 00 02 00 00 00 00 00 00
+#
+# 0x00: XHCI_REG_CAP_CAPLENGTH    0x20        => Op base at 0x600000020
+# 0x02: XHCI_REG_CAP_HCIVERSION   0x0100      => Version 1.0 = USB 3.0 controller
+# 0x04: XHCI_REG_CAP_HCSPARAMS1   0x05000420  0b 00000101 (MaxPorts = 5) 00000 (Rsvd) 00000000100 (MaxIntrs = 4) 00100000 (MaxSlots = 32)
+# 0x08: XHCI_REG_CAP_HCSPARAMS2   0xfc000031  0b 11111 (Max Scratchpad Buffers Lo = 31) 1 (Scratchpad Restore = 1) 00000 (Max Scratchpad Buffers Hi = 0) 0000000000000 (Rsvd) 0011 (Event Ring Segment Table Max = 3) 0001 (Isochronous Scheduling Threshold = 1)
+# 0x0c: XHCI_REG_CAP_HCSPARAMS3   0x00e70004  0b 0000000011100111 (U2->U0 Device Exit Latency < 231 microseconds) 00000000 (Rsvd) 00000100 (U1->U0 Device Exit Latency < 4 microseconds)
+# 0x10: XHCI_REG_CAP_HCCPARAMS1   0x002841eb  0b 0000000000101000: xHCI Extended Capabilities Pointer (xECP) = 40 => 160 bytes offset (0xa0) => extended capabilities at 0x6000000a0
+#                                                0100: MaxPSASize = 4 => Primary Stream Array size = 32
+#                                                0: Contiguous Frame ID Capability (CFC)
+#                                                0: Stopped EDTLA Capability (SEC)
+#                                                0: Stopped - Short Packet Capability (SPC)
+#                                                1: Parse All Event Data (PAE)
+#                                                1: No Secondary SID Support (NSS)
+#                                                1: Latency Tolerance Messaging Capability (LTC)
+#                                                1: Light HC Reset Capability (LHRC)
+#                                                0: Port Indicators (PIND)
+#                                                1: Port Power Control (PPC)
+#                                                0: Context Size (CSZ) => 32 byte Context data structures (not Stream Contexts) (rather than 64 byte)
+#                                                1: BW Negotiation Capability (BNC)
+#                                                1: 64-bit Addressing Capability77 (AC64)
+# 0x14: XHCI_REG_CAP_DBOFF        0x00000100 => Doorbell Array Offset = 0x100 (i.e. 0x600000100)
+# 0x18: XHCI_REG_CAP_RTSOFF       0x00000200 => Runtime Register Space Offset (i.e. 0x600000200)
+# 0x1c: XHCI_REG_CAP_HCCPARAMS2   0x00000000 =>
+
+
+
+# Operational registers...
+#
+# 600000020 00 00 00 00 11 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+#
+# 0x20: XHCI_REG_OP_USBCMD        0x00000000
+# 0x24: XHCI_REG_OP_USBSTS        0x00000011
+# 0x28: XHCI_REG_OP_PAGESIZE      0x00000001
+# 0x2c: reserved                  0x00000000
+# 0x30: reserved                  0x00000000
+# 0x34: XHCI_REG_OP_DNCTRL        0x00000000
+# 0x38: XHCI_REG_OP_CRCR_LO       0x00000000
+# 0x3c: XHCI_REG_OP_CRCR_HI       0x00000000
+# 0x40: reserved                  0x00000000
+# 0x44: reserved                  0x00000000
+# 0x48: reserved                  0x00000000
+# 0x4c: reserved                  0x00000000
+# 0x50: XHCI_REG_OP_DCBAAP_LO     0x00000000
+# 0x54: XHCI_REG_OP_DCBAAP_HI     0x00000000
+# 0x58: XHCI_REG_OP_CONFIG        0x00000000
+
+
+# Extended capabilities...
+#
+# 6000000a0 01 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 02 08 00 02 55 53 42 20 01 01 06 10 00 00 00 00
+# 6000000c0 23 00 e0 01 00 00 00 00 00 00 00 00 00 00 00 00 02 8c 00 03 55 53 42 20 02 04 00 10 00 00 00 00
+# 6000000e0 34 01 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 600000220 00 00 00 00 a0 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 600000240 00 00 00 00 a0 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 600000260 00 00 00 00 a0 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 600000280 00 00 00 00 a0 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 600000300 0a 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 600000320 00 00 00 00 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 600000420 e1 02 02 40 00 00 00 00 00 00 00 00 00 00 00 00 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 600000440 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# 600000460 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
 
 .align 3
 xhci_mmio: .space 8                               // = 0x600000000 (pcie base = xhci base) (capability registers)

@@ -46,6 +46,8 @@ demo:
   mov     x2, #36
   bl      display_memory
   bl      display_sysvars
+  ldr     x0, =0xfffffff600000000
+  bl      display_page
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

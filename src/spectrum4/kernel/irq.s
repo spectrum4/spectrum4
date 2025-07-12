@@ -96,7 +96,9 @@ enable_ic_bcm2711:
   mov     w6, #0x261
   str     w6, [x1, #0x1000]                       // [0xff842000]     = [GICC_CTLR]        = 0x00000261                                            => EOImodeNS: 1, IRQBypDisGrp1: 1, FIQBypDisGrp1: 1, EnableGrp1: 1
   mov     w4, #0x40000000
-  str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0x40000000                                            => enable interrupt 30 (0x1e)
+  str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0x40000000                                            => enable interrupt 30  (0x1e) - Generic Timer (CNTP)
+  mov     w4, #0x00100000
+  str     w4, [x1, #0x114]                        // [0xff841114]     = [GICD_ISENABLER0]  = 0x00100000                                            => enable interrupt 180 (0xb4) - PCIE_0_MSI
   ret
 
 

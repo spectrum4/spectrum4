@@ -45,13 +45,15 @@ demo:
   mov     x1, #2
   mov     x2, #36
   bl      display_memory
-  add     x0, x28, scratchpad_ptrs-sysvars
-  mov     x1, #8
-  mov     x2, #40
-  bl      display_memory
   bl      display_sysvars
   ldr     x0, =0xfffffff600000000
   bl      display_page
+  adrp    x0, coherent_start
+  mov     w6, (coherent_end-coherent_start)>>12
+  1:
+    bl      display_page_32bit
+    subs    x6, x6, #1
+    b.ne    1b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

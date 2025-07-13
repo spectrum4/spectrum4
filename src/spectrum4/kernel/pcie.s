@@ -1016,7 +1016,7 @@ strwi   w3, x1, #0x0
 #
 # 0x20: XHCI_REG_OP_USBCMD        0x00000000
 # 0x24: XHCI_REG_OP_USBSTS        0x00000011
-# 0x28: XHCI_REG_OP_PAGESIZE      0x00000001
+# 0x28: XHCI_REG_OP_PAGESIZE      0x00000001  => 4KB page size
 # 0x2c: reserved                  0x00000000
 # 0x30: reserved                  0x00000000
 # 0x34: XHCI_REG_OP_DNCTRL        0x00000000

@@ -36,7 +36,8 @@ poke_address_2_setup:
 
 
 poke_address_2_setup_regs:
-  adr     x0, display_file + 16*216
+  adrp    x0, (display_file + 16*216)
+  add     x0, x0, :lo12:(display_file + 16*216)
   mov     x1, #34
   ret
 
@@ -278,7 +279,8 @@ poke_address_3_effects_regs:
 
 
 poke_address_4_setup_regs:
-  adr     x0, COL
+  adrp    x0, COL
+  add     x0, x0, :lo12:COL
   mov     x1, #17
   ret
 
@@ -289,7 +291,8 @@ poke_address_4_effects:
 
 
 poke_address_4_effects_regs:
-  adr     x9, display_file
+  adrp    x9, display_file
+  add     x9, x9, :lo12:display_file
   movl    w11, (COL - attributes_file)
   sxtw    x11, w11
   nzcv    #0b1000

@@ -942,36 +942,54 @@ pcie_init_bcm2711:
   // reset the Host Controller
   // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 1)
   6:
-    ldrwi   w3, x1, #0x4                          // w3 = [USBSTS]
-    tbnz    w3, #11, 1b                           // loop while CNR != 0
+    ldrwi   w3, x0, #0x24                         // w3 = [USBSTS]
+    tbnz    w3, #11, 6b                           // loop while CNR != 0
     tbz     w3, #0, 6b                            // loop while HCHalted == 0
 
   // set USBCMD.HCRST = 1
-  ldrwi   w3, x1, #0x0                            // w3 = [USBCMD]
+  ldrwi   w3, x0, #0x20                           // w3 = [USBCMD]
   orr     w3, w3, #0x2                            // set bit 1 (HCRST)
-  strwi   w3, x1, #0x0
+  strwi   w3, x0, #0x20
 
   // wait until (USBCMD.HCRST == 0)
   7:
-    ldrwi   w3, x1, #0x0                          // w3 = [USBCMD]
+    ldrwi   w3, x0, #0x20                         // w3 = [USBCMD]
     tbnz    w3, #0x1, 7b                          // loop while HCRST != 0
 
   // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 0)
   8:
-    ldrwi   w3, x1, #0x4                          // w3 = USBSTS
+    ldrwi   w3, x0, #0x24                         // w3 = USBSTS
     tbnz    w3, #11, 8b                           // loop while CNR != 0
 #   tbz     w3, #11, 8b                           // loop while Halted == 0
 
-  add     x0, x28, scratchpad_ptrs-sysvars        // x0 = scratchpad_ptrs
-  add     x1, x28, scratchpad_bufs-sysvars        // x1 = scratchpad_bufs (virtual)
-  and     x1, x1, #0x00000000ffffffff             // x1 = scratchpad_bufs (physical)
-  orr     x1, x1, #0x0000000400000000             // x1 = DMA address of scratchpad_bufs
-  mov     w2, 31                                  // 31 scratchpads to initialise
+  adrp    x1, xhci_start
+  adrp    x2, xhci_end
+  add     x2, x2, :lo12:xhci_end
   9:
-    str     x1, [x0], #8                          // scratchpad_ptrs[i] = DMA(scratchpad_bufs[i])
+    str     xzr, [x1], #8
+    cmp     x1, x2
+    b.lt    9b
+
+  adrp    x1, scratchpad_bufs                     // x1 = scratchpad_bufs (virutal)
+  mov     w4, #0x4                                // upper 32 bits for DMA addresses
+  adrp    x7, dcbaa                               // x7 = dcbaa (virtual)
+
+  strwi   w7, x0, #0x50                           // [XHCI_REG_OP_DCBAAP_LO] = :lo32:dcbaa (virtual) = :lo32:dcbaa (physical) = :lo32:dcbaa (dma)
+  strwi   w4, x0, #0x54                           // [XHCI_REG_OP_DCBAAP_HI] = 0x4 => DCBAAP = dcbaa (DMA)
+
+  add     x3, x7, scratchpad_ptrs-dcbaa           // x3 = scratchpad_ptrs (virtual)
+  mov     x6, x3                                  // x6 = scratchpad_ptrs (virual)
+  bfi     x6, x4, #32, #32                        // x6 = scratchpad_ptrs (DMA)
+  str     x6, [x7]                                // [dcbaa] = scratchpad_ptrs (DMA)
+
+  bfi     x1, x4, #32, #32                        // x1 = scratchpad_bufs (DMA)
+
+  mov     w2, 31                                  // 31 scratchpads to initialise
+  10:
+    str     x1, [x3], #8                          // scratchpad_ptrs[i] = DMA(scratchpad_bufs[i])
     add     x1, x1, #0x1000
     sub     w2, w2, #1
-    cbnz    w2, 9b
+    cbnz    w2, 10b
 
 # // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
 # 4:

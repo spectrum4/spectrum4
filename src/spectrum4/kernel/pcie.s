@@ -914,30 +914,30 @@ pcie_init_bcm2711:
   strhi   w1, x7, #0x2c                           // store [XHCI_REG_CAP_HCIVERSION] on heap (should be 0x0110)
 
   // init spectrum4 MMIO data structure
-  adr     x2, xhci_mmio
-  str     x0, [x2], #8                            // [xhci_mmio] = 0x600000000 (pcie base)
-  ldrbi   w1, x0, #0x0                            // w1 = capabilities length
-  add     x1, x1, x0                              // x1 = address of first byte after capabilities = op base
-  str     x1, [x2], #8                            // [xhci_mmio_op] = 0x600000000 + [0x600000000]
-  ldrwi   w3, x0, #0x14                           // w3 = [XHCI_REG_CAP_DBOFF]
-  and     w3, w3, 0xfffffffc
-  add     x3, x3, x0
-  str     x3, [x2], #8                            // [xhci_mmio_db] = 0x600000000 + ([0x600000014] && 0xfffffffc)
-  ldrwi   w3, x0, #0x18                           // w3 = [XHCI_REG_CAP_RTSOFF]
-  and     w3, w3, 0xffffffe0
-  add     x3, x3, x0
-  str     x3, [x2], #8                            // [xhci_mmio_rt] = 0x600000000 + ([0x600000018] && 0xffffffe0)
-  add     x3, x1, #0x400                          // x3 = op base + 0x400
-  str     x3, [x2], #8                            // [xhci_mmio_pt] = 0x600000400 + ([0x600000000])
-  ldrwi   w3, x0, #0x4                            // w3 = [XHCI_REG_CAP_HCSPARAMS1]
-  ldrwi   w4, x0, #0x8                            // w4 = [XHCI_REG_CAP_HCSPARAMS2]
-  ldrwi   w6, x0, #0xc                            // w6 = [XHCI_REG_CAP_HCSPARAMS3]
-  ldrwi   w7, x0, #0x10                           // w7 = [XHCI_REG_CAP_HCSPARAMS]
-  stp     w3, w4, [x2], #8                        // update lower 64 bits of [xhci_cap_cache]
-  stp     w6, w7, [x2], #8                        // update update 64 bits of [xhci_cap_cache]
-  and     w7, w7, #0xffff0000
-  add     x7, x0, x7, lsr #14                     // x7 = 0x600000000 + (([0x600000010] & 0xffff0000) << 14) = extended capabilities address
-  str     x7, [x2], #8                            // [xhci_mmio_ec] = extended capabilities address
+# adr     x2, xhci_mmio
+# str     x0, [x2], #8                            // [xhci_mmio] = 0x600000000 (pcie base)
+# ldrbi   w1, x0, #0x0                            // w1 = capabilities length
+# add     x1, x1, x0                              // x1 = address of first byte after capabilities = op base
+# str     x1, [x2], #8                            // [xhci_mmio_op] = 0x600000000 + [0x600000000]
+# ldrwi   w3, x0, #0x14                           // w3 = [XHCI_REG_CAP_DBOFF]
+# and     w3, w3, 0xfffffffc
+# add     x3, x3, x0
+# str     x3, [x2], #8                            // [xhci_mmio_db] = 0x600000000 + ([0x600000014] && 0xfffffffc)
+# ldrwi   w3, x0, #0x18                           // w3 = [XHCI_REG_CAP_RTSOFF]
+# and     w3, w3, 0xffffffe0
+# add     x3, x3, x0
+# str     x3, [x2], #8                            // [xhci_mmio_rt] = 0x600000000 + ([0x600000018] && 0xffffffe0)
+# add     x3, x1, #0x400                          // x3 = op base + 0x400
+# str     x3, [x2], #8                            // [xhci_mmio_pt] = 0x600000400 + ([0x600000000])
+# ldrwi   w3, x0, #0x4                            // w3 = [XHCI_REG_CAP_HCSPARAMS1]
+# ldrwi   w4, x0, #0x8                            // w4 = [XHCI_REG_CAP_HCSPARAMS2]
+# ldrwi   w6, x0, #0xc                            // w6 = [XHCI_REG_CAP_HCSPARAMS3]
+# ldrwi   w7, x0, #0x10                           // w7 = [XHCI_REG_CAP_HCSPARAMS]
+# stp     w3, w4, [x2], #8                        // update lower 64 bits of [xhci_cap_cache]
+# stp     w6, w7, [x2], #8                        // update update 64 bits of [xhci_cap_cache]
+# and     w7, w7, #0xffff0000
+# add     x7, x0, x7, lsr #14                     // x7 = 0x600000000 + (([0x600000010] & 0xffff0000) << 14) = extended capabilities address
+# str     x7, [x2], #8                            // [xhci_mmio_ec] = extended capabilities address
 
   // reset the Host Controller
   // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 1)
@@ -1056,16 +1056,6 @@ pcie_init_bcm2711:
 # 600000420 e1 02 02 40 00 00 00 00 00 00 00 00 00 00 00 00 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 # 600000440 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 # 600000460 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-
-.align 3
-xhci_mmio: .space 8                               // = 0x600000000 (pcie base = xhci base) (capability registers)
-xhci_mmio_op: .space 8                            // operational registers address
-xhci_mmio_db: .space 8                            // doorbell registers address
-xhci_mmio_rt: .space 8                            // runtime registers address
-xhci_mmio_pt: .space 8                            // port register set address
-xhci_cap_cache: .space 16                         // capability cache values
-xhci_mmio_ec: .space 8                            // extended capabilities address
 
 
 
@@ -1232,3 +1222,13 @@ vl805_reset_req:
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L26-L66
   .word 0                                         // End Tags
 vl805_reset_req_end:
+
+
+# .align 3
+# xhci_mmio: .space 8                               // = 0x600000000 (pcie base = xhci base) (capability registers)
+# xhci_mmio_op: .space 8                            // operational registers address
+# xhci_mmio_db: .space 8                            // doorbell registers address
+# xhci_mmio_rt: .space 8                            // runtime registers address
+# xhci_mmio_pt: .space 8                            // port register set address
+# xhci_cap_cache: .space 16                         // capability cache values
+# xhci_mmio_ec: .space 8                            // extended capabilities address

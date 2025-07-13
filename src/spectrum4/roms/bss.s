@@ -359,15 +359,6 @@ MEMBOT:          .space 32                        // L5C92: Calculator's memory 
 .align 4                                          // Ensure sysvars_end is at a 16 byte boundary.
 sysvars_end:
 
-.align 4
-dcbaa:           .space 512                       // 64 entries × 8 bytes
-
-.align 4
-scratchpad_ptrs: .space 248                       // 31 entries × 8 bytes
-
-.align 4
-command_ring:    .space 256                       // 16 TRBs × 16 bytes
-
 printer_buffer:  .space 0xd80                     // Printer buffer used by 48K Basic but not by 128K Basic (see docs/printer-buffer.md)
 printer_buffer_end:
 
@@ -382,8 +373,28 @@ attributes_file: .space (SCREEN_HEIGHT-BORDER_TOP-BORDER_BOTTOM)*(SCREEN_WIDTH-B
                                                   // 16*16 pixels per attribute record => 256 pixles per byte
 attributes_file_end:
 
-.align 12
-scratchpad_bufs: .space 31 * 4096                 // 31 scratchpads × 4 KB
-
 ram_disk:        .space RAM_DISK_SIZE
 heap:            .space HEAP_SIZE
+
+# 21 is 2MB boundary, which matches granularity of our MMU page tables.
+# This is needed since memory attributes are different for this memory region.
+.align 21
+coherent_start:
+
+.align 12
+xhci_start:
+scratchpad_bufs: .space 31 * 4096                 // 31 scratchpads × 4 KB
+
+# technically only need .align 4 but since it comes straight after scratchpad_bufs we get .align 12 for free allowing us to use adrp without needing extra add :lo12:
+.align 12
+dcbaa:           .space 264                       // 33 entries × 8 bytes
+
+.align 4
+scratchpad_ptrs: .space 248                       // 31 entries × 8 bytes
+
+.align 4
+command_ring:    .space 256                       // 16 TRBs × 16 bytes
+xhci_end:
+
+.align 12
+coherent_end:

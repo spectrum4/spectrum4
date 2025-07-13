@@ -45,6 +45,10 @@ demo:
   mov     x1, #2
   mov     x2, #36
   bl      display_memory
+  add     x0, x28, scratchpad_ptrs-sysvars
+  mov     x1, #8
+  mov     x2, #40
+  bl      display_memory
   bl      display_sysvars
   ldr     x0, =0xfffffff600000000
   bl      display_page

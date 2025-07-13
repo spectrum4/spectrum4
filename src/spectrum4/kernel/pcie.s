@@ -939,28 +939,39 @@ pcie_init_bcm2711:
   add     x7, x0, x7, lsr #14                     // x7 = 0x600000000 + (([0x600000010] & 0xffff0000) << 14) = extended capabilities address
   str     x7, [x2], #8                            // [xhci_mmio_ec] = extended capabilities address
 
-// reset the Host Controller
-// wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 1)
-1:
-  ldrwi   w3, x1, #0x4                            // w3 = [USBSTS]
-  tbnz    w3, #11, 1b                             // loop while CNR != 0
-  tbz     w3, #0, 1b                              // loop while HCHalted == 0
+  // reset the Host Controller
+  // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 1)
+  6:
+    ldrwi   w3, x1, #0x4                          // w3 = [USBSTS]
+    tbnz    w3, #11, 1b                           // loop while CNR != 0
+    tbz     w3, #0, 6b                            // loop while HCHalted == 0
 
-// set USBCMD.HCRST = 1
-ldrwi   w3, x1, #0x0                              // w3 = [USBCMD]
-orr     w3, w3, #0x2                              // set bit 1 (HCRST)
-strwi   w3, x1, #0x0
-
-// wait until (USBCMD.HCRST == 0)
-2:
+  // set USBCMD.HCRST = 1
   ldrwi   w3, x1, #0x0                            // w3 = [USBCMD]
-  tbnz    w3, #0x1, 2b                            // loop while HCRST != 0
+  orr     w3, w3, #0x2                            // set bit 1 (HCRST)
+  strwi   w3, x1, #0x0
 
-// wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 0)
-3:
-  ldrwi   w3, x1, #0x4                            // w3 = USBSTS
-  tbnz    w3, #11, 3b                             // loop while CNR != 0
-#   tbz     w3, #11, 3b                           // loop while Halted == 0
+  // wait until (USBCMD.HCRST == 0)
+  7:
+    ldrwi   w3, x1, #0x0                          // w3 = [USBCMD]
+    tbnz    w3, #0x1, 7b                          // loop while HCRST != 0
+
+  // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 0)
+  8:
+    ldrwi   w3, x1, #0x4                          // w3 = USBSTS
+    tbnz    w3, #11, 8b                           // loop while CNR != 0
+#   tbz     w3, #11, 8b                           // loop while Halted == 0
+
+  add     x0, x28, scratchpad_ptrs-sysvars        // x0 = scratchpad_ptrs
+  add     x1, x28, scratchpad_bufs-sysvars        // x1 = scratchpad_bufs (virtual)
+  and     x1, x1, #0x00000000ffffffff             // x1 = scratchpad_bufs (physical)
+  orr     x1, x1, #0x0000000400000000             // x1 = DMA address of scratchpad_bufs
+  mov     w2, 31                                  // 31 scratchpads to initialise
+  9:
+    str     x1, [x0], #8                          // scratchpad_ptrs[i] = DMA(scratchpad_bufs[i])
+    add     x1, x1, #0x1000
+    sub     w2, w2, #1
+    cbnz    w2, 9b
 
 # // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
 # 4:

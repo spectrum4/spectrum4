@@ -396,7 +396,8 @@ scratchpad_ptrs: .space 248                       // 31 entries × 8 bytes
 
 .align 4
 command_ring:    .space 256                       // 16 TRBs × 16 bytes
+.align 12
 xhci_end:
 
-.align 12
+.align 21
 coherent_end:

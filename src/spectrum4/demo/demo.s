@@ -48,8 +48,8 @@ demo:
   bl      display_sysvars
   ldr     x0, =0xfffffff600000000
   bl      display_page
-  adrp    x0, coherent_start
-  mov     w6, (coherent_end-coherent_start)>>12
+  adrp    x0, xhci_start
+  mov     w6, (xhci_end-xhci_start)>>12
   1:
     bl      display_page_32bit
     subs    x6, x6, #1
@@ -139,6 +139,32 @@ display_page:
     add     x19, x19, 0x400
     sub     x20, x20, #0x1
     cbnz    x20, 1b
+  ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
+  ret
+
+
+display_page_32bit:
+  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
+  mov     x29, sp                                 // Update frame pointer to new stack location.
+  add     x4, x0, #0x1000
+  1:
+    ldr     w7, [x0]
+    add     x5, x0, #0x4
+    cbz     w7, 2f                                // Skip line if value is zero (to save space in logs)
+    mov     x2, #36
+    bl      uart_x0_s
+    mov     x0, ':'
+    bl      uart_send
+    mov     x0, ' '
+    bl      uart_send
+    mov     w0, w7
+    mov     x2, #32
+    bl      uart_x0_s
+    bl      uart_newline
+2:
+    mov     x0, x5
+    cmp     x0, x4
+    b.lt    1b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

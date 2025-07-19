@@ -263,26 +263,3 @@ uart_x0_s:
   ldp     x19, x20, [sp], #16                     // Restore x19, x20
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
-
-
-display_page_32bit:
-  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                                 // Update frame pointer to new stack location.
-  add     x4, x0, #0x1000
-  1:
-    mov     x2, #36
-    bl      uart_x0_s
-    mov     x5, x0
-    mov     x0, ':'
-    bl      uart_send
-    mov     x0, ' '
-    bl      uart_send
-    ldr     w0, [x5], #0x4
-    mov     x2, #32
-    bl      uart_x0_s
-    bl      uart_newline
-    mov     x0, x5
-    cmp     x0, x4
-    b.lt    1b
-  ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
-  ret

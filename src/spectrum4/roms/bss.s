@@ -376,6 +376,8 @@ attributes_file_end:
 ram_disk:        .space RAM_DISK_SIZE
 heap:            .space HEAP_SIZE
 
+.section .bss.coherent, "aw", %nobits
+
 # 21 is 2MB boundary, which matches granularity of our MMU page tables.
 # This is needed since memory attributes are different for this memory region.
 .align 21

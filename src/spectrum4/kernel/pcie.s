@@ -991,16 +991,15 @@ pcie_init_bcm2711:
     sub     w2, w2, #1
     cbnz    w2, 10b
 
-# // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
-# 4:
-# ldrwi   w3, x1, #0x0                            // w3 = [USBCMD]
-# orr     w3, w3, #0x1                            // set bit 0 (RUN_STOP)
-# orr     w3, w3, #0x4                            // set bit 2 (INTE)
-# strwi   w3, x1, #0x0
+  // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
+  ldrwi   w3, x0, #0x20                           // w3 = [USBCMD]
+  orr     w3, w3, #0x1                            // set bit 0 (RUN_STOP)
+  orr     w3, w3, #0x4                            // set bit 2 (INTE)
+  strwi   w3, x0, #0x20
 
-# 4:
-#   ldrwi   w3, x1, #0x4                          // w3 = USBSTS
-#   tbnz    w3, #0, 4b                            // loop while HCHalted != 0
+  11:
+    ldrwi   w3, x0, #0x24                         // w3 = USBSTS
+    tbnz    w3, #0, 11b                           // loop while HCHalted != 0
 
   ret     x5
 

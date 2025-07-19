@@ -397,7 +397,7 @@ post_gic_setup:
                                                   // T0SZ:    0b011100 => TTBR0_EL1 region size = 2^(64-28) = 2^36 bytes = 64GB
   msr     tcr_el1, x0
 
-  ldr     x0, =0x000004ff
+  ldr     x0, =0x000004ff                         // TODO: this should be 0x004404ff but get it working with 000004ff first!!!
   msr     mair_el1, x0                            // mair_el1 = 0x00000000000004ff => attr index 0 => normal, attr index 1 => device, attr index 2 => coherent
   ldr     x2, =10f                                // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)
   mrs     x0, sctlr_el1                           // fetch System Control Register (EL1)

@@ -54,6 +54,22 @@ demo:
     bl      display_page_32bit
     subs    x6, x6, #1
     b.ne    1b
+  ldr     x0, =0xfffffff600000000
+  ldrwi   w1, x0, #0x38
+  ldrwi   w1, x0, #0x3c
+  ldrwi   w1, x0, #0x220
+  ldrwi   w1, x0, #0x224
+  ldrwi   w1, x0, #0x228
+  ldrwi   w1, x0, #0x22c
+  ldrwi   w1, x0, #0x230
+  ldrwi   w1, x0, #0x234
+  ldrwi   w1, x0, #0x238
+  ldrwi   w1, x0, #0x23c
+  adrp    x0, event_ring
+  bl      display_page_32bit
+  adrp    x4, 0xfd504000 + _start                 // x4 = Broadcom PCIe Set Top Box registers
+  ldrwi   w1, x4, #0x500                          // MSI_INT_STATUS
+                                                  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L125-L127
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

@@ -399,8 +399,12 @@ scratchpad_ptrs: .space 31 * 0x8                  // 31 entries
 command_ring:    .space 0x100 * 0x10              // 256 entries
 
 .align 12
-event_ring:      .space 0xff * 0x10               // 255 entries (so that ERST can fit in same page)
-erst:            .space 0x10                      // 1 entry
+event_ring:      .space 0xfc * 0x10               // 252 entries (so that ERST can fit in same page)
+.align 6                                          // Needs to be 64 byte aligned since ERSTBA bits 0-5 are RsvdP
+erst:            .space 0x40                      // only the first 0x10 bytes matter, but reserve 0x40 since spec says:
+                                                  // The Ring Segment Size may be set to any value from 16 to 4096, however
+                                                  // software shall allocate a buffer for the Event Ring Segment that rounds up its
+                                                  // size to the nearest 64B boundary to allow full cache-line accesses.
 
 .align 12
 xhci_end:

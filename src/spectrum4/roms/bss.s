@@ -385,17 +385,23 @@ coherent_start:
 
 .align 12
 xhci_start:
-scratchpad_bufs: .space 31 * 4096                 // 31 scratchpads × 4 KB
+scratchpad_bufs: .space 31 * 0x1000               // 31 scratchpads
 
-# technically only need .align 4 but since it comes straight after scratchpad_bufs we get .align 12 for free allowing us to use adrp without needing extra add :lo12:
+
+.align 12                                         // technically only need .align 4 but since it comes straight after scratchpad_bufs
+                                                  // we get .align 12 for free allowing us to use adrp without needing extra add :lo12:
+dcbaa:           .space 33 * 0x8                  // 33 entries
+
+.align 4
+scratchpad_ptrs: .space 31 * 0x8                  // 31 entries
+
 .align 12
-dcbaa:           .space 264                       // 33 entries × 8 bytes
+command_ring:    .space 0x100 * 0x10              // 256 entries
 
-.align 4
-scratchpad_ptrs: .space 248                       // 31 entries × 8 bytes
+.align 12
+event_ring:      .space 0xff * 0x10               // 255 entries (so that ERST can fit in same page)
+erst:            .space 0x10                      // 1 entry
 
-.align 4
-command_ring:    .space 256                       // 16 TRBs × 16 bytes
 .align 12
 xhci_end:
 

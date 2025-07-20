@@ -440,12 +440,12 @@ pcie_init_bcm2711:
      tbz     w0, #5, 1b                           // repeat loop if bit 5 is clear (PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE)
  2:
    stp     w0, w8, [x7]                           // store last read status register value and number of 1ms on heap
-// cbz     w8, 4f                                  // exit early if failed to wake up
+// cbz     w8, 4f                                 // exit early if failed to wake up
 
   // Exit early if in endpoint mode, not in root complex mode => implies PCIe misconfiguration
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L980-L983
 
-//  tbz     w0, #7, 4f                              // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 4:
+//  tbz     w0, #7, 4f                            // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 4:
 
   // Extends the timeout period for an access to an internal bus to 4s
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1537-L1554
@@ -932,12 +932,12 @@ pcie_init_bcm2711:
 # ldrwi   w3, x0, #0x4                            // w3 = [XHCI_REG_CAP_HCSPARAMS1]
 # ldrwi   w4, x0, #0x8                            // w4 = [XHCI_REG_CAP_HCSPARAMS2]
 # ldrwi   w6, x0, #0xc                            // w6 = [XHCI_REG_CAP_HCSPARAMS3]
-# ldrwi   w7, x0, #0x10                           // w7 = [XHCI_REG_CAP_HCSPARAMS]
+# ldrwi   w9, x0, #0x10                           // w9 = [XHCI_REG_CAP_HCSPARAMS]
 # stp     w3, w4, [x2], #8                        // update lower 64 bits of [xhci_cap_cache]
-# stp     w6, w7, [x2], #8                        // update update 64 bits of [xhci_cap_cache]
-# and     w7, w7, #0xffff0000
-# add     x7, x0, x7, lsr #14                     // x7 = 0x600000000 + (([0x600000010] & 0xffff0000) << 14) = extended capabilities address
-# str     x7, [x2], #8                            // [xhci_mmio_ec] = extended capabilities address
+# stp     w6, w9, [x2], #8                        // update upper 64 bits of [xhci_cap_cache]
+# and     w9, w9, #0xffff0000
+# add     x9, x0, x9, lsr #14                     // x9 = 0x600000000 + (([0x600000010] & 0xffff0000) << 14) = extended capabilities address
+# str     x9, [x2], #8                            // [xhci_mmio_ec] = extended capabilities address
 
   // reset the Host Controller
   // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 1)
@@ -972,15 +972,15 @@ pcie_init_bcm2711:
 
   adrp    x1, scratchpad_bufs                     // x1 = scratchpad_bufs (virutal)
   mov     w4, #0x4                                // upper 32 bits for DMA addresses
-  adrp    x7, dcbaa                               // x7 = dcbaa (virtual)
+  adrp    x9, dcbaa                               // x9 = dcbaa (virtual)
 
-  strwi   w7, x0, #0x50                           // [XHCI_REG_OP_DCBAAP_LO] = :lo32:dcbaa (virtual) = :lo32:dcbaa (physical) = :lo32:dcbaa (dma)
+  strwi   w9, x0, #0x50                           // [XHCI_REG_OP_DCBAAP_LO] = :lo32:dcbaa (virtual) = :lo32:dcbaa (physical) = :lo32:dcbaa (dma)
   strwi   w4, x0, #0x54                           // [XHCI_REG_OP_DCBAAP_HI] = 0x4 => DCBAAP = dcbaa (DMA)
 
-  add     x3, x7, scratchpad_ptrs-dcbaa           // x3 = scratchpad_ptrs (virtual)
+  add     x3, x9, scratchpad_ptrs-dcbaa           // x3 = scratchpad_ptrs (virtual)
   mov     x6, x3                                  // x6 = scratchpad_ptrs (virual)
   bfi     x6, x4, #32, #32                        // x6 = scratchpad_ptrs (DMA)
-  str     x6, [x7]                                // [dcbaa] = scratchpad_ptrs (DMA)
+  str     x6, [x9]                                // [dcbaa] = scratchpad_ptrs (DMA)
 
   bfi     x1, x4, #32, #32                        // x1 = scratchpad_bufs (DMA)
 
@@ -990,6 +990,30 @@ pcie_init_bcm2711:
     add     x1, x1, #0x1000
     sub     w2, w2, #1
     cbnz    w2, 10b
+
+  adrp    x1, command_ring                        // x1 = command_ring (virtual)
+  stp     xzr, xzr, [x1]
+  mov     w2, (23 << 10) | 1
+  str     w2, [x1, #0xc]
+
+  bfi     x1, x4, #32, #32                        // x1 = command_ring (DMA)
+  orr     x1, x1, #1                              // set cycle bit in CRCR (bit 0)
+  str     x1, [x0, #0x38]                         // [XHCI_REG_OP_CRCR_{LO,HI}] = command_ring (DMA) | 0x1
+
+  adrp    x2, event_ring                          // x2 = event_ring (virtual)
+  add     x3, x2, erst-event_ring                 // x3 = ERST (virtual)
+  bfi     x2, x4, #32, #32                        // x2 = event_ring (DMA)
+  str     x2, [x3]                                // [ERST] = event_ring (DMA)
+  mov     w9, #0x00ff
+  strh    w9, [x3, #0x8]                          // [ERST+0x8] = 0xff (event ring has 255 TRBs)
+
+  bfi     x3, x4, #32, #32                        // x3 = ERST (DMA)
+  str     x3, [x0, #0x230]                        // [interrupt 0 ERSTBA] = erst (DMA)
+
+  mov     w8, #1
+  str     w8, [x0, #0x228]                        // [interrupt 0 ERSTSZ] = 1 segment
+  str     x2, [x0, #0x238]                        // [interrupt 0 ERDP] = event_ring (DMA)
+  str     w8, [x0, #0x220]                        // [interrupt 0 IMAN] = InterruptEnable = 1
 
   // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
   ldrwi   w3, x0, #0x20                           // w3 = [USBCMD]

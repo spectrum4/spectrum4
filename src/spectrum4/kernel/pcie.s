@@ -1050,6 +1050,15 @@ pcie_init_bcm2711:
 
   strwi   wzr, x0, #0x100                         // ring host controller doorbell (register 0)
 
+  // Test - try to write to MSI address directly to trigger interrupt...
+  // If my maths isn't totally off, this should be the MSI target address as a CPU virtual address, and it should be mapped.
+  // However, currently this is causing a crash (later on) so there may be an issue in the interrupt handler...
+  // Commenting out for now until I have gotten to the bottom of it...
+  //
+  //   mov     w3, #0x6540
+  //   ldr     x2, =0xfffffff63ffffffc
+  //   str     w3, [x2]
+
   ret     x5
 
 

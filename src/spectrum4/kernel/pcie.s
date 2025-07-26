@@ -1000,7 +1000,9 @@ pcie_init_bcm2711:
   // must perform 32 bit writes; MMIO region
   // Command ring dequeue pointer -> first TRB in command ring TRB
   strwi   w1, x0, #0x38                           // [XHCI_REG_OP_CRCR_LO] = lower32(command_ring (virtual)) | 0x1 = lower32(command_ring (DMA)) | 0x1
+  ldrwi   w2, x0, #0x38
   strwi   w4, x0, #0x3c                           // [XHCI_REG_OP_CRCR_HI] = 4 = upper32(command_ring (DMA))
+  ldrwi   w2, x0, #0x3c
 
   adrp    x2, event_ring                          // x2 = event_ring (virtual)
   add     x3, x2, erst-event_ring                 // x3 = ERST (virtual)

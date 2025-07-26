@@ -55,8 +55,15 @@ demo:
     subs    x6, x6, #1
     b.ne    1b
   ldr     x0, =0xfffffff600000000
+  ldrwi   w1, x0, #0x20
+  ldrwi   w1, x0, #0x24
+  ldrwi   w1, x0, #0x28
+  ldrwi   w1, x0, #0x34
   ldrwi   w1, x0, #0x38
   ldrwi   w1, x0, #0x3c
+  ldrwi   w1, x0, #0x50
+  ldrwi   w1, x0, #0x54
+  ldrwi   w1, x0, #0x58
   ldrwi   w1, x0, #0x220
   ldrwi   w1, x0, #0x224
   ldrwi   w1, x0, #0x228

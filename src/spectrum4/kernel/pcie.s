@@ -983,13 +983,13 @@ pcie_init_bcm2711:
   add     x3, x9, scratchpad_ptrs-dcbaa           // x3 = scratchpad_ptrs (virtual)
   mov     x6, x3                                  // x6 = scratchpad_ptrs (virual)
   bfi     x6, x4, #32, #32                        // x6 = scratchpad_ptrs (DMA)
-  str     x6, [x9]                                // [dcbaa] = scratchpad_ptrs (DMA)
+  strxi   x6, x9, #0x0                            // [dcbaa] = scratchpad_ptrs (DMA)
 
   bfi     x1, x4, #32, #32                        // x1 = scratchpad_bufs (DMA)
 
   mov     w2, 31                                  // 31 scratchpads to initialise
   10:
-    str     x1, [x3], #8                          // scratchpad_ptrs[i] = DMA(scratchpad_bufs[i])
+    strxi   x1, x3, #8                            // scratchpad_ptrs[i] = DMA(scratchpad_bufs[i])
     add     x1, x1, #0x1000
     sub     w2, w2, #1
     cbnz    w2, 10b
@@ -1010,9 +1010,9 @@ pcie_init_bcm2711:
 
 // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 // Section 6.5 (page 514)
-  str     x2, [x3]                                // [ERST] = event_ring (DMA)
+  strxi   x2, x3, #0x0                            // [ERST] = event_ring (DMA)
   mov     w9, #0x00fc
-  strh    w9, [x3, #0x8]                          // [ERST+0x8] = 0xfc (event ring has 252 TRBs)
+  strhi   w9, x3, #0x8                            // [ERST+0x8] = 0xfc (event ring has 252 TRBs)
 
   // must perform 32 bit writes; MMIO region
   strwi   w3, x0, #0x230                          // [interrupt 0 ERSTBA] = lower32(erst (virtual)) = lower32(erst (DMA))
@@ -1041,13 +1041,15 @@ pcie_init_bcm2711:
   // Section 6.4.3.1 (page 488)
   adrp    x1, command_ring                        // x1 = command_ring (virtual)
   mov     w2, (23 << 10) | 1                      // TRB Type = 23 (No-Op: see page 512 of xHCI spec)
-  str     xzr, [x1]
-  stp     wzr, w2, [x1, #0x8]
+  strxi   xzr, x1, #0x0
+  strwi   wzr, x1, #0x8
+  strwi   w2, x1, #0xc
   mov     x8, x1
   bfi     x8, x4, #32, #32                        // x2 = event_ring (DMA)
-  str     x8, [x1, #0x10]
+  strxi   x8, x1, #0x10
   mov     w9, (6 << 10) | (1 << 1)                // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
-  stp     wzr, w9, [x1, #0x18]
+  strwi   wzr, x1, #0x18
+  strwi   w9, x1, #0x1c
 
   strwi   wzr, x0, #0x100                         // ring host controller doorbell (register 0)
 
@@ -1058,7 +1060,7 @@ pcie_init_bcm2711:
   //
   //   mov     w3, #0x6540
   //   ldr     x2, =0xfffffff63ffffffc
-  //   str     w3, [x2]
+  //   strwi   w3, x2, #0x0
 
   ret     x5
 

@@ -956,7 +956,7 @@ pcie_init_bcm2711:
     ldrwi   w3, x0, #0x20                         // w3 = [USBCMD]
     tbnz    w3, #0x1, 7b                          // loop while HCRST != 0
 
-  // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 0)
+  // wait until (USBSTS.CNR == 0)
   8:
     ldrwi   w3, x0, #0x24                         // w3 = USBSTS
     tbnz    w3, #11, 8b                           // loop while CNR != 0
@@ -1023,8 +1023,9 @@ pcie_init_bcm2711:
   // must perform 32 bit writes; MMIO region
   strwi   w2, x0, #0x238                          // [interrupt 0 ERDP] = lower32(event_ring (DMA))
   strwi   w4, x0, #0x23c                          // [interrupt 0 ERDP] = 4 = upper32(event_ring (DMA))
-  mov     w8, #2
-  strwi   w8, x0, #0x220                          // [interrupt 0 IMAN] = InterruptEnable = 1
+  ldrwi   w8, x0, #0x220                          // w8 = [interrupt 0 IMAN]
+  orr     w8, w8, #2                              // InterruptEnable (bit 1) = 1
+  strwi   w8, x0, #0x220                          // update [interrupt 0 IMAN] setting InterruptEnable (bit 1) = 1
 
   // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
   ldrwi   w3, x0, #0x20                           // w3 = [USBCMD]

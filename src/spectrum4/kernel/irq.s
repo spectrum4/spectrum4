@@ -109,7 +109,9 @@ handle_irq_bcm283x:
   ldr     w7, [x1, #0x60]                         // w7 = [0x40000060] = "Core0 IRQ Source" register
                                                   //   https://datasheets.raspberrypi.com/bcm2836/bcm2836-peripherals.pdf (page 7)
   cmp     w7, #0x2                                // test bit 1 (CNTPNSIRQ, page 16)
-  b.ne    panic_unknown_interrupt
+  b.eq    1f
+  b       panic_unknown_interrupt
+1:
   bl      handle_timer_irq
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
@@ -120,15 +122,27 @@ handle_irq_bcm2711:
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adrp    x8, 0xff842000 + _start
   ldr     w7, [x8, #0xc]                          // w7 = [0xff84200c] = [GICC_IAR]
-  cmp     w7, #0x1e
-  b.ne    panic_unknown_interrupt
   str     w7, [x8, #0x10]                         // [0xff842010] = [GICC_EOIR] = [GICC_IAR]
                                                   // Note: Writing to GICC_EOIR before servicing interrupt, which I believe means the
                                                   // interrupt routine will be reentrant at this point. Writing to EOIR after
                                                   // handling timer may be safer.
   dsb     sy                                      // The GIC architecture specification requires that valid EOIR writes are ordered
                                                   // however probably not needed since device memory writes should already be ordered.
+  cmp     w7, #0x1e
+  b.eq    1f
+.if PCI_INCLUDE
+  cmp     w7, #0xb4
+  b.eq    2f
+.endif
+  b       panic_unknown_interrupt
+1:
   bl      handle_timer_irq
+.if PCI_INCLUDE
+  b       3f
+2:
+  bl      handle_xhci_irq
+3:
+.endif
   str     w7, [x8, #0x1000]                       // [0xff843000] = [GICC_DIR]  = [GICC_IAR]
                                                   // Note: Could set GICC_CTLR.EOImodeNS to 0 and not have separate GICC_EOIR and
                                                   // GICC_DIR writes, i.e. just write to GICC_EOIR after servicing interrupt.

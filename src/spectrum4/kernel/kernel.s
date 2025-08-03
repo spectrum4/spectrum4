@@ -836,8 +836,8 @@ msg_write:                     .asciz "write "
 
 .include "rng.s"
 .if PCI_INCLUDE
-# .include "pci.s"
   .include "pcie.s"
+  .include "xhci.s"
 .endif
 .include "irq.s"
 .include "timer.s"

@@ -83,12 +83,28 @@ enable_ic_bcm2711:
     subs    w3, w3, #1
     b.ne    2b
   mov     w3, #0x10
-  mov     w8, #0x55555555
   add     x5, x1, #0xc00
   3:
-    str     w8, [x5], #0x4                        // [0xff841c00+4*n] = [GICD_ICFGRn]      = 0x55555555 for n=0 to 15 (0xf) (2 bits per interrupt) => set all 256 interrupts to level-sensitive
+    str     wzr, [x5], #0x4                       // [0xff841c00+4*n] = [GICD_ICFGRn]      = 0x00000000 for n=0 to 15 (0xf) (2 bits per interrupt) => set all 256 interrupts to level-sensitive
+
+                                                  // Note: despite MSI usually being edge-triggered, in BCM they appear to be level sensitive:
+                                                  //   https://github.com/raspberrypi/linux/blob/8ad5b3918c3e3da2999a580bbed11a72d37189be/arch/arm/boot/dts/broadcom/bcm2711.dtsi#L561
+                                                  // So no need to update GICD_ICFGR11 (0xff841c2c) to e.g. 0x200 for interrupt 180 (PCIE_0_MSI).
+
+                                                  // Note: reads of [GICD_ICFGRn] will return even bits set, e.g. 0x55555555
+                                                  // From https://developer.arm.com/documentation/ddi0471/b/programmers-model/distributor-register-descriptions/interrupt-configuration-registers--gicd-icfgrn?lang=en:
+                                                  //   The GIC-400 also implements the legacy encoding of the even bits in the register, designated
+                                                  //   Int_config[0] in the architecture specification. The Int_config[0] bits are always read-only and
+                                                  //   [are]* only provide support for legacy software. They must not be used by new software.
+                                                  // *) Probably a typo
+                                                  // From https://developer.arm.com/documentation/ihi0048/b/Programmers--Model/Distributor-register-descriptions/Interrupt-Configuration-Registers--GICD-ICFGRn?lang=en#BEIBFHCH:
+                                                  //   On a GIC where the handling mode of peripheral interrupts is configurable, the encoding of Int_config[0] for PPIs and SPIs, is:
+                                                  //     0 Corresponding interrupt is handled using the N-N model.
+                                                  //     1 Corresponding interrupt is handled using the 1-N model.
+                                                  // I think "1-N model" originally meant that interrupts were routed to just one core
     subs    w3, w3, #1
     b.ne    3b
+
   mov     w4, #0x1
   str     w4, [x1]                                // [0xff841000]     = [GICD_CTLR]        = 0x00000001                                            => forward group 1 interrupts from GIC distributor
   mov     w5, #0xf0
@@ -98,7 +114,7 @@ enable_ic_bcm2711:
   mov     w4, #0x40000000
   str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0x40000000                                            => enable interrupt 30  (0x1e) - Generic Timer (CNTP)
   mov     w4, #0x00100000
-  str     w4, [x1, #0x114]                        // [0xff841114]     = [GICD_ISENABLER0]  = 0x00100000                                            => enable interrupt 180 (0xb4) - PCIE_0_MSI
+  str     w4, [x1, #0x114]                        // [0xff841114]     = [GICD_ISENABLER5]  = 0x00100000                                            => enable interrupt 180 (0xb4) - PCIE_0_MSI
   ret
 
 

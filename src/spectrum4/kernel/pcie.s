@@ -989,7 +989,8 @@ pcie_init_bcm2711:
 
   mov     w2, 31                                  // 31 scratchpads to initialise
   10:
-    strxi   x1, x3, #8                            // scratchpad_ptrs[i] = DMA(scratchpad_bufs[i])
+    strxi   x1, x3, #0                            // scratchpad_ptrs[i] = DMA(scratchpad_bufs[i])
+    add     x3, x3, #0x8
     add     x1, x1, #0x1000
     sub     w2, w2, #1
     cbnz    w2, 10b
@@ -1014,10 +1015,6 @@ pcie_init_bcm2711:
   mov     w9, #0x00fc
   strhi   w9, x3, #0x8                            // [ERST+0x8] = 0xfc (event ring has 252 TRBs)
 
-  // must perform 32 bit writes; MMIO region
-  strwi   w3, x0, #0x230                          // [interrupt 0 ERSTBA] = lower32(erst (virtual)) = lower32(erst (DMA))
-  strwi   w4, x0, #0x234                          // [interrupt 0 ERSTBA] = 4 = upper32(erst (DMA))
-
   mov     w8, #1
   strwi   w8, x0, #0x228                          // [interrupt 0 ERSTSZ] = 1 segment
   // must perform 32 bit writes; MMIO region
@@ -1026,6 +1023,11 @@ pcie_init_bcm2711:
   ldrwi   w8, x0, #0x220                          // w8 = [interrupt 0 IMAN]
   orr     w8, w8, #2                              // InterruptEnable (bit 1) = 1
   strwi   w8, x0, #0x220                          // update [interrupt 0 IMAN] setting InterruptEnable (bit 1) = 1
+
+  dsb     sy                                      // not needed if using device memory, but if we switch memory attributes of coherent region to 0x44, we will need this!
+  // must perform 32 bit writes; MMIO region
+  strwi   w3, x0, #0x230                          // [interrupt 0 ERSTBA] = lower32(erst (virtual)) = lower32(erst (DMA))
+  strwi   w4, x0, #0x234                          // [interrupt 0 ERSTBA] = 4 = upper32(erst (DMA))
 
   // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
   ldrwi   w3, x0, #0x20                           // w3 = [USBCMD]
@@ -1044,12 +1046,12 @@ pcie_init_bcm2711:
   strxi   xzr, x1, #0x0
   strwi   wzr, x1, #0x8
   strwi   w2, x1, #0xc
-  mov     x8, x1
-  bfi     x8, x4, #32, #32                        // x2 = event_ring (DMA)
-  strxi   x8, x1, #0x10
-  mov     w9, (6 << 10) | (1 << 1)                // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
-  strwi   wzr, x1, #0x18
-  strwi   w9, x1, #0x1c
+//  mov     x8, x1
+//  bfi     x8, x4, #32, #32                        // x2 = event_ring (DMA)
+//  strxi   x8, x1, #0x10
+//  mov     w9, (6 << 10) | (1 << 1)                // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
+//  strwi   wzr, x1, #0x18
+//  strwi   w9, x1, #0x1c
 
   strwi   wzr, x0, #0x100                         // ring host controller doorbell (register 0)
 

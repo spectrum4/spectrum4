@@ -17,11 +17,18 @@ handle_xhci_irq:
   adr     x0, msg_xhci_event
   bl      uart_puts
 .endif
+  adrp    x7, 0xfd504000 + _start                 // x4 = MSI status register
+  ldr     w0, [x7, #0x500]                        // w0 = [MSI status]
+.if UART_DEBUG
+  bl      uart_x0                                 // log MSI interrupt vectors
+  bl      uart_newline
+.endif
+  str     w0, [x7, #0x508]                        // clear MSI interrupts
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
 
 .if UART_DEBUG
 msg_xhci_event:
-  .asciz "XHCI event occurred\r\n"
+  .asciz "XHCI MSI vector status: "
 .endif

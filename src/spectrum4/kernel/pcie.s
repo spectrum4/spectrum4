@@ -1016,18 +1016,22 @@ pcie_init_bcm2711:
   strhi   w9, x3, #0x8                            // [ERST+0x8] = 0xfc (event ring has 252 TRBs)
 
   mov     w8, #1
-  strwi   w8, x0, #0x228                          // [interrupt 0 ERSTSZ] = 1 segment
+  strwi   w8, x0, #0x228                          // [interrupter 0 ERSTSZ] = 1 segment
   // must perform 32 bit writes; MMIO region
-  strwi   w2, x0, #0x238                          // [interrupt 0 ERDP] = lower32(event_ring (DMA))
-  strwi   w4, x0, #0x23c                          // [interrupt 0 ERDP] = 4 = upper32(event_ring (DMA))
-  ldrwi   w8, x0, #0x220                          // w8 = [interrupt 0 IMAN]
+  strwi   w2, x0, #0x238                          // [interrupter 0 ERDP] = lower32(event_ring (DMA))
+  strwi   w4, x0, #0x23c                          // [interrupter 0 ERDP] = 4 = upper32(event_ring (DMA))
+
+  mov     w9, #0x00a0
+  strwi   w9, x0, #0x224                          // [interrupter 0 IMOD] = 0x00a0 => IMODI = 160 (40us) (circle sets to 500 => 125us)
+
+  ldrwi   w8, x0, #0x220                          // w8 = [interrupter 0 IMAN]
   orr     w8, w8, #2                              // InterruptEnable (bit 1) = 1
-  strwi   w8, x0, #0x220                          // update [interrupt 0 IMAN] setting InterruptEnable (bit 1) = 1
+  strwi   w8, x0, #0x220                          // update [interrupter 0 IMAN] setting InterruptEnable (bit 1) = 1
 
   dsb     sy                                      // not needed if using device memory, but if we switch memory attributes of coherent region to 0x44, we will need this!
   // must perform 32 bit writes; MMIO region
-  strwi   w3, x0, #0x230                          // [interrupt 0 ERSTBA] = lower32(erst (virtual)) = lower32(erst (DMA))
-  strwi   w4, x0, #0x234                          // [interrupt 0 ERSTBA] = 4 = upper32(erst (DMA))
+  strwi   w3, x0, #0x230                          // [interrupter 0 ERSTBA] = lower32(erst (virtual)) = lower32(erst (DMA))
+  strwi   w4, x0, #0x234                          // [interrupter 0 ERSTBA] = 4 = upper32(erst (DMA))
 
   // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
   ldrwi   w3, x0, #0x20                           // w3 = [USBCMD]

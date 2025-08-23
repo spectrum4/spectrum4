@@ -842,7 +842,7 @@ pcie_init_bcm2711:
   //  fd508000 06 11 83 34 46 05 10 00 01 30 03 0c 10 00 00 00 04 00 00 c0 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd508020 00 00 00 00 00 00 00 00 00 00 00 00 06 11 83 34 00 00 00 00 80 00 00 00 00 00 00 00 3e 01 00 00
 
-  //  09-0b: 0c0330 => usb3 xhci (0c = serial bus controller, 0c = usb host controller, 30 = usb3 xhci)
+  //  fd508009-fd50800b: 0c0330 => usb3 xhci (0c = serial bus controller, 0c = usb host controller, 30 = usb3 xhci)
 
   // VL805 legacy data
 
@@ -850,19 +850,19 @@ pcie_init_bcm2711:
   //  fd508040 00 00 00 00 00 01 00 00 09 00 00 0e 04 00 00 00 c0 38 01 00 00 00 00 00 00 00 00 00 06 11 83 34
   //  fd508060 30 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 00 03 00 01 00 00 18
 
-  //  60: 30 => release 3.0 (not 3.1 or 3.2)
-  //  61: 20 (default) => SOF cycle time of 60000
-
   //  fd508048: Mirror of xHCI Command Ring Control Register lower 32 bits (0x0e000009)
-  //    Bits 31:6 (address) = 0x0e000000 → Command Ring 64 byte aligned Base Address lower 32 bits
-  //    Bits 5:0 (flags) = 0x09 → 0b001001
-  //      Bit 5: CRCS (Command Ring Cycle State) → 0
-  //      Bit 4: CA (Command Abort) → 0
-  //      Bit 3: CRR (Command Ring Running) → 1
-  //      Bit 2: Reserved → 0
-  //      Bit 1: Reserved → 0
-  //      Bit 0: RCS (Ring Cycle State) → 1
+  //    Bits 31:6 (address) = 0x0e000000 -> Command Ring 64 byte aligned Base Address lower 32 bits
+  //    Bits 5:0 (flags) = 0x09 -> 0b001001
+  //      Bit 5: CRCS (Command Ring Cycle State) -> 0
+  //      Bit 4: CA (Command Abort) -> 0
+  //      Bit 3: CRR (Command Ring Running) -> 1
+  //      Bit 2: Reserved -> 0
+  //      Bit 1: Reserved -> 0
+  //      Bit 0: RCS (Ring Cycle State) -> 1
   //  fd508050: Firmware version 0x000138c0
+
+  //  fd508060: 30 => release 3.0 (not 3.1 or 3.2)
+  //  fd508061: 20 (default) => SOF cycle time of 60000
 
   // VL805 Capabilities
 
@@ -914,7 +914,7 @@ pcie_init_bcm2711:
   strhi   w1, x7, #0x2c                           // store [XHCI_REG_CAP_HCIVERSION] on heap (should be 0x0110)
 
   // init spectrum4 MMIO data structure
-# adr     x2, xhci_mmio
+# adr     x2, xhci_vars
 # str     x0, [x2], #8                            // [xhci_mmio] = 0x600000000 (pcie base)
 # ldrbi   w1, x0, #0x0                            // w1 = capabilities length
 # add     x1, x1, x0                              // x1 = address of first byte after capabilities = op base
@@ -999,13 +999,20 @@ pcie_init_bcm2711:
   orr     x1, x1, #1                              // set cycle bit in CRCR (bit 0)
 
   // must perform 32 bit writes; MMIO region
-  // Command ring dequeue pointer -> first TRB in command ring TRB
+  // Command ring dequeue pointer -> first TRB in command ring TRB.
+
+  // Note, it is assumed CRR (bit 3 of physical address 0x600000038) is already
+  // 0, otherwise the below writes to the same address would be ineffective.
+  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+  // Section 4.6.1 (page 104) and Table 5-24 (pages 402, 403)
   strwi   w1, x0, #0x38                           // [XHCI_REG_OP_CRCR_LO] = lower32(command_ring (virtual)) | 0x1 = lower32(command_ring (DMA)) | 0x1
   ldrwi   w2, x0, #0x38
   strwi   w4, x0, #0x3c                           // [XHCI_REG_OP_CRCR_HI] = 4 = upper32(command_ring (DMA))
   ldrwi   w2, x0, #0x3c
 
   adrp    x2, event_ring                          // x2 = event_ring (virtual)
+  adr     x8, xhci_vars
+  str     x2, [x8, xhci_event_dequeue-xhci_vars]  // keep internal record of event ring dequeue pointer (virtual)
   add     x3, x2, erst-event_ring                 // x3 = ERST (virtual)
   bfi     x2, x4, #32, #32                        // x2 = event_ring (DMA)
 
@@ -1308,11 +1315,13 @@ vl805_reset_req:
 vl805_reset_req_end:
 
 
-# .align 3
-# xhci_mmio: .space 8                               // = 0x600000000 (pcie base = xhci base) (capability registers)
-# xhci_mmio_op: .space 8                            // operational registers address
-# xhci_mmio_db: .space 8                            // doorbell registers address
-# xhci_mmio_rt: .space 8                            // runtime registers address
-# xhci_mmio_pt: .space 8                            // port register set address
-# xhci_cap_cache: .space 16                         // capability cache values
-# xhci_mmio_ec: .space 8                            // extended capabilities address
+.align 3
+xhci_vars:
+xhci_event_dequeue: .space 8
+# xhci_mmio: .space 8                             // = 0x600000000 (pcie base = xhci base) (capability registers)
+# xhci_mmio_op: .space 8                          // operational registers address
+# xhci_mmio_db: .space 8                          // doorbell registers address
+# xhci_mmio_rt: .space 8                          // runtime registers address
+# xhci_mmio_pt: .space 8                          // port register set address
+# xhci_cap_cache: .space 16                       // capability cache values
+# xhci_mmio_ec: .space 8                          // extended capabilities address

@@ -18,14 +18,15 @@ handle_xhci_irq:
   adr     x0, msg_xhci_event
   bl      uart_puts
 .endif
-  adrp    x9, 0xfd504000 + _start                 // x4 = MSI status register
-  ldr     w0, [x9, #0x500]                        // w0 = [MSI status]
+  adrp    x9, 0xfd504000 + _start                 // x9 = MSI status register
 .if UART_DEBUG
+  ldr     w0, [x9, #0x500]                        // w0 = [MSI status]
   bl      uart_x0                                 // log MSI interrupt vectors
   bl      uart_newline
 .endif
+  mov     w0, #0x1
+  str     w0, [x9, #0x508]                        // MSI_INT_CLR = 1 (clear MSI vector 0)
   bl      consume_xhci_events
-  str     w0, [x9, #0x508]                        // clear MSI interrupts
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -35,20 +36,24 @@ consume_xhci_events:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adr     x12, xhci_vars
-  ldr     x10, [x12, xhci_event_dequeue-xhci_vars]
+  ldrxi   x10, x12, xhci_event_dequeue-xhci_vars
+  ldrxi   x14, x12, xhci_event_ccs-xhci_vars      // x14 = Event Consumer Cycle Status (in bit 32)
+  ldr     x15, =(0x600000000 + _start)            // x15 = VL805 USB Host Controller Capability Registers
+
+  // loop through event TRBs
   1:
-    ldp     x0, x11, [x10], #16
-    tbz     x11, #32, 2f
-.if UART_DEBUG
-    bl      uart_x0
-    bl      uart_newline
-    mov     x0, x11
-    bl      uart_x0
-    bl      uart_newline
-.endif
+    ldrxi   x13, x10, #0x0                        // x13 = Event TRB Data Buffer Pointer (or immediate data)
+    ldrxi   x11, x10, #0x8                        // x11 = Control (63:32) and Status (31:0)
+    eor     x11, x11, x14                         // xor Producer Cycle State with Consumer Cycle State
+    tbz     x11, #32, 2f                          // Jump ahead if this TRB entry has wrong cycle state
+    add     x10, x10, #16                         // Bump x10 to next event TRB entry
+    orr     w1, w10, #0x8                         // prepare to clear ERDP.EHB (RW1C)
+    mov     w2, #0x4                              // ERDP_HI = 0x4 for DMA address
+    strwi   w1, x15, #0x238                       // [ERDP_LO] = next TRB (lo) with EHB cleared
+    strwi   w2, x15, #0x23c                       // ERDP_HI = next TRB (hi)
     b       1b
 2:
-  str     x10, [x12, xhci_event_dequeue-xhci_vars]
+  strxi   x10, x12, xhci_event_dequeue-xhci_vars
                                                   // advance event dequeue pointer
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret

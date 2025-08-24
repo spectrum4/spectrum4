@@ -45,14 +45,14 @@ consume_xhci_events:
     ldrxi   x13, x10, #0x0                        // x13 = Event TRB Data Buffer Pointer (or immediate data)
     ldrxi   x11, x10, #0x8                        // x11 = Control (63:32) and Status (31:0)
     eor     x11, x11, x14                         // xor Producer Cycle State with Consumer Cycle State
-    tbz     x11, #32, 2f                          // Jump ahead if this TRB entry has wrong cycle state
+    tbnz    x11, #32, 2f                          // Break from loop if PCS!=CCS (=> this is not a pending TRB)
     add     x10, x10, #16                         // Bump x10 to next event TRB entry
-    orr     w1, w10, #0x8                         // prepare to clear ERDP.EHB (RW1C)
-    mov     w2, #0x4                              // ERDP_HI = 0x4 for DMA address
-    strwi   w1, x15, #0x238                       // [ERDP_LO] = next TRB (lo) with EHB cleared
-    strwi   w2, x15, #0x23c                       // ERDP_HI = next TRB (hi)
     b       1b
 2:
+  orr     w1, w10, #0x8                           // prepare to clear ERDP.EHB (RW1C)
+  mov     w2, #0x4                                // ERDP_HI = 0x4 for DMA address
+  strwi   w1, x15, #0x238                         // [ERDP_LO] = next TRB (lo) with EHB cleared
+  strwi   w2, x15, #0x23c                         // [ERDP_HI] = next TRB (hi)
   strxi   x10, x12, xhci_event_dequeue-xhci_vars
                                                   // advance event dequeue pointer
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.

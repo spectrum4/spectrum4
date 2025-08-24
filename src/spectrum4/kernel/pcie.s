@@ -1012,7 +1012,9 @@ pcie_init_bcm2711:
 
   adrp    x2, event_ring                          // x2 = event_ring (virtual)
   adr     x8, xhci_vars
-  stp     x2, xzr, [x8, xhci_event_dequeue-xhci_vars]
+  mov     x9, #(1<<32)                            // bit 32 of x9 stores event ring consumer cycle state, initially set to 1
+                                                  // Section 4.9.4 (page 179)
+  stp     x2, x9, [x8, xhci_event_dequeue-xhci_vars]
                                                   // keep internal record of event ring dequeue pointer (virtual)
   add     x3, x2, erst-event_ring                 // x3 = ERST (virtual)
   bfi     x2, x4, #32, #32                        // x2 = event_ring (DMA)

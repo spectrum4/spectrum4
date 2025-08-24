@@ -46,8 +46,14 @@ consume_xhci_events:
     ldrxi   x11, x10, #0x8                        // x11 = Control (63:32) and Status (31:0)
     eor     x11, x11, x14                         // xor Producer Cycle State with Consumer Cycle State
     tbnz    x11, #32, 2f                          // Break from loop if PCS!=CCS (=> this is not a pending TRB)
-    add     x10, x10, #16                         // Bump x10 to next event TRB entry
-    b       1b
+    add     x10, x10, #16                         // Bump x10 to next event TRB entry (potentially overrunning event ring)
+    and     x13, x10, #0xfff                      // x13 = lower 12 bits of x10 (event ring offset)
+    cmp     x13, #(event_ring_end-event_ring)     // check if x10 has overrun the ring
+    b.ne    1b                                    // if not, loop around
+    and     x10, x10, #~0xfff                     // set x10 to start of ring
+    eor     x14, x14, #(1<<32)                    // toggle Event Consumer Cycle Status bit
+    strxi   x14, x12, xhci_event_ccs-xhci_vars    // store it
+    b       1b                                    // loop around
 2:
   orr     w1, w10, #0x8                           // prepare to clear ERDP.EHB (RW1C)
   mov     w2, #0x4                                // ERDP_HI = 0x4 for DMA address

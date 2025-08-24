@@ -1012,7 +1012,8 @@ pcie_init_bcm2711:
 
   adrp    x2, event_ring                          // x2 = event_ring (virtual)
   adr     x8, xhci_vars
-  str     x2, [x8, xhci_event_dequeue-xhci_vars]  // keep internal record of event ring dequeue pointer (virtual)
+  stp     x2, xzr, [x8, xhci_event_dequeue-xhci_vars]
+                                                  // keep internal record of event ring dequeue pointer (virtual)
   add     x3, x2, erst-event_ring                 // x3 = ERST (virtual)
   bfi     x2, x4, #32, #32                        // x2 = event_ring (DMA)
 
@@ -1317,7 +1318,8 @@ vl805_reset_req_end:
 
 .align 3
 xhci_vars:
-xhci_event_dequeue: .space 8
+xhci_event_dequeue: .space 8                      // keep together!!!
+xhci_event_ccs: .space 8                          // since loaded and stored with ldp/stp!!!
 # xhci_mmio: .space 8                             // = 0x600000000 (pcie base = xhci base) (capability registers)
 # xhci_mmio_op: .space 8                          // operational registers address
 # xhci_mmio_db: .space 8                          // doorbell registers address

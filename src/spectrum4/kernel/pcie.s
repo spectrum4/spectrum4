@@ -469,9 +469,6 @@ pcie_init_bcm2711:
   // Enable SSC (spread spectrum clocking) steps
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L372-L409
   //
-  // Perhaps the MDIO register updates are only needed for ethernet, since MDIO seems to relate only to ethernet:
-  //   https://en.wikipedia.org/wiki/Management_Data_Input/Output
-  //
   // Updates registers:
   //   * MDIO register SET_ADDR
   //   * MDIO register SSC_CNTL
@@ -941,6 +938,7 @@ pcie_init_bcm2711:
 
   // reset the Host Controller
   // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 1)
+  // TODO: should probably have a timeout here
   6:
     ldrwi   w3, x0, #0x24                         // w3 = [USBSTS]
     tbnz    w3, #11, 6b                           // loop while CNR != 0
@@ -952,15 +950,16 @@ pcie_init_bcm2711:
   strwi   w3, x0, #0x20
 
   // wait until (USBCMD.HCRST == 0)
+  // TODO: should probably have a timeout here
   7:
     ldrwi   w3, x0, #0x20                         // w3 = [USBCMD]
     tbnz    w3, #0x1, 7b                          // loop while HCRST != 0
 
   // wait until (USBSTS.CNR == 0)
+  // TODO: should probably have a timeout here
   8:
     ldrwi   w3, x0, #0x24                         // w3 = USBSTS
     tbnz    w3, #11, 8b                           // loop while CNR != 0
-#   tbz     w3, #11, 8b                           // loop while Halted == 0
 
   adrp    x1, xhci_start
   adrp    x2, xhci_end
@@ -1200,9 +1199,17 @@ mdio_read:
     bl      wait_usec                             // sleep 10us
     ldrwi   w1, x10, #0x1108                      // w0=[0xfd501108] (PCIE_RC_DL_MDIO_RD_DATA)
     tbz     w1, #31, 1b                           // repeat loop if bit 31 is clear (=> read value before register update was complete)
-2:
   ret     x11
+2:
+.if UART_DEBUG
+  adr     x0, msg_mdio_read_timeout
+  bl      uart_puts
+.endif
+  b       sleep
 
+.if UART_DEBUG
+msg_mdio_read_timeout: .asciz "Timeout in mdio_read\r\n"
+.endif
 
 # -----------------------------
 # Write to a MDIO register/port
@@ -1255,8 +1262,17 @@ mdio_write:
     bl      wait_usec                             // sleep 10us
     ldrwi   w1, x10, #0x1104                      // w0=[0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA)
     tbnz    w1, #31, 1b                           // repeat loop if bit 31 is set (=> read value before register update was complete)
-2:
   ret     x11
+2:
+.if UART_DEBUG
+  adr     x0, msg_mdio_write_timeout
+  bl      uart_puts
+.endif
+  b       sleep
+
+.if UART_DEBUG
+msg_mdio_write_timeout: .asciz "Timeout in mdio_write\r\n"
+.endif
 
 
 # # Return the PCIe register address for a given PCI bus, device function and

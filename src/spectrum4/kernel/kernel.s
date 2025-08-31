@@ -174,7 +174,9 @@ _start:
   msr     hcr_el2, x0
 
   mrs     x0, midr_el1                            // See https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
-  ldr     x1, =0x00000000410fd083                 // value on my Raspberry Pi 400. TODO: Change this filter to match any rpi4/rpi400 model that has GIC-400.
+  and     x0, x0, #0xfff0
+  mov     x1, #0xd080                             // Part Number 0xd08 => Cortex-A72 processor => Raspberry Pi 4/400/CM4 (and thus BCM2711 with GIC-400, i.e. GICv2 implementation)
+                                                  // https://developer.arm.com/documentation/100095/0002/system-control/aarch64-register-descriptions/main-id-register--el1
   cmp     x0, x1
   b.ne    post_gic_setup                          // Skip GIC setup if not on rpi4/rpi400
 
@@ -192,6 +194,7 @@ _start:
     subs    x0, x0, #4                            // x0 = 0x1c, 0x18, 0x14, 0x10, 0x0c, 0x08, 0x04, 0x00
     str     w1, [x2, x0]                          // [0xff84209c] / [0xff82098] / [0xff82094] / [0xff82090] / [0xff8208c] / [0xff82088] / [0xff82084] / [0xff82080] = 0xffffffff
     b.ne    gic_loop                              // GICD_IGROUPR[0-7] Interrupt Group Registers
+  dsb     sy                                      // Ensure udpates before proceeding
 post_gic_setup:
 
 
@@ -403,12 +406,14 @@ post_gic_setup:
   mrs     x0, sctlr_el1                           // fetch System Control Register (EL1)
   mov     x1, #0x1005
   orr     x0, x0, x1                              // enable MMU (0x1), data cache (0x4) and instruction cache (0x1000)
-  msr     sctlr_el1, x0                           // update System Control Register (EL1)
-  dsb     sy
-  isb
+  msr     sctlr_el1, x0                           // update System Control Register (EL1) to enable MMU
+  dsb     ishst                                   // ensure page table writes are complete (inner shareable - not really needed as nothing else running in domain)
+  tlbi    vmalle1                                 // invalidate all EL1/EL0 TLB entries for current VMID (VMID=0 since EL2 disabled)
+  dsb     ish                                     // ensure TLBI completion across CPU cores (other cores sleeping, not really needed)
+  isb                                             // synchronize instruction fetch with new MMU state
   br      x2                                      // jump to next instruction so that program counter starts using virtual address
 10:
-  msr     ttbr0_el1, xzr                          // Ensure only ttbr1_el1 is used from now on
+  msr     ttbr0_el1, xzr                          // disable ttbr0 to force all accesses via ttbr1 (upper va space)
   adrp    x28, sysvars
   add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
 .if UART_DEBUG
@@ -615,6 +620,11 @@ mbox_call:
   cmp     w11, w12                                // See if the message is for us.
   b.ne    2b                                      // If not, try again.
   dmb     sy                                      // Data Memory Barrier
+
+# TODO: check tag responses for errors here. loop through tags until last tag
+# found, checking each response code. report tag code for every failure and break
+# to sleep if any failures.
+
   ret
 
 

@@ -1146,10 +1146,42 @@ pcie_init_bcm2711:
 # 600000280 00 00 00 00 a0 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 # 600000300 0a 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 # 600000320 00 00 00 00 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+
+# PORT SC
+# Port 1 and 2:
 # 600000420 e1 02 02 40 00 00 00 00 00 00 00 00 00 00 00 00 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# Port 3 and 4:
 # 600000440 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+# Port 5:
 # 600000460 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
+# Port 1:    0x400202e1 = 0b0100 0000 0000 0010 0000 0010 1110 0001
+#    0: CCS = 1 => Device Connected
+#    1: PED = 0 => Port Disabled
+#    3: OCA = 0 => Port does not have over-current condition
+#    4: PR = 0 => Port is not in reset
+#    8:5: PLS = 7 => Port is in the Polling State
+#    9: PP = 1 => Port is not powered off (I believe - need to check HCCPARAMS1.PPC to be sure)
+#    13:10: PS = 0 => Port Speed is undefined speed
+#    15:14: PIC = 0 => Port indicators are off
+#    ...
+#    21: PRC = 1 => Port Reset Complete
+#    ...
+#    30: DR = 1 => Device is non-removable
+#
+# Port 2-5:  0x000002a0 = 0b0000 0000 0000 0000 0000 0010 1010 0000
+#    0: CCS = 0 => Device is not connected
+#    1: PED = 0 => Port Disabled
+#    3: OCA = 0 => Port does not have over-current condition
+#    4: PR = 0 => Port is not in reset
+#    8:5: PLS = 5 => Port is in the RxDetect State (USB 3 spec section 10.14.2.6.1)
+#    9: PP = 1 => Port is not powered off (I believe - need to check HCCPARAMS1.PPC to be sure)
+#    13:10: PS = 0 => Port Speed is undefined speed
+#    15:14: PIC = 0 => Port indicators are off
+#    ...
+#    21: PRC = 0 => No change to port reset status
+#    ...
+#    30: DR = 0 => Device is removable
 
 
 # ------------------------------

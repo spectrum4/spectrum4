@@ -45,7 +45,33 @@ consume_xhci_events:
     ldrxi   x13, x10, #0x0                        // x13 = Event TRB Data Buffer Pointer (or immediate data)
     ldrxi   x11, x10, #0x8                        // x11 = Control (63:32) and Status (31:0)
     eor     x11, x11, x14                         // xor Producer Cycle State with Consumer Cycle State
-    tbnz    x11, #32, 2f                          // Break from loop if PCS!=CCS (=> this is not a pending TRB)
+    tbnz    x11, #32, 3f                          // Break from loop if PCS!=CCS (=> this is not a pending TRB)
+
+// Example TRBs
+
+//   read [0xfffffff000221000]=0x01000000 = 0b > 0000 0001 < 0000 0000 0000 0000 0000 0000 => Port = 1
+//   read [0xfffffff000221004]=0x00000000 = 0b0000 0000 0000 0000 0000 0000 0000 0000
+//   read [0xfffffff000221008]=0x01000000 = 0b > 0000 0001 < 0000 0000 0000 0000 0000 0000 => Completion Code = 1
+//   read [0xfffffff00022100c]=0x00008801 = 0b0000 0000 0000 0000 > 1000 10 < 00 0000 000 > 1 < => TRB Type = 34 (Port Status Change Event), Cycle Bit = 1
+
+//   read [0xfffffff000221010]=0x00220000 = 0b0000 0000 0010 0010 0000 0000 0000 0000
+//   read [0xfffffff000221014]=0x00000004 = 0b0000 0000 0000 0000 0000 0000 0000 0100
+//   read [0xfffffff000221018]=0x01000000 = 0b0000 0001 0000 0000 0000 0000 0000 0000
+//   read [0xfffffff00022101c]=0x00008401 = 0b0000 0000 0000 0000 > 1000 01 < 00 0000 000 > 1 < => TRB Type = 33 (Command Completion Event), Cycle Bit = 1
+
+    and     x16, x11, #0x0000fc0000000000
+
+    mov     x17, #0x0000880000000000
+    cmp     x16, x17
+    b.eq    port_status_change_event
+
+    mov     x17, #0x0000840000000000
+    cmp     x16, x17
+    b.eq    command_completion_event
+
+    b       unknown_event
+
+2:
     add     x10, x10, #16                         // Bump x10 to next event TRB entry (potentially overrunning event ring)
     and     x13, x10, #0xfff                      // x13 = lower 12 bits of x10 (event ring offset)
     cmp     x13, #(event_ring_end-event_ring)     // check if x10 has overrun the ring
@@ -54,7 +80,7 @@ consume_xhci_events:
     eor     x14, x14, #(1<<32)                    // toggle Event Consumer Cycle Status bit
     strxi   x14, x12, xhci_event_ccs-xhci_vars    // store it
     b       1b                                    // loop around
-2:
+3:
   orr     w1, w10, #0x8                           // prepare to clear ERDP.EHB (RW1C)
   mov     w2, #0x4                                // ERDP_HI = 0x4 for DMA address
   strwi   w1, x15, #0x238                         // [ERDP_LO] = next TRB (lo) with EHB cleared
@@ -65,8 +91,40 @@ consume_xhci_events:
   ret
 
 
+port_status_change_event:
+.if UART_DEBUG
+  adr     x0, msg_port_status_change_event
+  bl      uart_puts
+.endif
+  lsr     w17, w13, #24                           // w17 = port number
+  add     x17, x15, x17, lsl #4                   // x17 = 0x6 0000 0000 + port number * 0x10
+  ldrwi   x18, x17, #0x410                        // x18 = [0x6 0000 0420 + (port number - 1) * 0x10] = [PORTSC]
+  b       2b
+
+
+command_completion_event:
+.if UART_DEBUG
+  adr     x0, msg_command_completion_event
+  bl      uart_puts
+.endif
+  b       2b
+
+
+unknown_event:
+.if UART_DEBUG
+  adr     x0, msg_unknown_event
+  bl      uart_puts
+.endif
+  b       sleep
+
 
 .if UART_DEBUG
 msg_xhci_event:
   .asciz "XHCI MSI vector status: "
+msg_port_status_change_event:
+  .asciz "Port Status Change Event\r\n"
+msg_command_completion_event:
+  .asciz "Command Completion Event\r\n"
+msg_unknown_event:
+  .asciz "Unknown Event\r\n"
 .endif

@@ -1052,22 +1052,6 @@ pcie_init_bcm2711:
     ldrwi   w3, x0, #0x24                         // w3 = USBSTS
     tbnz    w3, #0, 11b                           // loop while HCHalted != 0
 
-  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-  // Section 6.4.3.1 (page 488)
-  adrp    x1, command_ring                        // x1 = command_ring (virtual)
-  mov     w2, (23 << 10) | 1                      // TRB Type = 23 (No-Op: see page 512 of xHCI spec)
-  strxi   xzr, x1, #0x0
-  strwi   wzr, x1, #0x8
-  strwi   w2, x1, #0xc
-//  mov     x8, x1
-//  bfi     x8, x4, #32, #32                        // x2 = event_ring (DMA)
-//  strxi   x8, x1, #0x10
-//  mov     w9, (6 << 10) | (1 << 1)                // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
-//  strwi   wzr, x1, #0x18
-//  strwi   w9, x1, #0x1c
-
-  strwi   wzr, x0, #0x100                         // ring host controller doorbell (register 0)
-
   // Test - try to write to MSI address directly to trigger interrupt...
   // If my maths isn't totally off, this should be the MSI target address as a CPU virtual address, and it should be mapped.
   // However, currently this is causing a crash (later on) so there may be an issue in the interrupt handler...

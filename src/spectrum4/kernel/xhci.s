@@ -183,7 +183,7 @@ consume_xhci_events:
 //   read [0xfffffff000221018]=0x01000000 = 0b0000 0001 0000 0000 0000 0000 0000 0000
 //   read [0xfffffff00022101c]=0x00008401 = 0b0000 0000 0000 0000 > 1000 01 < 00 0000 000 > 1 < => TRB Type = 33 (Command Completion Event), Cycle Bit = 1
 
-    and     x16, x11, #0x0000fc0000000000
+    and     x16, x11, #0x0000fc0000000000         // x16 = TRB Type in bits 42-47
 
     mov     x17, #0x0000880000000000
     cmp     x16, x17
@@ -253,6 +253,8 @@ command_completion_event:
   adr     x0, msg_command_completion_event
   bl      uart_puts
 .endif
+  // first pass, assume this is the Enable Slot command - later add logic to determine command
+  lsr     x16, x11, #56                           // x16 = Slot ID (from bits 56-63 of x11)
   b       2b
 
 

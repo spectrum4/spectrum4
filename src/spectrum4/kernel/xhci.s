@@ -81,30 +81,31 @@
 # 600000460 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
 # Port 1:    0x400202e1 = 0b0100 0000 0000 0010 0000 0010 1110 0001
-#    0: Current Connect Status (CCS) – ROS = 1 => Device Connected
-#    1: Port Enabled/Disabled (PED) – RW1CS = 0 => Port Disabled
+#                   e03 =                            1110 0000 0011
+#    0: Current Connect Status (CCS)        - ROS = 1 => Device Connected
+#    1: Port Enabled/Disabled (PED)         - RW1CS = 0 => Port Disabled
 #    2: RsvdZ = 0
-#    3: Over-current Active (OCA) – RO = 0 => Port does not have over-current condition
-#    4: Port Reset (PR) – RW1S = 0 => Port is not in reset
-#    8:5: Port Link State (PLS) – RWS = 7 => Port is in the Polling State
-#    9: Port Power (PP) – RWS = 1 => Port is not powered off (I believe - need to check HCCPARAMS1.PPC to be sure)
-#    13:10: Port Speed (Port Speed) – ROS = 0 => Port Speed is undefined speed
-#    15:14: Port Indicator Control (PIC) – RWS = 0 => Port indicators are off
-#    16: Port Link State Write Strobe (LWS) – RW = 0
-#    17: Connect Status Change (CSC) – RW1CS = 0
-#    18: Port Enabled/Disabled Change (PEC) – RW1CS = 0
-#    19: Warm Port Reset Change (WRC) – RW1CS/RsvdZ = 0
-#    20: Over-current Change (OCC) – RW1CS = 0
-#    21: Port Reset Change (PRC) – RW1CS = 1 => Port Reset Complete
-#    22: Port Link State Change (PLC) – RW1CS = 0
-#    23: Port Config Error Change (CEC) – RW1CS/RsvdZ = 0
-#    24: Cold Attach Status (CAS) – RO = 0
-#    25: Wake on Connect Enable (WCE) – RWS = 0
-#    26: Wake on Disconnect Enable (WDE) – RWS = 0
-#    27: Wake on Over-current Enable (WOE) – RWS = 0
+#    3: Over-current Active (OCA)           - RO = 0 => Port does not have over-current condition
+#    4: Port Reset (PR)                     - RW1S = 0 => Port is not in reset
+#    8:5: Port Link State (PLS)             - RWS = 7 => Port is in the Polling State
+#    9: Port Power (PP)                     - RWS = 1 => Port is not powered off (I believe - need to check HCCPARAMS1.PPC to be sure)
+#    13:10: Port Speed (Port Speed)         - ROS = 0 => Port Speed is undefined speed
+#    15:14: Port Indicator Control (PIC)    - RWS = 0 => Port indicators are off
+#    16: Port Link State Write Strobe (LWS) - RW = 0
+#    17: Connect Status Change (CSC)        - RW1CS = 0
+#    18: Port Enabled/Disabled Change (PEC) - RW1CS = 0
+#    19: Warm Port Reset Change (WRC)       - RW1CS/RsvdZ = 0
+#    20: Over-current Change (OCC)          - RW1CS = 0
+#    21: Port Reset Change (PRC)            - RW1CS = 1 => Port Reset Complete
+#    22: Port Link State Change (PLC)       - RW1CS = 0
+#    23: Port Config Error Change (CEC)     - RW1CS/RsvdZ = 0
+#    24: Cold Attach Status (CAS)           - RO = 0
+#    25: Wake on Connect Enable (WCE)       - RWS = 0
+#    26: Wake on Disconnect Enable (WDE)    - RWS = 0
+#    27: Wake on Over-current Enable (WOE)  - RWS = 0
 #    29:28: RsvdZ = 0
-#    30: Device Removable97 (DR) - RO = 1 => Device is non-removable
-#    31: Warm Port Reset (WPR) – RW1S/RsvdZ = 0
+#    30: Device Removable (DR)              - RO = 1 => Device is non-removable
+#    31: Warm Port Reset (WPR)              - RW1S/RsvdZ = 0
 #
 # Port 2-5:  0x000002a0 = 0b0000 0000 0000 0000 0000 0010 1010 0000
 #    0: CCS = 0 => Device is not connected
@@ -214,7 +215,11 @@ port_status_change_event:
 .endif
   lsr     w17, w13, #24                           // w17 = port number
   add     x17, x15, x17, lsl #4                   // x17 = 0x6 0000 0000 + port number * 0x10
-  ldrwi   x18, x17, #0x410                        // x18 = [0x6 0000 0420 + (port number - 1) * 0x10] = [PORTSC]
+  ldrwi   w18, x17, #0x410                        // w18 = [0x6 0000 0420 + (port number - 1) * 0x10] = [PORTSC]
+  ubfx    w19, w18, #1, #1                        // w19 = bit 1 of w18 = PED (port enabled)
+  eor     w19, w19, #1                            // invert w19 bit 0 i.e. 0 if port enabled, 1 if port disabled
+  bfi     w18, w19, #4, #1                        // PR (port reset) = 0 if port enabled, 1 if port disabled
+  strwi   w18, x17, #0x410                        // write value back to clear RW1CS changes, potentially reset port
   b       2b
 
 

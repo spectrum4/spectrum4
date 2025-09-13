@@ -72,6 +72,13 @@
 # 600000300 0a 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 # 600000320 00 00 00 00 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
+# a0: Capability 01: USB Legacy Support; SMI options all set to 0 - SMI only relevant for legacy x86/BIOS stuff
+# b0: Capability 02: Supported Protocol v2.0 "USB " ports 1-1 protocol defined 0x006 => high speed only; integrated hub; PSIC 0x1; protocol slot type 0;
+#         Protocol speed IDs: 0x01e00023 0b0000 0001 1110 0000 0000 0000 0010 0011 => PSIV=3 @ 480 Mb/s (symmetric) half-duplex
+# d0: Capability 02: Supported Protocol v3.0 "USB " ports 2-5 ..... slot type 0;
+#         .....
+# 300: Capability 0a: USB Debug Capability
+
 # PORT SC
 # Port 1 and 2:
 # 600000420 e1 02 02 40 00 00 00 00 00 00 00 00 00 00 00 00 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00
@@ -220,6 +227,24 @@ port_status_change_event:
   eor     w19, w19, #1                            // invert w19 bit 0 i.e. 0 if port enabled, 1 if port disabled
   bfi     w18, w19, #4, #1                        // PR (port reset) = 0 if port enabled, 1 if port disabled
   strwi   w18, x17, #0x410                        // write value back to clear RW1CS changes, potentially reset port
+  tbnz    w19, #0, 2b                             // if resetting port, return and wait for next port status change
+
+  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+  // Section 6.4.3.2 (page 488)
+  adrp    x1, command_ring                        // x1 = command_ring (virtual)
+  mov     w2, (9 << 10) | 1                       // TRB Type = 9 (Enable Slot: see page 512 of xHCI spec)
+  strxi   xzr, x1, #0x0
+  strwi   wzr, x1, #0x8
+  strwi   w2, x1, #0xc
+//  mov     x8, x1
+//  bfi     x8, x4, #32, #32                      // x2 = event_ring (DMA)
+//  strxi   x8, x1, #0x10
+//  mov     w9, (6 << 10) | (1 << 1)              // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
+//  strwi   wzr, x1, #0x18
+//  strwi   w9, x1, #0x1c
+
+  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
+
   b       2b
 
 

@@ -183,14 +183,12 @@ consume_xhci_events:
 //   read [0xfffffff000221018]=0x01000000 = 0b0000 0001 0000 0000 0000 0000 0000 0000
 //   read [0xfffffff00022101c]=0x00008401 = 0b0000 0000 0000 0000 > 1000 01 < 00 0000 000 > 1 < => TRB Type = 33 (Command Completion Event), Cycle Bit = 1
 
-    and     x16, x11, #0x0000fc0000000000         // x16 = TRB Type in bits 42-47
+    ubfx    x16, x11, #42, #6                     // x16 = TRB Type (from bits 42-47 of x11)
 
-    mov     x17, #0x0000880000000000
-    cmp     x16, x17
+    cmp     x16, #34
     b.eq    port_status_change_event
 
-    mov     x17, #0x0000840000000000
-    cmp     x16, x17
+    cmp     x16, #33
     b.eq    command_completion_event
 
     b       unknown_event

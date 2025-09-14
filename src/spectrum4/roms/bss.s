@@ -412,7 +412,10 @@ erst:            .space 0x40                      // only the first 0x10 bytes m
 
 .align 12                                         // Technically only requires .align 6 but sits at page boundary anyway, and this way
                                                   // adrp can be used.
-keyboard_device_context: .space 0x400             // 1 Slot Context and 31 Endpoint Contexts (i.e. 32 contexts, each 32 bytes = 32 * 32 = 1024 bytes)
+keyboard_device_context: .space 0x80              // 1 Slot Context and 3 Endpoint Contexts (i.e. 4 contexts, each 0x20 bytes = 4 * 0x20 = 0x80 bytes)
+
+.align 6
+keyboard_input_context: .space 0xa0               // 1 Input Control Context, 1 Slot Context, 3 Endpoint Contexts (EP 0, EP 1 OUT, EP 1 IN)
 
 .align 12
 xhci_end:

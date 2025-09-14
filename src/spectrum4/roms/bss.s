@@ -376,6 +376,8 @@ attributes_file_end:
 ram_disk:        .space RAM_DISK_SIZE
 heap:            .space HEAP_SIZE
 
+.if PCI_INCLUDE
+
 .section .bss.coherent, "aw", %nobits
 
 # 21 is 2MB boundary, which matches granularity of our MMU page tables.
@@ -408,8 +410,15 @@ erst:            .space 0x40                      // only the first 0x10 bytes m
                                                   // software shall allocate a buffer for the Event Ring Segment that rounds up its
                                                   // size to the nearest 64B boundary to allow full cache-line accesses.
 
+.align 12                                         // Technically only requires .align 6 but sits at page boundary anyway, and this way
+                                                  // adrp can be used.
+keyboard_device_context: .space 0x400             // 1 Slot Context and 31 Endpoint Contexts (i.e. 32 contexts, each 32 bytes = 32 * 32 = 1024 bytes)
+
 .align 12
 xhci_end:
 
+
 .align 21
 coherent_end:
+
+.endif

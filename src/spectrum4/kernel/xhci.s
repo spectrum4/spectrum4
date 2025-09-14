@@ -289,3 +289,49 @@ msg_command_completion_event:
 msg_unknown_event:
   .asciz "Unknown Event\r\n"
 .endif
+
+
+
+.data
+.align 6
+
+# USB Keyboard Input Context (Address Device Command)
+keyboard_input_context_address_device:
+# Input Control Context
+.word 0x00000000
+.word 0x00000003                                  // A0=1, A1=1
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+# Slot Context
+.word 0x08300000                                  // 0b00001 0 0 0 0011 00000000000000000000
+.word 0x00010000                                  // 0b00000000 00000001 0000000000000000
+                                                  // Context Entries = 1
+                                                  // Hub = 0
+                                                  // MTT (Multiple TT support) = 0 (disabled)
+                                                  // Speed = 3
+                                                  // Route String = 0
+                                                  // Number of Ports = 0
+                                                  // Root Hub Port Number = 1
+# Endpoint Context
+.word 0x00000000                                  // 0b00000000 00000000 0 00000 00 00000 000
+.word 0x00400026                                  // 0b0000000001000000 00000000 0 0 100 11 0
+.dword (transfer_ring_keyboard_EP0 + 0x1)         // 0b<transfer ring address> 000 1
+.word 0x00000008                                  // 0b0000000000000000 0000000000001000
+
+                                                  // EP State = 0 (Disabled)
+                                                  // Mult = 0
+                                                  // MaxPStreams = 0
+                                                  // LSA = 0
+                                                  // Interval = 11 (=> 256 ms)
+                                                  // Max ESIT Payload = 1
+                                                  // CErr = 3
+                                                  // EP Type = 7
+                                                  // HID = 0
+                                                  // Max Burst Size = 0
+                                                  // Max Packet Size = 1
+                                                  // DCS = 1
+                                                  // TR Dequeue Pointer = 0x400623900

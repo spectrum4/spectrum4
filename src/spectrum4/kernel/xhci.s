@@ -259,6 +259,15 @@ command_completion_event:
   mov     w18, #0x4
   strwi   w16, x17, #0x0
   strwi   w18, x17, #0x4                          // dcbaa[slotID] = keyboard_device_context (DMA)
+  mov     w19, #0x3
+  strwi   w19, x16, #(keyboard_input_context + 0x4 - keyboard_device_context)
+                                                  // A0 = 1, A1 = 1 (Input Control Context)
+  mov     w20, #0x08300000                        // Slot Context; Context Entries=0b00001, Hub=0b0, MTT=0b0, RsvdZ=0b0, Speed=0b0011, Route String=0b00000000000000000000
+
+  mov     w21, #0x00010000                        // Number of Ports = 0b00000000, Root Hub Port Number = 0b00000001, Max Exit Latency = 0b0000000000000000
+  strwi   w20, x16, (keyboard_input_context + 0x20 - keyboard_device_context)
+  strwi   w21, x16, (keyboard_input_context + 0x24 - keyboard_device_context)
+
   b       2b
 
 

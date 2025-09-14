@@ -309,6 +309,7 @@ post_gic_setup:
     b.ne    2b
   adrp    x0, (pg_dir+0x1000)
   mov     x1, #0x401                              // bit 10: AF=1, bits 2-4: mair attr index = 0 (normal), bits 0-1: 1 (block descriptor)
+.if PCI_INCLUDE
   ldr     x2, pcie_init
   cbz     x2, 5f                                  // skip configure coherent region if pcie not in use
   adrp    x2, coherent_start
@@ -326,6 +327,7 @@ post_gic_setup:
     b.lt    4b
   sub     x1, x1, #0x8                            // bits 2-4: mair attr index = 0 (normal)
 5:
+.endif
   ldr     w2, arm_size
   6:
     str     x1, [x0], #8                          // [pg_dir + 0x1000 + i*8] = 0x401 + i*0x200000. PMD table entries complete for 0 to arm_size address.
@@ -338,6 +340,7 @@ post_gic_setup:
     add     x1, x1, #0x200000
     cmp     x1, x3
     b.lt    7b
+.if PCI_INCLUDE
   ldr     x0, pcie_init                           // Is PCIe available?
   cbz     x0, 9f                                  // Skip mapping xHCI region if no PCIe
   adrp    x0, pg_dir
@@ -353,6 +356,7 @@ post_gic_setup:
     cmp     x2, x3
     b.lt    8b
 9:
+.endif
   dsb     sy                                      // Data Sync Barrier
   adrp    x0, pg_dir
   msr     ttbr1_el1, x0                           // Configure page tables for virtual addresses with 1's in first 28 bits
@@ -430,10 +434,12 @@ post_gic_setup:
   ldr     x0, enable_ic
   blr     x0
   bl      enable_irq
+.if PCI_INCLUDE
   ldr     x0, pcie_init
   cbz     x0, 11f
   blr     x0
 11:
+.endif
   bl      fill_memory_with_junk
   bl      run_tests
 .endif
@@ -876,12 +882,6 @@ aux_mu_baud_reg:
   .word     0x0000021d                            // default is for rpi4
 cntfrq:
   .word     54000000                              // default is for rpi4
-pcie_init:
-.if PCI_INCLUDE
-  .quad     pcie_init_bcm2711                     // default is for rpi4
-.else
-  .quad     0x0000000000000000                    // 0 => no pcie
-.endif
 local_control:
   .quad     0x00000000ff800000                    // default is for rpi4
                                                   // note, clock is set before MMU is enabled, so use physical (not virtual) address
@@ -897,6 +897,10 @@ peripherals_start:
 peripherals_end:
   .quad     0x0000000100000000                    // default is for rpi4
                                                   // used for MMU page tables, thus physical address needed
+.if PCI_INCLUDE
+pcie_init:
+  .quad     pcie_init_bcm2711                     // default is for rpi4
+.endif
 
 
 # RPi 3B (bcm2837):
@@ -920,8 +924,6 @@ base_rpi3:
   .word     0x0000010e
 # rpi3 cntfrq
   .word     19200000
-# rpi3 pcie_init
-  .quad     0x0000000000000000                    // 0 => no pcie
 # rpi3 local_control (physical address, not virtual)
   .quad     0x0000000040000000
 # rpi3 timer_base
@@ -934,6 +936,10 @@ base_rpi3:
   .quad     0x000000003f000000
 # rpi3 peripherals_end (physical address, not virtual)
   .quad     0x0000000040200000
+.if PCI_INCLUDE
+# rpi3 pcie_init
+  .quad     0x0000000000000000                    // 0 => no pcie
+.endif
 
 
 .align 2
@@ -1002,13 +1008,17 @@ set_peripherals_addresses:
                                                   //  x7 = [rpi3 uart_x0]
   ldp     x8, x9, [x0, #48]                       //  x8 = [rpi3 aux_mu_baud_reg] (bits 0-31)
                                                   //       [rpi3 cntfrq] (bits 32-63)
-                                                  //  x9 = [rpi3 pcie_init]
-  ldp     x10, x11, [x0, #64]                     // x10 = [rpi3 local_control]
-                                                  // x11 = [rpi3 timer_base]
-  ldp     x12, x13, [x0, #80]                     // x12 = [rpi3 enable_ic]
-                                                  // x13 = [rpi3 handle_irq]
-  ldp     x14, x15, [x0, #96]                     // x14 = [rpi3 peripherals_start]
-                                                  // x15 = [rpi3 peripherals_end]
+                                                  //  x9 = [rpi3 local_control]
+  ldp     x10, x11, [x0, #64]                     // x10 = [rpi3 timer_base]
+                                                  // x11 = [rpi3 enable_ic]
+  ldp     x12, x13, [x0, #80]                     // x12 = [rpi3 handle_irq]
+                                                  // x13 = [rpi3 peripherals_start]
+.if PCI_INCLUDE
+  ldp     x14, x15, [x0, #96]                     // x14 = [rpi3 peripherals_end]
+                                                  // x15 = [rpi3 pcie_init]
+.else
+  ldr     x14, [x0, #96]                          // x14 = [rpi3 peripherals_end]
+.endif
   stp     x2, x3, [x1]                            // [mailbox_base]      = [rpi3 mailbox_base]
                                                   // [gpio_base]         = [rpi3 gpio_base]
   stp     x4, x5, [x1, #16]                       // [aux_base]          = [rpi3 aux_base]
@@ -1017,13 +1027,17 @@ set_peripherals_addresses:
                                                   // [uart_x0]           = [rpi3 uart_x0]
   stp     x8, x9, [x1, #48]                       // [aux_mu_baud_reg]   = [rpi3 aux_mu_baud_reg] (32 bit)
                                                   // [cntfrq]            = [rpi3 cntfrq] (32 bit)
+                                                  // [local_control]     = [rpi3 local_control]
+  stp     x10, x11, [x1, #64]                     // [timer_base]        = [rpi3 timer_base]
+                                                  // [enable_ic]         = [rpi3 enable_ic]
+  stp     x12, x13, [x1, #80]                     // [handle_irq]        = [rpi3 handle_irq]
+                                                  // [peripherals_start] = [rpi3 peripherals_start]
+.if PCI_INCLUDE
+  stp     x14, x15, [x1, #96]                     // [peripherals_end]   = [rpi3 peripherals_end]
                                                   // [pcie_init]         = [rpi3 pcie_init]
-  stp     x10, x11, [x1, #64]                     // [local_control]     = [rpi3 local_control]
-                                                  // [timer_base]        = [rpi3 timer_base]
-  stp     x12, x13, [x1, #80]                     // [enable_ic]         = [rpi3 enable_ic]
-                                                  // [handle_irq]        = [rpi3 handle_irq]
-  stp     x14, x15, [x1, #96]                     // [peripherals_start] = [rpi3 peripherals_start]
-                                                  // [peripherals_end]   = [rpi3 peripherals_end]
+.else
+  str     x14, [x1, #96]                          // [peripherals_end]   = [rpi3 peripherals_end]
+.endif
 1:
   ret
 

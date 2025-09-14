@@ -253,6 +253,12 @@ command_completion_event:
 .endif
   // first pass, assume this is the Enable Slot command - later add logic to determine command
   lsr     x16, x11, #56                           // x16 = Slot ID (from bits 56-63 of x11)
+  adrp    x17, dcbaa                              // x17 = dcbaa (virtual)
+  add     x17, x17, x16, lsl #3                   // x17 = dcbaa[slotID]
+  adrp    x16, keyboard_device_context            // conveniently sits at a 4KB page boundary
+  mov     w18, #0x4
+  strwi   w16, x17, #0x0
+  strwi   w18, x17, #0x4                          // dcbaa[slotID] = keyboard_device_context (DMA)
   b       2b
 
 

@@ -980,7 +980,7 @@ pcie_init_bcm2711:
   strwi   w4, x0, #0x54                           // [XHCI_REG_OP_DCBAAP_HI] = 0x4 => DCBAAP = dcbaa (DMA)
 
   add     x3, x9, scratchpad_ptrs-dcbaa           // x3 = scratchpad_ptrs (virtual)
-  mov     x6, x3                                  // x6 = scratchpad_ptrs (virual)
+  mov     x6, x3                                  // x6 = scratchpad_ptrs (virtual)
   bfi     x6, x4, #32, #32                        // x6 = scratchpad_ptrs (DMA)
   strxi   x6, x9, #0x0                            // [dcbaa] = scratchpad_ptrs (DMA)
 

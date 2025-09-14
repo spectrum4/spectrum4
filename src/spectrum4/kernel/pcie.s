@@ -1250,6 +1250,8 @@ vl805_reset_req_end:
 xhci_vars:
 xhci_event_dequeue: .space 8                      // keep together!!!
 xhci_event_ccs: .space 8                          // since loaded and stored with ldp/stp!!!
+xhci_transfer_keyboard_EP0_dequeue: .space 8
+xhci_transfer_keyboard_EP1_dequeue: .space 8
 # xhci_mmio: .space 8                             // = 0x600000000 (pcie base = xhci base) (capability registers)
 # xhci_mmio_op: .space 8                          // operational registers address
 # xhci_mmio_db: .space 8                          // doorbell registers address

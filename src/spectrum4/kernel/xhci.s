@@ -259,14 +259,16 @@ command_completion_event:
   mov     w18, #0x4
   strwi   w16, x17, #0x0
   strwi   w18, x17, #0x4                          // dcbaa[slotID] = keyboard_device_context (DMA)
-  mov     w19, #0x3
-  strwi   w19, x16, #(keyboard_input_context + 0x4 - keyboard_device_context)
-                                                  // A0 = 1, A1 = 1 (Input Control Context)
-  mov     w20, #0x08300000                        // Slot Context; Context Entries=0b00001, Hub=0b0, MTT=0b0, RsvdZ=0b0, Speed=0b0011, Route String=0b00000000000000000000
-
-  mov     w21, #0x00010000                        // Number of Ports = 0b00000000, Root Hub Port Number = 0b00000001, Max Exit Latency = 0b0000000000000000
-  strwi   w20, x16, (keyboard_input_context + 0x20 - keyboard_device_context)
-  strwi   w21, x16, (keyboard_input_context + 0x24 - keyboard_device_context)
+  adrp    x17, keyboard_input_context_address_device
+  add     x17, x17, :lo12:keyboard_input_context_address_device
+  adrp    x1, command_ring                        // x1 = command_ring (virtual)
+  mov     w2, (11 << 10) | 1                      // TRB Type = 11, BSR = 0 (Address Device: see page 511 of xHCI spec)
+  orr     w2, w2, 0x01000000                      // Slot 1
+  strwi   w17, x1, #0x10
+  strwi   w18, x1, #0x14
+  strwi   wzr, x1, #0x18
+  strwi   w2, x1, #0x1c
+  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
 
   b       2b
 
@@ -293,9 +295,9 @@ msg_unknown_event:
 
 
 .data
-.align 6
 
 # USB Keyboard Input Context (Address Device Command)
+.align 6
 keyboard_input_context_address_device:
 # Input Control Context
 .word 0x00000000
@@ -309,6 +311,12 @@ keyboard_input_context_address_device:
 # Slot Context
 .word 0x08300000                                  // 0b00001 0 0 0 0011 00000000000000000000
 .word 0x00010000                                  // 0b00000000 00000001 0000000000000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
                                                   // Context Entries = 1
                                                   // Hub = 0
                                                   // MTT (Multiple TT support) = 0 (disabled)
@@ -319,8 +327,11 @@ keyboard_input_context_address_device:
 # Endpoint Context
 .word 0x00000000                                  // 0b00000000 00000000 0 00000 00 00000 000
 .word 0x00400026                                  // 0b0000000001000000 00000000 0 0 100 11 0
-.dword (transfer_ring_keyboard_EP0 + 0x1)         // 0b<transfer ring address> 000 1
+.dword (transfer_ring_keyboard_EP0-0xfffffff000000000+0x400000000+0x1)
 .word 0x00000008                                  // 0b0000000000000000 0000000000001000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
 
                                                   // EP State = 0 (Disabled)
                                                   // Mult = 0

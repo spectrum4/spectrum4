@@ -199,7 +199,6 @@ consume_xhci_events:
 
     cmp     x16, #33
     b.eq    command_completion_event
-
     b       unknown_event
 
 2:
@@ -260,10 +259,9 @@ command_completion_event:
   adr     x0, msg_command_completion_event
   bl      uart_puts
 .endif
-  // first pass, assume this is the Enable Slot command - later add logic to determine command
   adrp    x16, command_ring
-  cmp     w16, w13
-  b.ne    3f
+  cmp     w13, w16                                // is the event for the Enable Slot command?
+  b.ne    4f                                      // if not, skip ahead
   lsr     x16, x11, #56                           // x16 = Slot ID (from bits 56-63 of x11)
   adrp    x17, dcbaa                              // x17 = dcbaa (virtual)
   add     x17, x17, x16, lsl #3                   // x17 = dcbaa[slotID]
@@ -281,14 +279,7 @@ command_completion_event:
   strwi   wzr, x1, #0x18
   strwi   w2, x1, #0x1c
   strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
-3:
-.if DEMO_INCLUDE
-  adrp    x0, keyboard_device_context             // conveniently sits at a 4KB page boundary
-  mov     x1, #2
-  mov     x2, #40
-  bl      display_memory
-.endif
-
+4:
   b       2b
 
 
@@ -312,13 +303,16 @@ msg_unknown_event:
 .endif
 
 
-
 .data
 
 # USB Keyboard Input Context (Address Device Command)
+# https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+# Section 6.2.5 (page 459)
 .align 6
 keyboard_input_context_address_device:
 # Input Control Context
+# https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+# Section 6.2.5.1 (page 461)
 .word 0x00000000
 .word 0x00000003                                  // A0=1, A1=1
 .word 0x00000000
@@ -328,6 +322,8 @@ keyboard_input_context_address_device:
 .word 0x00000000
 .word 0x00000000
 # Slot Context
+# https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+# Section 6.2.2 (page 444)
 .word 0x08300000                                  // 0b00001 0 0 0 0011 00000000000000000000
 .word 0x00010000                                  // 0b00000000 00000001 0000000000000000
 .word 0x00000000
@@ -344,7 +340,8 @@ keyboard_input_context_address_device:
                                                   // Number of Ports = 0
                                                   // Root Hub Port Number = 1
 # Endpoint Context
-# See page 450
+# https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+# Section 6.2.3 (page 449)
 .word 0x00000000                                  // 0b00000000 00000000 0 00000 00 00000 000; Max ESIT Payload Hi = 0; Interval = 0; LSA = 0; MaxPStreams = 0; Mult = 0; RsvdZ = 0; EP State = 0
 .word 0x00400026                                  // 0b0000000001000000 00000000 0 0 100 11 0; Max Packet Size = 64; Max Burst Size = 0; HID = 0; RsvdZ = 0; EP Type = 4; CErr = 3; RsvdZ = 0
 .dword (transfer_ring_keyboard_EP0-0xfffffff000000000+0x400000000+0x1)

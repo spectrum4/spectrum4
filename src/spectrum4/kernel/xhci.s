@@ -308,7 +308,8 @@ msg_unknown_event:
 # USB Keyboard Input Context (Address Device Command)
 # https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 # Section 6.2.5 (page 459)
-.align 6
+# .align 6
+.align 12
 keyboard_input_context_address_device:
 # Input Control Context
 # https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
@@ -364,3 +365,4 @@ keyboard_input_context_address_device:
                                                   // Max Packet Size = 64 bytes
                                                   // DCS = 1; Dequeue Cycle State (initially 1, alternates each time we loop around ring)
                                                   // TR Dequeue Pointer = DMA address (transfer_ring_keyboard_EP0)
+.align 12, 0

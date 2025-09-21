@@ -399,7 +399,9 @@ scratchpad_ptrs: .space 31 * 0x8                  // 31 entries
 
 .align 12
 command_ring:    .space 0x100 * 0x10              // 256 entries
+.align 12
 transfer_ring_keyboard_EP0: .space 0x20 * 0x10    // 32 entries
+.align 12
 transfer_ring_keyboard_EP1: .space 0x20 * 0x10    // 32 entries
 
 .align 12

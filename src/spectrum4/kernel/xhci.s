@@ -35,7 +35,16 @@
 #                                                1: 64-bit Addressing Capability77 (AC64)
 # 0x14: XHCI_REG_CAP_DBOFF        0x00000100 => Doorbell Array Offset = 0x100 (i.e. 0x600000100)
 # 0x18: XHCI_REG_CAP_RTSOFF       0x00000200 => Runtime Register Space Offset (i.e. 0x600000200)
-# 0x1c: XHCI_REG_CAP_HCCPARAMS2   0x00000000 =>
+# 0x1c: XHCI_REG_CAP_HCCPARAMS2   0x00000000 0b  0: U3C U3 Entry Capbility not supported (Port Suspend Complete notification not supported)
+#                                                0: CMC Configure Endpoint Command Max Exit Latency Too Large Capability
+#                                                0: FSC
+#                                                0: CTC
+#                                                0: LEC
+#                                                0: CIC
+#                                                0: ETC
+#                                                0: ETC_TSC
+#                                                0: GSC
+#                                                0: VTC
 
 
 
@@ -252,6 +261,9 @@ command_completion_event:
   bl      uart_puts
 .endif
   // first pass, assume this is the Enable Slot command - later add logic to determine command
+  adrp    x16, command_ring
+  cmp     w16, w13
+  b.ne    3f
   lsr     x16, x11, #56                           // x16 = Slot ID (from bits 56-63 of x11)
   adrp    x17, dcbaa                              // x17 = dcbaa (virtual)
   add     x17, x17, x16, lsl #3                   // x17 = dcbaa[slotID]
@@ -269,6 +281,13 @@ command_completion_event:
   strwi   wzr, x1, #0x18
   strwi   w2, x1, #0x1c
   strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
+3:
+.if DEMO_INCLUDE
+  adrp    x0, keyboard_device_context             // conveniently sits at a 4KB page boundary
+  mov     x1, #2
+  mov     x2, #40
+  bl      display_memory
+.endif
 
   b       2b
 
@@ -325,24 +344,26 @@ keyboard_input_context_address_device:
                                                   // Number of Ports = 0
                                                   // Root Hub Port Number = 1
 # Endpoint Context
-.word 0x00000000                                  // 0b00000000 00000000 0 00000 00 00000 000
-.word 0x00400026                                  // 0b0000000001000000 00000000 0 0 100 11 0
+# See page 450
+.word 0x00000000                                  // 0b00000000 00000000 0 00000 00 00000 000; Max ESIT Payload Hi = 0; Interval = 0; LSA = 0; MaxPStreams = 0; Mult = 0; RsvdZ = 0; EP State = 0
+.word 0x00400026                                  // 0b0000000001000000 00000000 0 0 100 11 0; Max Packet Size = 64; Max Burst Size = 0; HID = 0; RsvdZ = 0; EP Type = 4; CErr = 3; RsvdZ = 0
 .dword (transfer_ring_keyboard_EP0-0xfffffff000000000+0x400000000+0x1)
-.word 0x00000008                                  // 0b0000000000000000 0000000000001000
+                                                  // TR Dequeue Pointer = DMA(transfer_ring_keyboard_EP0); RsvdZ = 0; DCS = 1
+.word 0x00000008                                  // 0b0000000000000000 0000000000001000; Max ESIT Payload Lo = 0; Average TB Length = 8
 .word 0x00000000
 .word 0x00000000
 .word 0x00000000
 
-                                                  // EP State = 0 (Disabled)
-                                                  // Mult = 0
-                                                  // MaxPStreams = 0
-                                                  // LSA = 0
-                                                  // Interval = 11 (=> 256 ms)
-                                                  // Max ESIT Payload = 1
-                                                  // CErr = 3
-                                                  // EP Type = 7
-                                                  // HID = 0
-                                                  // Max Burst Size = 0
-                                                  // Max Packet Size = 1
-                                                  // DCS = 1
-                                                  // TR Dequeue Pointer = 0x400623900
+                                                  // EP State = 0 (Disabled - required for input contexts)
+                                                  // Mult = 0 (required for non-SS-Isochronous endpoint types)
+                                                  // MaxPStreams = 0; streams not supported => TR Dequeue Pointer is a transfer ring
+                                                  // LSA = 0; RsvdZ since MaxPStreams == 0
+                                                  // Interval = 11 (=> send/receive every 256 ms)
+                                                  // Max ESIT Payload = 0; RsvdZ since LEC == 0
+                                                  // CErr = 3; 3 attempts before giving up on executing a TD
+                                                  // EP Type = 4; Control (bidirectional)
+                                                  // HID = 0; does not apply to non-stream-enabled endpoints
+                                                  // Max Burst Size = 0 => burst size 1 (since encoding is zero-based)
+                                                  // Max Packet Size = 64 bytes
+                                                  // DCS = 1; Dequeue Cycle State (initially 1, alternates each time we loop around ring)
+                                                  // TR Dequeue Pointer = DMA address (transfer_ring_keyboard_EP0)

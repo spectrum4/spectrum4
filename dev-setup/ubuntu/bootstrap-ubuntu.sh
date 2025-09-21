@@ -139,15 +139,16 @@ for tool in as ld readelf objcopy objdump; do
 done
 
 if ${z80_tools_absent} || ${aarch64_tools_absent}; then
-  retry curl -fsSL 'https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz' > binutils-2.41.tar.gz
-  tar xfz binutils-2.41.tar.gz
+  retry curl -fsSL 'https://ftp.gnu.org/gnu/binutils/binutils-2.45.tar.gz' > binutils-2.45.tar.gz
+  tar xfz binutils-2.45.tar.gz
 
   if ${z80_tools_absent}; then
     mkdir binutils-z80-build
     cd binutils-z80-build
-    ../binutils-2.41/configure \
+    ../binutils-2.45/configure \
       --target=z80-unknown-elf \
-      --disable-werror
+      --disable-werror \
+      --with-system-zlib
     make -j4
     make install
     cd ..
@@ -156,8 +157,9 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
   if ${aarch64_tools_absent}; then
     mkdir binutils-aarch64-build
     cd binutils-aarch64-build
-    ../binutils-2.41/configure \
-      --target=aarch64-none-elf
+    ../binutils-2.45/configure \
+      --target=aarch64-none-elf \
+      --with-system-zlib
     make -j4
     make install
     cd ..

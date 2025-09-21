@@ -44,7 +44,10 @@ echo "Preparing installation inside temp directory: '${PREP_DIR}' ..."
 cd "${PREP_DIR}"
 
 # install homebrew
-which brew > /dev/null 2>&1 || bash -c "$(retry curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+if ! which brew > /dev/null 2>&1; then
+  bash -c "$(retry curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+fi
 
 # This may not be needed in general, but I had issues on macOS Big Sur (version
 # 11.6.4) that were resolved by installing GNU make.
@@ -52,6 +55,11 @@ which brew > /dev/null 2>&1 || bash -c "$(retry curl -fsSL https://raw.githubuse
 if ! hash gmake 2> /dev/null; then
   brew install make
 fi
+
+# make sure dirs exist and are writable that are needed later...
+for subdir in lib include bin share; do
+  sudo install -d -o "$(id -un)" -g "$(id -gn)" "/usr/local/${subdir}"
+done
 
 # install libspectrum (needed for building tape2wav and fuse)
 if ! hash fuse 2> /dev/null || ! hash tape2wav 2> /dev/null; then
@@ -100,7 +108,8 @@ if ! hash fuse 2> /dev/null || ! hash tape2wav 2> /dev/null; then
   cd libspectrum
   git checkout e85c934f585cb8caff5eeab55899617b606abfeb
   ./autogen.sh
-  ./configure
+  brew install glib pkg-config
+  PKG_CONFIG_PATH="$(brew --prefix glib)/lib/pkgconfig" ./configure
   gmake -j4
   sudo gmake install
   cd ..
@@ -175,23 +184,16 @@ done
 
 if ${z80_tools_absent} || ${aarch64_tools_absent}; then
 
-  # This makeinfo hack avoids needing to install makeinfo 6.8 or higher for binutils 2.41.
-  # See:
-  #   * https://sourceware.org/bugzilla/show_bug.cgi?id=30703#c16
-  TEMP_BIN_DIR="${PREP_DIR}/temp-bin-dir"
-  mkdir -p "${TEMP_BIN_DIR}"
-  PATH="${TEMP_BIN_DIR}:${PATH}"
-  ln -s /usr/bin/true "${TEMP_BIN_DIR}/makeinfo"
-
-  retry curl -fsSL 'https://ftp.gnu.org/gnu/binutils/binutils-2.41.tar.gz' > binutils-2.41.tar.gz
-  tar xfz binutils-2.41.tar.gz
+  retry curl -fsSL 'https://mirrors.dotsrc.org/gnu/binutils/binutils-2.45.tar.gz' > binutils-2.45.tar.gz
+  tar xfz binutils-2.45.tar.gz
 
   if ${z80_tools_absent}; then
     mkdir binutils-z80-build
     cd binutils-z80-build
-    ../binutils-2.41/configure \
+    ../binutils-2.45/configure \
       --target=z80-unknown-elf \
-      --disable-werror
+      --disable-werror \
+      --with-system-zlib
     gmake -j4
     sudo gmake install
     cd ..
@@ -200,8 +202,9 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
   if ${aarch64_tools_absent}; then
     mkdir binutils-aarch64-build
     cd binutils-aarch64-build
-    ../binutils-2.41/configure \
-      --target=aarch64-none-elf
+    ../binutils-2.45/configure \
+      --target=aarch64-none-elf \
+      --with-system-zlib
     gmake -j4
     sudo gmake install
     cd ..

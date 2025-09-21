@@ -910,33 +910,9 @@ pcie_init_bcm2711:
   ldrhi   w1, x0, #0x2                            // w1 = [XHCI_REG_CAP_HCIVERSION]
   strhi   w1, x7, #0x2c                           // store [XHCI_REG_CAP_HCIVERSION] on heap (should be 0x0110)
 
-  // init spectrum4 MMIO data structure
-# adr     x2, xhci_vars
-# str     x0, [x2], #8                            // [xhci_mmio] = 0x600000000 (pcie base)
-# ldrbi   w1, x0, #0x0                            // w1 = capabilities length
-# add     x1, x1, x0                              // x1 = address of first byte after capabilities = op base
-# str     x1, [x2], #8                            // [xhci_mmio_op] = 0x600000000 + [0x600000000]
-# ldrwi   w3, x0, #0x14                           // w3 = [XHCI_REG_CAP_DBOFF]
-# and     w3, w3, 0xfffffffc
-# add     x3, x3, x0
-# str     x3, [x2], #8                            // [xhci_mmio_db] = 0x600000000 + ([0x600000014] && 0xfffffffc)
-# ldrwi   w3, x0, #0x18                           // w3 = [XHCI_REG_CAP_RTSOFF]
-# and     w3, w3, 0xffffffe0
-# add     x3, x3, x0
-# str     x3, [x2], #8                            // [xhci_mmio_rt] = 0x600000000 + ([0x600000018] && 0xffffffe0)
-# add     x3, x1, #0x400                          // x3 = op base + 0x400
-# str     x3, [x2], #8                            // [xhci_mmio_pt] = 0x600000400 + ([0x600000000])
-# ldrwi   w3, x0, #0x4                            // w3 = [XHCI_REG_CAP_HCSPARAMS1]
-# ldrwi   w4, x0, #0x8                            // w4 = [XHCI_REG_CAP_HCSPARAMS2]
-# ldrwi   w6, x0, #0xc                            // w6 = [XHCI_REG_CAP_HCSPARAMS3]
-# ldrwi   w9, x0, #0x10                           // w9 = [XHCI_REG_CAP_HCSPARAMS]
-# stp     w3, w4, [x2], #8                        // update lower 64 bits of [xhci_cap_cache]
-# stp     w6, w9, [x2], #8                        // update upper 64 bits of [xhci_cap_cache]
-# and     w9, w9, #0xffff0000
-# add     x9, x0, x9, lsr #14                     // x9 = 0x600000000 + (([0x600000010] & 0xffff0000) << 14) = extended capabilities address
-# str     x9, [x2], #8                            // [xhci_mmio_ec] = extended capabilities address
-
   // reset the Host Controller
+  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+  // Section 4.2 (page 80): Host Controller Initialization
   // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 1)
   // TODO: should probably have a timeout here
   6:

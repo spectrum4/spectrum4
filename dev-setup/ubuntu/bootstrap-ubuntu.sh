@@ -51,11 +51,9 @@ cd "${PREP_DIR}"
 case "$(uname -m)" in
   x86_64)
     ARCH=amd64
-    ARCH2=amd64
     ;;
   aarch64)
-    ARCH=arm64
-    ARCH2=aarch64
+    ARCH=aarch64
     ;;
   *)
     echo "Unsupported architecture '$(uname -m)' - currently docker/bootstrap.sh only supports architectures x86_64 and aarch64" >&2
@@ -97,7 +95,7 @@ retry apt-get upgrade -y
 retry apt-get install -y autoconf bison bsdmainutils build-essential flex fuse-emulator-utils fuse3 git golang-go libfuse3-dev libglib2.0 libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libpcre3-dev libtool qemu-system-arm texinfo unzip wget xz-utils zlib1g-dev
 
 if ! hash curl 2> /dev/null; then
-  retry wget -O /usr/local/bin/curl "https://github.com/moparisthebest/static-curl/releases/download/v7.84.0/curl-${ARCH2}"
+  retry wget -O /usr/local/bin/curl "https://github.com/moparisthebest/static-curl/releases/download/v7.84.0/curl-${ARCH}"
   chmod a+x /usr/local/bin/curl
 fi
 
@@ -117,6 +115,7 @@ if ! hash fuse 2> /dev/null; then
   ./configure
   gmake -j4
   gmake install
+  ldconfig
   cd ..
 
   # fuse
@@ -139,7 +138,7 @@ for tool in as ld readelf objcopy objdump; do
 done
 
 if ${z80_tools_absent} || ${aarch64_tools_absent}; then
-  retry curl -fsSL 'https://ftp.gnu.org/gnu/binutils/binutils-2.45.tar.gz' > binutils-2.45.tar.gz
+  retry curl -fsSL 'https://sourceware.org/pub/binutils/releases/binutils-2.45.tar.gz' > binutils-2.45.tar.gz
   tar xfz binutils-2.45.tar.gz
 
   if ${z80_tools_absent}; then
@@ -167,9 +166,9 @@ if ${z80_tools_absent} || ${aarch64_tools_absent}; then
 fi
 
 if ! hash aarch64-none-elf-gdb 2> /dev/null; then
-  retry curl -fsSL 'https://ftp.gnu.org/gnu/gdb/gdb-16.1.tar.gz' > gdb-16.1.tar.gz
-  tar zvfx gdb-16.1.tar.gz
-  cd gdb-16.1
+  retry curl -fsSL 'https://sourceware.org/pub/gdb/releases/gdb-16.3.tar.gz' > gdb-16.3.tar.gz
+  tar zvfx gdb-16.3.tar.gz
+  cd gdb-16.3
   ./configure --target=aarch64-none-elf
   make -j4
   make install
@@ -188,13 +187,17 @@ if ! hash tup 2> /dev/null; then
   # sufficient.
   CFLAGS="-g" ./build.sh
   mv build/tup /usr/local/bin
-  cat << EOF | sed 's/^    //' | sudo tee /etc/apparmor.d/tup > /dev/null
-    abi <abi/4.0>,
+  # only if apparmor installed (e.g. apparmor not installed in ubuntu:latest)
+  if [ -d /etc/apparmor.d ]; then
+    cat << EOF | sed 's/^      //' | tee /etc/apparmor.d/tup > /dev/null
+      abi <abi/4.0>,
 
-    profile tup /usr/local/bin/tup flags=(unconfined) {
-      userns,
-    }
+      profile tup /usr/local/bin/tup flags=(unconfined) {
+        userns,
+      }
 EOF
+    systemctl reload apparmor
+  fi
   cd ..
 fi
 

@@ -97,7 +97,10 @@
 # 600000460 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
 # Port 1:    0x400202e1 = 0b0100 0000 0000 0010 0000 0010 1110 0001
-#                   e03 =                            1110 0000 0011
+#            0x400002e1 = 0b0100 0000 0000 0000 0000 0010 1110 0001 (CSC)
+#            0x40200e03 = 0b0100 0000 0010 0000 0000 1110 0000 0011 (PED, PLS, Port Speed, PRC)
+#            0x40000e03 = 0b0100 0000 0000 0000 0000 1110 0000 0011 (PRC)
+#
 #    0: Current Connect Status (CCS)        - ROS = 1 => Device Connected
 #    1: Port Enabled/Disabled (PED)         - RW1CS = 0 => Port Disabled              / 1 => Port Enabled
 #    2: RsvdZ = 0
@@ -232,6 +235,7 @@ port_status_change_event:
   ubfx    w19, w18, #1, #1                        // w19 = bit 1 of w18 = PED (port enabled)
   eor     w19, w19, #1                            // invert w19 bit 0 i.e. 0 if port enabled, 1 if port disabled
   bfi     w18, w19, #4, #1                        // PR (port reset) = 0 if port enabled, 1 if port disabled
+  and     w18, w18, #~0x2                         // Don't set bit 1 (PED) since this would disable port
   strwi   w18, x17, #0x410                        // write value back to clear RW1CS changes, potentially reset port
   tbnz    w19, #0, 2b                             // if resetting port, return and wait for next port status change
 

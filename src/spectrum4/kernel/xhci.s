@@ -99,13 +99,13 @@
 # Port 1:    0x400202e1 = 0b0100 0000 0000 0010 0000 0010 1110 0001
 #                   e03 =                            1110 0000 0011
 #    0: Current Connect Status (CCS)        - ROS = 1 => Device Connected
-#    1: Port Enabled/Disabled (PED)         - RW1CS = 0 => Port Disabled
+#    1: Port Enabled/Disabled (PED)         - RW1CS = 0 => Port Disabled              / 1 => Port Enabled
 #    2: RsvdZ = 0
 #    3: Over-current Active (OCA)           - RO = 0 => Port does not have over-current condition
 #    4: Port Reset (PR)                     - RW1S = 0 => Port is not in reset
-#    8:5: Port Link State (PLS)             - RWS = 7 => Port is in the Polling State
+#    8:5: Port Link State (PLS)             - RWS = 7 => Link is in the Polling State / 0 => Link is in the U0 State
 #    9: Port Power (PP)                     - RWS = 1 => Port is not powered off (I believe - need to check HCCPARAMS1.PPC to be sure)
-#    13:10: Port Speed (Port Speed)         - ROS = 0 => Port Speed is undefined speed
+#    13:10: Port Speed (Port Speed)         - ROS = 0 => Port Speed is undefined speed / 3 => Port Speed is 3 (High Speed??)
 #    15:14: Port Indicator Control (PIC)    - RWS = 0 => Port indicators are off
 #    16: Port Link State Write Strobe (LWS) - RW = 0
 #    17: Connect Status Change (CSC)        - RW1CS = 0

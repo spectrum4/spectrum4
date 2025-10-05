@@ -931,11 +931,9 @@ pcie_init_bcm2711:
     ldrwi   w3, x0, #0x20                         // w3 = [USBCMD]
     tbnz    w3, #0x1, 7b                          // loop while HCRST != 0
 
-  // wait until (USBSTS.CNR == 0)
-  // TODO: should probably have a timeout here
-  8:
-    ldrwi   w3, x0, #0x24                         // w3 = USBSTS
-    tbnz    w3, #11, 8b                           // loop while CNR != 0
+  ldrwi   w3, x0, #0x24                           // w3 = USBSTS
+  log     'E'
+  tbnz    w3, #11, sleep                          // give up if CNR != 0
 
   adrp    x1, xhci_start
   adrp    x2, xhci_end
@@ -1020,13 +1018,15 @@ pcie_init_bcm2711:
 
   // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
   ldrwi   w3, x0, #0x20                           // w3 = [USBCMD]
-  orr     w3, w3, #0x1                            // set bit 0 (RUN_STOP)
   orr     w3, w3, #0x4                            // set bit 2 (INTE)
   strwi   w3, x0, #0x20
+  orr     w3, w3, #0x1                            // set bit 0 (RUN_STOP)
+  strwi   w3, x0, #0x20
 
-  11:
-    ldrwi   w3, x0, #0x24                         // w3 = USBSTS
-    tbnz    w3, #0, 11b                           // loop while HCHalted != 0
+  log     'C'
+  ldrwi   w3, x0, #0x24                           // w3 = USBSTS
+  tbnz    w3, #0, sleep                           // give up if HCHalted != 0
+  log     'D'
 
   // Test - try to write to MSI address directly to trigger interrupt...
   // If my maths isn't totally off, this should be the MSI target address as a CPU virtual address, and it should be mapped.

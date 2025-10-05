@@ -288,6 +288,7 @@ command_completion_event:
 
   // Create a GET_DESCRIPTOR request
   // Setup Stage
+  // xHCI spec page 468
   adrp    x0, transfer_ring_keyboard_EP0
   add     x0, x0, :lo12:transfer_ring_keyboard_EP0
   ldr     x1, =0x0008000001000680                 // 0b0000000000001000 0000000000000000 0000000100000000 00000110 10000000
@@ -302,26 +303,30 @@ command_completion_event:
                                                   // bRequest 0x6 => GET_DESCRIPTOR (page 251 and sectio 9.4.3 on page 253 of USB 2.0 spec)
                                                   // bmRequestType 128 (0x80) => device to host, standard type, device recipient (page 248 of USB 2.0 spec)
 
-  ldr     x2, =0x0000000800030841                 // 0b0000000000 00000 00000000000001000 00000000000000 11 000010 000 1 0 0000 1
-                                                  // interruptor target = 0
-                                                  // TRB Transfer Length = 8. Always 8 according to xHCI spec page 469.
+  ldr     x2, =0x0003084100000008                 // 0b00000000000000 11 000010 000 1 0 0000 1 0000000000 00000 00000000000001000
+                                                  // RsvdZ
                                                   // TRT (Transfer Type) = 3 (IN data stage) (p469 xHCI spec)
                                                   // TRB Type = 2 (Setup Stage) (p511 xHCI)
+                                                  // RsvdZ
                                                   // IDT = 1 (required for setup stage - p469 xHCI spec)
                                                   // IOC = 0 (interrupt on completion not enabled - only needed on last TRB)
+                                                  // RsvdZ
                                                   // C = 1 => cycle bit 1
+                                                  // Interruptor Target = 0
+                                                  // RsvdZ
+                                                  // TRB Transfer Length = 8. Always 8 according to xHCI spec page 469.
   stp     x1, x2, [x0]
 
   // Data Stage
+  // xHCI spec page 470
   adrp    x3, keyboard_descriptor
   add     x3, x3, :lo12:keyboard_descriptor       // Physical address of data buffer for keyboard descriptor
 
-  ldr     x4, = 0x0000000800010c01                // 0b0000000000 00000 00000000000001000 000000000000000 1 000011 000 0 0 0 0 0 0 1
-                                                  // interruptor target = 0
-                                                  // TD size = 0. The spec is very complicated here, and I don't understand it. xHCI spec page 218.
-                                                  // TRB transfer length = 8 bytes. Looks like the host is free to set this to preferred value? p470.
+  ldr     x4, = 0x00010c0100000008                // 0b000000000000000 1 000011 000 0 0 0 0 0 0 1 0000000000 00000 00000000000001000
+                                                  // RsvdZ
                                                   // DIR = 1. IN direction. p471.
                                                   // TRB Type = 3 (Data stage) (p511)
+                                                  // RsvdZ
                                                   // IDT = 0 (immediate data: false, i.e. data is referenced via pointer)
                                                   // IOC = 0 (no interrupt on completion - only needed on last TRB)
                                                   // CH = 0 (end of chain, i.e. DATA STAGE is a single TRB)
@@ -329,6 +334,9 @@ command_completion_event:
                                                   // ISP = 0 (interrupt on short packet disabled)
                                                   // ENT = 0 (evaluate next TRB disabled - see page 250, also not allowed since chain bit = 0)
                                                   // C = 1 (cycle bit)
+                                                  // Interruptor Target = 0
+                                                  // TD size = 0. The spec is very complicated here, and I don't understand it. xHCI spec page 218.
+                                                  // TRB transfer length = 8 bytes. Looks like the host is free to set this to preferred value? p470.
   stp     w3, w18, [x0, #0x10]
   str     x4, [x0, #0x18]
 
@@ -338,9 +346,7 @@ command_completion_event:
                                                   // 0b00000000000000000000000000000000 00000000000000000000000000000000
                                                   // RsvdZ
                                                   // RsvdZ
-  mov     w5, #0x1021                             // 0b0000000000 0000000000000000000000 000000000000000 0 000100 0000 1 0 00 0 1
-                                                  // Interruptor target = 0
-                                                  // RsvdZ
+  mov     x5, #0x0000102100000000                 // 0b000000000000000 0 000100 0000 1 0 00 0 1 0000000000 0000000000000000000000
                                                   // RsvdZ
                                                   // DIR = 0
                                                   // TRB Type = 4 (Status Stage) (p511)
@@ -350,9 +356,12 @@ command_completion_event:
                                                   // RsvdZ
                                                   // ENT = 0
                                                   // C = 1
+                                                  // Interruptor target = 0
+                                                  // RsvdZ
   stp     xzr, x5, [x0, #0x20]
   mov     w6, #0x1                                // Control EP0 Enqueue Pointer Update (page 431 xHCI spec)
-  str     w6, [x15, x16, lsl #2]                  // ring doorbell of device slot in w16
+  add     x16, x15, x16, lsl #2                   // x16 = 0x100 less than address of doorbell for slot number stored in x16
+  strwi   w6, x16, #0x100                         // ring doorbell of device slot in w16
 
   b       2b
 

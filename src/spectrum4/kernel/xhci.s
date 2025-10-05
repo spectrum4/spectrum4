@@ -263,14 +263,14 @@ command_completion_event:
   adr     x0, msg_command_completion_event
   bl      uart_puts
 .endif
+  mov     w18, #0x4
   adrp    x16, command_ring
   cmp     w13, w16                                // is the event for the Enable Slot command?
-  b.ne    4f                                      // if not, skip ahead
   lsr     x16, x11, #56                           // x16 = Slot ID (from bits 56-63 of x11)
+  b.ne    4f                                      // if not, skip ahead
   adrp    x17, dcbaa                              // x17 = dcbaa (virtual)
   add     x17, x17, x16, lsl #3                   // x17 = dcbaa[slotID]
   adrp    x16, keyboard_device_context            // conveniently sits at a 4KB page boundary
-  mov     w18, #0x4
   strwi   w16, x17, #0x0
   strwi   w18, x17, #0x4                          // dcbaa[slotID] = keyboard_device_context (DMA)
   adrp    x17, keyboard_input_context_address_device
@@ -285,6 +285,74 @@ command_completion_event:
   strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
 4:
   // for now assume the event was for the Address Device command
+
+  // Create a GET_DESCRIPTOR request
+  // Setup Stage
+  adrp    x0, transfer_ring_keyboard_EP0
+  add     x0, x0, :lo12:transfer_ring_keyboard_EP0
+  ldr     x1, =0x0008000001000680                 // 0b0000000000001000 0000000000000000 0000000100000000 00000110 10000000
+                                                  // wLength = 8 => descriptor length 8 bytes (duplicate of TRB transfer length in DATA STAGE?)
+                                                  // wIndex = 0 => Zero or Language ID
+                                                  // wValue 0x100 (256) => Descriptor Type 1 (DEVICE - page 251 of USB 2.0 spec) and Descriptor Index 0.
+                                                  //   The descriptor index is used to select a specific descriptor (only for configuration and
+                                                  //   string descriptors) when several descriptors of the same type are implemented in a device. For example, a
+                                                  //   device can implement several configuration descriptors. For other standard descriptors that can be retrieved
+                                                  //   via a GetDescriptor() request, a descriptor index of zero must be used. The range of values used for a
+                                                  //   descriptor index is from 0 to one less than the number of descriptors of that type implemented by the device.
+                                                  // bRequest 0x6 => GET_DESCRIPTOR (page 251 and sectio 9.4.3 on page 253 of USB 2.0 spec)
+                                                  // bmRequestType 128 (0x80) => device to host, standard type, device recipient (page 248 of USB 2.0 spec)
+
+  ldr     x2, =0x0000000800030841                 // 0b0000000000 00000 00000000000001000 00000000000000 11 000010 000 1 0 0000 1
+                                                  // interruptor target = 0
+                                                  // TRB Transfer Length = 8. Always 8 according to xHCI spec page 469.
+                                                  // TRT (Transfer Type) = 3 (IN data stage) (p469 xHCI spec)
+                                                  // TRB Type = 2 (Setup Stage) (p511 xHCI)
+                                                  // IDT = 1 (required for setup stage - p469 xHCI spec)
+                                                  // IOC = 0 (interrupt on completion not enabled - only needed on last TRB)
+                                                  // C = 1 => cycle bit 1
+  stp     x1, x2, [x0]
+
+  // Data Stage
+  adrp    x3, keyboard_descriptor
+  add     x3, x3, :lo12:keyboard_descriptor       // Physical address of data buffer for keyboard descriptor
+
+  ldr     x4, = 0x0000000800010c01                // 0b0000000000 00000 00000000000001000 000000000000000 1 000011 000 0 0 0 0 0 0 1
+                                                  // interruptor target = 0
+                                                  // TD size = 0. The spec is very complicated here, and I don't understand it. xHCI spec page 218.
+                                                  // TRB transfer length = 8 bytes. Looks like the host is free to set this to preferred value? p470.
+                                                  // DIR = 1. IN direction. p471.
+                                                  // TRB Type = 3 (Data stage) (p511)
+                                                  // IDT = 0 (immediate data: false, i.e. data is referenced via pointer)
+                                                  // IOC = 0 (no interrupt on completion - only needed on last TRB)
+                                                  // CH = 0 (end of chain, i.e. DATA STAGE is a single TRB)
+                                                  // NS = 0 (no snoop - don't understand - see https://linux-usb.vger.kernel.narkive.com/2ODz0UCV/why-use-pci-express-no-snoop-option-for-xhci)
+                                                  // ISP = 0 (interrupt on short packet disabled)
+                                                  // ENT = 0 (evaluate next TRB disabled - see page 250, also not allowed since chain bit = 0)
+                                                  // C = 1 (cycle bit)
+  stp     w3, w18, [x0, #0x10]
+  str     x4, [x0, #0x18]
+
+
+  // Status Stage
+  // xHCI spec page 472
+                                                  // 0b00000000000000000000000000000000 00000000000000000000000000000000
+                                                  // RsvdZ
+                                                  // RsvdZ
+  mov     w5, #0x1021                             // 0b0000000000 0000000000000000000000 000000000000000 0 000100 0000 1 0 00 0 1
+                                                  // Interruptor target = 0
+                                                  // RsvdZ
+                                                  // RsvdZ
+                                                  // DIR = 0
+                                                  // TRB Type = 4 (Status Stage) (p511)
+                                                  // RsvdZ
+                                                  // IOC = 1 (interrupt on completion)
+                                                  // CH = 0 (last TRB of TD)
+                                                  // RsvdZ
+                                                  // ENT = 0
+                                                  // C = 1
+  stp     xzr, x5, [x0, #0x20]
+  mov     w6, #0x1                                // Control EP0 Enqueue Pointer Update (page 431 xHCI spec)
+  str     w6, [x15, x16, lsl #2]                  // ring doorbell of device slot in w16
 
   b       2b
 
@@ -370,83 +438,3 @@ keyboard_input_context_address_device:
                                                   // Max Packet Size = 64 bytes
                                                   // DCS = 1; Dequeue Cycle State (initially 1, alternates each time we loop around ring)
                                                   // TR Dequeue Pointer = DMA address (transfer_ring_keyboard_EP0)
-
-
-.align 6                                          // TODO: check xhci spec if this alignment is necessary/sufficient
-get_descriptor_keyboard:
-
-# SETUP STAGE
-# xHCI spec page 468
-
-.word 0x01000680                                  // 0b0000000100000000 00000110 10000000
-                                                  // wValue 0x100 (256) => Descriptor Type 1 (DEVICE - page 251 of USB 2.0 spec) and Descriptor Index 0.
-                                                  //   The descriptor index is used to select a specific descriptor (only for configuration and
-                                                  //   string descriptors) when several descriptors of the same type are implemented in a device. For example, a
-                                                  //   device can implement several configuration descriptors. For other standard descriptors that can be retrieved
-                                                  //   via a GetDescriptor() request, a descriptor index of zero must be used. The range of values used for a
-                                                  //   descriptor index is from 0 to one less than the number of descriptors of that type implemented by the device.
-                                                  // bRequest 0x6 => GET_DESCRIPTOR (page 251 and sectio 9.4.3 on page 253 of USB 2.0 spec)
-                                                  // bmRequestType 128 (0x80) => device to host, standard type, device recipient (page 248 of USB 2.0 spec)
-
-.word 0x00080000                                  // 0b0000000000001000 0000000000000000
-                                                  // wLength = 8 => descriptor length 8 bytes (duplicate of TRB transfer length in DATA STAGE?)
-                                                  // wIndex = 0 => Zero or Language ID
-
-.word 0x00000008                                  // 0b0000000000 00000 00000000000001000
-                                                  // interruptor target = 0
-                                                  // TRB Transfer Length = 8. Always 8 according to xHCI spec page 469.
-
-.word 0x00030841                                  // 0b00000000000000 11 000010 000 1 0 0000 1
-                                                  // TRT (Transfer Type) = 3 (IN data stage) (p469 xHCI spec)
-                                                  // TRB Type = 2 (Setup Stage) (p511 xHCI)
-                                                  // IDT = 1 (required for setup stage - p469 xHCI spec)
-                                                  // IOC = 0 (interrupt on completion not enabled - only needed on last TRB)
-                                                  // C = 1 => cycle bit 1
-
-
-# DATA STAGE
-# xHCI spec page 470
-
-.dword (keyboard_descriptor-0xfffffff000000000+0x400000000)
-                                                  // DMA address of data buffer
-
-.word 0x00000008                                  // 0b0000000000 00000 00000000000001000
-                                                  // interruptor target = 0
-                                                  // TD size = 0. The spec is very complicated here, and I don't understand it. xHCI spec page 218.
-                                                  // TRB transfer length = 8 bytes. Looks like the host is free to set this to preferred value? p470.
-
-.word 0x00010c01                                  // 0b000000000000000 1 000011 000 0 0 0 0 0 0 1
-                                                  // DIR = 1. IN direction. p471.
-                                                  // TRB Type = 3 (Data stage) (p511)
-                                                  // IDT = 0 (immediate data: false, i.e. data is referenced via pointer)
-                                                  // IOC = 0 (no interrupt on completion - only needed on last TRB)
-                                                  // CH = 0 (end of chain, i.e. DATA STAGE is a single TRB)
-                                                  // NS = 0 (no snoop - don't understand - see https://linux-usb.vger.kernel.narkive.com/2ODz0UCV/why-use-pci-express-no-snoop-option-for-xhci)
-                                                  // ISP = 0 (interrupt on short packet disabled)
-                                                  // ENT = 0 (evaluate next TRB disabled - see page 250, also not allowed since chain bit = 0)
-                                                  // C = 1 (cycle bit)
-
-
-# STATUS STAGE
-# xHCI spec page 472
-
-.word 0x00000000
-                                                  // RsvdZ
-
-.word 0x00000000
-                                                  // RsvdZ
-
-.word 0x00000000                                  // 0b0000000000 0000000000000000000000
-                                                  // Interruptor target = 0
-                                                  // RsvdZ
-
-.word 0x00001021                                  // 0b000000000000000 0 000100 0000 1 0 00 0 1
-                                                  // RsvdZ
-                                                  // DIR = 0
-                                                  // TRB Type = 4 (Status Stage) (p511)
-                                                  // RsvdZ
-                                                  // IOC = 1 (interrupt on completion)
-                                                  // CH = 0 (last TRB of TD)
-                                                  // RsvdZ
-                                                  // ENT = 0
-                                                  // C = 1

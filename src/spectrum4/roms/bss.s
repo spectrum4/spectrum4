@@ -415,6 +415,7 @@ erst:            .space 0x40                      // only the first 0x10 bytes m
 .align 12                                         // Technically only requires .align 6 but sits at page boundary anyway, and this way
                                                   // adrp can be used.
 keyboard_device_context: .space 0x80              // 1 Slot Context and 3 Endpoint Contexts; EP0, EP1 OUT, EP1 IN (i.e. 4 contexts, each 0x20 bytes = 4 * 0x20 = 0x80 bytes)
+keyboard_descriptor: .space 0x12
 
 .align 12
 xhci_end:

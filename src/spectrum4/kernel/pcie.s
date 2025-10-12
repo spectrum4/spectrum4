@@ -971,18 +971,6 @@ pcie_init_bcm2711:
   adrp    x1, command_ring                        // x1 = command_ring (virtual)
   orr     x1, x1, #1                              // set cycle bit in CRCR (bit 0)
 
-  // must perform 32 bit writes; MMIO region
-  // Command ring dequeue pointer -> first TRB in command ring TRB.
-
-  // Note, it is assumed CRR (bit 3 of physical address 0x600000038) is already
-  // 0, otherwise the below writes to the same address would be ineffective.
-  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-  // Section 4.6.1 (page 104) and Table 5-24 (pages 402, 403)
-  strwi   w1, x0, #0x38                           // [XHCI_REG_OP_CRCR_LO] = lower32(command_ring (virtual)) | 0x1 = lower32(command_ring (DMA)) | 0x1
-  ldrwi   w2, x0, #0x38
-  strwi   w4, x0, #0x3c                           // [XHCI_REG_OP_CRCR_HI] = 4 = upper32(command_ring (DMA))
-  ldrwi   w2, x0, #0x3c
-
   adrp    x2, event_ring                          // x2 = event_ring (virtual)
   adr     x8, xhci_vars
   mov     x9, #(1<<32)                            // bit 32 of x9 stores event ring consumer cycle state, initially set to 1
@@ -1013,6 +1001,16 @@ pcie_init_bcm2711:
   ldrwi   w8, x0, #0x220                          // w8 = [interrupter 0 IMAN]
   orr     w8, w8, #2                              // InterruptEnable (bit 1) = 1
   strwi   w8, x0, #0x220                          // update [interrupter 0 IMAN] setting InterruptEnable (bit 1) = 1
+
+  // must perform 32 bit writes; MMIO region
+  // Command ring dequeue pointer -> first TRB in command ring TRB.
+
+  // Note, it is assumed CRR (bit 3 of physical address 0x600000038) is already
+  // 0, otherwise the below writes to the same address would be ineffective.
+  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
+  // Section 4.6.1 (page 104) and Table 5-24 (pages 402, 403)
+  strwi   w1, x0, #0x38                           // [XHCI_REG_OP_CRCR_LO] = lower32(command_ring (virtual)) | 0x1 = lower32(command_ring (DMA)) | 0x1
+  strwi   w4, x0, #0x3c                           // [XHCI_REG_OP_CRCR_HI] = 4 = upper32(command_ring (DMA))
 
   dsb     sy                                      // not needed if using device memory, but if we switch memory attributes of coherent region to 0x44, we will need this!
 

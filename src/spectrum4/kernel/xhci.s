@@ -175,9 +175,12 @@ consume_xhci_events:
   ldrxi   x10, x12, xhci_event_dequeue-xhci_vars
   ldrxi   x14, x12, xhci_event_ccs-xhci_vars      // x14 = Event Consumer Cycle Status (in bit 32)
   ldr     x15, =(0x600000000 + _start)            // x15 = VL805 USB Host Controller Capability Registers
+  ldrwi   w13, x15, #0x20                         // log USBCMD to see if RUN_STOP (bit 0) is clear or set
 
   // loop through event TRBs
   1:
+    dc      civac, x10                            // invalidate cache for TRB
+    dsb     sy                                    // ensure completion
     ldrxi   x13, x10, #0x0                        // x13 = Event TRB Data Buffer Pointer (or immediate data)
     ldrxi   x11, x10, #0x8                        // x11 = Control (63:32) and Status (31:0)
     eor     x11, x11, x14                         // xor Producer Cycle State with Consumer Cycle State
@@ -253,6 +256,7 @@ port_status_change_event:
 //  strwi   wzr, x1, #0x18
 //  strwi   w9, x1, #0x1c
 
+  dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
   strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
 
   b       2b
@@ -282,7 +286,9 @@ command_completion_event:
   strwi   w18, x1, #0x14
   strwi   wzr, x1, #0x18
   strwi   w2, x1, #0x1c
+  dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
   strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
+  b       2b
 4:
   // for now assume the event was for the Address Device command
 
@@ -361,7 +367,10 @@ command_completion_event:
   stp     xzr, x5, [x0, #0x20]
   mov     w6, #0x1                                // Control EP0 Enqueue Pointer Update (page 431 xHCI spec)
   add     x16, x15, x16, lsl #2                   // x16 = 0x100 less than address of doorbell for slot number stored in x16
+  dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
+  ldrwi   w3, x15, #0x24                          // w3 = USBSTS
   strwi   w6, x16, #0x100                         // ring doorbell of device slot in w16
+  ldrwi   w3, x15, #0x24                          // w3 = USBSTS
 
   b       2b
 

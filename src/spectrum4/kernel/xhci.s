@@ -175,7 +175,10 @@ consume_xhci_events:
   ldrxi   x10, x12, xhci_event_dequeue-xhci_vars
   ldrxi   x14, x12, xhci_event_ccs-xhci_vars      // x14 = Event Consumer Cycle Status (in bit 32)
   ldr     x15, =(0x600000000 + _start)            // x15 = VL805 USB Host Controller Capability Registers
-  ldrwi   w13, x15, #0x20                         // log USBCMD to see if RUN_STOP (bit 0) is clear or set
+  ldrwi   w13, x15, #0x20                         // TODO: remove this, just for debug: log USBCMD to see if RUN_STOP (bit 0) is clear or set
+
+  ldrwi   w3, x15, #0x24                          // Read USBSTS in w3
+  strwi   w3, x15, #0x24                          // Write back (RW1C) to clear bits (EINT, PCD)
 
   // loop through event TRBs
   1:
@@ -292,6 +295,9 @@ command_completion_event:
 4:
   // for now assume the event was for the Address Device command
 
+  sub     w1, w13, w16                            // calculate offset from start of command ring
+  cmp     w1, #0x10                               // is it Address Device command?
+  b.ne    2b                                      // if not, exit (i.e.
   // Create a GET_DESCRIPTOR request
   // Setup Stage
   // xHCI spec page 468
@@ -368,9 +374,9 @@ command_completion_event:
   mov     w6, #0x1                                // Control EP0 Enqueue Pointer Update (page 431 xHCI spec)
   add     x16, x15, x16, lsl #2                   // x16 = 0x100 less than address of doorbell for slot number stored in x16
   dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
-  ldrwi   w3, x15, #0x24                          // w3 = USBSTS
+  ldrwi   w3, x15, #0x24                          // TODO: remove this, just for debug: w3 = USBSTS
   strwi   w6, x16, #0x100                         // ring doorbell of device slot in w16
-  ldrwi   w3, x15, #0x24                          // w3 = USBSTS
+  ldrwi   w3, x15, #0x24                          // TODO: remove this, just for debug: w3 = USBSTS
 
   b       2b
 

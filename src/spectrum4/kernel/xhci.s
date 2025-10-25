@@ -208,7 +208,10 @@ consume_xhci_events:
 
     cmp     x16, #33
     b.eq    command_completion_event
-    b       unknown_event
+.if UART_DEBUG
+    adr     x0, msg_unknown_event
+.endif
+    b       panic
 
 2:
     add     x10, x10, #16                         // Bump x10 to next event TRB entry (potentially overrunning event ring)
@@ -272,9 +275,17 @@ command_completion_event:
 .endif
   mov     w18, #0x4
   adrp    x16, command_ring
-  cmp     w13, w16                                // is the event for the Enable Slot command?
+  subs    w1, w13, w16                            // calculate offset from start of command ring
   lsr     x16, x11, #56                           // x16 = Slot ID (from bits 56-63 of x11)
-  b.ne    4f                                      // if not, skip ahead
+  b.eq    4f                                      // if offset from start of command ring 0 (i.e. first TRB), jump ahead to Enable Slot completion handling
+  cmp     w1, #0x10                               // is it Address Device command?
+  b.eq    5f                                      // if so, jump ahead to Address Device completion handling
+.if UART_DEBUG
+  adr     x0, msg_unknown_command_trb
+.endif
+  b       panic
+4:
+  // Handle Enable Slot command completion
   adrp    x17, dcbaa                              // x17 = dcbaa (virtual)
   add     x17, x17, x16, lsl #3                   // x17 = dcbaa[slotID]
   adrp    x16, keyboard_device_context            // conveniently sits at a 4KB page boundary
@@ -292,12 +303,9 @@ command_completion_event:
   dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
   strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
   b       2b
-4:
-  // for now assume the event was for the Address Device command
+5:
+  // Handle Address Device command completion
 
-  sub     w1, w13, w16                            // calculate offset from start of command ring
-  cmp     w1, #0x10                               // is it Address Device command?
-  b.ne    2b                                      // if not, exit (i.e.
   // Create a GET_DESCRIPTOR request
   // Setup Stage
   // xHCI spec page 468
@@ -381,9 +389,8 @@ command_completion_event:
   b       2b
 
 
-unknown_event:
+panic:
 .if UART_DEBUG
-  adr     x0, msg_unknown_event
   bl      uart_puts
 .endif
   b       sleep
@@ -398,6 +405,8 @@ msg_command_completion_event:
   .asciz "Command Completion Event\r\n"
 msg_unknown_event:
   .asciz "Unknown Event\r\n"
+msg_unknown_command_trb:
+  .asciz "Unknown Command TRB\r\n"
 .endif
 
 

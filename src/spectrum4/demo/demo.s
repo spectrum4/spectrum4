@@ -51,6 +51,9 @@ demo:
   mov     x2, #40
   bl      display_memory
   bl      display_sysvars
+.if PCI_INCLUDE
+  ldr     x0, pcie_init                           // Is PCIe available?
+  cbz     x0, 2f                                  // Skip mapping xHCI region if no PCIe
   ldr     x0, =0xfffffff600000000
   bl      display_page
   adrp    x0, xhci_start
@@ -83,6 +86,8 @@ demo:
   adrp    x4, 0xfd504000 + _start                 // x4 = Broadcom PCIe Set Top Box registers
   ldrwi   w1, x4, #0x500                          // MSI_INT_STATUS
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L125-L127
+.endif
+2:
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

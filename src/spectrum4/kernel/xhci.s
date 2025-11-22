@@ -255,12 +255,15 @@ port_status_change_event:
   strxi   xzr, x1, #0x0
   strwi   wzr, x1, #0x8
   strwi   w2, x1, #0xc
-//  mov     x8, x1
-//  bfi     x8, x4, #32, #32                      // x2 = event_ring (DMA)
-//  strxi   x8, x1, #0x10
-//  mov     w9, (6 << 10) | (1 << 1)              // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
-//  strwi   wzr, x1, #0x18
-//  strwi   w9, x1, #0x1c
+
+  // Ensure link TRB is configured before first doorbell ring, since xHC may read arbitrarily ahead
+  mov     x18, x1
+  mov     w2, #0x4
+  bfi     x18, x2, #32, #32                       // x18 = command_ring (DMA)
+  strxi   x18, x1, #(command_ring_end - command_ring - 0x10)
+  mov     w19, (6 << 10) | (1 << 1)               // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
+  strwi   wzr, x1, #(command_ring_end - command_ring - 0x08)
+  strwi   w19, x1, #(command_ring_end - command_ring - 0x04)
 
   dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
   strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
@@ -379,6 +382,16 @@ command_completion_event:
                                                   // Interruptor target = 0
                                                   // RsvdZ
   stp     xzr, x5, [x0, #0x20]
+
+  // Create Link TRB before ringing doorbell, since xHC may reads ahead past last TRB
+  mov     x18, x0
+  mov     w2, #0x4
+  bfi     x18, x2, #32, #32                       // x18 = transfer ring (DMA)
+  strxi   x18, x0, #(transfer_ring_keyboard_EP0_end - transfer_ring_keyboard_EP0 - 0x10)
+  mov     w19, (6 << 10) | (1 << 1)               // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
+  strwi   wzr, x0, #(transfer_ring_keyboard_EP0_end - transfer_ring_keyboard_EP0 - 0x08)
+  strwi   w19, x0, #(transfer_ring_keyboard_EP0_end - transfer_ring_keyboard_EP0 - 0x04)
+
   mov     w6, #0x1                                // Control EP0 Enqueue Pointer Update (page 431 xHCI spec)
   add     x16, x15, x16, lsl #2                   // x16 = 0x100 less than address of doorbell for slot number stored in x16
   dsb     sy                                      // ensure TRB writes are complete before ringing doorbell

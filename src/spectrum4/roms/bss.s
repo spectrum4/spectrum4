@@ -394,7 +394,7 @@ scratchpad_bufs: .space 31 * 0x1000               // 31 scratchpads
                                                   // we get .align 12 for free allowing us to use adrp without needing extra add :lo12:
 dcbaa:           .space 33 * 0x8                  // 33 entries
 
-.align 4
+.align 6
 scratchpad_ptrs: .space 31 * 0x8                  // 31 entries
 
 .align 12

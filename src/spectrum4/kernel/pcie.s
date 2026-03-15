@@ -932,7 +932,6 @@ pcie_init_bcm2711:
     tbnz    w3, #0x1, 7b                          // loop while HCRST != 0
 
   ldrwi   w3, x0, #0x24                           // w3 = USBSTS
-  log     'E'
   tbnz    w3, #11, sleep                          // give up if CNR != 0
 
   adrp    x1, xhci_start
@@ -1021,10 +1020,8 @@ pcie_init_bcm2711:
   orr     w3, w3, #0x1                            // set bit 0 (RUN_STOP)
   strwi   w3, x0, #0x20
 
-  log     'C'
   ldrwi   w3, x0, #0x24                           // w3 = USBSTS
   tbnz    w3, #0, sleep                           // give up if HCHalted != 0
-  log     'D'
 
   // Test - try to write to MSI address directly to trigger interrupt...
   // If my maths isn't totally off, this should be the MSI target address as a CPU virtual address, and it should be mapped.

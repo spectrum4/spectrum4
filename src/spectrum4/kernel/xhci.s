@@ -208,6 +208,10 @@ consume_xhci_events:
 
     cmp     x16, #33
     b.eq    command_completion_event
+
+    cmp     x16, #32
+    b.eq    transfer_event
+
 .if UART_DEBUG
     adr     x0, msg_unknown_event
 .endif
@@ -401,6 +405,13 @@ command_completion_event:
 
   b       2b
 
+transfer_event:
+.if UART_DEBUG
+  adr     x0, msg_transfer_event
+  bl      uart_puts
+.endif
+  b       2b
+
 
 panic:
 .if UART_DEBUG
@@ -416,6 +427,8 @@ msg_port_status_change_event:
   .asciz "Port Status Change Event\r\n"
 msg_command_completion_event:
   .asciz "Command Completion Event\r\n"
+msg_transfer_event:
+  .asciz "Transfer Event\r\n"
 msg_unknown_event:
   .asciz "Unknown Event\r\n"
 msg_unknown_command_trb:

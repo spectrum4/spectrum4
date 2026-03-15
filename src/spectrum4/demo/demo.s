@@ -88,6 +88,8 @@ demo:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L125-L127
 .endif
 2:
+  adr     x0, msg_demo_completed
+  bl      uart_puts
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -227,3 +229,4 @@ msg_hex_header:                .asciz "           00 01 02 03 04 05 06 07 08 09 
 msg_demo_copyright:                      // L0561
   .byte 0x7f                                      // '(c)'.
   .asciz " 2022 Spectrum +4 Demo Authors"
+msg_demo_completed:            .asciz "Demo completed!"

@@ -4,7 +4,7 @@
 
 .text
 .align 2
-# Print zero byte delimited string stored at memory location x0 to current channel.
+# Print zero byte delimited string stored at memory location x2 to current channel.
 # On entry:
 #   x2 = address of zero byte delimited string
 print_message:                           // L057D

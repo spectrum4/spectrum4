@@ -108,7 +108,7 @@ co_temp_5:                               // L2211
 7:
   orr     w6, w6, w1                              // set bits in MASK_T for ink or paper
   orr     w4, w4, w7                              // set P_FLAG bit 4/6 for INK or PAPER 9
-  mvn     w3, w1                                  // invert w1 (0xfffffff8 for INK 9 or 0xffffffc7 for PAPER 9)
+  mvn     w3, w1                                  // w3 = bitwise NOT of w1 (0xfffffff8 for INK 9 or 0xffffffc7 for PAPER 9)
   mov     w5, #0x24
   and     w3, w3, w5                              // 0x20 for INK 9 or 0x04 for PAPER 9
   and     w3, w3, w2                              // Leading PAPER bit of ATTR_T in bit 5 if INK 9 or leading INK bit of ATTR_T in bit 2 if PAPER 9

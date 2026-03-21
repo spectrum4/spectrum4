@@ -108,25 +108,31 @@ new:                                     // L019D
 # PCIe revision: 0x0000000000000304
 # PCIe link is ready
 # PCIe status register: 0x00000000000000b0
-# PCIe loop iterations: 0x000000000000002e
+# PCIe loop iterations: 0x0000000000000063
 # PCIe class code (initial): 0x0000000020060400
 # PCIe class code (updated): 0x0000000020060400
-# SSC configuration stage / link capabilities: 0x0000000090120006
+# SSC configuration stage: 0x0000000000000006
+# Link status (PCI_EXP_LNKSTA): 0x0000000000009012
 # SSC status register: 0x0000000080001c17
 # VID/DID: 0x00000000000014e4/0x0000000000002711
-# Header type: 0x0000000000000001
+# RC header type: 0x0000000000000001
+# Bus 1 class/revision: 0x000000000c033001
+# Bus 1 header type: 0x0000000000000000
+# xHCI version: 0x0000000000000100
 
 #   [heap+0x00]: last read status register
 #   [heap+0x04]: number of iterations of 1ms reading status register
 #   [heap+0x08]: initial class code
 #   [heap+0x0c]: updated class code
 #   [heap+0x10]: SSC configuration steps successfully completed (0-6)
-#   [heap+0x12]: link capabilities
+#   [heap+0x12]: link status (PCI_EXP_LNKSTA)
 #   [heap+0x14]: revision number
 #   [heap+0x18]: vid
 #   [heap+0x1a]: did
-#   [heap+0x1c]: header type
-#   [heap+0x20]: SSC status register
+#   [heap+0x1c]: header type (lower 8 bits)
+#   [heap+0x20]: bus 1 class (upper 24 bits) and revision (lower 8 bits)
+#   [heap+0x24]: bus 1 header type (lower 8 bits)
+#   [heap+0x28]: SSC status register
 
   ldr     x0, pcie_init
   cbz     x0, 4f                                  // skip PCIE logging if no pcie (e.g. rpi3b)
@@ -171,14 +177,19 @@ new:                                     // L019D
   mov     x0, x8
   bl      uart_x0
   bl      uart_newline
-  adr     x0, msg_ssc_config_state_link_capabilities
+  adr     x0, msg_ssc_config_stage
   bl      uart_puts
-  ldr     w0, [x10, #0x10]                        // w0 = ssc config stage / link capabilities
+  ldrh    w0, [x10, #0x10]                        // w0 = SSC configuration steps completed (0-6)
+  bl      uart_x0
+  bl      uart_newline
+  adr     x0, msg_link_status
+  bl      uart_puts
+  ldrh    w0, [x10, #0x12]                        // w0 = link status (PCI_EXP_LNKSTA)
   bl      uart_x0
   bl      uart_newline
   adr     x0, msg_ssc_status
   bl      uart_puts
-  ldr     w0, [x10, #0x20]                        // w0 = ssc status
+  ldr     w0, [x10, #0x28]                        // w0 = ssc status (stored at heap+0x28 by pcie_init)
   bl      uart_x0
   bl      uart_newline
   adr     x0, msg_vid_did
@@ -187,12 +198,27 @@ new:                                     // L019D
   bl      uart_x0
   mov     x0, '/'
   bl      uart_send
-  ldrh    w0, [x10, #0x1a]                        // w8 = did
+  ldrh    w0, [x10, #0x1a]                        // w0 = did
   bl      uart_x0
   bl      uart_newline
   adr     x0, msg_header_type
   bl      uart_puts
-  ldr     w0, [x10, #0x1c]                        // w9 = header type
+  ldr     w0, [x10, #0x1c]                        // w0 = RC header type
+  bl      uart_x0
+  bl      uart_newline
+  adr     x0, msg_bus1_class
+  bl      uart_puts
+  ldr     w0, [x10, #0x20]                        // w0 = bus 1 class (upper 24 bits) + revision (lower 8 bits)
+  bl      uart_x0
+  bl      uart_newline
+  adr     x0, msg_bus1_header_type
+  bl      uart_puts
+  ldr     w0, [x10, #0x24]                        // w0 = bus 1 header type
+  bl      uart_x0
+  bl      uart_newline
+  adr     x0, msg_xhci_version
+  bl      uart_puts
+  ldrh    w0, [x10, #0x2c]                        // w0 = XHCI_REG_CAP_HCIVERSION
   bl      uart_x0
   bl      uart_newline
   b       5f
@@ -351,8 +377,11 @@ msg_class_code_initial:
 msg_class_code_updated:
   .asciz "PCIe class code (updated): "
 
-msg_ssc_config_state_link_capabilities:
-  .asciz "SSC configuration stage / link capabilities: "
+msg_ssc_config_stage:
+  .asciz "SSC configuration stage: "
+
+msg_link_status:
+  .asciz "Link status (PCI_EXP_LNKSTA): "
 
 msg_ssc_status:
   .asciz "SSC status register: "
@@ -361,7 +390,16 @@ msg_vid_did:
   .asciz "VID/DID: "
 
 msg_header_type:
-  .asciz "Header type: "
+  .asciz "RC header type: "
+
+msg_bus1_class:
+  .asciz "Bus 1 class/revision: "
+
+msg_bus1_header_type:
+  .asciz "Bus 1 header type: "
+
+msg_xhci_version:
+  .asciz "xHCI version: "
 
 msg_framebuffer_start:
   .asciz "Framebuffer start address: "

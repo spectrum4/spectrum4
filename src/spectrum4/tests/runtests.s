@@ -840,7 +840,7 @@ compare_all_snapshots:
     ldr     x12, [x20]                            // x12 = address offset of sys var
     add     x14, x12, x28                         // x14 = expected value reference
     add     x13, x12, x7                          // x13 = post-test value reference
-    add     x12, x12, x6                          // x13 = post-test value reference
+    add     x12, x12, x6                          // x12 = pre-test value reference
     bl      test_fail                             // report mismatched sysvar values
   4:
     subs    w9, w9, #1
@@ -922,7 +922,7 @@ compare_snapshots:
     ldp     x17, x4, [x6], #16                    // x17 = repeat count (1 less than total entries), x4 = value
   3:
   // x17 and x4 correctly set now
-    cbz     x18, 4f                               // If not still repeating previous pre-test value, jump ahead to 4:
+    cbz     x18, 4f                               // If not still repeating previous post-test value, jump ahead to 4:
     sub     x18, x18, #1                          // Decrement counter
     b       5f                                    // x5 already set from previous iteration, so jump ahead
   4:

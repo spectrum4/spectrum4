@@ -53,18 +53,18 @@ po_fetch:                                // L0B03
   // Upper screen in use; fetch channel 'S' cursor position.
   ldrb    w0, [x28, S_POSN_Y-sysvars]             // Fetch upper screen row.
   ldrb    w1, [x28, S_POSN_X-sysvars]             // Fetch upper screen column.
-  ldr     x2, [x28, DF_CC]                        // Fetch upper screen display file address.
+  ldr     x2, [x28, DF_CC-sysvars]                // Fetch upper screen display file address.
   b       3f                                      // Exit routine.
 1:
   // Lower screen in use; fetch channel 'K' cursor position.
   ldrb    w0, [x28, S_POSN_Y_L-sysvars]           // Fetch lower screen row.
   ldrb    w1, [x28, S_POSN_X_L-sysvars]           // Fetch lower screen column.
-  ldr     x2, [x28, DF_CC_L]                      // Fetch lower screen display file address.
+  ldr     x2, [x28, DF_CC_L-sysvars]              // Fetch lower screen display file address.
   b       3f                                      // Exit routine.
 2:
   // Printer in use; fetch channel 'P' cursor position.
   ldrb    w1, [x28, P_POSN_X-sysvars]             // Fetch printer column.
-  ldr     x2, [x28, PR_CC]                        // Fetch printer buffer address.
+  ldr     x2, [x28, PR_CC-sysvars]                // Fetch printer buffer address.
 3:
   // Exit routine.
   ret

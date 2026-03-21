@@ -52,7 +52,7 @@ cl_line:                                 // L0E44
   add     x21, x21, #0x00f, lsl #12               // x21 += 216*15*20 (=0xfd20) to reach same pixel row in first char line of next
   add     x21, x21, #0xd20                        // screen third.
   mov     x24, #4320                              // x24 = 20 lines * 216 bytes = 4320 bytes
-  add     x25, x25, #1                            // x22 = next screen third to update
+  add     x25, x25, #1                            // x25 = next screen third to update
   cmp     x25, #3
   b.ne    3b                                      // Repeat if more sections to update
   add     x26, x26, #0x001, lsl #12               // Next row pixel address = previous base address + 216 bytes * 20 rows
@@ -63,7 +63,7 @@ cl_line:                                 // L0E44
   add     x21, x21, :lo12:attributes_file_end
   sub     x22, x21, x20, lsr #1                   // x22 = start address in attributes file to clear
   ldrb    w19, [x28, TV_FLAG-sysvars]             // w19[0-7] = [TV_FLAG]
-  tbz     w19, #0, 4f                             // If bit 0 is clear, lower screen is in use; jump ahead to 4:.
+  tbz     w19, #0, 4f                             // If bit 0 is clear, upper screen is in use; jump ahead to 4:.
   ldrb    w20, [x28, BORDCR-sysvars]
   b       5f
 4:

@@ -46,5 +46,5 @@ restart:                                 // L0000
   strb    w12, [x28, RASP-sysvars]                // [RASP]=0x40
   strb    wzr, [x28, PIP-sysvars]                 // [PIP]=0x00
   sub     x13, x18, 1 + UDG_COUNT * 32
-  str     x13, [x28, RAMTOP-sysvars]              // [RAMPTOP] = UDG - 1 (address of last byte before UDG starts).
+  str     x13, [x28, RAMTOP-sysvars]              // [RAMTOP] = UDG - 1 (address of last byte before UDG starts).
   b       new

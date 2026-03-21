@@ -37,7 +37,7 @@
 po_search:                               // L0C41
   add     w6, w3, #1                              // Adjust for initial step-over token.
 1:
-  ldrb    w0, [x4], #1                            // w0 = [w4++]
+  ldrb    w0, [x4], #1                            // w0 = [x4++]
   cbnz    w0, 1b                                  // Jump back to 1: if not zero
   subs    w6, w6, #1                              // Reduce index counter
   b.ne    1b                                      // Jump back to 1: if index not zero.

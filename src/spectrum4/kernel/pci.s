@@ -63,7 +63,7 @@ pci_read:
 # TODO work in progress
 #
 # Based on
-#   * https://github.com/petemoore/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2333-L2348
+#   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2333-L2348
 pci_dev_vendor_id:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp

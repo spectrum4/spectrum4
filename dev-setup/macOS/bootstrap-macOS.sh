@@ -61,6 +61,10 @@ for subdir in lib include bin share; do
   sudo install -d -o "$(id -un)" -g "$(id -gn)" "/usr/local/${subdir}"
 done
 
+# Prefer Homebrew's pkg-config over MacPorts' (/opt/local/bin/pkg-config),
+# which doesn't know about Homebrew-installed libraries.
+export PKG_CONFIG="$(brew --prefix)/bin/pkg-config"
+
 # install libspectrum (needed for building tape2wav and fuse)
 if ! hash fuse 2> /dev/null || ! hash tape2wav 2> /dev/null; then
 
@@ -95,7 +99,7 @@ if ! hash fuse 2> /dev/null || ! hash tape2wav 2> /dev/null; then
   for patch in ../debian/patches/*.patch; do
     patch -p1 < "${patch}"
   done
-  ./configure --disable-dependency-tracking --prefix=/usr/local
+  CXXFLAGS="-g -O2 -isystem $(xcrun --show-sdk-path)/usr/include/c++/v1" ./configure --disable-dependency-tracking --prefix=/usr/local
   gmake -j"$(nproc)"
   gmake install
   curl -fsSL -o test.aiff https://mmsp.ece.mcgill.ca/Documents/AudioFormats/AIFF/Samples/CCRMA/wood24.aiff
@@ -142,7 +146,7 @@ if ! hash tape2wav 2> /dev/null; then
   retry curl -fsSL 'https://sourceforge.net/projects/fuse-emulator/files/fuse-utils/1.4.3/fuse-utils-1.4.3.tar.gz/download' > fuse-utils-1.4.3.tar.gz
   tar xvfz fuse-utils-1.4.3.tar.gz
   cd fuse-utils-1.4.3
-  ./configure
+  CXXFLAGS="-g -O2 -isystem $(xcrun --show-sdk-path)/usr/include/c++/v1" ./configure
   gmake -j4
   sudo gmake install
   cd ..

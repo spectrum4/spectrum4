@@ -106,7 +106,7 @@ if ! hash fuse 2> /dev/null || ! hash tape2wav 2> /dev/null; then
 
   retry git clone https://git.code.sf.net/p/fuse-emulator/libspectrum
   cd libspectrum
-  git checkout e85c934f585cb8caff5eeab55899617b606abfeb
+  git checkout libspectrum-1.6.0
   ./autogen.sh
   brew install glib pkg-config
   PKG_CONFIG_PATH="$(brew --prefix glib)/lib/pkgconfig" ./configure
@@ -128,7 +128,7 @@ if ! hash fuse 2> /dev/null; then
   # libspectrum and automake already installed above
   retry git clone https://git.code.sf.net/p/fuse-emulator/fuse
   cd fuse
-  git checkout 54bb53145a42f054dd7b5e5aa0bfa2d41020e265
+  git checkout fuse-1.7.0
   ./autogen.sh
   ./configure --with-null-ui
   gmake -j4

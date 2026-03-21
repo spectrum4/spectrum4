@@ -112,8 +112,8 @@ _start:
                                                   // ITD:     0b1 => Disable Thumb IT instruction at EL0
                                                   // THEE:    0b0 => T32EE (Thumb big endian) not implemented on cortex-a53/cortex-a72 (effectively RES0)
                                                   // CP15BEN: 0b0 => CP15 barrier operations disabled in aarch32 in EL0
-                                                  // SA0:     0b0 => Disable EL0 Stack Alignment (16 byte bounday) check
-                                                  // SA:      0b1 => Enable Stack Alignment (16 byte bounday) check
+                                                  // SA0:     0b0 => Disable EL0 Stack Alignment (16 byte boundary) check
+                                                  // SA:      0b1 => Enable Stack Alignment (16 byte boundary) check
                                                   // C:       0b0 => Data and unified caches disabled
                                                   // A:       0b1 => Enable alignment fault checking
                                                   // M:       0b0 => MMU disabled
@@ -183,18 +183,18 @@ _start:
   adrp    x2, 0xff841000                          // GIC Distributor     note: physical, not virtual address (do not add _start to value!)
   adrp    x1, 0xff842000                          // GIC CPU Interface   note: physical, not virtual address (do not add _start to value!)
   mov     w0, #0x000001e7
-  str     w0, [x1]                                // Enable group 1 IRQs from CPU interface [GICC_CTLR]=[0xff841000]=0x000001e7 CPU Interface Control Register
+  str     w0, [x1]                                // Enable group 1 IRQs from CPU interface [GICC_CTLR]=[0xff842000]=0x000001e7 CPU Interface Control Register
                                                   // See https://developer.arm.com/documentation/ihi0048/b/Programmers--Model/About-the-programmers--model/CPU-interface-register-map?lang=en
   mov     w0, #0x000000ff
-  str     w0, [x1, #0x4]                          // priority mask [0xff841004]=0x000000ff [GICC_PMR]=0x000000ff Interrupt Priority Mask Register
-  add     x2, x2, #0x80                           // x2 = 0xff842080
+  str     w0, [x1, #0x4]                          // priority mask [0xff842004]=0x000000ff [GICC_PMR]=0x000000ff Interrupt Priority Mask Register
+  add     x2, x2, #0x80                           // x2 = 0xff841080
   mov     x0, #0x20
   mov     w1, #~0                                 // group 1 all the things
   gic_loop:
     subs    x0, x0, #4                            // x0 = 0x1c, 0x18, 0x14, 0x10, 0x0c, 0x08, 0x04, 0x00
-    str     w1, [x2, x0]                          // [0xff84209c] / [0xff82098] / [0xff82094] / [0xff82090] / [0xff8208c] / [0xff82088] / [0xff82084] / [0xff82080] = 0xffffffff
+    str     w1, [x2, x0]                          // [0xff84109c] / [0xff841098] / [0xff841094] / [0xff841090] / [0xff84108c] / [0xff841088] / [0xff841084] / [0xff841080] = 0xffffffff
     b.ne    gic_loop                              // GICD_IGROUPR[0-7] Interrupt Group Registers
-  dsb     sy                                      // Ensure udpates before proceeding
+  dsb     sy                                      // Ensure updates before proceeding
 post_gic_setup:
 
 
@@ -270,7 +270,7 @@ post_gic_setup:
                                                   // ALLINT:  0b0     => RES0 since FEAT_NMI was first optional in Armv8.7 (Non-maskable Interrupts)
                                                   // SSBS:    0b0     => RES0 since FEAT_SSBS is optional but not present in Cortex-A53/Cortex-A72 (ID_AA64PFR1_EL1 = 0x0) (Speculative Store Bypass Safe)
                                                   // BTYPE:   0b0     => RES0 since FEAT_BTI was first optional in Armv8.4 (Branch Target Identification)
-                                                  // D:       0b0     => set PSTATE.D to 0b0 after next eret => after eret mask (disable) debug interrupts
+                                                  // D:       0b0     => set PSTATE.D to 0b0 after next eret => after eret unmask (enable) debug exceptions
                                                   // A:       0b1     => set PSTATE.A to 0b1 after next eret => after eret mask (disable) error (SError) interrupts
                                                   // I:       0b1     => set PSTATE.I to 0b1 after next eret => after eret mask (disable) regular (IRQ) interrupts
                                                   // F:       0b1     => set PSTATE.F to 0b1 after next eret => after eret mask (disable) fast (FIQ) interrupts
@@ -346,12 +346,12 @@ post_gic_setup:
   adrp    x0, pg_dir
   adrp    x1, (pg_dir+0x5000)
   orr     x2, x1, #0b11                           // bit 0 = 1 => valid descriptor. bit 1 = 1 => table descriptor
-  str     x2, [x0, 0xc0]                          // [pg_dir+0x10c0] = pg_dir+0x6003. PUD table entry for xHCI region (entry 0x600000000-0x640000000 covers more than xHCI).
+  str     x2, [x0, 0xc0]                          // [pg_dir+0xc0] = pg_dir+0x5003. PUD table entry for xHCI region (entry 0x600000000-0x640000000 covers more than xHCI).
   mov     x2, 0x600000000                         // x2 = xHCI start (24GB)
   orr     x3, x2, 0x40000000                      // x3 = xHCI end (1GB higher) (0x640000000) - so we will fill entire table, i.e. all 512 entries
   add     x2, x2, #0x405                          // bit 10: AF=1, bits 2-4: mair attr index = 1 (device), bits 0-1: 1 (block descriptor)
   8:                                              // creates 512 entries for xHCI addresses 0x600000000 - 0x640000000
-    str     x2, [x1], #8                          // [pg_dir + 0x6000 + i*8] = 0x409 + i*0x200000. PMD table entries complete for xHCI region.
+    str     x2, [x1], #8                          // [pg_dir + 0x5000 + i*8] = 0x600000405 + i*0x200000. PMD table entries complete for xHCI region.
     add     x2, x2, #0x200000
     cmp     x2, x3
     b.lt    8b
@@ -1003,9 +1003,9 @@ set_peripherals_addresses:
   ldp     x2, x3, [x0]                            //  x2 = [rpi3 mailbox_base]
                                                   //  x3 = [rpi3 gpio_base]
   ldp     x4, x5, [x0, #16]                       //  x4 = [rpi3 aux_base]
-                                                  //  x5 = [rpi3 uart_init]
-  ldp     x6, x7, [x0, #32]                       //  x6 = [rpi3 uart_block]
-                                                  //  x7 = [rpi3 uart_x0]
+                                                  //  x5 = [rpi3 rand_init]
+  ldp     x6, x7, [x0, #32]                       //  x6 = [rpi3 rand_block]
+                                                  //  x7 = [rpi3 rand_x0]
   ldp     x8, x9, [x0, #48]                       //  x8 = [rpi3 aux_mu_baud_reg] (bits 0-31)
                                                   //       [rpi3 cntfrq] (bits 32-63)
                                                   //  x9 = [rpi3 local_control]
@@ -1022,9 +1022,9 @@ set_peripherals_addresses:
   stp     x2, x3, [x1]                            // [mailbox_base]      = [rpi3 mailbox_base]
                                                   // [gpio_base]         = [rpi3 gpio_base]
   stp     x4, x5, [x1, #16]                       // [aux_base]          = [rpi3 aux_base]
-                                                  // [uart_init]         = [rpi3 uart_init]
-  stp     x6, x7, [x1, #32]                       // [uart_block]        = [rpi3 uart_block]
-                                                  // [uart_x0]           = [rpi3 uart_x0]
+                                                  // [rand_init]         = [rpi3 rand_init]
+  stp     x6, x7, [x1, #32]                       // [rand_block]        = [rpi3 rand_block]
+                                                  // [rand_x0]           = [rpi3 rand_x0]
   stp     x8, x9, [x1, #48]                       // [aux_mu_baud_reg]   = [rpi3 aux_mu_baud_reg] (32 bit)
                                                   // [cntfrq]            = [rpi3 cntfrq] (32 bit)
                                                   // [local_control]     = [rpi3 local_control]

@@ -59,7 +59,7 @@ uart_init:
   str     wzr, [x4, #0x94]                        //   [GPPUD] = 0x00000000 => GPIO Pull up/down = OFF
   mov     x5, #0x96                               // Wait 150 instruction cycles (as stipulated by datasheet).
   1:
-    subs    x5, x5, #0x1                          // x0 -= 1
+    subs    x5, x5, #0x1                          // x5 -= 1
     b.ne    1b                                    // Repeat until x0 == 0.
   mov     w2, #0xc000                             // w2 = 2^14 + 2^15
   str     w2, [x4, #0x98]                         //   [GPPUDCLK0] = 0x0000c000 => Control signal to lines 14, 15.

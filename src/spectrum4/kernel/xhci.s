@@ -32,10 +32,10 @@
 #                                                1: Port Power Control (PPC)
 #                                                0: Context Size (CSZ) => 32 byte Context data structures (not Stream Contexts) (rather than 64 byte)
 #                                                1: BW Negotiation Capability (BNC)
-#                                                1: 64-bit Addressing Capability77 (AC64)
+#                                                1: 64-bit Addressing Capability (AC64)
 # 0x14: XHCI_REG_CAP_DBOFF        0x00000100 => Doorbell Array Offset = 0x100 (i.e. 0x600000100)
 # 0x18: XHCI_REG_CAP_RTSOFF       0x00000200 => Runtime Register Space Offset (i.e. 0x600000200)
-# 0x1c: XHCI_REG_CAP_HCCPARAMS2   0x00000000 0b  0: U3C U3 Entry Capbility not supported (Port Suspend Complete notification not supported)
+# 0x1c: XHCI_REG_CAP_HCCPARAMS2   0x00000000 0b  0: U3C U3 Entry Capability not supported (Port Suspend Complete notification not supported)
 #                                                0: CMC Configure Endpoint Command Max Exit Latency Too Large Capability
 #                                                0: FSC
 #                                                0: CTC
@@ -142,10 +142,6 @@
 
 
 # Note: preserve x7 and x8 since caller (handle_irq_bcm2711) uses these
-# On exit:
-#   x1: new timer value ([next_interrupt])
-#   x2: 0x2000000
-#   plus any changes made by timed_interrupt routine (potentially replacing x1/x2 changes above)
 .align 2
 handle_xhci_irq:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -331,7 +327,7 @@ command_completion_event:
                                                   //   device can implement several configuration descriptors. For other standard descriptors that can be retrieved
                                                   //   via a GetDescriptor() request, a descriptor index of zero must be used. The range of values used for a
                                                   //   descriptor index is from 0 to one less than the number of descriptors of that type implemented by the device.
-                                                  // bRequest 0x6 => GET_DESCRIPTOR (page 251 and sectio 9.4.3 on page 253 of USB 2.0 spec)
+                                                  // bRequest 0x6 => GET_DESCRIPTOR (page 251 and section 9.4.3 on page 253 of USB 2.0 spec)
                                                   // bmRequestType 128 (0x80) => device to host, standard type, device recipient (page 248 of USB 2.0 spec)
 
   ldr     x2, =0x0003084100000008                 // 0b00000000000000 11 000010 000 1 0 0000 1 0000000000 00000 00000000000001000

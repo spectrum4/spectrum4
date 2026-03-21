@@ -19,7 +19,7 @@
 #   [heap+0x08]: initial class code
 #   [heap+0x0c]: updated class code
 #   [heap+0x10]: SSC configuration steps successfully completed (0-6)
-#   [heap+0x12]: link capabilities
+#   [heap+0x12]: link status (PCI_EXP_LNKSTA)
 #   [heap+0x14]: revision number
 #   [heap+0x18]: vid
 #   [heap+0x1a]: did
@@ -311,7 +311,7 @@ pcie_init_bcm2711:
   ldrwi   w0, x4, #0x6c                           // w0 = [0xfd50406c] (PCIE_MISC_REVISION)
   strwi   w0, x7, #0x14                           // store revision number on heap
 
-  // MSI initisalisation
+  // MSI initialisation
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L623-L641
   //
   // Updates registers:
@@ -346,7 +346,7 @@ pcie_init_bcm2711:
   ldrwi   w2, x10, #0x0                           // x2 bits 0-15: vid (Vendor ID), bits 16-31: did (Device ID)
   // Preserve header type on the heap
   ldrbi   w3, x10, #0xe                           // w3 = header type
-  stp     w2, w3, [x7, #0x18]                     // store did/vid and header type on heap
+  stp     w2, w3, [x7, #0x18]                     // store vid/did and header type on heap
 4:
 
   // RC: Set LTR Enable bit in PCI Express Device Control 2 register (PCI_EXP_DEVCTL2) of the root complex, i.e. turn LTR on.
@@ -505,10 +505,10 @@ pcie_init_bcm2711:
 3:
   strhi   w6, x7, #0x10                           // store w6 on heap to record which configuration stage SSC reached
 
-  ldrhi   w0, x10, #0xbe                          // Query link capabilities
+  ldrhi   w0, x10, #0xbe                          // Query link status (PCI_EXP_LNKSTA at 0xac + 0x12 = 0xbe)
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1028-L1033
 
-  strhi   w0, x7, #0x12                           // store w0 on heap to record link capabilities register
+  strhi   w0, x7, #0x12                           // store w0 on heap to record link status register
 
   // RC Disable:
   //   PCI_EXP_RTCTL_SECEE      0x0001     System Error on Correctable Error
@@ -547,7 +547,7 @@ pcie_init_bcm2711:
   strhi   w1, x13, #0x84                          // of [0xfd508084] (PCI_PM_CTRL)
 
   // VL805: Enable PCIe error reporting
-  ldrhi   w1, x13, #0xcc                          // PCI_EXP_DEVCTL (offset 0x8 from 0xac where PCIe device capability starts)
+  ldrhi   w1, x13, #0xcc                          // PCI_EXP_DEVCTL (offset 0x8 from 0xc4 where PCIe capability starts on VL805)
   orr     w1, w1, #0xf                            //  PCI_EXP_DEVCTL_CERE    0x01    Correctable Error Reporting Enable
                                                   //  PCI_EXP_DEVCTL_NFERE   0x02    Non-Fatal Error Reporting Enable
                                                   //  PCI_EXP_DEVCTL_FERE    0x04    Fatal Error Reporting Enable
@@ -952,7 +952,7 @@ pcie_init_bcm2711:
   mov     w3, #0x20
   strwi   w3, x0, #0x58                           // [XHCI_REG_OP_CONFIG] = 32 (=> maximum 32 device slots)
 
-  adrp    x1, scratchpad_bufs                     // x1 = scratchpad_bufs (virutal)
+  adrp    x1, scratchpad_bufs                     // x1 = scratchpad_bufs (virtual)
   mov     w4, #0x4                                // upper 32 bits for DMA addresses
   adrp    x9, dcbaa                               // x9 = dcbaa (virtual)
 
@@ -1087,7 +1087,7 @@ mdio_read:
     sub     w8, w8, #1                            // decrement loop counter
     mov     x0, #10
     bl      wait_usec                             // sleep 10us
-    ldrwi   w1, x10, #0x1108                      // w0=[0xfd501108] (PCIE_RC_DL_MDIO_RD_DATA)
+    ldrwi   w1, x10, #0x1108                      // w1=[0xfd501108] (PCIE_RC_DL_MDIO_RD_DATA)
     tbz     w1, #31, 1b                           // repeat loop if bit 31 is clear (=> read value before register update was complete)
   ret     x11
 2:
@@ -1150,7 +1150,7 @@ mdio_write:
     sub     w8, w8, #1                            // decrement loop counter
     mov     x0, #10
     bl      wait_usec                             // sleep 10us
-    ldrwi   w1, x10, #0x1104                      // w0=[0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA)
+    ldrwi   w1, x10, #0x1104                      // w1=[0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA)
     tbnz    w1, #31, 1b                           // repeat loop if bit 31 is set (=> read value before register update was complete)
   ret     x11
 2:

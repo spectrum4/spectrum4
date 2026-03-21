@@ -38,12 +38,12 @@ rand_x0_bcm283x:
     ldr     w0, [x1, #0x4]                        // Bits 24-31 tell us how many words
     lsr     w0, w0, #24                           // are available.
     cbz     w0, 1b                                // Try again if no words are available.
-  ldr     w2, [x1, #0x8]                          // w0 = [0x3f104008] (random data)
+  ldr     w2, [x1, #0x8]                          // w2 = [0x3f104008] (random data)
   1:                                              // Wait until ([0x3f104004] >> 24) >= 1
     ldr     w0, [x1, #0x4]                        // Bits 24-31 tell us how many words
     lsr     w0, w0, #24                           // are available.
     cbz     w0, 1b                                // Try again if no words are available.
-  ldr     w0, [x1, #0x8]                          // w2 = [0x3f104008] (random data)
+  ldr     w0, [x1, #0x8]                          // w0 = [0x3f104008] (random data)
   bfi     x0, x2, #32, #32                        // Copy bits from w2 into high bits of x0.
   ret
 
@@ -109,8 +109,8 @@ rand_x0_iproc:
     ldrb    w0, [x1, #0x24]
     cmp     w0, #2
     b.lo    2b
-  ldr     w0, [x1, #0x20]                         // w0 = [0xfe104008] (random data)
-  ldr     w2, [x1, #0x20]                         // w2 = [0xfe104008] (random data)
+  ldr     w0, [x1, #0x20]                         // w0 = [0xfe104020] (RNG_FIFO_DATA: random data)
+  ldr     w2, [x1, #0x20]                         // w2 = [0xfe104020] (RNG_FIFO_DATA: random data)
   bfi     x0, x2, #32, #32                        // Copy bits from w2 into high bits of x0.
   ret
 
@@ -134,10 +134,10 @@ rand_block_iproc:
     cmp     w3, #16
     b.ls    1b
   1:                                              // Loop until buffer filled
-    2:                                            // Wait until ([0xfe104004] >> 24) >= 1
+    2:                                            // Wait until [0xfe104024] (RNG_FIFO_COUNT) >= 1
       ldrb    w3, [x2, #0x24]
       cbz     w3, 2b
-    ldr     w3, [x2, #0x20]                       // w3 = [0xfe104008] (random data)
+    ldr     w3, [x2, #0x20]                       // w3 = [0xfe104020] (RNG_FIFO_DATA: random data)
     str     w3, [x0], #0x04                       // Write to buffer.
     subs    x1, x1, #0x04
     cbnz    x1, 1b

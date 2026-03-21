@@ -347,7 +347,7 @@ command_completion_event:
   // Data Stage
   // xHCI spec page 470
   adrp    x3, keyboard_descriptor
-  add     x3, x3, :lo12:keyboard_descriptor       // Physical address of data buffer for keyboard descriptor
+  add     x3, x3, :lo12:keyboard_descriptor       // CPU virtual address of data buffer for keyboard descriptor
 
   ldr     x4, = 0x00010c0100000008                // 0b000000000000000 1 000011 000 0 0 0 0 0 0 1 0000000000 00000 00000000000001000
                                                   // RsvdZ
@@ -410,6 +410,11 @@ transfer_event:
   adr     x0, msg_transfer_event
   bl      uart_puts
 .endif
+  adrp    x3, keyboard_descriptor
+  add     x3, x3, :lo12:keyboard_descriptor       // CPU virtual address of data buffer for keyboard descriptor
+  dc      ivac, x3                                // invalidate cache line(s)
+  dsb     ish
+  ldrxi   w18, x3, #0x0                           // Debug: log the keyboard descriptor from the GET_DESCRIPTOR request
   b       2b
 
 

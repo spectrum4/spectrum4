@@ -84,7 +84,10 @@ pcie_init_bcm2711:
                                                   //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L2228
                                                   //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L950-L974
 
-  // Clear SERDES_IDDQ, i.e. put the PCIe Serializer/Deserializer PHY into IDDQ (deep power-down mode)
+  // Clear SERDES_IDDQ to power up the PCIe SerDes (Serializer/Deserializer) PHY.
+  // SERDES_IDDQ=1 means deep power-down (IDDQ mode); clearing it brings the SerDes out of
+  // power-down and into normal operation. The wait below is for the SerDes to stabilise after
+  // power-up.
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1399-L1404
                                                   // +=============================================+
   ldrwi   w6, x4, #0x204                          // | PCIE_MISC_HARD_PCIE_HARD_DEBUG [0xfd504204] |
@@ -167,8 +170,8 @@ pcie_init_bcm2711:
                                                   // 0b 1---/1 ---/-- --/----/-- 1 1/- 1 --/1 -- -/---- SET BITS
   ldr     w8, =0x88003480                         // 0x    8     8     0    0      3      4      8    0
   orr     w6, w6, w8                              //
-                                                  // SCB0_SIZE = 0b10001 = 17 (number of bits required to address bus - 15)
-                                                  //   => System Control Bus size is > 2GB, and <= 4GB
+                                                  // SCB0_SIZE = 0b10001 = 17 (encoded as ilog2(size) - 15, so size = 2^(17+15) = 2^32 = 4GB)
+                                                  //   => System Control Bus size is 4GB
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L932
                                                   //
                                                   // SCB_MAX_BURST_SIZE = 0b00
@@ -340,7 +343,7 @@ pcie_init_bcm2711:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L639-L640
 
   // Preserve device id, vendor id on the heap
-  ldrwi   w2, x10, #0x0                           // x2 bits 0-15: did, bits 16-31: vid
+  ldrwi   w2, x10, #0x0                           // x2 bits 0-15: vid (Vendor ID), bits 16-31: did (Device ID)
   // Preserve header type on the heap
   ldrbi   w3, x10, #0xe                           // w3 = header type
   stp     w2, w3, [x7, #0x18]                     // store did/vid and header type on heap
@@ -354,7 +357,7 @@ pcie_init_bcm2711:
   strhi   w1, x10, #0xd4                          // [0xfd5000d4] = 0x0400 (was 0x0000)
 
   // RC: Set SERR forwarding bit (bit 1) in PCI bridge control of root complex.
-  // In contrast, Cirlce sets bit 0 instead which enables parity detection on secondary interface.
+  // In contrast, Circle sets bit 0 instead which enables parity detection on secondary interface.
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2207-L2223
   mov     w1, #0x0002
   strhi   w1, x10, #0x3e                          // [0xfd50003e] = 0x0002 (was 0x0000)
@@ -527,7 +530,7 @@ pcie_init_bcm2711:
   strhi   w1, x10, #0xc8                          // [0xfd5000c8] = 0x0010 (was 0x0000)
 
   // PCIe RC ECAM Index Register (offset 0x9000 from base, x14 + 0x0)
-  // Mounts VL805 (bus 1, device 0, function 0, offset 0) configuration space at physical address [0xfd58000] (x13)
+  // Mounts VL805 (bus 1, device 0, function 0, offset 0) configuration space at physical address [0xfd508000] (x13)
   // 0b0000 bbbb bbbb dddd dfff oooo oooo oooo (b = bus, d = device, f = function, o = offset)
   // 0b0000 0000 0001 0000 0000 0000 0000 0000
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L707-L722
@@ -538,10 +541,10 @@ pcie_init_bcm2711:
   // Power Management capability starts at offset 0x80, and PCI_PM_CTRL has offset 0x04 from start of capability,
   // i.e. offset is 0x80 + 0x04 = 0x84
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pci.c#L2354-L2368
-  ldrhi   w1, x13, #0x84                          // w1 = [0xfd50004c] (=0x2008) = current value of PCI_PM_CTRL for root complex
+  ldrhi   w1, x13, #0x84                          // w1 = [0xfd508084] = current value of PCI_PM_CTRL for VL805
   and     w1, w1, #~0x0100                        // clear bit 8 (PCI_PM_CTRL_PME_ENABLE)
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
-  strhi   w1, x13, #0x84                          // of [0xfd50004c] (PCI_PM_CTRL)
+  strhi   w1, x13, #0x84                          // of [0xfd508084] (PCI_PM_CTRL)
 
   // VL805: Enable PCIe error reporting
   ldrhi   w1, x13, #0xcc                          // PCI_EXP_DEVCTL (offset 0x8 from 0xac where PCIe device capability starts)
@@ -703,13 +706,17 @@ pcie_init_bcm2711:
   mov     w1, #0x00a4
   strhi   w1, x13, #0x92
 
-  // VL805:
+  // VL805: Set MSI message address (low 32 bits) = 0xfffffffc
+  // Matches the RC MSI target address configured in PCIE_MISC_MSI_BAR_CONFIG_LO above.
+  // The device will write to this address when raising an MSI interrupt.
   mov     w1, #0xfffffffc
-  strwi   w1, x13, #0x94                          // was 0x00000000
+  strwi   w1, x13, #0x94                          // [0xfd508094] (MSI Message Address Lo) = 0xfffffffc (was 0x00000000)
 
-  // VL805:
+  // VL805: Set MSI message data = 0x6540
+  // Matches the lower 16 bits of PCIE_MISC_MSI_DATA_CONFIG (0xffe06540) configured above.
+  // The RC uses this value to identify which MSI vector was triggered.
   mov     w1, #0x6540
-  strhi   w1, x13, #0x9c                          // was 0x0000
+  strhi   w1, x13, #0x9c                          // [0xfd50809c] (MSI Message Data) = 0x6540 (was 0x0000)
 
   // VL805: Set PCI command
   // 0b0000 0101 0100 0110

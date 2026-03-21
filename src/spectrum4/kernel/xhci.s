@@ -154,7 +154,7 @@ handle_xhci_irq:
   adr     x0, msg_xhci_event
   bl      uart_puts
 .endif
-  adrp    x9, 0xfd504000 + _start                 // x9 = MSI status register
+  adrp    x9, 0xfd504000 + _start                 // x9 = Broadcom PCIe STB register base (MSI registers at x9+0x500)
 .if UART_DEBUG
   ldr     w0, [x9, #0x500]                        // w0 = [MSI status]
   bl      uart_x0                                 // log MSI interrupt vectors
@@ -178,7 +178,7 @@ consume_xhci_events:
   ldrwi   w13, x15, #0x20                         // TODO: remove this, just for debug: log USBCMD to see if RUN_STOP (bit 0) is clear or set
 
   ldrwi   w3, x15, #0x24                          // Read USBSTS in w3
-  strwi   w3, x15, #0x24                          // Write back (RW1C) to clear bits (EINT, PCD)
+  strwi   w3, x15, #0x24                          // Write back (RW1C) to clear status bits: bit 3 EINT (Event Interrupt), bit 4 PCD (Port Change Detect)
 
   // loop through event TRBs
   1:
@@ -219,10 +219,10 @@ consume_xhci_events:
 
 2:
     add     x10, x10, #16                         // Bump x10 to next event TRB entry (potentially overrunning event ring)
-    and     x13, x10, #0xfff                      // x13 = lower 12 bits of x10 (event ring offset)
+    and     x13, x10, #0xfff                      // x13 = offset within page (= offset from ring start, since event ring is page-aligned and < 4KB)
     cmp     x13, #(event_ring_end-event_ring)     // check if x10 has overrun the ring
     b.ne    1b                                    // if not, loop around
-    and     x10, x10, #~0xfff                     // set x10 to start of ring
+    and     x10, x10, #~0xfff                     // wrap: reset x10 to start of ring (clear page offset)
     eor     x14, x14, #(1<<32)                    // toggle Event Consumer Cycle Status bit
     strxi   x14, x12, xhci_event_ccs-xhci_vars    // store it
     b       1b                                    // loop around
@@ -243,8 +243,8 @@ port_status_change_event:
   bl      uart_puts
 .endif
   lsr     w17, w13, #24                           // w17 = port number
-  add     x17, x15, x17, lsl #4                   // x17 = 0x6 0000 0000 + port number * 0x10
-  ldrwi   w18, x17, #0x410                        // w18 = [0x6 0000 0420 + (port number - 1) * 0x10] = [PORTSC]
+  add     x17, x15, x17, lsl #4                   // x17 = base + port_number*16; PORTSC[n] is at base+0x420+(n-1)*16, reached via [x17, #0x410]
+  ldrwi   w18, x17, #0x410                        // w18 = [PORTSC for port_number] (e.g. port 1 => base+0x420)
   ubfx    w19, w18, #1, #1                        // w19 = bit 1 of w18 = PED (port enabled)
   eor     w19, w19, #1                            // invert w19 bit 0 i.e. 0 if port enabled, 1 if port disabled
   bfi     w18, w19, #4, #1                        // PR (port reset) = 0 if port enabled, 1 if port disabled
@@ -266,6 +266,10 @@ port_status_change_event:
   bfi     x18, x2, #32, #32                       // x18 = command_ring (DMA)
   strxi   x18, x1, #(command_ring_end - command_ring - 0x10)
   mov     w19, (6 << 10) | (1 << 1)               // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
+                                                  // Cycle = 0 (opposite of current PCS = 1) so the xHC stops here
+                                                  // rather than following the ring back to slot 0 prematurely.
+                                                  // Toggle Cycle = 1 so that when we do want the xHC to wrap,
+                                                  // it will flip its PCS on processing this Link TRB.
   strwi   wzr, x1, #(command_ring_end - command_ring - 0x08)
   strwi   w19, x1, #(command_ring_end - command_ring - 0x04)
 
@@ -357,13 +361,16 @@ command_completion_event:
                                                   // IDT = 0 (immediate data: false, i.e. data is referenced via pointer)
                                                   // IOC = 0 (no interrupt on completion - only needed on last TRB)
                                                   // CH = 0 (end of chain, i.e. DATA STAGE is a single TRB)
-                                                  // NS = 0 (no snoop - don't understand - see https://linux-usb.vger.kernel.narkive.com/2ODz0UCV/why-use-pci-express-no-snoop-option-for-xhci)
+                                                  // NS = 0 (No Snoop hint to PCIe: 0 = CPU caches will be kept coherent with DMA. Setting 1 would
+                                                  //         allow the PCIe device to bypass CPU cache snooping for potentially better throughput,
+                                                  //         but risks stale data on non-coherent systems. 0 is the safe/correct choice here.)
                                                   // ISP = 0 (interrupt on short packet disabled)
                                                   // ENT = 0 (evaluate next TRB disabled - see page 250, also not allowed since chain bit = 0)
                                                   // C = 1 (cycle bit)
                                                   // Interruptor Target = 0
-                                                  // TD size = 0. The spec is very complicated here, and I don't understand it. xHCI spec page 218.
-                                                  // TRB transfer length = 8 bytes. Looks like the host is free to set this to preferred value? p470.
+                                                  // TD size = 0. This is a hint to the xHC about how many more packets remain in the TD after this TRB,
+                                                  //   used for isochronous scheduling. For control transfers, 0 ("don't know") is standard and correct.
+                                                  // TRB transfer length = 8 bytes. Must match wLength from the Setup Stage (8 bytes of device descriptor).
   stp     w3, w18, [x0, #0x10]
   str     x4, [x0, #0x18]
 
@@ -393,6 +400,8 @@ command_completion_event:
   bfi     x18, x2, #32, #32                       // x18 = transfer ring (DMA)
   strxi   x18, x0, #(transfer_ring_keyboard_EP0_end - transfer_ring_keyboard_EP0 - 0x10)
   mov     w19, (6 << 10) | (1 << 1)               // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
+                                                  // Cycle = 0 (opposite of current PCS = 1) so xHC stops here
+                                                  // rather than wrapping back to slot 0 before we are ready.
   strwi   wzr, x0, #(transfer_ring_keyboard_EP0_end - transfer_ring_keyboard_EP0 - 0x08)
   strwi   w19, x0, #(transfer_ring_keyboard_EP0_end - transfer_ring_keyboard_EP0 - 0x04)
 
@@ -414,7 +423,7 @@ transfer_event:
   add     x3, x3, :lo12:keyboard_descriptor       // CPU virtual address of data buffer for keyboard descriptor
   dc      ivac, x3                                // invalidate cache line(s)
   dsb     ish
-  ldrxi   w18, x3, #0x0                           // Debug: log the keyboard descriptor from the GET_DESCRIPTOR request
+  ldrxi   x18, x3, #0x0                           // Debug: read first 8 bytes of the returned descriptor data
   b       2b
 
 
@@ -484,7 +493,7 @@ keyboard_input_context_address_device:
 .word 0x00400026                                  // 0b0000000001000000 00000000 0 0 100 11 0; Max Packet Size = 64; Max Burst Size = 0; HID = 0; RsvdZ = 0; EP Type = 4; CErr = 3; RsvdZ = 0
 .dword (transfer_ring_keyboard_EP0-0xfffffff000000000+0x400000000+0x1)
                                                   // TR Dequeue Pointer = DMA(transfer_ring_keyboard_EP0); RsvdZ = 0; DCS = 1
-.word 0x00000008                                  // 0b0000000000000000 0000000000001000; Max ESIT Payload Lo = 0; Average TB Length = 8
+.word 0x00000008                                  // 0b0000000000000000 0000000000001000; Max ESIT Payload Lo = 0; Average TRB Length = 8
 .word 0x00000000
 .word 0x00000000
 .word 0x00000000
@@ -493,12 +502,15 @@ keyboard_input_context_address_device:
                                                   // Mult = 0 (required for non-SS-Isochronous endpoint types)
                                                   // MaxPStreams = 0; streams not supported => TR Dequeue Pointer is a transfer ring
                                                   // LSA = 0; RsvdZ since MaxPStreams == 0
-                                                  // Interval = 11 (=> send/receive every 256 ms)
-                                                  // Max ESIT Payload = 0; RsvdZ since LEC == 0
+                                                  // Interval = 0 (don't care for Control endpoints per xHCI spec §6.2.3.6)
+                                                  // Max ESIT Payload Hi = 0; RsvdZ since LEC == 0 (bits 31:24 of DWORD0)
+                                                  // Max ESIT Payload Lo = 0; RsvdZ since LEC == 0 (bits 31:16 of DWORD4)
                                                   // CErr = 3; 3 attempts before giving up on executing a TD
                                                   // EP Type = 4; Control (bidirectional)
                                                   // HID = 0; does not apply to non-stream-enabled endpoints
                                                   // Max Burst Size = 0 => burst size 1 (since encoding is zero-based)
-                                                  // Max Packet Size = 64 bytes
+                                                  // Max Packet Size = 64 bytes (USB 2.0 High Speed devices always use 64 bytes for EP0;
+                                                  //   no need to start with 8 and update as you would for Full Speed devices)
                                                   // DCS = 1; Dequeue Cycle State (initially 1, alternates each time we loop around ring)
+                                                  // Average TRB Length = 8 bytes (bits 15:0 of DWORD4; used by xHC for bandwidth scheduling)
                                                   // TR Dequeue Pointer = DMA address (transfer_ring_keyboard_EP0)

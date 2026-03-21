@@ -187,8 +187,8 @@ if ! hash tup 2> /dev/null; then
   # sufficient.
   CFLAGS="-g" ./build.sh
   mv build/tup /usr/local/bin
-  # only if apparmor installed (e.g. apparmor not installed in ubuntu:latest)
-  if [ -d /etc/apparmor.d ]; then
+  # only if apparmor is active on this system
+  if [ -d /sys/kernel/security/apparmor ]; then
     cat << EOF | sed 's/^      //' | tee /etc/apparmor.d/tup > /dev/null
       abi <abi/4.0>,
 

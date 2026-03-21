@@ -111,12 +111,19 @@ changes).
 ### Example: `test_po_change.s`
 
 ```asm
-# Setup: set [CURCHL] to a test channel block with input routine = 0x0123456789abcdef
+# Test data: a fake channel block in memory, initialised with a known input
+# routine address. We need this so that CURCHL can point to it (CURCHL holds
+# the address of the current channel block, not the block itself).
+.align 3
+po_change_1_channel_block:
+  .quad 0x0123456789abcdef
+
+# Setup: set [CURCHL] to point to our test channel block
 po_change_1_setup:
   _str    po_change_1_channel_block, CURCHL
   ret
 
-# Setup registers: x4 = the new input routine address
+# Setup registers: x4 = the new input routine address to write
 po_change_1_setup_regs:
   ldr     x4, =0xfedbca9876543210
   ret

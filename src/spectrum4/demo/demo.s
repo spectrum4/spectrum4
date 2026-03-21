@@ -45,8 +45,8 @@ demo:
   mov     x1, #2
   mov     x2, #36
   bl      display_memory
-  adrp    x0, transfer_ring_keyboard_EP0
-  add     x0, x0, :lo12:transfer_ring_keyboard_EP0
+  adrp    x0, transfer_ring_slot1_EP0
+  add     x0, x0, :lo12:transfer_ring_slot1_EP0
   mov     x1, #2
   mov     x2, #40
   bl      display_memory

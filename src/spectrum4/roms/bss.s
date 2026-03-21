@@ -400,10 +400,10 @@ scratchpad_ptrs: .space 31 * 0x8                  // 31 entries
 .align 12
 command_ring:    .space 0x100 * 0x10              // 256 entries
 command_ring_end:
-transfer_ring_keyboard_EP0: .space 0x20 * 0x10    // 32 entries
-transfer_ring_keyboard_EP0_end:
-transfer_ring_keyboard_EP1: .space 0x20 * 0x10    // 32 entries
-transfer_ring_keyboard_EP1_end:
+transfer_ring_slot1_EP0: .space 0x20 * 0x10       // 32 entries
+transfer_ring_slot1_EP0_end:
+transfer_ring_slot1_EP1: .space 0x20 * 0x10       // 32 entries
+transfer_ring_slot1_EP1_end:
 
 .align 12
 event_ring:      .space 0xfc * 0x10               // 252 entries (so that ERST can fit in same page)
@@ -417,8 +417,8 @@ erst:            .space 0x40                      // only the first 0x10 bytes m
 
 .align 12                                         // Technically only requires .align 6 but sits at page boundary anyway, and this way
                                                   // adrp can be used.
-keyboard_device_context: .space 0x80              // 1 Slot Context and 3 Endpoint Contexts; EP0, EP1 OUT, EP1 IN (i.e. 4 contexts, each 0x20 bytes = 4 * 0x20 = 0x80 bytes)
-keyboard_descriptor: .space 0x12
+slot1_device_context: .space 0x80                 // 1 Slot Context and 3 Endpoint Contexts; EP0, EP1 OUT, EP1 IN (i.e. 4 contexts, each 0x20 bytes = 4 * 0x20 = 0x80 bytes)
+slot1_descriptor: .space 0x12
 
 .align 12
 xhci_end:

@@ -295,11 +295,11 @@ command_completion_event:
   // Handle Enable Slot command completion
   adrp    x17, dcbaa                              // x17 = dcbaa (virtual)
   add     x17, x17, x16, lsl #3                   // x17 = dcbaa[slotID]
-  adrp    x16, keyboard_device_context            // conveniently sits at a 4KB page boundary
+  adrp    x16, slot1_device_context               // conveniently sits at a 4KB page boundary
   strwi   w16, x17, #0x0
-  strwi   w18, x17, #0x4                          // dcbaa[slotID] = keyboard_device_context (DMA)
-  adrp    x17, keyboard_input_context_address_device
-  add     x17, x17, :lo12:keyboard_input_context_address_device
+  strwi   w18, x17, #0x4                          // dcbaa[slotID] = slot1_device_context (DMA)
+  adrp    x17, slot1_input_context
+  add     x17, x17, :lo12:slot1_input_context
   adrp    x1, command_ring                        // x1 = command_ring (virtual)
   mov     w2, (11 << 10) | 1                      // TRB Type = 11, BSR = 0 (Address Device: see page 511 of xHCI spec)
   orr     w2, w2, 0x01000000                      // Slot 1
@@ -316,8 +316,8 @@ command_completion_event:
   // Create a GET_DESCRIPTOR request
   // Setup Stage
   // xHCI spec page 468
-  adrp    x0, transfer_ring_keyboard_EP0
-  add     x0, x0, :lo12:transfer_ring_keyboard_EP0
+  adrp    x0, transfer_ring_slot1_EP0
+  add     x0, x0, :lo12:transfer_ring_slot1_EP0
   ldr     x1, =0x0008000001000680                 // 0b0000000000001000 0000000000000000 0000000100000000 00000110 10000000
                                                   // wLength = 8 => descriptor length 8 bytes (duplicate of TRB transfer length in DATA STAGE?)
                                                   // wIndex = 0 => Zero or Language ID
@@ -346,8 +346,8 @@ command_completion_event:
 
   // Data Stage
   // xHCI spec page 470
-  adrp    x3, keyboard_descriptor
-  add     x3, x3, :lo12:keyboard_descriptor       // CPU virtual address of data buffer for keyboard descriptor
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor          // CPU virtual address of data buffer for slot 1 device descriptor (VL805 internal USB 2.0 hub)
 
   ldr     x4, = 0x00010c0100000008                // 0b000000000000000 1 000011 000 0 0 0 0 0 0 1 0000000000 00000 00000000000001000
                                                   // RsvdZ
@@ -394,12 +394,12 @@ command_completion_event:
   mov     x18, x0
   mov     w2, #0x4
   bfi     x18, x2, #32, #32                       // x18 = transfer ring (DMA)
-  strxi   x18, x0, #(transfer_ring_keyboard_EP0_end - transfer_ring_keyboard_EP0 - 0x10)
+  strxi   x18, x0, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0 - 0x10)
   mov     w19, (6 << 10) | (1 << 1)               // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
                                                   // Cycle = 0 (opposite of current PCS = 1) so xHC stops here
                                                   // rather than wrapping back to slot 0 before we are ready.
-  strwi   wzr, x0, #(transfer_ring_keyboard_EP0_end - transfer_ring_keyboard_EP0 - 0x08)
-  strwi   w19, x0, #(transfer_ring_keyboard_EP0_end - transfer_ring_keyboard_EP0 - 0x04)
+  strwi   wzr, x0, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0 - 0x08)
+  strwi   w19, x0, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0 - 0x04)
 
   mov     w6, #0x1                                // Control EP0 Enqueue Pointer Update (page 431 xHCI spec)
   add     x16, x15, x16, lsl #2                   // x16 = 0x100 less than address of doorbell for slot number stored in x16
@@ -415,8 +415,8 @@ transfer_event:
   adr     x0, msg_transfer_event
   bl      uart_puts
 .endif
-  adrp    x3, keyboard_descriptor
-  add     x3, x3, :lo12:keyboard_descriptor       // CPU virtual address of data buffer for keyboard descriptor
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor          // CPU virtual address of data buffer for slot 1 device descriptor (VL805 internal USB 2.0 hub)
   dc      ivac, x3                                // invalidate cache line(s)
   dsb     ish
   ldrxi   x18, x3, #0x0                           // Debug: read first 8 bytes of the returned descriptor data
@@ -448,11 +448,19 @@ msg_unknown_command_trb:
 
 .data
 
-# USB Keyboard Input Context (Address Device Command)
+# TODO: Consider moving this to .bss.coherent (non-cacheable) region. Currently in .data
+# (Normal Cacheable, AttrIndx 0). The xHC DMA-reads this during Address Device command.
+# Static .data is safe IF the CPU never modifies the cache lines, but placing it in the
+# coherent region alongside other DMA buffers would be cleaner and avoid any risk of
+# dirty cache line write-backs from adjacent data affecting the xHC's view.
+#
+# USB Slot 1 Input Context (Address Device Command)
+# Note: Slot 1 is the VL805's internal USB 2.0 hub (bDeviceClass=0x09, bDeviceProtocol=0x01 single TT).
+# A USB keyboard would be connected downstream of this hub, requiring hub enumeration first.
 # https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 # Section 6.2.5 (page 459)
 .align 6
-keyboard_input_context_address_device:
+slot1_input_context:
 # Input Control Context
 # https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 # Section 6.2.5.1 (page 461)
@@ -475,20 +483,20 @@ keyboard_input_context_address_device:
 .word 0x00000000
 .word 0x00000000
 .word 0x00000000
-                                                  // Context Entries = 1
-                                                  // Hub = 0
-                                                  // MTT (Multiple TT support) = 0 (disabled)
-                                                  // Speed = 3
-                                                  // Route String = 0
-                                                  // Number of Ports = 0
-                                                  // Root Hub Port Number = 1
+                                                  // Context Entries = 1 (only EP0 configured at Address Device time)
+                                                  // Hub = 0 (set to 0 for Address Device; would be updated via Configure Endpoint after reading hub descriptor)
+                                                  // MTT (Multiple TT support) = 0 (disabled; hub reports single TT via bDeviceProtocol=0x01)
+                                                  // Speed = 3 (High Speed / USB 2.0 — matches port 1's Supported Protocol capability)
+                                                  // Route String = 0 (directly attached to root hub port, no upstream hubs)
+                                                  // Number of Ports = 0 (set to 0 for Address Device; would be updated after reading hub descriptor)
+                                                  // Root Hub Port Number = 1 (VL805 port 1 = internal USB 2.0 hub)
 # Endpoint Context
 # https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 # Section 6.2.3 (page 449)
 .word 0x00000000                                  // 0b00000000 00000000 0 00000 00 00000 000; Max ESIT Payload Hi = 0; Interval = 0; LSA = 0; MaxPStreams = 0; Mult = 0; RsvdZ = 0; EP State = 0
 .word 0x00400026                                  // 0b0000000001000000 00000000 0 0 100 11 0; Max Packet Size = 64; Max Burst Size = 0; HID = 0; RsvdZ = 0; EP Type = 4; CErr = 3; RsvdZ = 0
-.dword (transfer_ring_keyboard_EP0-0xfffffff000000000+0x400000000+0x1)
-                                                  // TR Dequeue Pointer = DMA(transfer_ring_keyboard_EP0); RsvdZ = 0; DCS = 1
+.dword (transfer_ring_slot1_EP0-0xfffffff000000000+0x400000000+0x1)
+                                                  // TR Dequeue Pointer = DMA(transfer_ring_slot1_EP0); RsvdZ = 0; DCS = 1
 .word 0x00000008                                  // 0b0000000000000000 0000000000001000; Max ESIT Payload Lo = 0; Average TRB Length = 8
 .word 0x00000000
 .word 0x00000000
@@ -509,4 +517,4 @@ keyboard_input_context_address_device:
                                                   //   no need to start with 8 and update as you would for Full Speed devices)
                                                   // DCS = 1; Dequeue Cycle State (initially 1, alternates each time we loop around ring)
                                                   // Average TRB Length = 8 bytes (bits 15:0 of DWORD4; used by xHC for bandwidth scheduling)
-                                                  // TR Dequeue Pointer = DMA address (transfer_ring_keyboard_EP0)
+                                                  // TR Dequeue Pointer = DMA address (transfer_ring_slot1_EP0)

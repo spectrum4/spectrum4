@@ -1018,7 +1018,8 @@ pcie_init_bcm2711:
   strwi   w1, x0, #0x38                           // [XHCI_REG_OP_CRCR_LO] = lower32(command_ring (virtual)) | 0x1 = lower32(command_ring (DMA)) | 0x1
   strwi   w4, x0, #0x3c                           // [XHCI_REG_OP_CRCR_HI] = 4 = upper32(command_ring (DMA))
 
-  dsb     sy                                      // not needed if using device memory, but if we switch memory attributes of coherent region to 0x44, we will need this!
+  dsb     sy                                      // Essential: ensures all Normal Non-Cacheable writes (TRBs, DCBAA, ERST, scratchpad ptrs)
+                                                  // are committed to memory before the xHC starts reading them via RUN_STOP below.
 
   // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
   ldrwi   w3, x0, #0x20                           // w3 = [USBCMD]
@@ -1228,8 +1229,8 @@ vl805_reset_req_end:
 xhci_vars:
 xhci_event_dequeue: .space 8                      // keep together!!!
 xhci_event_ccs: .space 8                          // since loaded and stored with ldp/stp!!!
-xhci_transfer_keyboard_EP0_dequeue: .space 8
-xhci_transfer_keyboard_EP1_dequeue: .space 8
+xhci_transfer_slot1_EP0_dequeue: .space 8
+xhci_transfer_slot1_EP1_dequeue: .space 8
 # xhci_mmio: .space 8                             // = 0x600000000 (pcie base = xhci base) (capability registers)
 # xhci_mmio_op: .space 8                          // operational registers address
 # xhci_mmio_db: .space 8                          // doorbell registers address

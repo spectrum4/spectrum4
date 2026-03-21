@@ -486,7 +486,7 @@ slot1_input_context:
                                                   // Context Entries = 1 (only EP0 configured at Address Device time)
                                                   // Hub = 0 (set to 0 for Address Device; would be updated via Configure Endpoint after reading hub descriptor)
                                                   // MTT (Multiple TT support) = 0 (disabled; hub reports single TT via bDeviceProtocol=0x01)
-                                                  // Speed = 3 (High Speed / USB 2.0 — matches port 1's Supported Protocol capability)
+                                                  // Speed = 3 (High Speed / USB 2.0 - matches port 1's Supported Protocol capability)
                                                   // Route String = 0 (directly attached to root hub port, no upstream hubs)
                                                   // Number of Ports = 0 (set to 0 for Address Device; would be updated after reading hub descriptor)
                                                   // Root Hub Port Number = 1 (VL805 port 1 = internal USB 2.0 hub)

@@ -79,8 +79,8 @@ an "expected" snapshot.
 
 The harness compares the post-test snapshot (what the routine actually did)
 against the expected snapshot (what the test declares it should do). Any
-differences — unexpected register changes, unexpected memory writes, or missing
-expected changes — are reported as failures via UART, showing the pre-test
+differences - unexpected register changes, unexpected memory writes, or missing
+expected changes - are reported as failures via UART, showing the pre-test
 value, the actual post-test value, and the expected value.
 
 ### Why random noise catches bugs
@@ -143,8 +143,8 @@ po_change_1_effects_regs:
 
 The same test format is used for both Spectrum 128K and Spectrum +4:
 
-- `src/spectrum128k/tests/` — tests against the original Z80 ROM routines
-- `src/spectrum4/tests/` — tests against the ported AArch64 routines
+- `src/spectrum128k/tests/` - tests against the original Z80 ROM routines
+- `src/spectrum4/tests/` - tests against the ported AArch64 routines
 
 When porting a routine, the workflow is:
 
@@ -152,18 +152,55 @@ When porting a routine, the workflow is:
    understanding of its behaviour
 2. Port the routine to Spectrum +4 (AArch64)
 3. Port the test cases to the Spectrum +4 test harness
-4. Verify both test suites pass — confirming equivalent behaviour
+4. Verify both test suites pass - confirming equivalent behaviour
+
+## Adding a new test suite
+
+To add tests for routine `<routine>`, create a test file:
+
+```
+src/spectrum4/tests/test_<routine>.<chunk>.s
+```
+
+Where `<chunk>` is a short descriptive name (e.g., `printer`, `upper_screen`).
+The file should contain the four test routines described above, using the
+naming convention `<test_name>_setup`, `<test_name>_setup_regs`, etc.
+
+**That's all you need to create.** The build system automatically generates:
+
+- `test_<routine>.<chunk>.suite` - wires the test into the harness (via
+  `tests.sh`, which discovers test routines by scanning for `_setup`,
+  `_setup_regs`, `_effects`, and `_effects_regs` label suffixes)
+- `test_<routine>.<chunk>.runner` - the QEMU test runner
+- The `.elf`, `.img`, `.disassembly`, `.symbols` build artefacts
+
+The routine to test is inferred from the filename: `test_po_scr.tv_flag_bit4.s`
+tests the routine `po_scr`. If the routine is not included via `roms.s`, add a
+conditional `.include` block at the top of the test file (see existing tests
+for the pattern).
+
+### Available macros
+
+The following macros from `macros.s` are useful in test routines:
+
+| Macro | Description |
+|-------|-------------|
+| `_strb val, SYSVAR` | Store byte `val` to system variable |
+| `_strh val, SYSVAR` | Store halfword `val` to system variable |
+| `_str val, SYSVAR` | Store 64-bit `val` to system variable |
+| `_setbit bit, SYSVAR` | Set bit `bit` of system variable |
+| `_resbit bit, SYSVAR` | Clear bit `bit` of system variable |
+| `nzcv value` | Set NZCV flags to a 4-bit value (e.g., `nzcv #0b0010`) |
+
+### Generated tests
+
+To generate test cases programmatically (e.g., iterating over multiple input
+values), create `test_<something>.sh` in the tests directory. See
+`test_po_scr.sh` for an example.
 
 ## Unit tests
 
-Unit tests are written for both the original Spectrum 128K ROMs and for the new
-Spectrum +4 routines.
-
 Ideally equivalent tests should exist for both platforms, so if you are adding
 Spectrum +4 tests, you are encouraged to add equivalent Spectrum 128K tests
-(and vice versa).
-
-The Spectrum +4 test framework and the Spectrum 128K test framework use the
-same format for defining test cases. See the [Spectrum 128K
-README](../spectrum128k/README.md) for details on writing tests, generating
-tests, and disabling passing tests.
+(and vice versa). See the [Spectrum 128K README](../spectrum128k/README.md)
+for details on writing Z80 tests.

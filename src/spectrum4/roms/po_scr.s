@@ -82,8 +82,7 @@ po_scr:                                  // L0C55
   b.lo    report_5                                // w0 < [DF_SZ] => Out of screen (number of lines of upper screen < line offset).
   b.ne    8f                                      // No need to scroll - call cl_set and return.
 // w0 == w2
-  tbz     w1, #4, po_scr_2                        // TODO: BUG? Tests bit 4 of w1 (column position), but Z80 original tests bit 4 of
-                                                  // TV_FLAG (automatic listing flag). Should this be `tbz w4, #4, po_scr_2`?
+  tbz     w4, #4, po_scr_2                        // Test TV_FLAG bit 4: if not an automatic listing, jump ahead to po_scr_2.
                                                   // w4 = [TV_FLAG] from line 78 above.
 // TODO - test code below
 // Automatic program listing

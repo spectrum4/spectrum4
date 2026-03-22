@@ -5,9 +5,7 @@
 .text
 
 
-# [XHCI] s5.3 p381 -- Host Controller Capability Registers (see references.inc for spec URL)
-
-
+# Raspberry Pi 400
 # VL805 Capability Registers (read at boot from PCIe BAR 0x600000000)
 # [XHCI] s5.3.1-5.3.9 p381-399
 #

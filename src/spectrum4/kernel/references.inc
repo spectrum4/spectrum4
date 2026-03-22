@@ -68,6 +68,18 @@
 #   SHA256: ab1874e354b3ca1c522ea0f53f8cb6174b6caeff1e4d055dcdf18bca5bc20ce1
 #   Note: ARM docs portal; navigate to download PDF.
 
+# [HID]
+#   USB Device Class Definition for Human Interface Devices (HID)
+#   Revision 1.11, June 2001 (USB-IF)
+#   https://www.usb.org/sites/default/files/hid1_11.pdf
+#   SHA256: 206272dacaf01ff34beda038b8ed59abbb02f028394896345c393bc026795d36
+
+# [HUT]
+#   HID Usage Tables for Universal Serial Bus (USB)
+#   Revision 1.5, January 2024 (USB-IF)
+#   https://www.usb.org/sites/default/files/hut1_5.pdf
+#   SHA256: f4ead217b01134f89199155ed616d4eeae9ad40a5f73dad9544002b592c07db3
+
 # [PCIE]
 #   PCI Express Base Specification
 #   Revision 5.0, 2019 (PCI-SIG)

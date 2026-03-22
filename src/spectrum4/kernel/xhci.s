@@ -899,7 +899,7 @@ handle_configure_endpoint_keyboard_done:
   // Keyboard fully configured. Set boot protocol and start interrupt transfers.
 
   // Issue SET_PROTOCOL(0 = boot protocol) on slot 2 EP0
-  // USB Device Class Definition for HID, s7.2.6 -- Set Protocol
+  // [HID] s7.2.6 p54 -- Set Protocol
   // bmRequestType=0x21 (host-to-device, class, interface), bRequest=0x0B (SET_PROTOCOL),
   // wValue=0 (boot protocol), wIndex=0 (interface), wLength=0
   adr     x0, xhci_xfer_s2e0_ring_meta
@@ -952,7 +952,7 @@ handle_set_protocol_done:
 
 handle_keyboard_input:
   // Handle keyboard HID boot protocol report (8 bytes)
-  // USB Device Class Definition for HID, Appendix B -- Boot Interface Descriptors
+  // [HID] Appendix B p59 -- Boot Interface Descriptors
   //   byte 0: modifier keys (shift, ctrl, alt, etc.)
   //   byte 1: reserved (OEM)
   //   bytes 2-7: keycodes (up to 6 simultaneous keys)

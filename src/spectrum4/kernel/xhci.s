@@ -374,23 +374,25 @@ handle_enable_slot_done:
 handle_address_device_done:
   // Handle Address Device command completion for hub (slot 1)
   // All values hardcoded for VL805 internal USB 2.0 hub:
-  //   bNbrPorts=4, bPwrOn2PwrGood=50, bConfigurationValue=1
-  //   EP1 IN: bEndpointAddress=0x81, wMaxPacketSize=1, bInterval=12
+  //   bNbrPorts=4, bPwrOn2PwrGood=50  [USB2] s11.23.2.1 p417 -- Hub Descriptor
+  //   bConfigurationValue=1            [USB2] s9.6.3 p264 -- Configuration Descriptor
+  //   EP1 IN: wMaxPacketSize=1, bInterval=12  [USB2] s9.6.6 p269 -- Endpoint Descriptor
   mov     w16, #4
   strb    w16, [x12, #xhci_hub_num_ports-xhci_vars]
 
   // Prepare slot1_input_context for Configure Endpoint
-  // Update Input Control Context: Add Flags = A0 (Slot) | A3 (EP1 IN)
+  // [XHCI] s6.2.5.1 p461 -- Input Control Context
   adrp    x17, slot1_input_context
   add     x17, x17, :lo12:slot1_input_context
-  mov     w19, #0x09                              // A0=1 (Slot), A3=1 (EP1 IN DCI=3)
-  str     w19, [x17, #0x04]                       // Input Control Context DWORD1 = Add Flags
+  mov     w19, #0x09                              // Add Flags: A0=1 (Slot), A3=1 (EP1 IN DCI=3)
+  str     w19, [x17, #0x04]                       // Input Control Context DWORD1
 
-  // Slot Context DWORD0: Context Entries=3, Hub=1, Speed=3 (HS), Route String=0
+  // [XHCI] s6.2.2 p444 -- Slot Context
+  // DWORD0: Context Entries=3, Hub=1, Speed=3 (HS), Route String=0
   mov     w19, #0x1C300000
   str     w19, [x17, #0x20]
 
-  // Slot Context DWORD1: Number of Ports=4, Root Hub Port Number=1
+  // DWORD1: Number of Ports=4, Root Hub Port Number=1
   mov     w19, #0x04010000
   str     w19, [x17, #0x24]
 
@@ -465,6 +467,7 @@ hub_port_power_next:
   adr     x0, xhci_xfer_s1e0_ring_meta
 
   // Setup Stage TRB (no data stage)
+  // [USB2] s11.24.2.13 p420 Table 11-17 -- Hub Class Feature Selectors
   // bmRequestType=0x23 (host-to-device, class, other), bRequest=0x03 (SET_FEATURE),
   // wValue=PORT_POWER (8), wIndex=port, wLength=0
   ldr     x1, =0x0000000000080323                 // bmRequestType=0x23, bRequest=0x03, wValue=8 (PORT_POWER)
@@ -546,7 +549,7 @@ handle_hub_port_status:
   tbz     w18, #0, hub_port_try_next              // if PORT_CONNECTION not set, try next port
 
   // Device connected — issue SET_PORT_FEATURE(PORT_RESET, port)
-  // [USB2] s11.24.2.7.1 p425 -- Set Port Feature
+  // [USB2] s11.24.2.13 p420 Table 11-17 -- Hub Class Feature Selectors
   ldrb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
   adr     x0, xhci_xfer_s1e0_ring_meta
 
@@ -639,6 +642,7 @@ handle_hub_port_reset_confirmed:
   ubfx    w19, w18, #9, #2                        // w19 = speed (0=FS, 1=LS, 2=HS)
 
   // Issue Enable Slot command for the keyboard (will become slot 2)
+  // [XHCI] s4.3.2 p88 -- Device Slot Assignment; [XHCI] s6.4.3.2 p488 -- Enable Slot Command TRB
   adr     x0, xhci_cmd_ring_meta
   mov     x1, xzr
   mov     w2, #(9 << 10)
@@ -668,6 +672,7 @@ handle_enable_slot_keyboard_done:
   strwi   w18, x17, #0x4                          // dcbaa[slotID] = slot2_device_context (DMA)
 
   // Prepare slot 2 input context for Address Device
+  // [XHCI] s6.2.5.1 p461 -- Input Control Context
   adrp    x17, slot2_input_context
   add     x17, x17, :lo12:slot2_input_context
 
@@ -676,7 +681,8 @@ handle_enable_slot_keyboard_done:
   str     wzr, [x17, #0x00]                       // Drop Flags = 0
   str     w4, [x17, #0x04]                        // Add Flags = A0|A1
 
-  // Slot Context DWORD0: Context Entries=1, Speed from port status
+  // [XHCI] s6.2.2 p444 -- Slot Context
+  // DWORD0: Context Entries=1, Speed from port status
   // USB port speed to xHCI speed mapping:
   //   USB port status bits 9-10: 0=FS(12Mbps), 1=LS(1.5Mbps), 2=HS(480Mbps)
   //   xHCI speed: 1=FS, 2=LS, 3=HS, 4=SS
@@ -754,6 +760,7 @@ handle_enable_slot_keyboard_done:
   dsb     sy
 
   // Issue Address Device command for slot 2
+  // [XHCI] s6.4.3.4 p490 -- Address Device Command TRB
   mov     x1, x17                                 // TRB data = slot2_input_context (virtual)
   bfi     x1, x18, #32, #32                       // TRB data = slot2_input_context (DMA)
   // Control: TRB Type=11 (Address Device), Slot ID from Enable Slot completion
@@ -783,6 +790,7 @@ handle_address_device_keyboard_done:
   bl      wait_usec
 
   // Prepare slot2_input_context for Configure Endpoint
+  // [XHCI] s6.2.5.1 p461 -- Input Control Context
   adrp    x17, slot2_input_context
   add     x17, x17, :lo12:slot2_input_context
 
@@ -791,7 +799,7 @@ handle_address_device_keyboard_done:
   mov     w4, #0x09
   str     w4, [x17, #0x04]
 
-  // Slot Context — hardcoded for LS keyboard at hub port 4
+  // [XHCI] s6.2.2 p444 -- Slot Context
   // DWORD0: Context Entries=3, Speed=2 (LS), Route String=4
   ldr     w3, =0x18200004                         // CE=3, Speed=2(LS), RouteString=4
   str     w3, [x17, #0x20]
@@ -804,6 +812,7 @@ handle_address_device_keyboard_done:
   mov     w3, #0x0401                             // ParentPort=4, ParentSlot=1
   str     w3, [x17, #0x28]
 
+  // [XHCI] s6.2.3 p449 -- Endpoint Context
   // EP1 IN Context (at offset 0x80)
   // DWORD0: Interval — for LS/FS interrupt endpoint behind HS hub:
   //   xHCI Interval = ceiling(log2(bInterval * 8)), valid range 3-10
@@ -840,6 +849,7 @@ handle_address_device_keyboard_done:
 
 
   // Issue SET_CONFIGURATION(1) on slot 2 EP0
+  // [USB2] s9.4.7 p257 -- Set Configuration
   adr     x0, xhci_xfer_s2e0_ring_meta
 
   ldr     x1, =0x0000000000010900                 // bmRequestType=0x00, bRequest=0x09, wValue=1
@@ -863,6 +873,7 @@ handle_address_device_keyboard_done:
 
 handle_set_configuration_keyboard_done:
   // Issue Configure Endpoint command for keyboard (slot 2)
+  // [XHCI] s4.6.6 p115 -- Configure Endpoint; [XHCI] s6.4.3.5 p491 -- Configure Endpoint Command TRB
   adrp    x17, slot2_input_context
   add     x17, x17, :lo12:slot2_input_context
   mov     x1, x17
@@ -888,7 +899,7 @@ handle_configure_endpoint_keyboard_done:
   // Keyboard fully configured. Set boot protocol and start interrupt transfers.
 
   // Issue SET_PROTOCOL(0 = boot protocol) on slot 2 EP0
-  // [HID] s7.2.6 -- Set Protocol
+  // USB Device Class Definition for HID, s7.2.6 -- Set Protocol
   // bmRequestType=0x21 (host-to-device, class, interface), bRequest=0x0B (SET_PROTOCOL),
   // wValue=0 (boot protocol), wIndex=0 (interface), wLength=0
   adr     x0, xhci_xfer_s2e0_ring_meta
@@ -941,7 +952,7 @@ handle_set_protocol_done:
 
 handle_keyboard_input:
   // Handle keyboard HID boot protocol report (8 bytes)
-  // [HID] Appendix B -- Boot Interface Descriptors
+  // USB Device Class Definition for HID, Appendix B -- Boot Interface Descriptors
   //   byte 0: modifier keys (shift, ctrl, alt, etc.)
   //   byte 1: reserved (OEM)
   //   bytes 2-7: keycodes (up to 6 simultaneous keys)

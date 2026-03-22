@@ -622,6 +622,8 @@ handle_get_hub_descriptor_done:
 
   ubfx    w16, w18, #16, #8                       // w16 = byte 2 = bNbrPorts
   strb    w16, [x12, #xhci_hub_num_ports-xhci_vars]
+  ubfx    x17, x18, #40, #8                       // w17 = byte 5 = bPwrOn2PwrGood
+  strb    w17, [x12, #xhci_hub_pwron2pwrgood-xhci_vars]
 
   // Prepare slot1_input_context for Configure Endpoint
   // Update Input Control Context: Add Flags = A0 (Slot) | A3 (EP1 IN)
@@ -724,7 +726,377 @@ handle_set_configuration_hub_done:
 
 handle_configure_endpoint_hub_done:
   // Handle Configure Endpoint command completion — hub is fully configured
-  // End of Chunk B. Chunk C starts with SET_PORT_FEATURE(PORT_POWER).
+  // Start scanning hub ports for connected devices
+
+  // Start with port 1
+  mov     w16, #1
+  strb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
+
+hub_port_power_next:
+  // Issue SET_PORT_FEATURE(PORT_POWER, port) on slot 1 EP0
+  // [USB2] s11.24.2.7.1 p425 -- Set Port Feature
+  ldrb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
+  adr     x0, xhci_xfer_s1e0_ring_meta
+
+  // Setup Stage TRB (no data stage)
+  // bmRequestType=0x23 (host-to-device, class, other), bRequest=0x03 (SET_FEATURE),
+  // wValue=PORT_POWER (8), wIndex=port, wLength=0
+  ldr     x1, =0x0000000000080323                 // bmRequestType=0x23, bRequest=0x03, wValue=8 (PORT_POWER)
+  bfi     x1, x16, #32, #8                        // wIndex = port number
+
+  ldr     x2, =0x0000084000000008                 // TRB Type=2, TRT=0 (No Data), IDT=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Status Stage (DIR=1 for no-data-stage)
+  mov     x1, xzr
+  ldr     x2, =0x0001102000000000                 // TRB Type=4, IOC=1, DIR=1
+  bl      ring_write_trb
+
+  adr     x3, handle_hub_port_powered
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  mov     w6, #0x1
+  strwi   w6, x15, #0x104
+  b       2b
+
+
+handle_hub_port_powered:
+  // Handle SET_PORT_FEATURE(PORT_POWER) completion
+  // Wait bPwrOn2PwrGood * 2ms for port power to stabilise
+  // [USB2] s11.23.2.1 p417 -- Hub Descriptor
+  ldrb    w0, [x12, #xhci_hub_pwron2pwrgood-xhci_vars]
+  lsl     w0, w0, #1                              // w0 = bPwrOn2PwrGood * 2 (in ms)
+  mov     w1, #1000
+  mul     w0, w0, w1                              // w0 = delay in microseconds
+  bl      wait_usec
+
+  // Issue GET_PORT_STATUS(port) on slot 1 EP0
+  // [USB2] s11.24.2.7 p424 -- Get Port Status
+  ldrb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
+  adr     x0, xhci_xfer_s1e0_ring_meta
+
+  // Setup Stage TRB
+  // bmRequestType=0xA3 (device-to-host, class, other), bRequest=0x00 (GET_STATUS),
+  // wValue=0, wIndex=port, wLength=4
+  ldr     x1, =0x00040000000000A3                 // bmRequestType=0xA3, bRequest=0x00, wValue=0, wLength=4
+  bfi     x1, x16, #32, #8                        // wIndex = port number
+
+  ldr     x2, =0x0003084000000008                 // TRB Type=2, TRT=3 (IN), IDT=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Data Stage TRB — 4 bytes of port status
+  adrp    x1, slot1_descriptor
+  add     x1, x1, :lo12:slot1_descriptor
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32
+  ldr     x2, =0x00010C0000000004                 // TRB Type=3, DIR=1; Transfer Length=4
+  bl      ring_write_trb
+
+  // Status Stage
+  mov     x1, xzr
+  mov     x2, #0x0000102000000000                 // TRB Type=4, IOC=1
+  bl      ring_write_trb
+
+  adr     x3, handle_hub_port_status
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  mov     w6, #0x1
+  strwi   w6, x15, #0x104
+  b       2b
+
+
+handle_hub_port_status:
+  // Handle GET_PORT_STATUS completion — check if device is connected
+  // [USB2] s11.24.2.7.1 Table 11-21 p426 -- Port Status
+  //   bit 0: PORT_CONNECTION
+  //   bit 1: PORT_ENABLE
+  //   bit 2: PORT_SUSPEND
+  //   bit 3: PORT_OVER_CURRENT
+  //   bit 4: PORT_RESET
+  //   bit 8: PORT_POWER
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor
+  dc      ivac, x3
+  dsb     ish
+  ldrwi   w18, x3, #0x0                           // w18 = port status (4 bytes)
+
+  tbz     w18, #0, hub_port_try_next              // if PORT_CONNECTION not set, try next port
+
+  // Device connected — issue SET_PORT_FEATURE(PORT_RESET, port)
+  // [USB2] s11.24.2.7.1 p425 -- Set Port Feature
+  ldrb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
+  adr     x0, xhci_xfer_s1e0_ring_meta
+
+  // Setup Stage TRB (no data stage)
+  // bmRequestType=0x23, bRequest=0x03 (SET_FEATURE), wValue=PORT_RESET (4), wIndex=port, wLength=0
+  ldr     x1, =0x0000000000040323                 // bmRequestType=0x23, bRequest=0x03, wValue=4 (PORT_RESET)
+  bfi     x1, x16, #32, #8                        // wIndex = port number
+
+  ldr     x2, =0x0000084000000008                 // TRB Type=2, TRT=0, IDT=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Status Stage (DIR=1)
+  mov     x1, xzr
+  ldr     x2, =0x0001102000000000                 // TRB Type=4, IOC=1, DIR=1
+  bl      ring_write_trb
+
+  adr     x3, handle_hub_port_reset_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  mov     w6, #0x1
+  strwi   w6, x15, #0x104
+  b       2b
+
+hub_port_try_next:
+  // No device on this port — try next port
+  ldrb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
+  add     w16, w16, #1
+  strb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
+  ldrb    w17, [x12, #xhci_hub_num_ports-xhci_vars]
+  cmp     w16, w17
+  b.le    hub_port_power_next                     // try next port
+  // No more ports — no keyboard found, just continue boot
+  b       2b
+
+
+handle_hub_port_reset_done:
+  // Handle SET_PORT_FEATURE(PORT_RESET) completion
+  // Wait 10ms for reset recovery [USB2] s9.2.6.2 p245
+  mov     x0, #10000                              // 10ms = 10000us
+  bl      wait_usec
+
+  // Issue GET_PORT_STATUS to confirm reset complete
+  ldrb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
+  adr     x0, xhci_xfer_s1e0_ring_meta
+
+  // Setup Stage TRB
+  ldr     x1, =0x00040000000000A3
+  bfi     x1, x16, #32, #8
+
+  ldr     x2, =0x0003084000000008
+  bl      ring_write_trb
+
+  // Data Stage TRB
+  adrp    x1, slot1_descriptor
+  add     x1, x1, :lo12:slot1_descriptor
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32
+  ldr     x2, =0x00010C0000000004
+  bl      ring_write_trb
+
+  // Status Stage
+  mov     x1, xzr
+  mov     x2, #0x0000102000000000
+  bl      ring_write_trb
+
+  adr     x3, handle_hub_port_reset_confirmed
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  mov     w6, #0x1
+  strwi   w6, x15, #0x104
+  b       2b
+
+
+handle_hub_port_reset_confirmed:
+  // Handle GET_PORT_STATUS after reset — verify port enabled
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor
+  dc      ivac, x3
+  dsb     ish
+  ldrwi   w18, x3, #0x0                           // w18 = port status
+
+  // Check PORT_ENABLE (bit 1) and PORT_CONNECTION (bit 0)
+  and     w17, w18, #0x3
+  cmp     w17, #0x3                               // both PORT_CONNECTION and PORT_ENABLE must be set
+  b.ne    hub_port_try_next                       // if not, try next port
+
+  // Port is enabled with a device — extract speed from bits 9-10
+  // [USB2] s11.24.2.7.1 Table 11-21 -- Port Status bits 9-10: speed
+  //   00 = Full Speed, 01 = Low Speed, 10 = High Speed
+  ubfx    w19, w18, #9, #2                        // w19 = speed (0=FS, 1=LS, 2=HS)
+
+  // Issue Enable Slot command for the keyboard (will become slot 2)
+  adr     x0, xhci_cmd_ring_meta
+  mov     x1, xzr
+  mov     w2, #(9 << 10)
+  lsl     x2, x2, #32                             // Control: TRB Type=9 (Enable Slot)
+  bl      ring_write_trb
+
+  adr     x3, handle_enable_slot_keyboard_done
+  str     x3, [x12, #xhci_command_handler-xhci_vars]
+
+  dsb     sy
+  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
+  b       2b
+
+
+handle_enable_slot_keyboard_done:
+  // Handle Enable Slot command completion for keyboard
+  // x11 bits 56-63 = Slot ID (should be 2)
+  lsr     x16, x11, #56                           // x16 = Slot ID (expected: 2)
+  mov     w18, #0x4                               // upper 32 bits for DMA addresses
+
+  // Write DCBAA[slotID] = slot2_device_context (DMA)
+  adrp    x17, dcbaa
+  add     x17, x17, x16, lsl #3
+  adrp    x4, slot2_device_context
+  add     x4, x4, :lo12:slot2_device_context
+  strwi   w4, x17, #0x0
+  strwi   w18, x17, #0x4                          // dcbaa[slotID] = slot2_device_context (DMA)
+
+  // Prepare slot 2 input context for Address Device
+  adrp    x17, slot2_input_context
+  add     x17, x17, :lo12:slot2_input_context
+
+  // Input Control Context: A0=1 (Slot), A1=1 (EP0)
+  mov     w4, #0x03
+  str     wzr, [x17, #0x00]                       // Drop Flags = 0
+  str     w4, [x17, #0x04]                        // Add Flags = A0|A1
+
+  // Slot Context DWORD0: Context Entries=1, Speed from port status
+  // USB port speed to xHCI speed mapping:
+  //   USB port status bits 9-10: 0=FS(12Mbps), 1=LS(1.5Mbps), 2=HS(480Mbps)
+  //   xHCI speed: 1=FS, 2=LS, 3=HS, 4=SS
+  // Conversion: FS(0→1), LS(1→2), HS(2→3) => xhci_speed = usb_speed + 1
+  ldrb    w19, [x12, #xhci_hub_scan_port-xhci_vars]
+                                                  // w19 = port number (reloaded; was clobbered)
+  // Reconstruct speed from port status — need to re-read it
+  // Actually, w19 was set to speed earlier but got clobbered by ring_write_trb
+  // Re-read port status from buffer
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor
+  ldr     w4, [x3]                                // w4 = port status (still in buffer from last GET_PORT_STATUS)
+  ubfx    w19, w4, #9, #2                         // w19 = USB speed (0=FS, 1=LS, 2=HS)
+  add     w19, w19, #1                            // w19 = xHCI speed (1=FS, 2=LS, 3=HS)
+
+  ldrb    w4, [x12, #xhci_hub_scan_port-xhci_vars]
+                                                  // w4 = hub port number where keyboard was found
+
+  // DWORD0: Context Entries=1, Speed, Route String = port number (first tier)
+  mov     w6, #0x08000000                         // Context Entries = 1
+  orr     w6, w6, w19, lsl #20                    // Speed
+  orr     w6, w6, w4                              // Route String = port number (bits 3:0 for tier 1)
+  str     w6, [x17, #0x20]                        // Slot Context DWORD0
+
+  // DWORD1: Root Hub Port Number = 1 (VL805 port 1 = hub)
+  mov     w6, #0x00010000                         // Root Hub Port Number = 1
+  str     w6, [x17, #0x24]                        // Slot Context DWORD1
+
+  // DWORD2: Parent Hub Slot ID = 1, Parent Port Number = port, TT fields
+  //   Parent Hub Slot ID (7:0) = 1
+  //   Parent Port Number (15:8) = hub port where keyboard found
+  //   TTT (17:16) = 0 (single TT)
+  mov     w6, #0x01                               // Parent Hub Slot ID = 1
+  orr     w6, w6, w4, lsl #8                      // Parent Port Number = port
+  str     w6, [x17, #0x28]                        // Slot Context DWORD2
+
+  // EP0 Context: Max Packet Size depends on speed
+  //   LS: 8 bytes, FS: 8/16/32/64 (start with 8), HS: 64
+  // For simplicity: LS=8, FS=8, HS=64
+  cmp     w19, #3                                 // HS?
+  mov     w6, #64
+  b.eq    1f
+  mov     w6, #8                                  // LS or FS
+1:
+  // DWORD1: CErr=3 (bits 2:1), EP Type=4 (Control, bits 5:3), Max Packet Size (bits 31:16)
+  lsl     w6, w6, #16                             // Max Packet Size in bits 31:16
+  mov     w4, #0x26                               // CErr=3 (0x06), EP Type=4 (0x20) = 0x26
+  orr     w6, w6, w4
+  str     w6, [x17, #0x44]                        // EP0 Context DWORD1
+
+  // EP0 Context DWORD0: EP State=0, Interval=0 (control EP)
+  str     wzr, [x17, #0x40]
+
+  // EP0 TR Dequeue Pointer = DMA(transfer_ring_slot2_EP0) | DCS=1
+  adrp    x6, transfer_ring_slot2_EP0
+  add     x6, x6, :lo12:transfer_ring_slot2_EP0
+  mov     x3, x6
+  bfi     x3, x18, #32, #32                       // x3 = transfer_ring_slot2_EP0 (DMA)
+  orr     x3, x3, #1                              // DCS = 1
+  str     x3, [x17, #0x48]                        // EP0 Context DWORD2-3
+
+  // EP0 Average TRB Length = 8
+  mov     w6, #8
+  str     w6, [x17, #0x50]                        // EP0 Context DWORD4
+
+  // Zero remaining EP0 context DWORDs
+  str     wzr, [x17, #0x54]
+  str     wzr, [x17, #0x58]
+  str     wzr, [x17, #0x5C]
+
+  // Cache clean slot2_input_context
+  dc      cvac, x17
+  add     x3, x17, #0x40
+  dc      cvac, x3
+  dsb     sy
+
+  // Issue Address Device command for slot 2
+  mov     x1, x17                                 // TRB data = slot2_input_context (virtual)
+  bfi     x1, x18, #32, #32                       // TRB data = slot2_input_context (DMA)
+  // Control: TRB Type=11 (Address Device), Slot ID from Enable Slot completion
+  lsr     x16, x11, #56                           // reload Slot ID from event (should be 2)
+  mov     w2, #(11 << 10)
+  lsl     x2, x2, #32
+  bfi     x2, x16, #56, #8                        // Slot ID in bits 63:56 of x2 (= bits 31:24 of Control)
+  adr     x0, xhci_cmd_ring_meta
+  bl      ring_write_trb
+
+  adr     x3, handle_address_device_keyboard_done
+  str     x3, [x12, #xhci_command_handler-xhci_vars]
+
+  dsb     sy
+  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
+  b       2b
+
+
+handle_address_device_keyboard_done:
+  // Handle Address Device command completion for keyboard
+  // Wait 2ms SetAddress recovery interval [USB2] s9.2.6.3 p246
+  mov     x0, #2000                               // 2ms = 2000us
+  bl      wait_usec
+
+  // Issue GET_DESCRIPTOR(device, 8 bytes) on slot 2 EP0
+  adr     x0, xhci_xfer_s2e0_ring_meta
+
+  // Setup Stage TRB
+  ldr     x1, =0x0008000001000680                 // GET_DESCRIPTOR(device, 8 bytes)
+  ldr     x2, =0x0003084000000008                 // TRB Type=2, TRT=3, IDT=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Data Stage TRB
+  adrp    x1, slot2_descriptor
+  add     x1, x1, :lo12:slot2_descriptor
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32
+  ldr     x2, =0x00010C0000000008                 // TRB Type=3, DIR=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Status Stage TRB
+  mov     x1, xzr
+  mov     x2, #0x0000102000000000                 // TRB Type=4, IOC=1
+  bl      ring_write_trb
+
+  adr     x3, handle_get_keyboard_descriptor_8_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+
+  // Ring slot 2 doorbell
+  lsr     x16, x11, #56                           // Slot ID (should be 2)
+  add     x16, x15, x16, lsl #2                   // x16 = cap_base + slotID*4
+  mov     w6, #0x1                                // DB Target = 1 (EP0)
+  strwi   w6, x16, #0x100                         // ring doorbell for slot 2
+  b       2b
+
+
+handle_get_keyboard_descriptor_8_done:
+  // Handle GET_DESCRIPTOR(device, 8 bytes) for keyboard
+  // End of Chunk C — keyboard slot is addressed and we got its descriptor header.
+  // Chunk D will continue with full enumeration and HID setup.
+  adrp    x3, slot2_descriptor
+  add     x3, x3, :lo12:slot2_descriptor
+  dc      ivac, x3
+  dsb     ish
+  ldrxi   x18, x3, #0x0                           // Debug: read first 8 bytes of keyboard descriptor
   b       2b
 
 

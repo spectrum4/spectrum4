@@ -1009,6 +1009,22 @@ pcie_init_bcm2711:
   add     x1, x2, #(transfer_ring_slot1_EP1_end - transfer_ring_slot1_EP1)
   str     x1, [x8, #xhci_xfer_s1e1_end-xhci_vars]
 
+  // Slot 2 EP0 transfer ring metadata
+  adrp    x1, transfer_ring_slot2_EP0
+  add     x1, x1, :lo12:transfer_ring_slot2_EP0
+  str     x1, [x8, #xhci_xfer_s2e0_enqueue-xhci_vars]
+  strb    w3, [x8, #xhci_xfer_s2e0_pcs-xhci_vars]
+  str     x1, [x8, #xhci_xfer_s2e0_start-xhci_vars]
+  add     x2, x1, #(transfer_ring_slot2_EP0_end - transfer_ring_slot2_EP0)
+  str     x2, [x8, #xhci_xfer_s2e0_end-xhci_vars]
+
+  // Slot 2 EP1 transfer ring metadata
+  str     x2, [x8, #xhci_xfer_s2e1_enqueue-xhci_vars]
+  strb    w3, [x8, #xhci_xfer_s2e1_pcs-xhci_vars]
+  str     x2, [x8, #xhci_xfer_s2e1_start-xhci_vars]
+  add     x1, x2, #(transfer_ring_slot2_EP1_end - transfer_ring_slot2_EP1)
+  str     x1, [x8, #xhci_xfer_s2e1_end-xhci_vars]
+
   // Callback handler pointers — initialise to panic (catches unexpected completions)
   adr     x1, xhci_unexpected_event
   str     x1, [x8, #xhci_command_handler-xhci_vars]
@@ -1047,6 +1063,24 @@ pcie_init_bcm2711:
   str     x2, [x3, #-0x10]                        // link TRB data
   str     wzr, [x3, #-0x08]                       // link TRB status = 0
   str     w6, [x3, #-0x04]                        // link TRB control
+
+  // Slot 2 EP0 transfer ring link TRB
+  adrp    x1, transfer_ring_slot2_EP0
+  add     x1, x1, :lo12:transfer_ring_slot2_EP0
+  mov     x2, x1
+  bfi     x2, x4, #32, #32
+  add     x3, x1, #(transfer_ring_slot2_EP0_end - transfer_ring_slot2_EP0)
+  str     x2, [x3, #-0x10]
+  str     wzr, [x3, #-0x08]
+  str     w6, [x3, #-0x04]
+
+  // Slot 2 EP1 transfer ring link TRB
+  mov     x2, x3
+  bfi     x2, x4, #32, #32
+  add     x3, x3, #(transfer_ring_slot2_EP1_end - transfer_ring_slot2_EP1)
+  str     x2, [x3, #-0x10]
+  str     wzr, [x3, #-0x08]
+  str     w6, [x3, #-0x04]
 
   // --- Continue with existing xHCI register setup ---
   adrp    x1, command_ring                        // x1 = command_ring (virtual)
@@ -1329,10 +1363,27 @@ xhci_xfer_s1e1_end:      .space 8                 // +0x18: ring end (virtual)
 xhci_command_handler:    .space 8                 // branch target for next command completion event
 xhci_transfer_handler:   .space 8                 // branch target for next transfer event
 
+# --- Slot 2 ring metadata blocks (32 bytes each) ---
+xhci_xfer_s2e0_ring_meta:
+xhci_xfer_s2e0_enqueue:  .space 8
+xhci_xfer_s2e0_pcs:      .space 1
+                         .align 3
+xhci_xfer_s2e0_start:    .space 8
+xhci_xfer_s2e0_end:      .space 8
+
+xhci_xfer_s2e1_ring_meta:
+xhci_xfer_s2e1_enqueue:  .space 8
+xhci_xfer_s2e1_pcs:      .space 1
+                         .align 3
+xhci_xfer_s2e1_start:    .space 8
+xhci_xfer_s2e1_end:      .space 8
+
 # --- Hub enumeration state ---
 xhci_hub_num_ports:      .space 1                 // bNbrPorts from hub descriptor
 xhci_hub_config_value:   .space 1                 // bConfigurationValue from config descriptor
 xhci_hub_ep_interval:    .space 1                 // bInterval from endpoint descriptor
+xhci_hub_scan_port:      .space 1                 // current port being scanned (1-based)
+xhci_hub_pwron2pwrgood:  .space 1                 // bPwrOn2PwrGood from hub descriptor
                          .align 1
 xhci_hub_ep_max_pkt:     .space 2                 // wMaxPacketSize from endpoint descriptor
                          .align 3

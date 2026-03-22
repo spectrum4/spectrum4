@@ -420,6 +420,20 @@ erst:            .space 0x40                      // only the first 0x10 bytes m
 slot1_device_context: .space 0x80                 // 1 Slot Context and 3 Endpoint Contexts; EP0, EP1 OUT, EP1 IN (i.e. 4 contexts, each 0x20 bytes = 4 * 0x20 = 0x80 bytes)
 slot1_descriptor: .space 0x80                     // reusable descriptor buffer (device, configuration, hub class)
 
+.align 6
+slot2_device_context: .space 0x80                 // Slot + Endpoint contexts for keyboard (4 contexts, each 0x20)
+slot2_descriptor: .space 0x80                     // reusable descriptor buffer for keyboard
+
+.align 6
+slot2_input_context:  .space 0xA0                 // Input Control (0x20) + Slot (0x20) + EP0 (0x20) + EP1 OUT (0x20) + EP1 IN (0x20)
+keyboard_report:      .space 0x08                 // 8-byte HID boot protocol report buffer
+
+.align 12
+transfer_ring_slot2_EP0: .space 0x20 * 0x10       // 32 entries
+transfer_ring_slot2_EP0_end:
+transfer_ring_slot2_EP1: .space 0x20 * 0x10       // 32 entries (interrupt IN)
+transfer_ring_slot2_EP1_end:
+
 .align 12
 xhci_end:
 

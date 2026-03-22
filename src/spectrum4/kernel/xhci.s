@@ -141,6 +141,49 @@
 #    30: DR = 0 => Device is removable
 
 
+# ring_write_trb — Write a TRB to any ring, handling cycle bit and link TRB wrapping.
+#
+# Inputs:
+#   x0  = pointer to ring metadata block (32-byte struct: enqueue, PCS, start, end)
+#   x1  = TRB dword 0-1 (data field, 8 bytes)
+#   x2  = TRB dword 2-3 (status in lower 32, control in upper 32) — WITHOUT cycle bit set
+#
+# Outputs:
+#   Ring metadata updated (enqueue pointer advanced, PCS toggled on wrap)
+#
+# Clobbers: x3, x4, x5
+# Preserves: x0, x1, x2, x6-x30
+.align 2
+ring_write_trb:
+  ldr     x3, [x0, #0x00]                         // x3 = current enqueue pointer
+  ldrb    w4, [x0, #0x08]                         // w4 = PCS (0 or 1)
+  bfi     x2, x4, #32, #1                         // set cycle bit (bit 0 of Control dword = bit 32 of x2) to PCS
+  str     x1, [x3, #0x00]                         // write TRB data (dwords 0-1)
+  str     x2, [x3, #0x08]                         // write TRB status+control (dwords 2-3) with cycle bit
+  bfc     x2, #32, #1                             // clear cycle bit back out of x2 (restore caller's value)
+  add     x3, x3, #16                             // advance enqueue to next slot
+  ldr     x5, [x0, #0x18]                         // x5 = ring end
+  sub     x5, x5, #16                             // x5 = last slot (link TRB position)
+  cmp     x3, x5
+  b.lo    1f                                      // if enqueue < link TRB slot, just store and return
+
+  // Enqueue has reached the link TRB slot — handle wrapping
+  // Update link TRB's cycle bit to match current PCS so xHC follows it
+  ldr     w3, [x5, #0x0c]                         // w3 = link TRB control dword (at offset 0x0c from link TRB)
+  bfi     w3, w4, #0, #1                          // set link TRB cycle bit (bit 0 of control dword) to current PCS
+  str     w3, [x5, #0x0c]                         // write back link TRB control
+
+  // Toggle PCS
+  eor     w4, w4, #1                              // toggle PCS
+  strb    w4, [x0, #0x08]                         // store new PCS
+
+  // Reset enqueue to ring start
+  ldr     x3, [x0, #0x10]                         // x3 = ring start
+1:
+  str     x3, [x0, #0x00]                         // store updated enqueue pointer
+  ret
+
+
 # Note: preserve x7 and x8 since caller (handle_irq_bcm2711) uses these
 .align 2
 handle_xhci_irq:
@@ -253,29 +296,105 @@ port_status_change_event:
   strwi   w18, x17, #0x410                        // write value back to clear RW1CS changes, potentially reset port
   tbnz    w19, #0, 2b                             // if resetting port, return and wait for next port status change
 
+  // Port is enabled — issue Enable Slot command via ring_write_trb
   // [XHCI] s6.4.3.2 p488 -- Enable Slot Command TRB
-  adrp    x1, command_ring                        // x1 = command_ring (virtual)
-  mov     w2, (9 << 10) | 1                       // TRB Type = 9 (Enable Slot) [XHCI] s6.4.6 p511 Table 6-91
-  strxi   xzr, x1, #0x0
-  strwi   wzr, x1, #0x8
-  strwi   w2, x1, #0xc
+  adr     x0, xhci_cmd_ring_meta
+  mov     x1, xzr                                 // TRB data = 0
+  mov     w2, #(9 << 10)                          // Control: TRB Type = 9 (Enable Slot) [XHCI] s6.4.6 p511 Table 6-91
+  lsl     x2, x2, #32                             // shift into upper 32 bits (Control dword); Status = 0
+  bl      ring_write_trb
 
-  // Ensure link TRB is configured before first doorbell ring, since xHC may read arbitrarily ahead
-  mov     x18, x1
-  mov     w2, #0x4
-  bfi     x18, x2, #32, #32                       // x18 = command_ring (DMA)
-  strxi   x18, x1, #(command_ring_end - command_ring - 0x10)
-  mov     w19, (6 << 10) | (1 << 1)               // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
-                                                  // Cycle = 0 (opposite of current PCS = 1) so the xHC stops here
-                                                  // rather than following the ring back to slot 0 prematurely.
-                                                  // Toggle Cycle = 1 so that when we do want the xHC to wrap,
-                                                  // it will flip its PCS on processing this Link TRB.
-  strwi   wzr, x1, #(command_ring_end - command_ring - 0x08)
-  strwi   w19, x1, #(command_ring_end - command_ring - 0x04)
+  // Set callback for command completion
+  adr     x3, handle_enable_slot_done
+  str     x3, [x12, #xhci_command_handler-xhci_vars]
 
   dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
-  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0) [XHCI] s5.6 p429 -- Doorbell Registers
+  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0) [XHCI] s5.6 p429
 
+  b       2b
+
+
+handle_enable_slot_done:
+  // Handle Enable Slot command completion
+  // x11 bits 56-63 = Slot ID [XHCI] s6.4.2.1 p487 -- Command Completion Event TRB
+  lsr     x16, x11, #56                           // x16 = Slot ID
+  mov     w18, #0x4                               // upper 32 bits for DMA addresses
+  adrp    x17, dcbaa                              // x17 = dcbaa (virtual)
+  add     x17, x17, x16, lsl #3                   // x17 = dcbaa[slotID]
+  adrp    x16, slot1_device_context               // conveniently sits at a 4KB page boundary
+  strwi   w16, x17, #0x0
+  strwi   w18, x17, #0x4                          // dcbaa[slotID] = slot1_device_context (DMA)
+
+  // Issue Address Device command via ring_write_trb
+  // [XHCI] s6.4.3.4 p490 -- Address Device Command TRB
+  adrp    x17, slot1_input_context
+  add     x17, x17, :lo12:slot1_input_context
+  mov     x1, x17                                 // TRB data = slot1_input_context (virtual)
+  bfi     x1, x18, #32, #32                       // TRB data = slot1_input_context (DMA)
+  ldr     x2, =0x01002C0000000000                 // Control: TRB Type=11 (Address Device), Slot 1; Status=0
+  adr     x0, xhci_cmd_ring_meta
+  bl      ring_write_trb
+
+  // Set callback for Address Device completion
+  adr     x3, handle_address_device_done
+  str     x3, [x12, #xhci_command_handler-xhci_vars]
+
+  dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
+  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0) [XHCI] s5.6 p429
+
+  b       2b
+
+
+handle_address_device_done:
+  // Handle Address Device command completion — issue GET_DESCRIPTOR(device, 8 bytes) on slot 1 EP0
+
+  // Setup Stage TRB
+  // [XHCI] s6.4.1.2.1 p468 -- Setup Stage TRB
+  adr     x0, xhci_xfer_s1e0_ring_meta
+  ldr     x1, =0x0008000001000680                 // bmRequestType=0x80 (device-to-host), bRequest=0x06 (GET_DESCRIPTOR),
+                                                  // wValue=0x0100 (Device descriptor, index 0), wIndex=0, wLength=8
+  ldr     x2, =0x0003084000000008                 // Control: TRB Type=2 (Setup Stage), TRT=3 (IN), IDT=1; Status: Transfer Length=8
+                                                  // cycle bit NOT set — ring_write_trb handles it
+  bl      ring_write_trb
+
+  // Data Stage TRB
+  // [XHCI] s6.4.1.2.2 p470 -- Data Stage TRB
+  adrp    x1, slot1_descriptor
+  add     x1, x1, :lo12:slot1_descriptor          // x1 = slot1_descriptor (virtual)
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32                        // x1 = slot1_descriptor (DMA)
+  ldr     x2, =0x00010C0000000008                 // Control: TRB Type=3 (Data Stage), DIR=1 (IN); Status: Transfer Length=8
+                                                  // cycle bit NOT set — ring_write_trb handles it
+  bl      ring_write_trb
+
+  // Status Stage TRB
+  // [XHCI] s6.4.1.2.3 p472 -- Status Stage TRB
+  mov     x1, xzr                                 // TRB data = 0
+  mov     x2, #0x0000102000000000                 // Control: TRB Type=4 (Status Stage), IOC=1; Status=0
+                                                  // cycle bit NOT set — ring_write_trb handles it
+  bl      ring_write_trb
+
+  // Set callback for transfer completion
+  adr     x3, handle_get_device_descriptor_8_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+
+  dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
+
+  // Ring slot 1 doorbell, EP0 target = 1
+  // [XHCI] s5.6 p429 Table 5-43
+  mov     w6, #0x1                                // DB Target = 1 (Control EP0 Enqueue Pointer Update)
+  strwi   w6, x15, #0x104                         // ring doorbell register 1 (slot 1)
+
+  b       2b
+
+
+handle_get_device_descriptor_8_done:
+  // Handle GET_DESCRIPTOR(device, 8 bytes) transfer completion
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor          // CPU virtual address of data buffer
+  dc      ivac, x3                                // invalidate cache line(s)
+  dsb     ish
+  ldrxi   x18, x3, #0x0                           // Debug: read first 8 bytes of returned descriptor
   b       2b
 
 
@@ -286,141 +405,15 @@ command_completion_event:
 .endif
   ubfx    w0, w11, #24, #8                        // w0 = Completion Code (bits 31:24 of Status field)
   cmp     w0, #1                                  // 1 = Success [XHCI] s6.4.5 p507 Table 6-90
-  b.eq    4f
+  b.eq    1f
 .if UART_DEBUG
   adr     x0, msg_command_failed
 .endif
   b       panic
-4:
-  mov     w18, #0x4
-  adrp    x16, command_ring
-  subs    w1, w13, w16                            // calculate offset from start of command ring
-  lsr     x16, x11, #56                           // x16 = Slot ID (from bits 56-63 of x11)
-  b.eq    5f                                      // if offset from start of command ring 0 (i.e. first TRB), jump ahead to Enable Slot completion handling
-  cmp     w1, #0x10                               // is it Address Device command?
-  b.eq    6f                                      // if so, jump ahead to Address Device completion handling
-.if UART_DEBUG
-  adr     x0, msg_unknown_command_trb
-.endif
-  b       panic
-5:
-  // Handle Enable Slot command completion
-  adrp    x17, dcbaa                              // x17 = dcbaa (virtual)
-  add     x17, x17, x16, lsl #3                   // x17 = dcbaa[slotID]
-  adrp    x16, slot1_device_context               // conveniently sits at a 4KB page boundary
-  strwi   w16, x17, #0x0
-  strwi   w18, x17, #0x4                          // dcbaa[slotID] = slot1_device_context (DMA)
-  adrp    x17, slot1_input_context
-  add     x17, x17, :lo12:slot1_input_context
-  adrp    x1, command_ring                        // x1 = command_ring (virtual)
-  mov     w2, (11 << 10) | 1                      // TRB Type = 11, BSR = 0 (Address Device) [XHCI] s6.4.6 p511 Table 6-91
-  orr     w2, w2, 0x01000000                      // Slot 1
-  strwi   w17, x1, #0x10
-  strwi   w18, x1, #0x14
-  strwi   wzr, x1, #0x18
-  strwi   w2, x1, #0x1c
-  dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
-  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0) [XHCI] s5.6 p429
-  b       2b
-6:
-  // Handle Address Device command completion
+1:
+  ldr     x3, [x12, #xhci_command_handler-xhci_vars]
+  br      x3
 
-  // Create a GET_DESCRIPTOR request
-  // Setup Stage
-  // [XHCI] s6.4.1.2.1 p468 -- Setup Stage TRB
-  adrp    x0, transfer_ring_slot1_EP0
-  add     x0, x0, :lo12:transfer_ring_slot1_EP0
-  ldr     x1, =0x0008000001000680                 // 0b0000000000001000 0000000000000000 0000000100000000 00000110 10000000
-                                                  // wLength = 8 => descriptor length 8 bytes (duplicate of TRB transfer length in DATA STAGE?)
-                                                  // wIndex = 0 => Zero or Language ID
-                                                  // wValue 0x100 (256) => Descriptor Type 1 (DEVICE) and Descriptor Index 0. [USB2] s9.4 p251 Table 9-5
-                                                  //   The descriptor index is used to select a specific descriptor (only for configuration and
-                                                  //   string descriptors) when several descriptors of the same type are implemented in a device. For example, a
-                                                  //   device can implement several configuration descriptors. For other standard descriptors that can be retrieved
-                                                  //   via a GetDescriptor() request, a descriptor index of zero must be used. The range of values used for a
-                                                  //   descriptor index is from 0 to one less than the number of descriptors of that type implemented by the device.
-                                                  // bRequest 0x6 => GET_DESCRIPTOR [USB2] Table 9-4 p251, s9.4.3 p253
-                                                  // bmRequestType 128 (0x80) => device to host, standard type, device recipient [USB2] s9.3 p248 Table 9-2
-
-  ldr     x2, =0x0003084100000008                 // 0b00000000000000 11 000010 000 1 0 0000 1 0000000000 00000 00000000000001000
-                                                  // RsvdZ
-                                                  // TRT (Transfer Type) = 3 (IN data stage) [XHCI] s6.4.1.2.1 p468 Table 6-26
-                                                  // TRB Type = 2 (Setup Stage) [XHCI] s6.4.6 p511 Table 6-91
-                                                  // RsvdZ
-                                                  // IDT = 1 (required for setup stage) [XHCI] s6.4.1.2.1 p468 Table 6-26
-                                                  // IOC = 0 (interrupt on completion not enabled - only needed on last TRB)
-                                                  // RsvdZ
-                                                  // C = 1 => cycle bit 1
-                                                  // Interruptor Target = 0
-                                                  // RsvdZ
-                                                  // TRB Transfer Length = 8. Always 8. [XHCI] s6.4.1.2.1 p468 Table 6-25
-  stp     x1, x2, [x0]
-
-  // Data Stage
-  // [XHCI] s6.4.1.2.2 p470 -- Data Stage TRB
-  adrp    x3, slot1_descriptor
-  add     x3, x3, :lo12:slot1_descriptor          // CPU virtual address of data buffer for slot 1 device descriptor (VL805 internal USB 2.0 hub)
-
-  ldr     x4, = 0x00010c0100000008                // 0b000000000000000 1 000011 000 0 0 0 0 0 0 1 0000000000 00000 00000000000001000
-                                                  // RsvdZ
-                                                  // DIR = 1. IN direction. [XHCI] s6.4.1.2.2 p470 Table 6-29
-                                                  // TRB Type = 3 (Data Stage) [XHCI] s6.4.6 p511 Table 6-91
-                                                  // RsvdZ
-                                                  // IDT = 0 (immediate data: false, i.e. data is referenced via pointer)
-                                                  // IOC = 0 (no interrupt on completion - only needed on last TRB)
-                                                  // CH = 0 (end of chain, i.e. DATA STAGE is a single TRB)
-                                                  // NS = 0 (No Snoop hint to PCIe: 0 = CPU caches will be kept coherent with DMA. Setting 1 would
-                                                  //         allow the PCIe device to bypass CPU cache snooping for potentially better throughput,
-                                                  //         but risks stale data on non-coherent systems. 0 is the safe/correct choice here.)
-                                                  // ISP = 0 (interrupt on short packet disabled)
-                                                  // ENT = 0 (evaluate next TRB disabled, also not allowed since chain bit = 0) [XHCI] s4.12.3 p250
-                                                  // C = 1 (cycle bit)
-                                                  // Interruptor Target = 0
-                                                  // TD size = 0. This is a hint to the xHC about how many more packets remain in the TD after this TRB,
-                                                  //   used for isochronous scheduling. For control transfers, 0 ("don't know") is standard and correct.
-                                                  // TRB transfer length = 8 bytes. Must match wLength from the Setup Stage (8 bytes of device descriptor).
-  stp     w3, w18, [x0, #0x10]
-  str     x4, [x0, #0x18]
-
-
-  // Status Stage
-  // [XHCI] s6.4.1.2.3 p472 -- Status Stage TRB
-                                                  // 0b00000000000000000000000000000000 00000000000000000000000000000000
-                                                  // RsvdZ
-                                                  // RsvdZ
-  mov     x5, #0x0000102100000000                 // 0b000000000000000 0 000100 0000 1 0 00 0 1 0000000000 0000000000000000000000
-                                                  // RsvdZ
-                                                  // DIR = 0
-                                                  // TRB Type = 4 (Status Stage) [XHCI] s6.4.6 p511 Table 6-91
-                                                  // RsvdZ
-                                                  // IOC = 1 (interrupt on completion)
-                                                  // CH = 0 (last TRB of TD)
-                                                  // RsvdZ
-                                                  // ENT = 0
-                                                  // C = 1
-                                                  // Interruptor target = 0
-                                                  // RsvdZ
-  stp     xzr, x5, [x0, #0x20]
-
-  // Create Link TRB before ringing doorbell, since xHC may reads ahead past last TRB
-  mov     x18, x0
-  mov     w2, #0x4
-  bfi     x18, x2, #32, #32                       // x18 = transfer ring (DMA)
-  strxi   x18, x0, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0 - 0x10)
-  mov     w19, (6 << 10) | (1 << 1)               // TRB Type = 6 (Link TRB), Toggle Cycle = 1, Cycle = 0
-                                                  // Cycle = 0 (opposite of current PCS = 1) so xHC stops here
-                                                  // rather than wrapping back to slot 0 before we are ready.
-  strwi   wzr, x0, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0 - 0x08)
-  strwi   w19, x0, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0 - 0x04)
-
-  mov     w6, #0x1                                // Control EP0 Enqueue Pointer Update [XHCI] s5.6 p429 Table 5-43
-  add     x16, x15, x16, lsl #2                   // x16 = 0x100 less than address of doorbell for slot number stored in x16
-  dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
-  ldrwi   w3, x15, #0x24                          // TODO: remove this, just for debug: w3 = USBSTS
-  strwi   w6, x16, #0x100                         // ring doorbell of device slot in w16
-  ldrwi   w3, x15, #0x24                          // TODO: remove this, just for debug: w3 = USBSTS
-
-  b       2b
 
 transfer_event:
 .if UART_DEBUG
@@ -428,21 +421,15 @@ transfer_event:
   bl      uart_puts
 .endif
   ubfx    w0, w11, #24, #8                        // w0 = Completion Code (bits 31:24 of Status field)
-  cmp     w0, #1                                  // 1 = Success [XHCI] s6.4.5 p507 Table 6-90 (0xd = 13 = Short Packet might also be ok)
-  b.eq    6f
-# cmp     w0, #13                                 // 13 = Short Packet (maybe not an error for descriptors?)
-# b.eq    6f
+  cmp     w0, #1                                  // 1 = Success [XHCI] s6.4.5 p507 Table 6-90
+  b.eq    1f
 .if UART_DEBUG
   adr     x0, msg_transfer_failed
 .endif
   b       panic
-6:
-  adrp    x3, slot1_descriptor
-  add     x3, x3, :lo12:slot1_descriptor          // CPU virtual address of data buffer for slot 1 device descriptor (VL805 internal USB 2.0 hub)
-  dc      ivac, x3                                // invalidate cache line(s)
-  dsb     ish
-  ldrxi   x18, x3, #0x0                           // Debug: read first 8 bytes of the returned descriptor data
-  b       2b
+1:
+  ldr     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  br      x3
 
 
 panic:
@@ -450,6 +437,12 @@ panic:
   bl      uart_puts
 .endif
   b       sleep
+
+xhci_unexpected_event:
+.if UART_DEBUG
+  adr     x0, msg_unexpected_handler
+.endif
+  b       panic
 
 
 .if UART_DEBUG
@@ -463,12 +456,12 @@ msg_transfer_event:
   .asciz "XHCI Transfer Event\r\n"
 msg_unknown_event:
   .asciz "Unknown XHCI Event\r\n"
-msg_unknown_command_trb:
-  .asciz "Unknown XHCI Command TRB\r\n"
 msg_command_failed:
   .asciz "XHCI command failed"
 msg_transfer_failed:
   .asciz "XHCI transfer failed"
+msg_unexpected_handler:
+  .asciz "Unexpected xHCI completion (no handler set)\r\n"
 .endif
 
 

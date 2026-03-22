@@ -396,17 +396,7 @@ handle_address_device_done:
   mov     w19, #0x04010000
   str     w19, [x17, #0x24]
 
-  // EP1 IN DWORD0: Interval=12
-  mov     w19, #0x000C0000                        // Interval=12 in bits 23:16
-  str     w19, [x17, #0x80]
-
-  // EP1 IN DWORD1: CErr=3, EP Type=7 (Interrupt IN), Max Packet Size=1
-  ldr     w19, =0x0001003E                        // MaxPacketSize=1 in bits 31:16, CErr=3|EPType=7=0x3E
-  str     w19, [x17, #0x84]
-
-  // EP1 IN DWORD4: Average TRB Length = 1 (wMaxPacketSize)
-  mov     w19, #1
-  str     w19, [x17, #0x90]
+  // EP1 IN context is pre-populated in .data with hardcoded hub values
 
   // Cache clean the input context (it's in .data = cacheable memory)
   dc      cvac, x17                               // clean cache line at x17 (input control + slot context)
@@ -1080,8 +1070,8 @@ slot1_input_context:
 .word 0x00000000
 # Slot Context
 # [XHCI] s6.2.2 p444 -- Slot Context
-.word 0x08300000                                  // 0b00001 0 0 0 0011 00000000000000000000
-.word 0x00010000                                  // 0b00000000 00000001 0000000000000000
+.word 0x08300000                                  // Context Entries=1, Speed=3 (HS); updated to 0x1C300000 at Configure Endpoint
+.word 0x00010000                                  // Root Hub Port Number=1; DWORD1 updated at Configure Endpoint
 .word 0x00000000
 .word 0x00000000
 .word 0x00000000
@@ -1134,13 +1124,14 @@ slot1_input_context:
 .word 0x00000000
 .word 0x00000000
 
-# EP1 IN Context (DCI 3) — hub interrupt endpoint; populated at runtime
+# EP1 IN Context (DCI 3) — hub interrupt endpoint
 # [XHCI] s6.2.3 p449 -- Endpoint Context
-.word 0x00000000                                  // DWORD0: Interval, etc. — filled at runtime
-.word 0x00000000                                  // DWORD1: CErr, EP Type, Max Packet Size — filled at runtime
+# Pre-populated with hardcoded VL805 hub values (Interval=12, CErr=3, EPType=7, MaxPkt=1)
+.word 0x000C0000                                  // DWORD0: Interval=12 in bits 23:16
+.word 0x0001003E                                  // DWORD1: MaxPacketSize=1, CErr=3|EPType=7=0x3E
 .dword (transfer_ring_slot1_EP1-0xfffffff000000000+0x400000000+0x1)
                                                   // TR Dequeue Pointer = DMA(transfer_ring_slot1_EP1); DCS = 1
-.word 0x00000000                                  // DWORD4: Average TRB Length — filled at runtime
+.word 0x00000001                                  // DWORD4: Average TRB Length = 1
 .word 0x00000000
 .word 0x00000000
 .word 0x00000000

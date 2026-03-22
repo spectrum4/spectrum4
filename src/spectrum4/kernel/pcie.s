@@ -1379,21 +1379,12 @@ xhci_xfer_s2e1_start:    .space 8
 xhci_xfer_s2e1_end:      .space 8
 
 # --- Hub enumeration state ---
-xhci_hub_num_ports:      .space 1                 // bNbrPorts from hub descriptor
-xhci_hub_config_value:   .space 1                 // bConfigurationValue from config descriptor
-xhci_hub_ep_interval:    .space 1                 // bInterval from endpoint descriptor
+xhci_hub_num_ports:      .space 1                 // bNbrPorts (hardcoded: 4)
 xhci_hub_scan_port:      .space 1                 // current port being scanned (1-based)
-xhci_hub_pwron2pwrgood:  .space 1                 // bPwrOn2PwrGood from hub descriptor
-                         .align 1
-xhci_hub_ep_max_pkt:     .space 2                 // wMaxPacketSize from endpoint descriptor
+xhci_hub_pwron2pwrgood:  .space 1                 // bPwrOn2PwrGood (hardcoded: 50 = 100ms)
                          .align 3
 
-# --- Keyboard enumeration state ---
-xhci_kbd_config_value:   .space 1                 // bConfigurationValue from keyboard config descriptor
-xhci_kbd_ep_address:     .space 1                 // bEndpointAddress from keyboard endpoint descriptor
-xhci_kbd_ep_interval:    .space 1                 // bInterval from keyboard endpoint descriptor
-                         .align 1
-xhci_kbd_ep_max_pkt:     .space 2                 // wMaxPacketSize from keyboard endpoint descriptor
+# --- Keyboard state ---
 xhci_kbd_slot_id:        .space 1                 // slot ID assigned by xHC (expected: 2)
 xhci_kbd_resubmit:       .space 1                 // flag: 1 = resubmit interrupt TRB after event loop exits
                          .align 3

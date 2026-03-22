@@ -978,6 +978,77 @@ pcie_init_bcm2711:
     sub     w2, w2, #1
     cbnz    w2, 10b
 
+  // --- Initialise ring metadata blocks ---
+  adr     x8, xhci_vars
+
+  // Command ring metadata
+  adrp    x1, command_ring                        // x1 = command_ring (virtual)
+  str     x1, [x8, #xhci_cmd_ring_enqueue-xhci_vars]
+  mov     w3, #1
+  strb    w3, [x8, #xhci_cmd_ring_pcs-xhci_vars]  // PCS = 1 (matches CRCR cycle bit)
+  str     x1, [x8, #xhci_cmd_ring_start-xhci_vars]
+  adrp    x2, command_ring_end
+  str     x2, [x8, #xhci_cmd_ring_end-xhci_vars]
+
+  // Slot 1 EP0 transfer ring metadata
+  adrp    x1, transfer_ring_slot1_EP0
+  add     x1, x1, :lo12:transfer_ring_slot1_EP0
+  str     x1, [x8, #xhci_xfer_s1e0_enqueue-xhci_vars]
+  strb    w3, [x8, #xhci_xfer_s1e0_pcs-xhci_vars]
+                                                  // PCS = 1
+  str     x1, [x8, #xhci_xfer_s1e0_start-xhci_vars]
+  add     x2, x1, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0)
+  str     x2, [x8, #xhci_xfer_s1e0_end-xhci_vars]
+
+  // Slot 1 EP1 transfer ring metadata
+  // x2 already = transfer_ring_slot1_EP0_end = transfer_ring_slot1_EP1 (contiguous)
+  str     x2, [x8, #xhci_xfer_s1e1_enqueue-xhci_vars]
+  strb    w3, [x8, #xhci_xfer_s1e1_pcs-xhci_vars]
+                                                  // PCS = 1
+  str     x2, [x8, #xhci_xfer_s1e1_start-xhci_vars]
+  add     x1, x2, #(transfer_ring_slot1_EP1_end - transfer_ring_slot1_EP1)
+  str     x1, [x8, #xhci_xfer_s1e1_end-xhci_vars]
+
+  // Callback handler pointers — initialise to panic (catches unexpected completions)
+  adr     x1, xhci_unexpected_event
+  str     x1, [x8, #xhci_command_handler-xhci_vars]
+  str     x1, [x8, #xhci_transfer_handler-xhci_vars]
+
+  // --- Initialise link TRBs for all rings ---
+  // w4 = 0x4 (upper 32 bits for DMA addresses, already live from earlier)
+  mov     w6, (6 << 10) | (1 << 1)                // link TRB control: TRB Type=6 (Link), Toggle Cycle=1, Cycle=0
+                                                  // Cycle=0 because initial PCS=1; xHC stops here until
+                                                  // ring_write_trb flips the cycle bit when wrapping
+
+  // Command ring link TRB
+  adrp    x1, command_ring                        // x1 = command_ring (virtual)
+  mov     x2, x1
+  bfi     x2, x4, #32, #32                        // x2 = command_ring (DMA)
+  adrp    x3, command_ring_end
+  str     x2, [x3, #-0x10]                        // link TRB data = command_ring (DMA)
+  str     wzr, [x3, #-0x08]                       // link TRB status = 0
+  str     w6, [x3, #-0x04]                        // link TRB control
+
+  // Slot 1 EP0 transfer ring link TRB
+  adrp    x1, transfer_ring_slot1_EP0
+  add     x1, x1, :lo12:transfer_ring_slot1_EP0
+  mov     x2, x1
+  bfi     x2, x4, #32, #32                        // x2 = transfer_ring_slot1_EP0 (DMA)
+  add     x3, x1, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0)
+  str     x2, [x3, #-0x10]                        // link TRB data
+  str     wzr, [x3, #-0x08]                       // link TRB status = 0
+  str     w6, [x3, #-0x04]                        // link TRB control
+
+  // Slot 1 EP1 transfer ring link TRB
+  // x3 already = transfer_ring_slot1_EP0_end = transfer_ring_slot1_EP1 (contiguous)
+  mov     x2, x3
+  bfi     x2, x4, #32, #32                        // x2 = transfer_ring_slot1_EP1 (DMA)
+  add     x3, x3, #(transfer_ring_slot1_EP1_end - transfer_ring_slot1_EP1)
+  str     x2, [x3, #-0x10]                        // link TRB data
+  str     wzr, [x3, #-0x08]                       // link TRB status = 0
+  str     w6, [x3, #-0x04]                        // link TRB control
+
+  // --- Continue with existing xHCI register setup ---
   adrp    x1, command_ring                        // x1 = command_ring (virtual)
   orr     x1, x1, #1                              // set cycle bit in CRCR (bit 0)
 
@@ -1231,12 +1302,29 @@ vl805_reset_req_end:
 xhci_vars:
 xhci_event_dequeue: .space 8                      // keep together!!!
 xhci_event_ccs: .space 8                          // since loaded and stored with ldp/stp!!!
-xhci_transfer_slot1_EP0_dequeue: .space 8
-xhci_transfer_slot1_EP1_dequeue: .space 8
-# xhci_mmio: .space 8                             // = 0x600000000 (pcie base = xhci base) (capability registers)
-# xhci_mmio_op: .space 8                          // operational registers address
-# xhci_mmio_db: .space 8                          // doorbell registers address
-# xhci_mmio_rt: .space 8                          // runtime registers address
-# xhci_mmio_pt: .space 8                          // port register set address
-# xhci_cap_cache: .space 16                       // capability cache values
-# xhci_mmio_ec: .space 8                          // extended capabilities address
+# --- Ring metadata blocks (32 bytes each) ---
+# Layout per ring: +0x00 enqueue pointer (8), +0x08 PCS byte (1), .align 3, +0x10 ring start (8), +0x18 ring end (8)
+xhci_cmd_ring_meta:
+xhci_cmd_ring_enqueue:   .space 8                 // +0x00: current enqueue pointer (virtual)
+xhci_cmd_ring_pcs:       .space 1                 // +0x08: Producer Cycle State (0 or 1)
+                         .align 3
+xhci_cmd_ring_start:     .space 8                 // +0x10: ring start address (virtual)
+xhci_cmd_ring_end:       .space 8                 // +0x18: ring end address (virtual)
+
+xhci_xfer_s1e0_ring_meta:
+xhci_xfer_s1e0_enqueue:  .space 8                 // +0x00: slot 1 EP0 transfer ring enqueue pointer
+xhci_xfer_s1e0_pcs:      .space 1                 // +0x08: PCS
+                         .align 3
+xhci_xfer_s1e0_start:    .space 8                 // +0x10: ring start (virtual)
+xhci_xfer_s1e0_end:      .space 8                 // +0x18: ring end (virtual)
+
+xhci_xfer_s1e1_ring_meta:
+xhci_xfer_s1e1_enqueue:  .space 8                 // +0x00: slot 1 EP1 transfer ring enqueue pointer
+xhci_xfer_s1e1_pcs:      .space 1                 // +0x08: PCS
+                         .align 3
+xhci_xfer_s1e1_start:    .space 8                 // +0x10: ring start (virtual)
+xhci_xfer_s1e1_end:      .space 8                 // +0x18: ring end (virtual)
+
+# --- Callback handler pointers ---
+xhci_command_handler:    .space 8                 // branch target for next command completion event
+xhci_transfer_handler:   .space 8                 // branch target for next transfer event

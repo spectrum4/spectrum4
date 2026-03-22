@@ -376,8 +376,6 @@ handle_address_device_done:
   // All values hardcoded for VL805 internal USB 2.0 hub:
   //   bNbrPorts=4, bPwrOn2PwrGood=50, bConfigurationValue=1
   //   EP1 IN: bEndpointAddress=0x81, wMaxPacketSize=1, bInterval=12
-  mov     w16, #50
-  strb    w16, [x12, #xhci_hub_pwron2pwrgood-xhci_vars]
   mov     w16, #4
   strb    w16, [x12, #xhci_hub_num_ports-xhci_vars]
 
@@ -490,12 +488,9 @@ hub_port_power_next:
 
 handle_hub_port_powered:
   // Handle SET_PORT_FEATURE(PORT_POWER) completion
-  // Wait bPwrOn2PwrGood * 2ms for port power to stabilise
+  // Wait 100ms for port power to stabilise (bPwrOn2PwrGood=50 * 2ms)
   // [USB2] s11.23.2.1 p417 -- Hub Descriptor
-  ldrb    w0, [x12, #xhci_hub_pwron2pwrgood-xhci_vars]
-  lsl     w0, w0, #1                              // w0 = bPwrOn2PwrGood * 2 (in ms)
-  mov     w1, #1000
-  mul     w0, w0, w1                              // w0 = delay in microseconds
+  ldr     w0, =100000                             // 100ms = 100000us
   bl      wait_usec
 
   // Issue GET_PORT_STATUS(port) on slot 1 EP0

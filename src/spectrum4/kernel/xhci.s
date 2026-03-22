@@ -390,11 +390,341 @@ handle_address_device_done:
 
 handle_get_device_descriptor_8_done:
   // Handle GET_DESCRIPTOR(device, 8 bytes) transfer completion
+  // Verify bMaxPacketSize0 (byte 7) matches HS default (64)
+  // [XHCI] s4.6.5 p111 -- Evaluate Context for EP0 Max Packet Size
   adrp    x3, slot1_descriptor
-  add     x3, x3, :lo12:slot1_descriptor          // CPU virtual address of data buffer
-  dc      ivac, x3                                // invalidate cache line(s)
+  add     x3, x3, :lo12:slot1_descriptor
+  dc      ivac, x3
   dsb     ish
-  ldrxi   x18, x3, #0x0                           // Debug: read first 8 bytes of returned descriptor
+  ldrxi   x18, x3, #0x0                           // x18 = first 8 bytes of device descriptor
+.if UART_DEBUG
+  lsr     x0, x18, #56                            // x0 = byte 7 = bMaxPacketSize0
+  cmp     w0, #64
+  b.eq    1f
+  adr     x0, msg_unexpected_max_packet_size
+  b       panic
+1:
+.endif
+
+  // Issue GET_DESCRIPTOR(device, wLength=18) on slot 1 EP0
+  // [USB2] s9.4.3 p253 -- Get Descriptor
+  adr     x0, xhci_xfer_s1e0_ring_meta
+
+  // Setup Stage TRB
+  ldr     x1, =0x0012000001000680                 // bmRequestType=0x80, bRequest=0x06 (GET_DESCRIPTOR),
+                                                  // wValue=0x0100 (Device, index 0), wIndex=0, wLength=18
+  ldr     x2, =0x0003084000000008                 // TRB Type=2 (Setup Stage), TRT=3 (IN), IDT=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Data Stage TRB
+  adrp    x1, slot1_descriptor
+  add     x1, x1, :lo12:slot1_descriptor
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32                        // x1 = slot1_descriptor (DMA)
+  ldr     x2, =0x00010C0000000012                 // TRB Type=3 (Data Stage), DIR=1 (IN); Transfer Length=18
+  bl      ring_write_trb
+
+  // Status Stage TRB
+  mov     x1, xzr
+  mov     x2, #0x0000102000000000                 // TRB Type=4 (Status Stage), IOC=1
+  bl      ring_write_trb
+
+  adr     x3, handle_get_device_descriptor_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  mov     w6, #0x1
+  strwi   w6, x15, #0x104                         // ring slot 1 doorbell
+  b       2b
+
+
+handle_get_device_descriptor_done:
+  // Handle GET_DESCRIPTOR(device, 18 bytes) transfer completion
+  // Read full 18-byte device descriptor, verify bDeviceClass=0x09 (hub)
+  // [USB2] s9.6.1 p261 -- Device Descriptor
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor
+  dc      ivac, x3
+  dsb     ish
+  ldrxi   x18, x3, #0x0                           // bytes 0-7
+  ldrxi   x19, x3, #0x8                           // bytes 8-15
+.if UART_DEBUG
+  ubfx    w0, w18, #24, #8                        // w0 = byte 3 = bDeviceClass (should be 0x09 for hub)
+  // we expect bDeviceClass=0x09 for a hub
+.endif
+
+  // Issue GET_DESCRIPTOR(configuration, wLength=9) on slot 1 EP0 — header only
+  // [USB2] s9.4.3 p253 -- Get Descriptor; [USB2] s9.6.3 p264 -- Configuration Descriptor
+  adr     x0, xhci_xfer_s1e0_ring_meta
+
+  // Setup Stage TRB
+  ldr     x1, =0x0009000002000680                 // bmRequestType=0x80, bRequest=0x06 (GET_DESCRIPTOR),
+                                                  // wValue=0x0200 (Configuration, index 0), wIndex=0, wLength=9
+  ldr     x2, =0x0003084000000008                 // TRB Type=2 (Setup Stage), TRT=3 (IN), IDT=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Data Stage TRB
+  adrp    x1, slot1_descriptor
+  add     x1, x1, :lo12:slot1_descriptor
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32
+  ldr     x2, =0x00010C0000000009                 // TRB Type=3 (Data Stage), DIR=1 (IN); Transfer Length=9
+  bl      ring_write_trb
+
+  // Status Stage TRB
+  mov     x1, xzr
+  mov     x2, #0x0000102000000000                 // TRB Type=4 (Status Stage), IOC=1
+  bl      ring_write_trb
+
+  adr     x3, handle_get_config_descriptor_header_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  mov     w6, #0x1
+  strwi   w6, x15, #0x104
+  b       2b
+
+
+handle_get_config_descriptor_header_done:
+  // Handle GET_DESCRIPTOR(configuration, 9 bytes) — extract wTotalLength, request full descriptor
+  // [USB2] s9.6.3 p264 -- Configuration Descriptor
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor
+  dc      ivac, x3
+  dsb     ish
+  ldrxi   x18, x3, #0x0                           // bytes 0-7 of config descriptor
+
+  // wTotalLength is bytes 2-3 (LE)
+  ubfx    w16, w18, #16, #16                      // w16 = wTotalLength
+
+  // Issue GET_DESCRIPTOR(configuration, wLength=wTotalLength) — full descriptor tree
+  adr     x0, xhci_xfer_s1e0_ring_meta
+
+  // Setup Stage TRB — wLength = wTotalLength
+  // bmRequestType=0x80, bRequest=0x06, wValue=0x0200, wIndex=0, wLength=w16
+  ldr     x1, =0x0000000002000680                 // bmRequestType=0x80, bRequest=0x06, wValue=0x0200, wIndex=0
+  bfi     x1, x16, #48, #16                       // insert wLength at bytes 6-7
+
+  ldr     x2, =0x0003084000000008                 // TRB Type=2 (Setup Stage), TRT=3 (IN), IDT=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Data Stage TRB — Transfer Length = wTotalLength
+  adrp    x1, slot1_descriptor
+  add     x1, x1, :lo12:slot1_descriptor
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32
+  ldr     x2, =0x00010C0000000000                 // TRB Type=3 (Data Stage), DIR=1 (IN)
+  orr     x2, x2, x16                             // insert Transfer Length in lower 17 bits of status
+  bl      ring_write_trb
+
+  // Status Stage TRB
+  mov     x1, xzr
+  mov     x2, #0x0000102000000000                 // TRB Type=4 (Status Stage), IOC=1
+  bl      ring_write_trb
+
+  adr     x3, handle_get_config_descriptor_full_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  mov     w6, #0x1
+  strwi   w6, x15, #0x104
+  b       2b
+
+
+handle_get_config_descriptor_full_done:
+  // Handle GET_DESCRIPTOR(configuration, full) — parse configuration descriptor tree
+  // Layout: Configuration Descriptor (9) + Interface Descriptor (9) + Endpoint Descriptor (7)
+  // [USB2] s9.6.3 p264 -- Configuration Descriptor
+  // [USB2] s9.6.5 p267 -- Interface Descriptor
+  // [USB2] s9.6.6 p269 -- Endpoint Descriptor
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor
+  dc      ivac, x3
+  add     x4, x3, #0x40                           // invalidate second cache line (descriptors may span 2 lines)
+  dc      ivac, x4
+  dsb     ish
+
+  // Configuration Descriptor (bytes 0-8):
+  //   byte 5 = bConfigurationValue
+  ldrb    w16, [x3, #5]                           // w16 = bConfigurationValue
+  strb    w16, [x12, #xhci_hub_config_value-xhci_vars]
+
+  // Interface Descriptor (bytes 9-17):
+  //   byte 14 (offset 9+5) = bInterfaceClass — should be 0x09 (hub)
+.if UART_DEBUG
+  ldrb    w0, [x3, #14]
+  cmp     w0, #0x09
+  b.eq    1f
+  adr     x0, msg_not_a_hub
+  b       panic
+1:
+.endif
+
+  // Endpoint Descriptor (bytes 18-24):
+  //   byte 18 (offset 18+0) = bLength
+  //   byte 19 (offset 18+1) = bDescriptorType (should be 5 = endpoint)
+  //   byte 20 (offset 18+2) = bEndpointAddress
+  //   byte 21 (offset 18+3) = bmAttributes
+  //   bytes 22-23 (offset 18+4) = wMaxPacketSize (LE)
+  //   byte 24 (offset 18+6) = bInterval
+  ldrb    w17, [x3, #22]                          // wMaxPacketSize lo
+  ldrb    w18, [x3, #23]                          // wMaxPacketSize hi
+  orr     w17, w17, w18, lsl #8                   // w17 = wMaxPacketSize
+  strh    w17, [x12, #xhci_hub_ep_max_pkt-xhci_vars]
+
+  ldrb    w18, [x3, #24]                          // w18 = bInterval
+  strb    w18, [x12, #xhci_hub_ep_interval-xhci_vars]
+
+  // Issue GET_DESCRIPTOR(hub class) — get bNbrPorts before SET_CONFIGURATION
+  // so we have it for the Configure Endpoint input context
+  // [USB2] s11.24.2.5 p423 -- Get Hub Descriptor
+  adr     x0, xhci_xfer_s1e0_ring_meta
+
+  // Setup Stage TRB
+  // bmRequestType=0xA0 (class, device, device-to-host), bRequest=0x06 (GET_DESCRIPTOR),
+  // wValue=0x2900 (hub descriptor, index 0), wIndex=0, wLength=8 (min hub descriptor size)
+  ldr     x1, =0x00080000290006A0
+  ldr     x2, =0x0003084000000008                 // TRB Type=2, TRT=3, IDT=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Data Stage TRB
+  adrp    x1, slot1_descriptor
+  add     x1, x1, :lo12:slot1_descriptor
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32
+  ldr     x2, =0x00010C0000000008                 // TRB Type=3, DIR=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Status Stage TRB
+  mov     x1, xzr
+  mov     x2, #0x0000102000000000
+  bl      ring_write_trb
+
+  adr     x3, handle_get_hub_descriptor_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  mov     w6, #0x1
+  strwi   w6, x15, #0x104
+  b       2b
+
+
+handle_get_hub_descriptor_done:
+  // Handle GET_DESCRIPTOR(hub class) — extract bNbrPorts, prepare input context, issue SET_CONFIGURATION
+  // [USB2] s11.23.2.1 p417 -- Hub Descriptor
+  //   byte 0 = bDescLength
+  //   byte 1 = bDescriptorType (0x29)
+  //   byte 2 = bNbrPorts
+  //   byte 3 = wHubCharacteristics lo
+  //   byte 4 = wHubCharacteristics hi
+  //   byte 5 = bPwrOn2PwrGood
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor
+  dc      ivac, x3
+  dsb     ish
+  ldrxi   x18, x3, #0x0                           // x18 = first 8 bytes of hub descriptor
+
+  ubfx    w16, w18, #16, #8                       // w16 = byte 2 = bNbrPorts
+  strb    w16, [x12, #xhci_hub_num_ports-xhci_vars]
+
+  // Prepare slot1_input_context for Configure Endpoint
+  // Update Input Control Context: Add Flags = A0 (Slot) | A3 (EP1 IN)
+  adrp    x17, slot1_input_context
+  add     x17, x17, :lo12:slot1_input_context
+  mov     w19, #0x09                              // A0=1 (Slot), A3=1 (EP1 IN DCI=3)
+  str     w19, [x17, #0x04]                       // Input Control Context DWORD1 = Add Flags
+
+  // Update Slot Context for hub
+  // DWORD0: Context Entries=3, Hub=1, Speed=3 (HS), Route String=0
+  //   Context Entries (31:27) = 3 => 0x18000000
+  //   Hub (26) = 1 => 0x04000000
+  //   Speed (23:20) = 3 => 0x00300000
+  mov     w19, #0x1C300000                        // Context Entries=3, Hub=1, Speed=3 (HS)
+  str     w19, [x17, #0x20]                       // Slot Context DWORD0
+
+  // DWORD1: Root Hub Port Number=1, Number of Ports=bNbrPorts
+  //   Number of Ports (31:24) = bNbrPorts
+  //   Root Hub Port Number (23:16) = 1
+  mov     w19, #0x00010000                        // Root Hub Port Number = 1
+  orr     w19, w19, w16, lsl #24                  // Number of Ports = bNbrPorts
+  str     w19, [x17, #0x24]                       // Slot Context DWORD1
+
+  // Update EP1 IN Context (at offset 0x80 from input context start)
+  // DWORD0: Interval from endpoint descriptor; for HS interrupt, Interval = bInterval
+  ldrb    w19, [x12, #xhci_hub_ep_interval-xhci_vars]
+  lsl     w19, w19, #16                           // Interval field is bits 23:16
+  str     w19, [x17, #0x80]                       // EP1 IN DWORD0
+
+  // DWORD1: CErr=3, EP Type=7 (Interrupt IN), Max Packet Size from descriptor
+  //   CErr (2:1) = 3 => bits 1-2 = 0x6
+  //   EP Type (5:3) = 7 (Interrupt IN) => bits 3-5 = 0x38
+  //   Max Packet Size (31:16)
+  ldrh    w19, [x12, #xhci_hub_ep_max_pkt-xhci_vars]
+  lsl     w19, w19, #16                           // Max Packet Size in bits 31:16
+  orr     w19, w19, #0x3E                         // CErr=3 (bits 2:1=0x6), EP Type=7 (bits 5:3=0x38) = 0x06|0x38 = 0x3E
+  str     w19, [x17, #0x84]                       // EP1 IN DWORD1
+
+  // DWORD4: Average TRB Length = wMaxPacketSize
+  ldrh    w19, [x12, #xhci_hub_ep_max_pkt-xhci_vars]
+  str     w19, [x17, #0x90]                       // EP1 IN DWORD4
+
+  // Cache clean the input context (it's in .data = cacheable memory)
+  dc      cvac, x17                               // clean cache line at x17 (input control + slot context)
+  add     x4, x17, #0x40
+  dc      cvac, x4                                // clean EP0 context area
+  add     x4, x4, #0x40
+  dc      cvac, x4                                // clean EP1 OUT + EP1 IN context area
+  dsb     sy
+
+  // Issue SET_CONFIGURATION(bConfigurationValue) on slot 1 EP0
+  // [USB2] s9.4.7 p256 -- Set Configuration
+  adr     x0, xhci_xfer_s1e0_ring_meta
+
+  // Setup Stage TRB (no data stage)
+  // bmRequestType=0x00 (host-to-device, standard, device), bRequest=0x09 (SET_CONFIGURATION),
+  // wValue=bConfigurationValue, wIndex=0, wLength=0
+  ldrb    w16, [x12, #xhci_hub_config_value-xhci_vars]
+  mov     x1, #0x0000000000000900                 // bmRequestType=0x00, bRequest=0x09
+  bfi     x1, x16, #16, #8                        // wValue = bConfigurationValue
+
+  ldr     x2, =0x0000084000000008                 // TRB Type=2 (Setup Stage), TRT=0 (No Data Stage), IDT=1; Transfer Length=8
+  bl      ring_write_trb
+
+  // Status Stage TRB (DIR=1 for no-data-stage control transfers)
+  // [XHCI] s6.4.1.2.3 p472 -- "set to '1' (IN)" for no data stage
+  mov     x1, xzr
+  ldr     x2, =0x0001102000000000                 // TRB Type=4, IOC=1, DIR=1 (IN)
+  bl      ring_write_trb
+
+  adr     x3, handle_set_configuration_hub_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  mov     w6, #0x1
+  strwi   w6, x15, #0x104
+  b       2b
+
+
+handle_set_configuration_hub_done:
+  // Handle SET_CONFIGURATION transfer completion — issue Configure Endpoint command
+  // [XHCI] s4.6.6 p115 -- Configure Endpoint; [XHCI] s6.4.3.5 p491 -- Configure Endpoint Command TRB
+
+  // Input context is already prepared (handle_get_hub_descriptor_done did it)
+  adrp    x17, slot1_input_context
+  add     x17, x17, :lo12:slot1_input_context
+  mov     x1, x17                                 // TRB data = slot1_input_context (virtual)
+  mov     w18, #0x4
+  bfi     x1, x18, #32, #32                       // TRB data = slot1_input_context (DMA)
+  ldr     x2, =0x0100300000000000                 // Control: TRB Type=12 (Configure Endpoint), Slot 1; Status=0
+  adr     x0, xhci_cmd_ring_meta
+  bl      ring_write_trb
+
+  adr     x3, handle_configure_endpoint_hub_done
+  str     x3, [x12, #xhci_command_handler-xhci_vars]
+
+  dsb     sy
+  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
+  b       2b
+
+
+handle_configure_endpoint_hub_done:
+  // Handle Configure Endpoint command completion — hub is fully configured
+  // End of Chunk B. Chunk C starts with SET_PORT_FEATURE(PORT_POWER).
   b       2b
 
 
@@ -462,6 +792,10 @@ msg_transfer_failed:
   .asciz "XHCI transfer failed"
 msg_unexpected_handler:
   .asciz "Unexpected xHCI completion (no handler set)\r\n"
+msg_unexpected_max_packet_size:
+  .asciz "bMaxPacketSize0 != 64 for HS hub\r\n"
+msg_not_a_hub:
+  .asciz "bInterfaceClass != 0x09 (not a hub)\r\n"
 .endif
 
 
@@ -533,3 +867,26 @@ slot1_input_context:
                                                   // DCS = 1; Dequeue Cycle State (initially 1, alternates each time we loop around ring)
                                                   // Average TRB Length = 8 bytes (bits 15:0 of DWORD4; used by xHC for bandwidth scheduling)
                                                   // TR Dequeue Pointer = DMA address (transfer_ring_slot1_EP0)
+
+# EP1 OUT Context (DCI 2) — unused placeholder, required to reach EP1 IN at correct offset
+# [XHCI] s6.2.3 p449 -- Endpoint Context
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000
+
+# EP1 IN Context (DCI 3) — hub interrupt endpoint; populated at runtime by handle_get_config_descriptor_full_done
+# [XHCI] s6.2.3 p449 -- Endpoint Context
+slot1_input_ep1in:
+.word 0x00000000                                  // DWORD0: Interval, etc. — filled at runtime
+.word 0x00000000                                  // DWORD1: CErr, EP Type, Max Packet Size — filled at runtime
+.dword (transfer_ring_slot1_EP1-0xfffffff000000000+0x400000000+0x1)
+                                                  // TR Dequeue Pointer = DMA(transfer_ring_slot1_EP1); DCS = 1
+.word 0x00000000                                  // DWORD4: Average TRB Length — filled at runtime
+.word 0x00000000
+.word 0x00000000
+.word 0x00000000

@@ -1328,3 +1328,11 @@ xhci_xfer_s1e1_end:      .space 8                 // +0x18: ring end (virtual)
 # --- Callback handler pointers ---
 xhci_command_handler:    .space 8                 // branch target for next command completion event
 xhci_transfer_handler:   .space 8                 // branch target for next transfer event
+
+# --- Hub enumeration state ---
+xhci_hub_num_ports:      .space 1                 // bNbrPorts from hub descriptor
+xhci_hub_config_value:   .space 1                 // bConfigurationValue from config descriptor
+xhci_hub_ep_interval:    .space 1                 // bInterval from endpoint descriptor
+                         .align 1
+xhci_hub_ep_max_pkt:     .space 2                 // wMaxPacketSize from endpoint descriptor
+                         .align 3

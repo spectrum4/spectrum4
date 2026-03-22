@@ -456,8 +456,8 @@ handle_configure_endpoint_hub_done:
   // Handle Configure Endpoint command completion — hub is fully configured
   // Start scanning hub ports for connected devices
 
-  // Start with port 1
-  mov     w16, #1
+  // Keyboard is on port 4 (hardcoded for this hardware)
+  mov     w16, #4
   strb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
 
 hub_port_power_next:
@@ -796,31 +796,18 @@ handle_address_device_keyboard_done:
   mov     w4, #0x09
   str     w4, [x17, #0x04]
 
-  // Slot Context — build from scratch using known values
-  // (don't copy from output device context which contains xHC-internal state)
-
-  // DWORD0: Context Entries=3, Hub=0, Speed, Route String
-  // Re-read speed from port status buffer (still in slot1_descriptor from last GET_PORT_STATUS)
-  adrp    x3, slot1_descriptor
-  add     x3, x3, :lo12:slot1_descriptor
-  ldr     w4, [x3]                                // w4 = port status from handle_hub_port_reset_confirmed
-  ubfx    w4, w4, #9, #2                          // w4 = USB speed (0=FS, 1=LS, 2=HS)
-  add     w4, w4, #1                              // w4 = xHCI speed (1=FS, 2=LS, 3=HS)
-  ldrb    w6, [x12, #xhci_hub_scan_port-xhci_vars]
-  mov     w3, #0x18000000                         // Context Entries = 3
-  orr     w3, w3, w4, lsl #20                     // Speed
-  orr     w3, w3, w6                              // Route String = hub port number (tier 1)
-  str     w3, [x17, #0x20]                        // Slot Context DWORD0
+  // Slot Context — hardcoded for LS keyboard at hub port 4
+  // DWORD0: Context Entries=3, Speed=2 (LS), Route String=4
+  ldr     w3, =0x18200004                         // CE=3, Speed=2(LS), RouteString=4
+  str     w3, [x17, #0x20]
 
   // DWORD1: Root Hub Port Number = 1
-  mov     w3, #0x00010000                         // Root Hub Port Number = 1
-  str     w3, [x17, #0x24]                        // Slot Context DWORD1
+  mov     w3, #0x00010000
+  str     w3, [x17, #0x24]
 
-  // DWORD2: Parent Hub Slot ID = 1, Parent Port Number
-  mov     w3, #0x01                               // Parent Hub Slot ID = 1
-  orr     w3, w3, w6, lsl #8                      // Parent Port Number = hub port
-  str     w3, [x17, #0x28]                        // Slot Context DWORD2
-  // DWORD3-7: zero (BSS initialized)
+  // DWORD2: Parent Hub Slot ID=1, Parent Port Number=4
+  mov     w3, #0x0401                             // ParentPort=4, ParentSlot=1
+  str     w3, [x17, #0x28]
 
   // EP1 IN Context (at offset 0x80)
   // DWORD0: Interval — for LS/FS interrupt endpoint behind HS hub:

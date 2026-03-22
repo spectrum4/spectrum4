@@ -8,137 +8,25 @@
 # [XHCI] s5.3 p381 -- Host Controller Capability Registers (see references.inc for spec URL)
 
 
-# Capability registers...
+# VL805 Capability Registers (read at boot from PCIe BAR 0x600000000)
+# [XHCI] s5.3.1-5.3.9 p381-399
 #
-#           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
-# 600000000 20 00 00 01 20 04 00 05 31 00 00 fc 04 00 e7 00 eb 41 28 00 00 01 00 00 00 02 00 00 00 00 00 00
+# CAPLENGTH=0x20, HCIVERSION=1.0, MaxSlots=32, MaxPorts=5, MaxIntrs=4
+# MaxScratchpadBufs=31, ERST Max=3, PageSize=4KB, CSZ=0 (32-byte contexts)
+# AC64=1, PPC=1, xECP=0xa0, DBOFF=0x100, RTSOFF=0x200
 #
-# 0x00: XHCI_REG_CAP_CAPLENGTH    0x20        => Op base at 0x600000020
-# 0x02: XHCI_REG_CAP_HCIVERSION   0x0100      => Version 1.0 = USB 3.0 controller
-# 0x04: XHCI_REG_CAP_HCSPARAMS1   0x05000420  0b 00000101 (MaxPorts = 5) 00000 (Rsvd) 00000000100 (MaxIntrs = 4) 00100000 (MaxSlots = 32)
-# 0x08: XHCI_REG_CAP_HCSPARAMS2   0xfc000031  0b 11111 (Max Scratchpad Buffers Lo = 31) 1 (Scratchpad Restore = 1) 00000 (Max Scratchpad Buffers Hi = 0) 0000000000000 (Rsvd) 0011 (Event Ring Segment Table Max = 3) 0001 (Isochronous Scheduling Threshold = 1)
-# 0x0c: XHCI_REG_CAP_HCSPARAMS3   0x00e70004  0b 0000000011100111 (U2->U0 Device Exit Latency < 231 microseconds) 00000000 (Rsvd) 00000100 (U1->U0 Device Exit Latency < 4 microseconds)
-# 0x10: XHCI_REG_CAP_HCCPARAMS1   0x002841eb  0b 0000000000101000: xHCI Extended Capabilities Pointer (xECP) = 40 => 160 bytes offset (0xa0) => extended capabilities at 0x6000000a0
-#                                                0100: MaxPSASize = 4 => Primary Stream Array size = 32
-#                                                0: Contiguous Frame ID Capability (CFC)
-#                                                0: Stopped EDTLA Capability (SEC)
-#                                                0: Stopped - Short Packet Capability (SPC)
-#                                                1: Parse All Event Data (PAE)
-#                                                1: No Secondary SID Support (NSS)
-#                                                1: Latency Tolerance Messaging Capability (LTC)
-#                                                1: Light HC Reset Capability (LHRC)
-#                                                0: Port Indicators (PIND)
-#                                                1: Port Power Control (PPC)
-#                                                0: Context Size (CSZ) => 32 byte Context data structures (not Stream Contexts) (rather than 64 byte)
-#                                                1: BW Negotiation Capability (BNC)
-#                                                1: 64-bit Addressing Capability (AC64)
-# 0x14: XHCI_REG_CAP_DBOFF        0x00000100 => Doorbell Array Offset = 0x100 (i.e. 0x600000100)
-# 0x18: XHCI_REG_CAP_RTSOFF       0x00000200 => Runtime Register Space Offset (i.e. 0x600000200)
-# 0x1c: XHCI_REG_CAP_HCCPARAMS2   0x00000000 0b  0: U3C U3 Entry Capability not supported (Port Suspend Complete notification not supported)
-#                                                0: CMC Configure Endpoint Command Max Exit Latency Too Large Capability
-#                                                0: FSC
-#                                                0: CTC
-#                                                0: LEC
-#                                                0: CIC
-#                                                0: ETC
-#                                                0: ETC_TSC
-#                                                0: GSC
-#                                                0: VTC
-
-
-
-# Operational registers...
+# Extended Capabilities (at BAR+0xa0):
+#   0xa0: USB Legacy Support (irrelevant, x86/BIOS only)
+#   0xb0: Supported Protocol USB 2.0, port 1 (HS, integrated hub)
+#   0xd0: Supported Protocol USB 3.0, ports 2-5
+#   0x300: USB Debug Capability
 #
-# 600000020 00 00 00 00 11 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-#
-# 0x20: XHCI_REG_OP_USBCMD        0x00000000
-# 0x24: XHCI_REG_OP_USBSTS        0x00000011
-# 0x28: XHCI_REG_OP_PAGESIZE      0x00000001  => 4KB page size
-# 0x2c: reserved                  0x00000000
-# 0x30: reserved                  0x00000000
-# 0x34: XHCI_REG_OP_DNCTRL        0x00000000
-# 0x38: XHCI_REG_OP_CRCR_LO       0x00000000
-# 0x3c: XHCI_REG_OP_CRCR_HI       0x00000000
-# 0x40: reserved                  0x00000000
-# 0x44: reserved                  0x00000000
-# 0x48: reserved                  0x00000000
-# 0x4c: reserved                  0x00000000
-# 0x50: XHCI_REG_OP_DCBAAP_LO     0x00000000
-# 0x54: XHCI_REG_OP_DCBAAP_HI     0x00000000
-# 0x58: XHCI_REG_OP_CONFIG        0x00000000
-
-
-# Extended capabilities...
-#
-# 6000000a0 01 04 00 00 00 00 00 00 00 00 00 00 00 00 00 00 02 08 00 02 55 53 42 20 01 01 06 10 00 00 00 00
-# 6000000c0 23 00 e0 01 00 00 00 00 00 00 00 00 00 00 00 00 02 8c 00 03 55 53 42 20 02 04 00 10 00 00 00 00
-# 6000000e0 34 01 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-# 600000220 00 00 00 00 a0 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-# 600000240 00 00 00 00 a0 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-# 600000260 00 00 00 00 a0 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-# 600000280 00 00 00 00 a0 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-# 600000300 0a 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-# 600000320 00 00 00 00 00 00 00 00 a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-# a0: Capability 01: USB Legacy Support; SMI options all set to 0 - SMI only relevant for legacy x86/BIOS stuff
-# b0: Capability 02: Supported Protocol v2.0 "USB " ports 1-1 protocol defined 0x006 => high speed only; integrated hub; PSIC 0x1; protocol slot type 0;
-#         Protocol speed IDs: 0x01e00023 0b0000 0001 1110 0000 0000 0000 0010 0011 => PSIV=3 @ 480 Mb/s (symmetric) half-duplex
-# d0: Capability 02: Supported Protocol v3.0 "USB " ports 2-5 ..... slot type 0;
-#         .....
-# 300: Capability 0a: USB Debug Capability
-
-# PORT SC
-# Port 1 and 2:
-# 600000420 e1 02 02 40 00 00 00 00 00 00 00 00 00 00 00 00 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-# Port 3 and 4:
-# 600000440 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-# Port 5:
-# 600000460 a0 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-# Port 1:    0x400202e1 = 0b0100 0000 0000 0010 0000 0010 1110 0001
-#            0x400002e1 = 0b0100 0000 0000 0000 0000 0010 1110 0001 (CSC)
-#            0x40200e03 = 0b0100 0000 0010 0000 0000 1110 0000 0011 (PED, PLS, Port Speed, PRC)
-#            0x40000e03 = 0b0100 0000 0000 0000 0000 1110 0000 0011 (PRC)
-#
-#    0: Current Connect Status (CCS)        - ROS = 1 => Device Connected
-#    1: Port Enabled/Disabled (PED)         - RW1CS = 0 => Port Disabled              / 1 => Port Enabled
-#    2: RsvdZ = 0
-#    3: Over-current Active (OCA)           - RO = 0 => Port does not have over-current condition
-#    4: Port Reset (PR)                     - RW1S = 0 => Port is not in reset
-#    8:5: Port Link State (PLS)             - RWS = 7 => Link is in the Polling State / 0 => Link is in the U0 State
-#    9: Port Power (PP)                     - RWS = 1 => Port is not powered off (I believe - need to check HCCPARAMS1.PPC to be sure)
-#    13:10: Port Speed (Port Speed)         - ROS = 0 => Port Speed is undefined speed / 3 => Port Speed is 3 (High Speed??)
-#    15:14: Port Indicator Control (PIC)    - RWS = 0 => Port indicators are off
-#    16: Port Link State Write Strobe (LWS) - RW = 0
-#    17: Connect Status Change (CSC)        - RW1CS = 0
-#    18: Port Enabled/Disabled Change (PEC) - RW1CS = 0
-#    19: Warm Port Reset Change (WRC)       - RW1CS/RsvdZ = 0
-#    20: Over-current Change (OCC)          - RW1CS = 0
-#    21: Port Reset Change (PRC)            - RW1CS = 1 => Port Reset Complete
-#    22: Port Link State Change (PLC)       - RW1CS = 0
-#    23: Port Config Error Change (CEC)     - RW1CS/RsvdZ = 0
-#    24: Cold Attach Status (CAS)           - RO = 0
-#    25: Wake on Connect Enable (WCE)       - RWS = 0
-#    26: Wake on Disconnect Enable (WDE)    - RWS = 0
-#    27: Wake on Over-current Enable (WOE)  - RWS = 0
-#    29:28: RsvdZ = 0
-#    30: Device Removable (DR)              - RO = 1 => Device is non-removable
-#    31: Warm Port Reset (WPR)              - RW1S/RsvdZ = 0
-#
-# Port 2-5:  0x000002a0 = 0b0000 0000 0000 0000 0000 0010 1010 0000
-#    0: CCS = 0 => Device is not connected
-#    1: PED = 0 => Port Disabled
-#    3: OCA = 0 => Port does not have over-current condition
-#    4: PR = 0 => Port is not in reset
-#    8:5: PLS = 5 => Port is in the RxDetect State [XHCI] s5.4.8 p406 Table 5-27
-#                                                        [USB3] s7.5.3 p165
-#    9: PP = 1 => Port is not powered off (I believe - need to check HCCPARAMS1.PPC to be sure)
-#    13:10: PS = 0 => Port Speed is undefined speed
-#    15:14: PIC = 0 => Port indicators are off
-#    ...
-#    21: PRC = 0 => No change to port reset status
-#    ...
-#    30: DR = 0 => Device is removable
+# PORTSC bit fields ([XHCI] s5.4.8 p406):
+#    0: CCS (Current Connect Status)     3: OCA (Over-current)
+#    1: PED (Port Enabled)               4: PR (Port Reset)
+#    8:5: PLS (Port Link State)          9: PP (Port Power)
+#   13:10: Port Speed                   21: PRC (Port Reset Change)
+#   17: CSC (Connect Status Change)     30: DR (Device Removable)
 
 
 # ring_write_trb — Write a TRB to any ring, handling cycle bit and link TRB wrapping.
@@ -217,8 +105,6 @@ consume_xhci_events:
   ldrxi   x14, x12, xhci_event_ccs-xhci_vars      // x14 = Event Consumer Cycle Status (in bit 32)
   ldr     x15, =(0x600000000 + _start)            // x15 = VL805 USB Host Controller Capability Registers
                                                   // PCIe BAR mapped to 0x600000000 by pcie_init_bcm2711 in pcie.s
-  ldrwi   w13, x15, #0x20                         // TODO: remove this, just for debug: log USBCMD to see if RUN_STOP (bit 0) is clear or set
-
   ldrwi   w3, x15, #0x24                          // Read USBSTS in w3
   strwi   w3, x15, #0x24                          // Write back (RW1C) to clear status bits: bit 3 EINT (Event Interrupt), bit 4 PCD (Port Change Detect)
 
@@ -231,17 +117,6 @@ consume_xhci_events:
     eor     x11, x11, x14                         // xor Producer Cycle State with Consumer Cycle State
     tbnz    x11, #32, 3f                          // Break from loop if PCS!=CCS (=> this is not a pending TRB)
 
-// Example TRBs
-
-//   read [0xfffffff000221000]=0x01000000 = 0b > 0000 0001 < 0000 0000 0000 0000 0000 0000 => Port = 1
-//   read [0xfffffff000221004]=0x00000000 = 0b0000 0000 0000 0000 0000 0000 0000 0000
-//   read [0xfffffff000221008]=0x01000000 = 0b > 0000 0001 < 0000 0000 0000 0000 0000 0000 => Completion Code = 1
-//   read [0xfffffff00022100c]=0x00008801 = 0b0000 0000 0000 0000 > 1000 10 < 00 0000 000 > 1 < => TRB Type = 34 (Port Status Change Event), Cycle Bit = 1
-
-//   read [0xfffffff000221010]=0x00220000 = 0b0000 0000 0010 0010 0000 0000 0000 0000
-//   read [0xfffffff000221014]=0x00000004 = 0b0000 0000 0000 0000 0000 0000 0000 0100
-//   read [0xfffffff000221018]=0x01000000 = 0b0000 0001 0000 0000 0000 0000 0000 0000
-//   read [0xfffffff00022101c]=0x00008401 = 0b0000 0000 0000 0000 > 1000 01 < 00 0000 000 > 1 < => TRB Type = 33 (Command Completion Event), Cycle Bit = 1
 
     ubfx    x16, x11, #42, #6                     // x16 = TRB Type (from bits 42-47 of x11)
                                                   // [XHCI] s4.11.3 p222 -- Event TRBs: TRB Type is in bits 15:10 of DWORD3 (= bits 42-47 of 128-bit TRB)

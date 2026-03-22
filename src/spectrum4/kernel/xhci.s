@@ -280,18 +280,26 @@ command_completion_event:
   adr     x0, msg_command_completion_event
   bl      uart_puts
 .endif
+  ubfx    w0, w11, #24, #8                        // w0 = Completion Code (bits 31:24 of Status field)
+  cmp     w0, #1                                  // 1 = Success (xHCI spec Table 6-90, page 507)
+  b.eq    4f
+.if UART_DEBUG
+  adr     x0, msg_command_failed
+.endif
+  b       panic
+4:
   mov     w18, #0x4
   adrp    x16, command_ring
   subs    w1, w13, w16                            // calculate offset from start of command ring
   lsr     x16, x11, #56                           // x16 = Slot ID (from bits 56-63 of x11)
-  b.eq    4f                                      // if offset from start of command ring 0 (i.e. first TRB), jump ahead to Enable Slot completion handling
+  b.eq    5f                                      // if offset from start of command ring 0 (i.e. first TRB), jump ahead to Enable Slot completion handling
   cmp     w1, #0x10                               // is it Address Device command?
-  b.eq    5f                                      // if so, jump ahead to Address Device completion handling
+  b.eq    6f                                      // if so, jump ahead to Address Device completion handling
 .if UART_DEBUG
   adr     x0, msg_unknown_command_trb
 .endif
   b       panic
-4:
+5:
   // Handle Enable Slot command completion
   adrp    x17, dcbaa                              // x17 = dcbaa (virtual)
   add     x17, x17, x16, lsl #3                   // x17 = dcbaa[slotID]
@@ -310,7 +318,7 @@ command_completion_event:
   dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
   strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
   b       2b
-5:
+6:
   // Handle Address Device command completion
 
   // Create a GET_DESCRIPTOR request
@@ -415,6 +423,16 @@ transfer_event:
   adr     x0, msg_transfer_event
   bl      uart_puts
 .endif
+  ubfx    w0, w11, #24, #8                        // w0 = Completion Code (bits 31:24 of Status field)
+  cmp     w0, #1                                  // 1 = Success (xHCI spec Table 6-90, page 507) (0xd = 13 might also be ok)
+  b.eq    6f
+# cmp     w0, #13                                 // 13 = Short Packet (maybe not an error for descriptors?)
+# b.eq    6f
+.if UART_DEBUG
+  adr     x0, msg_transfer_failed
+.endif
+  b       panic
+6:
   adrp    x3, slot1_descriptor
   add     x3, x3, :lo12:slot1_descriptor          // CPU virtual address of data buffer for slot 1 device descriptor (VL805 internal USB 2.0 hub)
   dc      ivac, x3                                // invalidate cache line(s)
@@ -434,15 +452,19 @@ panic:
 msg_xhci_event:
   .asciz "XHCI MSI vector status: "
 msg_port_status_change_event:
-  .asciz "Port Status Change Event\r\n"
+  .asciz "XHCI Port Status Change Event\r\n"
 msg_command_completion_event:
-  .asciz "Command Completion Event\r\n"
+  .asciz "XHCI Command Completion Event\r\n"
 msg_transfer_event:
-  .asciz "Transfer Event\r\n"
+  .asciz "XHCI Transfer Event\r\n"
 msg_unknown_event:
-  .asciz "Unknown Event\r\n"
+  .asciz "Unknown XHCI Event\r\n"
 msg_unknown_command_trb:
-  .asciz "Unknown Command TRB\r\n"
+  .asciz "Unknown XHCI Command TRB\r\n"
+msg_command_failed:
+  .asciz "XHCI command failed"
+msg_transfer_failed:
+  .asciz "XHCI transfer failed"
 .endif
 
 

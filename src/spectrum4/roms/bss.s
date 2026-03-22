@@ -422,7 +422,6 @@ slot1_descriptor: .space 0x80                     // reusable descriptor buffer 
 
 .align 6
 slot2_device_context: .space 0x80                 // Slot + Endpoint contexts for keyboard (4 contexts, each 0x20)
-slot2_descriptor: .space 0x80                     // reusable descriptor buffer for keyboard
 
 .align 6
 slot2_input_context:  .space 0xA0                 // Input Control (0x20) + Slot (0x20) + EP0 (0x20) + EP1 OUT (0x20) + EP1 IN (0x20)

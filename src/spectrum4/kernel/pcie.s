@@ -1387,3 +1387,13 @@ xhci_hub_pwron2pwrgood:  .space 1                 // bPwrOn2PwrGood from hub des
                          .align 1
 xhci_hub_ep_max_pkt:     .space 2                 // wMaxPacketSize from endpoint descriptor
                          .align 3
+
+# --- Keyboard enumeration state ---
+xhci_kbd_config_value:   .space 1                 // bConfigurationValue from keyboard config descriptor
+xhci_kbd_ep_address:     .space 1                 // bEndpointAddress from keyboard endpoint descriptor
+xhci_kbd_ep_interval:    .space 1                 // bInterval from keyboard endpoint descriptor
+                         .align 1
+xhci_kbd_ep_max_pkt:     .space 2                 // wMaxPacketSize from keyboard endpoint descriptor
+xhci_kbd_slot_id:        .space 1                 // slot ID assigned by xHC (expected: 2)
+xhci_kbd_resubmit:       .space 1                 // flag: 1 = resubmit interrupt TRB after event loop exits
+                         .align 3

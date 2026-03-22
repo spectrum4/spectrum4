@@ -1381,7 +1381,6 @@ xhci_xfer_s2e1_end:      .space 8
 # --- Hub enumeration state ---
 xhci_hub_num_ports:      .space 1                 // bNbrPorts (hardcoded: 4)
 xhci_hub_scan_port:      .space 1                 // current port being scanned (1-based)
-xhci_hub_pwron2pwrgood:  .space 1                 // bPwrOn2PwrGood (hardcoded: 50 = 100ms)
                          .align 3
 
 # --- Keyboard state ---

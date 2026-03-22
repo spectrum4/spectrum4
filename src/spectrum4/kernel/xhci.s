@@ -277,6 +277,32 @@ consume_xhci_events:
   strwi   w2, x15, #0x23c                         // [ERDP_HI] = next TRB (hi)
   strxi   x10, x12, xhci_event_dequeue-xhci_vars
                                                   // advance event dequeue pointer
+
+  // Deferred keyboard interrupt resubmit — done AFTER the event loop exits
+  // so the next Transfer Event arrives via the next IRQ, not inside this loop
+  ldrb    w3, [x12, #xhci_kbd_resubmit-xhci_vars]
+  cbz     w3, 4f
+  strb    wzr, [x12, #xhci_kbd_resubmit-xhci_vars]
+
+  adr     x0, xhci_xfer_s2e1_ring_meta
+  adrp    x1, keyboard_report
+  add     x1, x1, :lo12:keyboard_report
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32
+  ldr     x2, =0x0000042400000008                 // Normal TRB: Type=1, IOC=1, ISP=1; Length=8
+  bl      ring_write_trb
+
+  // Self-referential callback for next keyboard Transfer Event
+  adr     x3, handle_keyboard_input
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+
+  // Ring slot 2 doorbell for EP1 IN (DB Target = 3)
+  ldrb    w16, [x12, #xhci_kbd_slot_id-xhci_vars]
+  add     x16, x15, x16, lsl #2
+  mov     w6, #0x3
+  strwi   w6, x16, #0x100
+4:
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -1090,13 +1116,362 @@ handle_address_device_keyboard_done:
 
 handle_get_keyboard_descriptor_8_done:
   // Handle GET_DESCRIPTOR(device, 8 bytes) for keyboard
-  // End of Chunk C — keyboard slot is addressed and we got its descriptor header.
-  // Chunk D will continue with full enumeration and HID setup.
+  // Save slot ID for later use
+  lsr     x16, x11, #56                           // x16 = Slot ID from transfer event (in bits 31:24 of Control)
+  strb    w16, [x12, #xhci_kbd_slot_id-xhci_vars]
+
   adrp    x3, slot2_descriptor
   add     x3, x3, :lo12:slot2_descriptor
   dc      ivac, x3
   dsb     ish
-  ldrxi   x18, x3, #0x0                           // Debug: read first 8 bytes of keyboard descriptor
+  ldrxi   x18, x3, #0x0                           // x18 = first 8 bytes of keyboard descriptor
+
+  // Issue GET_DESCRIPTOR(device, 18 bytes) on slot 2 EP0
+  adr     x0, xhci_xfer_s2e0_ring_meta
+
+  ldr     x1, =0x0012000001000680                 // GET_DESCRIPTOR(device, 18 bytes)
+  ldr     x2, =0x0003084000000008
+  bl      ring_write_trb
+
+  adrp    x1, slot2_descriptor
+  add     x1, x1, :lo12:slot2_descriptor
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32
+  ldr     x2, =0x00010C0000000012                 // Transfer Length=18
+  bl      ring_write_trb
+
+  mov     x1, xzr
+  mov     x2, #0x0000102000000000
+  bl      ring_write_trb
+
+  adr     x3, handle_get_keyboard_descriptor_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+
+  // Ring slot 2 doorbell
+  ldrb    w16, [x12, #xhci_kbd_slot_id-xhci_vars]
+  add     x16, x15, x16, lsl #2
+  mov     w6, #0x1
+  strwi   w6, x16, #0x100
+  b       2b
+
+
+handle_get_keyboard_descriptor_done:
+  // Handle GET_DESCRIPTOR(device, 18 bytes) for keyboard
+  adrp    x3, slot2_descriptor
+  add     x3, x3, :lo12:slot2_descriptor
+  dc      ivac, x3
+  dsb     ish
+  ldrxi   x18, x3, #0x0                           // bytes 0-7
+
+  // Issue GET_DESCRIPTOR(configuration, 9 bytes) on slot 2 EP0
+  adr     x0, xhci_xfer_s2e0_ring_meta
+
+  ldr     x1, =0x0009000002000680                 // GET_DESCRIPTOR(config, 9 bytes)
+  ldr     x2, =0x0003084000000008
+  bl      ring_write_trb
+
+  adrp    x1, slot2_descriptor
+  add     x1, x1, :lo12:slot2_descriptor
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32
+  ldr     x2, =0x00010C0000000009                 // Transfer Length=9
+  bl      ring_write_trb
+
+  mov     x1, xzr
+  mov     x2, #0x0000102000000000
+  bl      ring_write_trb
+
+  adr     x3, handle_get_keyboard_config_header_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  ldrb    w16, [x12, #xhci_kbd_slot_id-xhci_vars]
+  add     x16, x15, x16, lsl #2
+  mov     w6, #0x1
+  strwi   w6, x16, #0x100
+  b       2b
+
+
+handle_get_keyboard_config_header_done:
+  // Handle GET_DESCRIPTOR(configuration, 9 bytes) for keyboard — extract wTotalLength
+  adrp    x3, slot2_descriptor
+  add     x3, x3, :lo12:slot2_descriptor
+  dc      ivac, x3
+  dsb     ish
+  ldrxi   x18, x3, #0x0
+
+  ubfx    w16, w18, #16, #16                      // w16 = wTotalLength
+
+  // Issue GET_DESCRIPTOR(configuration, wTotalLength) on slot 2 EP0
+  adr     x0, xhci_xfer_s2e0_ring_meta
+
+  ldr     x1, =0x0000000002000680
+  bfi     x1, x16, #48, #16                       // wLength = wTotalLength
+  ldr     x2, =0x0003084000000008
+  bl      ring_write_trb
+
+  adrp    x1, slot2_descriptor
+  add     x1, x1, :lo12:slot2_descriptor
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32
+  ldr     x2, =0x00010C0000000000
+  orr     x2, x2, x16                             // Transfer Length = wTotalLength
+  bl      ring_write_trb
+
+  mov     x1, xzr
+  mov     x2, #0x0000102000000000
+  bl      ring_write_trb
+
+  adr     x3, handle_get_keyboard_config_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  ldrb    w16, [x12, #xhci_kbd_slot_id-xhci_vars]
+  add     x16, x15, x16, lsl #2
+  mov     w6, #0x1
+  strwi   w6, x16, #0x100
+  b       2b
+
+
+handle_get_keyboard_config_done:
+  // Handle GET_DESCRIPTOR(configuration, full) for keyboard — parse and SET_CONFIGURATION
+  // HID keyboard config: Config(9) + Interface(9) + HID(9) + Endpoint(7) = 34 bytes typical
+  adrp    x3, slot2_descriptor
+  add     x3, x3, :lo12:slot2_descriptor
+  dc      ivac, x3
+  add     x4, x3, #0x40
+  dc      ivac, x4
+  dsb     ish
+
+  // Configuration Descriptor: byte 5 = bConfigurationValue
+  ldrb    w16, [x3, #5]
+  strb    w16, [x12, #xhci_kbd_config_value-xhci_vars]
+
+  // Find the Endpoint Descriptor — scan for bDescriptorType=5
+  // Walk descriptor chain: each descriptor starts with bLength, bDescriptorType
+  mov     x4, x3                                  // x4 = current position
+  ldrb    w17, [x3, #2]
+  ldrb    w18, [x3, #3]
+  orr     w17, w17, w18, lsl #8                   // w17 = wTotalLength
+  add     x17, x3, x17                            // x17 = end of descriptors
+10:
+  ldrb    w18, [x4, #0]                           // bLength
+  cbz     w18, 11f                                // bLength=0 would cause infinite loop — bail out
+  ldrb    w19, [x4, #1]                           // bDescriptorType
+  cmp     w19, #5                                 // Endpoint Descriptor?
+  b.eq    12f
+  add     x4, x4, x18                             // advance by bLength
+  cmp     x4, x17
+  b.lo    10b
+11:
+  // No endpoint descriptor found — panic
+.if UART_DEBUG
+  adr     x0, msg_no_endpoint
+.endif
+  b       panic
+12:
+  // x4 points to Endpoint Descriptor
+  // byte 2 = bEndpointAddress, byte 3 = bmAttributes, bytes 4-5 = wMaxPacketSize, byte 6 = bInterval
+  ldrb    w18, [x4, #2]                           // bEndpointAddress
+  strb    w18, [x12, #xhci_kbd_ep_address-xhci_vars]
+  ldrb    w19, [x4, #4]                           // wMaxPacketSize lo
+  ldrb    w6, [x4, #5]                            // wMaxPacketSize hi
+  orr     w19, w19, w6, lsl #8
+  strh    w19, [x12, #xhci_kbd_ep_max_pkt-xhci_vars]
+  ldrb    w6, [x4, #6]                            // bInterval
+  strb    w6, [x12, #xhci_kbd_ep_interval-xhci_vars]
+
+  // Prepare slot2_input_context for Configure Endpoint
+  adrp    x17, slot2_input_context
+  add     x17, x17, :lo12:slot2_input_context
+
+  // Input Control Context: A0=1 (Slot), A3=1 (EP1 IN, DCI=3)
+  str     wzr, [x17, #0x00]
+  mov     w4, #0x09
+  str     w4, [x17, #0x04]
+
+  // Slot Context — build from scratch using known values
+  // (don't copy from output device context which contains xHC-internal state)
+
+  // DWORD0: Context Entries=3, Hub=0, Speed, Route String
+  // Re-read speed from port status buffer (still in slot1_descriptor from last GET_PORT_STATUS)
+  adrp    x3, slot1_descriptor
+  add     x3, x3, :lo12:slot1_descriptor
+  ldr     w4, [x3]                                // w4 = port status from handle_hub_port_reset_confirmed
+  ubfx    w4, w4, #9, #2                          // w4 = USB speed (0=FS, 1=LS, 2=HS)
+  add     w4, w4, #1                              // w4 = xHCI speed (1=FS, 2=LS, 3=HS)
+  ldrb    w6, [x12, #xhci_hub_scan_port-xhci_vars]
+  mov     w3, #0x18000000                         // Context Entries = 3
+  orr     w3, w3, w4, lsl #20                     // Speed
+  orr     w3, w3, w6                              // Route String = hub port number (tier 1)
+  str     w3, [x17, #0x20]                        // Slot Context DWORD0
+
+  // DWORD1: Root Hub Port Number = 1
+  mov     w3, #0x00010000                         // Root Hub Port Number = 1
+  str     w3, [x17, #0x24]                        // Slot Context DWORD1
+
+  // DWORD2: Parent Hub Slot ID = 1, Parent Port Number
+  mov     w3, #0x01                               // Parent Hub Slot ID = 1
+  orr     w3, w3, w6, lsl #8                      // Parent Port Number = hub port
+  str     w3, [x17, #0x28]                        // Slot Context DWORD2
+  // DWORD3-7: zero (BSS initialized)
+
+  // EP1 IN Context (at offset 0x80)
+  // DWORD0: Interval — for LS/FS interrupt endpoint behind HS hub:
+  //   xHCI Interval = ceiling(log2(bInterval * 8)), valid range 3-10
+  //   [XHCI] s6.2.3.6 p456
+  //   For bInterval=10 (10ms): ceiling(log2(80)) = 7 => 2^6 * 125us = 8ms
+  //   TODO: compute dynamically if bInterval varies across keyboards
+  mov     w4, #7                                  // Interval = 7 (8ms, close to USB 10ms request)
+  lsl     w4, w4, #16                             // Interval in bits 23:16
+  str     w4, [x17, #0x80]
+
+  // DWORD1: CErr=3, EP Type=7 (Interrupt IN), Max Packet Size
+  ldrh    w4, [x12, #xhci_kbd_ep_max_pkt-xhci_vars]
+  lsl     w4, w4, #16                             // Max Packet Size in bits 31:16
+  mov     w6, #0x3E                               // CErr=3, EP Type=7 (Interrupt IN)
+  orr     w4, w4, w6
+  str     w4, [x17, #0x84]
+
+  // TR Dequeue Pointer = DMA(transfer_ring_slot2_EP1) | DCS=1
+  adrp    x4, transfer_ring_slot2_EP1
+  add     x4, x4, :lo12:transfer_ring_slot2_EP1
+  mov     w6, #0x4
+  bfi     x4, x6, #32, #32                        // DMA address
+  orr     x4, x4, #1                              // DCS = 1
+  str     x4, [x17, #0x88]
+
+  // DWORD4: Average TRB Length = wMaxPacketSize
+  ldrh    w4, [x12, #xhci_kbd_ep_max_pkt-xhci_vars]
+  str     w4, [x17, #0x90]
+
+  // Cache clean
+  dc      cvac, x17
+  add     x4, x17, #0x40
+  dc      cvac, x4
+  add     x4, x4, #0x40
+  dc      cvac, x4
+  dsb     sy
+
+
+  // Issue SET_CONFIGURATION on slot 2 EP0
+  adr     x0, xhci_xfer_s2e0_ring_meta
+
+  ldrb    w16, [x12, #xhci_kbd_config_value-xhci_vars]
+  mov     x1, #0x0000000000000900
+  bfi     x1, x16, #16, #8
+
+  ldr     x2, =0x0000084000000008                 // TRT=0, IDT=1
+  bl      ring_write_trb
+
+  mov     x1, xzr
+  ldr     x2, =0x0001102000000000                 // Status Stage DIR=1
+  bl      ring_write_trb
+
+  adr     x3, handle_set_configuration_keyboard_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  ldrb    w16, [x12, #xhci_kbd_slot_id-xhci_vars]
+  add     x16, x15, x16, lsl #2
+  mov     w6, #0x1
+  strwi   w6, x16, #0x100
+  b       2b
+
+
+handle_set_configuration_keyboard_done:
+  // Issue Configure Endpoint command for keyboard (slot 2)
+  adrp    x17, slot2_input_context
+  add     x17, x17, :lo12:slot2_input_context
+  mov     x1, x17
+  mov     w18, #0x4
+  bfi     x1, x18, #32, #32                       // DMA address
+
+  ldrb    w16, [x12, #xhci_kbd_slot_id-xhci_vars]
+  mov     w2, #(12 << 10)                         // TRB Type=12 (Configure Endpoint)
+  lsl     x2, x2, #32
+  bfi     x2, x16, #56, #8                        // Slot ID
+
+  adr     x0, xhci_cmd_ring_meta
+  bl      ring_write_trb
+
+  adr     x3, handle_configure_endpoint_keyboard_done
+  str     x3, [x12, #xhci_command_handler-xhci_vars]
+  dsb     sy
+  strwi   wzr, x15, #0x100
+  b       2b
+
+
+handle_configure_endpoint_keyboard_done:
+  // Keyboard fully configured. Set boot protocol and start interrupt transfers.
+
+  // Issue SET_PROTOCOL(0 = boot protocol) on slot 2 EP0
+  // [HID] s7.2.6 -- Set Protocol
+  // bmRequestType=0x21 (host-to-device, class, interface), bRequest=0x0B (SET_PROTOCOL),
+  // wValue=0 (boot protocol), wIndex=0 (interface), wLength=0
+  adr     x0, xhci_xfer_s2e0_ring_meta
+
+  ldr     x1, =0x0000000000000B21                 // SET_PROTOCOL(boot)
+  ldr     x2, =0x0000084000000008                 // TRT=0, IDT=1
+  bl      ring_write_trb
+
+  mov     x1, xzr
+  ldr     x2, =0x0001102000000000                 // Status DIR=1
+  bl      ring_write_trb
+
+  adr     x3, handle_set_protocol_done
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+  ldrb    w16, [x12, #xhci_kbd_slot_id-xhci_vars]
+  add     x16, x15, x16, lsl #2
+  mov     w6, #0x1
+  strwi   w6, x16, #0x100
+  b       2b
+
+
+handle_set_protocol_done:
+  // SET_PROTOCOL complete. Submit first interrupt IN transfer on slot 2 EP1.
+  adr     x0, xhci_xfer_s2e1_ring_meta
+
+  // Normal TRB for interrupt IN transfer
+  // Data = keyboard_report buffer (DMA)
+  adrp    x1, keyboard_report
+  add     x1, x1, :lo12:keyboard_report
+  mov     w3, #0x4
+  bfi     x1, x3, #32, #32                        // DMA address
+
+  // Control: TRB Type=1 (Normal), IOC=1, ISP=1 (Interrupt on Short Packet)
+  // Status: Transfer Length=8 (HID boot report)
+  ldr     x2, =0x0000042400000008                 // Type=1 (Normal), IOC=1, ISP=1; Length=8
+  bl      ring_write_trb
+
+  adr     x3, handle_keyboard_input
+  str     x3, [x12, #xhci_transfer_handler-xhci_vars]
+  dsb     sy
+
+  // Ring slot 2 doorbell for EP1 IN (DB Target = 3 = DCI of EP1 IN)
+  ldrb    w16, [x12, #xhci_kbd_slot_id-xhci_vars]
+  add     x16, x15, x16, lsl #2
+  mov     w6, #0x3                                // DB Target = 3 (EP1 IN)
+  strwi   w6, x16, #0x100
+  b       2b
+
+
+handle_keyboard_input:
+  // Handle keyboard HID boot protocol report (8 bytes)
+  // [HID] Appendix B -- Boot Interface Descriptors
+  //   byte 0: modifier keys (shift, ctrl, alt, etc.)
+  //   byte 1: reserved (OEM)
+  //   bytes 2-7: keycodes (up to 6 simultaneous keys)
+  adrp    x3, keyboard_report
+  add     x3, x3, :lo12:keyboard_report
+  dc      ivac, x3
+  dsb     ish
+  ldrxi   x18, x3, #0x0                           // x18 = 8-byte HID report
+
+  // Defer resubmit to after event loop exits — prevents the keyboard interrupt
+  // loop from starving the main boot flow. The resubmit happens at label 4: in
+  // consume_xhci_events, so the next Transfer Event arrives via a fresh IRQ.
+  mov     w3, #1
+  strb    w3, [x12, #xhci_kbd_resubmit-xhci_vars]
   b       2b
 
 
@@ -1168,6 +1543,8 @@ msg_unexpected_max_packet_size:
   .asciz "bMaxPacketSize0 != 64 for HS hub\r\n"
 msg_not_a_hub:
   .asciz "bInterfaceClass != 0x09 (not a hub)\r\n"
+msg_no_endpoint:
+  .asciz "No endpoint descriptor found in keyboard config\r\n"
 .endif
 
 

@@ -5,6 +5,8 @@
 
 # These bcm283x hardware random number generator routines are inspired by:
 #   https://github.com/torvalds/linux/blob/d4f6d923238dbdb69b8525e043fedef2670d4f2c/drivers/char/hw_random/bcm2835-rng.c
+# Note: RNG registers are not documented in BCM2711/BCM2837 peripherals datasheets.
+# The Linux kernel source above is the only available reference for the register layout.
 
 .text
 

@@ -33,9 +33,10 @@
 pcie_init_bcm2711:
 
   mov     x5, x30
+                                                  // [BCM2711] s6.5 p93 -- PCIe is at low peripheral address range; config space mapped by firmware
   adrp    x10, 0xfd500000 + _start                // x10 = RC config space base address
   adrp    x4, 0xfd504000 + _start                 // x4 = Broadcom PCIe Set Top Box registers
-  adrp    x13, 0xfd508000 + _start                // x13 = VL805 USB Controller config space base address
+  adrp    x13, 0xfd508000 + _start                // x13 = VL805 USB Controller config space base address (bus 1 via ECAM)
   adrp    x14, 0xfd509000 + _start                // x14 = ECAM Index register
   adrp    x7, heap
   add     x7, x7, :lo12:heap                      // x7 = heap
@@ -457,9 +458,8 @@ pcie_init_bcm2711:
 
   // Provides L0s, L1, and L1SS, but not compliant to provide Clock Power
   // Management; specifically, may not be able to meet the Tclron max timing of
-  // 400ns as specified in "Dynamic Clock Control", section 3.2.5.2.2 of the
-  // PCIe spec. This situation is atypical and should happen only with older
-  // devices.
+  // 400ns as specified in [PCIE] s3.2.5.2.2 -- Dynamic Clock Control (section not found in PCIe 5.0; may be from an older revision). This
+  // situation is atypical and should happen only with older devices.
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1594-L1601
 
   // Updates registers:
@@ -540,6 +540,7 @@ pcie_init_bcm2711:
   // VL805: Disable Power Management (clear bit 8) and clear Power Management Status (by setting bit 15) of PCI_PM_CTRL register.
   // Power Management capability starts at offset 0x80, and PCI_PM_CTRL has offset 0x04 from start of capability,
   // i.e. offset is 0x80 + 0x04 = 0x84
+  // [PCIE] s7.5.2.2 p714 -- Power Management Control/Status Register
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pci.c#L2354-L2368
   ldrhi   w1, x13, #0x84                          // w1 = [0xfd508084] = current value of PCI_PM_CTRL for VL805
   and     w1, w1, #~0x0100                        // clear bit 8 (PCI_PM_CTRL_PME_ENABLE)
@@ -547,6 +548,7 @@ pcie_init_bcm2711:
   strhi   w1, x13, #0x84                          // of [0xfd508084] (PCI_PM_CTRL)
 
   // VL805: Enable PCIe error reporting
+  // [PCIE] s7.5.3.4 p725 -- Device Control Register
   ldrhi   w1, x13, #0xcc                          // PCI_EXP_DEVCTL (offset 0x8 from 0xc4 where PCIe capability starts on VL805)
   orr     w1, w1, #0xf                            //  PCI_EXP_DEVCTL_CERE    0x01    Correctable Error Reporting Enable
                                                   //  PCI_EXP_DEVCTL_NFERE   0x02    Non-Fatal Error Reporting Enable
@@ -668,10 +670,12 @@ pcie_init_bcm2711:
   adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address
 
   // VL805: PCI cache line size
+  // [PCIE] s7.5.1.1.7 p692 -- Cache Line Size Register (offset 0x0C)
   mov     w1, #0x10
   strbi   w1, x13, #0xc                           // PCI cache line size = 0x10 (64/4) (was 0x00)
 
   // VL805: configure MSI
+  // [XHCI] s5.2.8 p377 -- Message Signaled Interrupts (MSI & MSI-X) Capability
   //   Configure Queue size: 0b010 (log2 => 4)
   //   Disable MSI enable, if enabled
 
@@ -719,6 +723,7 @@ pcie_init_bcm2711:
   strhi   w1, x13, #0x9c                          // [0xfd50809c] (MSI Message Data) = 0x6540 (was 0x0000)
 
   // VL805: Set PCI command
+  // [PCIE] s7.5.1.1.3 p686 -- Command Register (offset 0x04)
   // 0b0000 0101 0100 0110
   // set bit 1  => Enable response in Memory space
   // set bit 2  => Enable bus mastering
@@ -918,8 +923,7 @@ pcie_init_bcm2711:
   strhi   w1, x7, #0x2c                           // store [XHCI_REG_CAP_HCIVERSION] on heap (should be 0x0110)
 
   // reset the Host Controller
-  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-  // Section 4.2 (page 80): Host Controller Initialization
+  // [XHCI] s4.2 p80 -- Host Controller Initialization
   // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 1)
   // TODO: should probably have a timeout here
   6:
@@ -980,14 +984,13 @@ pcie_init_bcm2711:
   adrp    x2, event_ring                          // x2 = event_ring (virtual)
   adr     x8, xhci_vars
   mov     x9, #(1<<32)                            // bit 32 of x9 stores event ring consumer cycle state, initially set to 1
-                                                  // Section 4.9.4 (page 179)
+                                                  // [XHCI] s4.9.4 p179 -- Event Ring Management
   stp     x2, x9, [x8, xhci_event_dequeue-xhci_vars]
                                                   // keep internal record of event ring dequeue pointer (virtual)
   add     x3, x2, erst-event_ring                 // x3 = ERST (virtual)
   bfi     x2, x4, #32, #32                        // x2 = event_ring (DMA)
 
-// https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-// Section 6.5 (page 514)
+// [XHCI] s6.5 p514 -- Event Ring Segment Table
   strxi   x2, x3, #0x0                            // [ERST] = event_ring (DMA)
   mov     w9, #0x00fc
   strhi   w9, x3, #0x8                            // [ERST+0x8] = 0xfc (event ring has 252 TRBs)
@@ -1013,8 +1016,7 @@ pcie_init_bcm2711:
 
   // Note, it is assumed CRR (bit 3 of physical address 0x600000038) is already
   // 0, otherwise the below writes to the same address would be ineffective.
-  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-  // Section 4.6.1 (page 104) and Table 5-24 (pages 402, 403)
+  // [XHCI] s4.6.1 p104 -- Command Ring Operation; Table 5-24 p402 -- CRCR
   strwi   w1, x0, #0x38                           // [XHCI_REG_OP_CRCR_LO] = lower32(command_ring (virtual)) | 0x1 = lower32(command_ring (DMA)) | 0x1
   strwi   w4, x0, #0x3c                           // [XHCI_REG_OP_CRCR_HI] = 4 = upper32(command_ring (DMA))
 

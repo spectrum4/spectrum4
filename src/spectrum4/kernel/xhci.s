@@ -5,8 +5,7 @@
 .text
 
 
-# https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-# page 381 (section 5.3 Host Controller Capability Registers)
+# [XHCI] s5.3 p381 -- Host Controller Capability Registers (see references.inc for spec URL)
 
 
 # Capability registers...
@@ -131,7 +130,8 @@
 #    1: PED = 0 => Port Disabled
 #    3: OCA = 0 => Port does not have over-current condition
 #    4: PR = 0 => Port is not in reset
-#    8:5: PLS = 5 => Port is in the RxDetect State (USB 3 spec section 10.14.2.6.1)
+#    8:5: PLS = 5 => Port is in the RxDetect State [XHCI] s5.4.8 p406 Table 5-27
+#                                                        [USB3] s7.5.3 p165
 #    9: PP = 1 => Port is not powered off (I believe - need to check HCCPARAMS1.PPC to be sure)
 #    13:10: PS = 0 => Port Speed is undefined speed
 #    15:14: PIC = 0 => Port indicators are off
@@ -151,6 +151,8 @@ handle_xhci_irq:
   bl      uart_puts
 .endif
   adrp    x9, 0xfd504000 + _start                 // x9 = Broadcom PCIe STB register base (MSI registers at x9+0x500)
+                                                  // BCM2711-proprietary MSI controller registers; see Linux kernel:
+                                                  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c
 .if UART_DEBUG
   ldr     w0, [x9, #0x500]                        // w0 = [MSI status]
   bl      uart_x0                                 // log MSI interrupt vectors
@@ -171,6 +173,7 @@ consume_xhci_events:
   ldrxi   x10, x12, xhci_event_dequeue-xhci_vars
   ldrxi   x14, x12, xhci_event_ccs-xhci_vars      // x14 = Event Consumer Cycle Status (in bit 32)
   ldr     x15, =(0x600000000 + _start)            // x15 = VL805 USB Host Controller Capability Registers
+                                                  // PCIe BAR mapped to 0x600000000 by pcie_init_bcm2711 in pcie.s
   ldrwi   w13, x15, #0x20                         // TODO: remove this, just for debug: log USBCMD to see if RUN_STOP (bit 0) is clear or set
 
   ldrwi   w3, x15, #0x24                          // Read USBSTS in w3
@@ -198,14 +201,14 @@ consume_xhci_events:
 //   read [0xfffffff00022101c]=0x00008401 = 0b0000 0000 0000 0000 > 1000 01 < 00 0000 000 > 1 < => TRB Type = 33 (Command Completion Event), Cycle Bit = 1
 
     ubfx    x16, x11, #42, #6                     // x16 = TRB Type (from bits 42-47 of x11)
-
-    cmp     x16, #34
+                                                  // [XHCI] s4.11.3 p222 -- Event TRBs: TRB Type is in bits 15:10 of DWORD3 (= bits 42-47 of 128-bit TRB)
+    cmp     x16, #34                              // [XHCI] s6.4.6 p511 Table 6-91 -- TRB Type 34 = Port Status Change Event
     b.eq    port_status_change_event
 
-    cmp     x16, #33
+    cmp     x16, #33                              // [XHCI] s6.4.6 p511 Table 6-91 -- TRB Type 33 = Command Completion Event
     b.eq    command_completion_event
 
-    cmp     x16, #32
+    cmp     x16, #32                              // [XHCI] s6.4.6 p511 Table 6-91 -- TRB Type 32 = Transfer Event
     b.eq    transfer_event
 
 .if UART_DEBUG
@@ -213,6 +216,7 @@ consume_xhci_events:
 .endif
     b       panic
 
+                                                  // [XHCI] s4.9.4 p179 -- Event Ring Management: dequeue pointer advancement and CCS toggle
 2:
     add     x10, x10, #16                         // Bump x10 to next event TRB entry (potentially overrunning event ring)
     and     x13, x10, #0xfff                      // x13 = offset within page (= offset from ring start, since event ring is page-aligned and < 4KB)
@@ -223,6 +227,7 @@ consume_xhci_events:
     strxi   x14, x12, xhci_event_ccs-xhci_vars    // store it
     b       1b                                    // loop around
 3:
+                                                  // [XHCI] s5.5.2 p424 -- Interrupter Register Set: ERDP at offset 0x18 from interrupter 0 base (0x220)
   orr     w1, w10, #0x8                           // prepare to clear ERDP.EHB (RW1C)
   mov     w2, #0x4                                // ERDP_HI = 0x4 for DMA address
   strwi   w1, x15, #0x238                         // [ERDP_LO] = next TRB (lo) with EHB cleared
@@ -248,10 +253,9 @@ port_status_change_event:
   strwi   w18, x17, #0x410                        // write value back to clear RW1CS changes, potentially reset port
   tbnz    w19, #0, 2b                             // if resetting port, return and wait for next port status change
 
-  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-  // Section 6.4.3.2 (page 488)
+  // [XHCI] s6.4.3.2 p488 -- Enable Slot Command TRB
   adrp    x1, command_ring                        // x1 = command_ring (virtual)
-  mov     w2, (9 << 10) | 1                       // TRB Type = 9 (Enable Slot: see page 512 of xHCI spec)
+  mov     w2, (9 << 10) | 1                       // TRB Type = 9 (Enable Slot) [XHCI] s6.4.6 p511 Table 6-91
   strxi   xzr, x1, #0x0
   strwi   wzr, x1, #0x8
   strwi   w2, x1, #0xc
@@ -270,7 +274,7 @@ port_status_change_event:
   strwi   w19, x1, #(command_ring_end - command_ring - 0x04)
 
   dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
-  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
+  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0) [XHCI] s5.6 p429 -- Doorbell Registers
 
   b       2b
 
@@ -281,7 +285,7 @@ command_completion_event:
   bl      uart_puts
 .endif
   ubfx    w0, w11, #24, #8                        // w0 = Completion Code (bits 31:24 of Status field)
-  cmp     w0, #1                                  // 1 = Success (xHCI spec Table 6-90, page 507)
+  cmp     w0, #1                                  // 1 = Success [XHCI] s6.4.5 p507 Table 6-90
   b.eq    4f
 .if UART_DEBUG
   adr     x0, msg_command_failed
@@ -309,58 +313,58 @@ command_completion_event:
   adrp    x17, slot1_input_context
   add     x17, x17, :lo12:slot1_input_context
   adrp    x1, command_ring                        // x1 = command_ring (virtual)
-  mov     w2, (11 << 10) | 1                      // TRB Type = 11, BSR = 0 (Address Device: see page 511 of xHCI spec)
+  mov     w2, (11 << 10) | 1                      // TRB Type = 11, BSR = 0 (Address Device) [XHCI] s6.4.6 p511 Table 6-91
   orr     w2, w2, 0x01000000                      // Slot 1
   strwi   w17, x1, #0x10
   strwi   w18, x1, #0x14
   strwi   wzr, x1, #0x18
   strwi   w2, x1, #0x1c
   dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
-  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0)
+  strwi   wzr, x15, #0x100                        // ring host controller doorbell (register 0) [XHCI] s5.6 p429
   b       2b
 6:
   // Handle Address Device command completion
 
   // Create a GET_DESCRIPTOR request
   // Setup Stage
-  // xHCI spec page 468
+  // [XHCI] s6.4.1.2.1 p468 -- Setup Stage TRB
   adrp    x0, transfer_ring_slot1_EP0
   add     x0, x0, :lo12:transfer_ring_slot1_EP0
   ldr     x1, =0x0008000001000680                 // 0b0000000000001000 0000000000000000 0000000100000000 00000110 10000000
                                                   // wLength = 8 => descriptor length 8 bytes (duplicate of TRB transfer length in DATA STAGE?)
                                                   // wIndex = 0 => Zero or Language ID
-                                                  // wValue 0x100 (256) => Descriptor Type 1 (DEVICE - page 251 of USB 2.0 spec) and Descriptor Index 0.
+                                                  // wValue 0x100 (256) => Descriptor Type 1 (DEVICE) and Descriptor Index 0. [USB2] s9.4 p251 Table 9-5
                                                   //   The descriptor index is used to select a specific descriptor (only for configuration and
                                                   //   string descriptors) when several descriptors of the same type are implemented in a device. For example, a
                                                   //   device can implement several configuration descriptors. For other standard descriptors that can be retrieved
                                                   //   via a GetDescriptor() request, a descriptor index of zero must be used. The range of values used for a
                                                   //   descriptor index is from 0 to one less than the number of descriptors of that type implemented by the device.
-                                                  // bRequest 0x6 => GET_DESCRIPTOR (page 251 and section 9.4.3 on page 253 of USB 2.0 spec)
-                                                  // bmRequestType 128 (0x80) => device to host, standard type, device recipient (page 248 of USB 2.0 spec)
+                                                  // bRequest 0x6 => GET_DESCRIPTOR [USB2] Table 9-4 p251, s9.4.3 p253
+                                                  // bmRequestType 128 (0x80) => device to host, standard type, device recipient [USB2] s9.3 p248 Table 9-2
 
   ldr     x2, =0x0003084100000008                 // 0b00000000000000 11 000010 000 1 0 0000 1 0000000000 00000 00000000000001000
                                                   // RsvdZ
-                                                  // TRT (Transfer Type) = 3 (IN data stage) (p469 xHCI spec)
-                                                  // TRB Type = 2 (Setup Stage) (p511 xHCI)
+                                                  // TRT (Transfer Type) = 3 (IN data stage) [XHCI] s6.4.1.2.1 p468 Table 6-26
+                                                  // TRB Type = 2 (Setup Stage) [XHCI] s6.4.6 p511 Table 6-91
                                                   // RsvdZ
-                                                  // IDT = 1 (required for setup stage - p469 xHCI spec)
+                                                  // IDT = 1 (required for setup stage) [XHCI] s6.4.1.2.1 p468 Table 6-26
                                                   // IOC = 0 (interrupt on completion not enabled - only needed on last TRB)
                                                   // RsvdZ
                                                   // C = 1 => cycle bit 1
                                                   // Interruptor Target = 0
                                                   // RsvdZ
-                                                  // TRB Transfer Length = 8. Always 8 according to xHCI spec page 469.
+                                                  // TRB Transfer Length = 8. Always 8. [XHCI] s6.4.1.2.1 p468 Table 6-25
   stp     x1, x2, [x0]
 
   // Data Stage
-  // xHCI spec page 470
+  // [XHCI] s6.4.1.2.2 p470 -- Data Stage TRB
   adrp    x3, slot1_descriptor
   add     x3, x3, :lo12:slot1_descriptor          // CPU virtual address of data buffer for slot 1 device descriptor (VL805 internal USB 2.0 hub)
 
   ldr     x4, = 0x00010c0100000008                // 0b000000000000000 1 000011 000 0 0 0 0 0 0 1 0000000000 00000 00000000000001000
                                                   // RsvdZ
-                                                  // DIR = 1. IN direction. p471.
-                                                  // TRB Type = 3 (Data stage) (p511)
+                                                  // DIR = 1. IN direction. [XHCI] s6.4.1.2.2 p470 Table 6-29
+                                                  // TRB Type = 3 (Data Stage) [XHCI] s6.4.6 p511 Table 6-91
                                                   // RsvdZ
                                                   // IDT = 0 (immediate data: false, i.e. data is referenced via pointer)
                                                   // IOC = 0 (no interrupt on completion - only needed on last TRB)
@@ -369,7 +373,7 @@ command_completion_event:
                                                   //         allow the PCIe device to bypass CPU cache snooping for potentially better throughput,
                                                   //         but risks stale data on non-coherent systems. 0 is the safe/correct choice here.)
                                                   // ISP = 0 (interrupt on short packet disabled)
-                                                  // ENT = 0 (evaluate next TRB disabled - see page 250, also not allowed since chain bit = 0)
+                                                  // ENT = 0 (evaluate next TRB disabled, also not allowed since chain bit = 0) [XHCI] s4.12.3 p250
                                                   // C = 1 (cycle bit)
                                                   // Interruptor Target = 0
                                                   // TD size = 0. This is a hint to the xHC about how many more packets remain in the TD after this TRB,
@@ -380,14 +384,14 @@ command_completion_event:
 
 
   // Status Stage
-  // xHCI spec page 472
+  // [XHCI] s6.4.1.2.3 p472 -- Status Stage TRB
                                                   // 0b00000000000000000000000000000000 00000000000000000000000000000000
                                                   // RsvdZ
                                                   // RsvdZ
   mov     x5, #0x0000102100000000                 // 0b000000000000000 0 000100 0000 1 0 00 0 1 0000000000 0000000000000000000000
                                                   // RsvdZ
                                                   // DIR = 0
-                                                  // TRB Type = 4 (Status Stage) (p511)
+                                                  // TRB Type = 4 (Status Stage) [XHCI] s6.4.6 p511 Table 6-91
                                                   // RsvdZ
                                                   // IOC = 1 (interrupt on completion)
                                                   // CH = 0 (last TRB of TD)
@@ -409,7 +413,7 @@ command_completion_event:
   strwi   wzr, x0, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0 - 0x08)
   strwi   w19, x0, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0 - 0x04)
 
-  mov     w6, #0x1                                // Control EP0 Enqueue Pointer Update (page 431 xHCI spec)
+  mov     w6, #0x1                                // Control EP0 Enqueue Pointer Update [XHCI] s5.6 p429 Table 5-43
   add     x16, x15, x16, lsl #2                   // x16 = 0x100 less than address of doorbell for slot number stored in x16
   dsb     sy                                      // ensure TRB writes are complete before ringing doorbell
   ldrwi   w3, x15, #0x24                          // TODO: remove this, just for debug: w3 = USBSTS
@@ -424,7 +428,7 @@ transfer_event:
   bl      uart_puts
 .endif
   ubfx    w0, w11, #24, #8                        // w0 = Completion Code (bits 31:24 of Status field)
-  cmp     w0, #1                                  // 1 = Success (xHCI spec Table 6-90, page 507) (0xd = 13 might also be ok)
+  cmp     w0, #1                                  // 1 = Success [XHCI] s6.4.5 p507 Table 6-90 (0xd = 13 = Short Packet might also be ok)
   b.eq    6f
 # cmp     w0, #13                                 // 13 = Short Packet (maybe not an error for descriptors?)
 # b.eq    6f
@@ -479,13 +483,11 @@ msg_transfer_failed:
 # USB Slot 1 Input Context (Address Device Command)
 # Note: Slot 1 is the VL805's internal USB 2.0 hub (bDeviceClass=0x09, bDeviceProtocol=0x01 single TT).
 # A USB keyboard would be connected downstream of this hub, requiring hub enumeration first.
-# https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-# Section 6.2.5 (page 459)
+# [XHCI] s6.2.5 p459 -- Input Context
 .align 6
 slot1_input_context:
 # Input Control Context
-# https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-# Section 6.2.5.1 (page 461)
+# [XHCI] s6.2.5.1 p461 -- Input Control Context
 .word 0x00000000
 .word 0x00000003                                  // A0=1, A1=1
 .word 0x00000000
@@ -495,8 +497,7 @@ slot1_input_context:
 .word 0x00000000
 .word 0x00000000
 # Slot Context
-# https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-# Section 6.2.2 (page 444)
+# [XHCI] s6.2.2 p444 -- Slot Context
 .word 0x08300000                                  // 0b00001 0 0 0 0011 00000000000000000000
 .word 0x00010000                                  // 0b00000000 00000001 0000000000000000
 .word 0x00000000
@@ -513,8 +514,7 @@ slot1_input_context:
                                                   // Number of Ports = 0 (set to 0 for Address Device; would be updated after reading hub descriptor)
                                                   // Root Hub Port Number = 1 (VL805 port 1 = internal USB 2.0 hub)
 # Endpoint Context
-# https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-# Section 6.2.3 (page 449)
+# [XHCI] s6.2.3 p449 -- Endpoint Context
 .word 0x00000000                                  // 0b00000000 00000000 0 00000 00 00000 000; Max ESIT Payload Hi = 0; Interval = 0; LSA = 0; MaxPStreams = 0; Mult = 0; RsvdZ = 0; EP State = 0
 .word 0x00400026                                  // 0b0000000001000000 00000000 0 0 100 11 0; Max Packet Size = 64; Max Burst Size = 0; HID = 0; RsvdZ = 0; EP Type = 4; CErr = 3; RsvdZ = 0
 .dword (transfer_ring_slot1_EP0-0xfffffff000000000+0x400000000+0x1)
@@ -528,7 +528,7 @@ slot1_input_context:
                                                   // Mult = 0 (required for non-SS-Isochronous endpoint types)
                                                   // MaxPStreams = 0; streams not supported => TR Dequeue Pointer is a transfer ring
                                                   // LSA = 0; RsvdZ since MaxPStreams == 0
-                                                  // Interval = 0 (don't care for Control endpoints per xHCI spec §6.2.3.6)
+                                                  // Interval = 0 (don't care for Control endpoints) [XHCI] s6.2.3.6 p456
                                                   // Max ESIT Payload Hi = 0; RsvdZ since LEC == 0 (bits 31:24 of DWORD0)
                                                   // Max ESIT Payload Lo = 0; RsvdZ since LEC == 0 (bits 31:16 of DWORD4)
                                                   // CErr = 3; 3 attempts before giving up on executing a TD

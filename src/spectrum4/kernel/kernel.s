@@ -44,8 +44,8 @@ _start:
                                                   // | L2CTLR_EL1 L2 Control Register, EL1 |
                                                   // +=====================================+
                                                   //
-                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/L2-Control-Register?lang=en
-                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/L2-Control-Register--EL1?lang=en
+                                                  // rpi3b: [A53TRM] s4.3.64 p4-100 -- L2 Control Register
+                                                  // rpi4b: [A72TRM] s4.3.58 p4-168 -- L2 Control Register, EL1
   mov     x1, #0x22
   orr     x0, x0, x1
   msr     s3_1_c11_c0_2, x0                       // set L2 read/write cache latency to 3
@@ -54,8 +54,8 @@ _start:
                                                   // | CPUECTLR_EL1 CPU Extended Control Register, EL1 |
                                                   // +=================================================+
                                                   //
-                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/CPU-Extended-Control-Register--EL1?lang=en
-                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/CPU-Extended-Control-Register--EL1?lang=en
+                                                  // rpi3b: [A53TRM] s4.3.79 p4-118 -- CPU Extended Control Register, EL1
+                                                  // rpi4b: [A72TRM] s4.3.67 p4-206 -- CPU Extended Control Register, EL1
                                                   //
                                                   //                                    D   L     L
                                                   //                                    T   2     2                                  S
@@ -81,8 +81,9 @@ _start:
                                                   // | SCTLR_EL1 System Control Register, EL1 |
                                                   // +========================================+
                                                   //
-                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/System-Control-Register--EL1?lang=en
-                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/System-Control-Register--EL1?lang=en
+                                                  // [ARMV8] sD17.2.118 pD17-6169 -- SCTLR_EL1, System Control Register (architecture definition)
+                                                  // rpi3b: [A53TRM] s4.3.30 p4-50 -- System Control Register, EL1
+                                                  // rpi4b: [A72TRM] s4.3.30 p4-125 -- System Control Register, EL1
                                                   //
                                                   //                                                 C
                                                   //                                                 P
@@ -123,8 +124,9 @@ _start:
                                                   // | HCR_EL2 Hypervisor Configuration Register, EL2 |
                                                   // +================================================+
                                                   //
-                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/Hypervisor-Configuration-Register?lang=en
-                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/Hypervisor-Configuration-Register--EL2?lang=en
+                                                  // [ARMV8] sD17.2.48 pD17-5834 -- HCR_EL2, Hypervisor Configuration Register (architecture definition)
+                                                  // rpi3b: [A53TRM] s4.3.36 p4-59 -- Hypervisor Configuration Register
+                                                  // rpi4b: [A72TRM] s4.3.34 p4-131 -- Hypervisor Configuration Register, EL2
                                                   //
                                                   //                                                                    T
                                                   //                                                T         T       T I   T T T T                          S
@@ -173,18 +175,19 @@ _start:
                                                   // VM:    0b0  => Disable second stage MMU address translation
   msr     hcr_el2, x0
 
-  mrs     x0, midr_el1                            // See https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
+  mrs     x0, midr_el1                            // [ARMV8] sD17.2.100 pD17-6115 -- MIDR_EL1, Main ID Register
   and     x0, x0, #0xfff0
   mov     x1, #0xd080                             // Part Number 0xd08 => Cortex-A72 processor => Raspberry Pi 4/400/CM4 (and thus BCM2711 with GIC-400, i.e. GICv2 implementation)
-                                                  // https://developer.arm.com/documentation/100095/0002/system-control/aarch64-register-descriptions/main-id-register--el1
+                                                  // [A72TRM] s4.3.1 p4-89 -- Main ID Register, EL1
   cmp     x0, x1
   b.ne    post_gic_setup                          // Skip GIC setup if not on rpi4/rpi400
 
+                                                  // [BCM2711] s6.5.1 p92 -- GIC-400 base at 0xff840000 (low peripheral mode)
+                                                  // [GIC400] s3.2 p3-3 Table 3-1 -- Distributor at +0x1000, CPU Interface at +0x2000
   adrp    x2, 0xff841000                          // GIC Distributor     note: physical, not virtual address (do not add _start to value!)
   adrp    x1, 0xff842000                          // GIC CPU Interface   note: physical, not virtual address (do not add _start to value!)
-  mov     w0, #0x000001e7
+  mov     w0, #0x000001e7                         // [GICv2] s4.4.1 p4-125 Table 4-31 -- GICC_CTLR Secure copy (EL3)
   str     w0, [x1]                                // Enable group 1 IRQs from CPU interface [GICC_CTLR]=[0xff842000]=0x000001e7 CPU Interface Control Register
-                                                  // See https://developer.arm.com/documentation/ihi0048/b/Programmers--Model/About-the-programmers--model/CPU-interface-register-map?lang=en
   mov     w0, #0x000000ff
   str     w0, [x1, #0x4]                          // priority mask [0xff842004]=0x000000ff [GICC_PMR]=0x000000ff Interrupt Priority Mask Register
   add     x2, x2, #0x80                           // x2 = 0xff841080
@@ -207,8 +210,9 @@ post_gic_setup:
                                                   // | SCR_EL3 Secure Configuration Register, EL3 |
                                                   // +============================================+
                                                   //
-                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/Secure-Configuration-Register?lang=en
-                                                  // rpi4b: ???
+                                                  // [ARMV8] sD17.2.117 pD17-6155 -- SCR_EL3, Secure Configuration Register (architecture definition)
+                                                  // rpi3b: [A53TRM] s4.3.42 p4-71 -- Secure Configuration Register
+                                                  // rpi4b: [A72TRM] s4.5.7 p4-248 -- Secure Configuration Register
                                                   //
                                                   //                           T T     S H S       F I
                                                   //                           W W S R I C M     E I R N
@@ -237,7 +241,7 @@ post_gic_setup:
                                                   // | SPSR_EL3 Saved Program Status Register, EL3 |
                                                   // +=============================================+
                                                   //
-                                                  // rpi3b/rpi4b: https://developer.arm.com/documentation/ddi0601/2024-12/AArch64-Registers/SPSR-EL3--Saved-Program-Status-Register--EL3-?lang=en
+                                                  // [ARMV8] sC5.2.20 pC5-743 -- SPSR_EL3, Saved Program Status Register, EL3
                                                   //
                                                   //                                          E                                    A                  M
                                                   //                                          X P                                  L   B              [
@@ -370,8 +374,9 @@ post_gic_setup:
                                                   // | TCR_EL1 Translation Control Register, EL1 |
                                                   // +===========================================+
                                                   //
-                                                  // rpi3b: https://developer.arm.com/documentation/ddi0500/j/System-Control/AArch64-register-descriptions/Translation-Control-Register--EL1?lang=en
-                                                  // rpi4b: https://developer.arm.com/documentation/100095/0003/System-Control/AArch64-register-descriptions/Translation-Control-Register--EL1?lang=en
+                                                  // [ARMV8] sD17.2.131 pD17-6257 -- TCR_EL1, Translation Control Register (architecture definition)
+                                                  // rpi3b: [A53TRM] s4.3.48 p4-80 -- Translation Control Register, EL1
+                                                  // rpi4b: [A72TRM] s4.3.41 p4-146 -- Translation Control Register, EL1
                                                   //
                                                   //                                                      O  I                    O  I
                                                   //                                    T T               R  R  E                 R  R  E
@@ -382,6 +387,7 @@ post_gic_setup:
                                                   //    6666 5555 5555 5544 4444 4444 3 3 3 3 3 333 33 22 22 22 2 2 22 1111 11 11 11
                                                   //    3210 9876 5432 1098 7654 3210 9 8 7 6 5 432 10 98 76 54 3 2 10 9876 54 32 10 98 7 6 54 3210
                                                   //
+                                                  // [ARMV8] sD17.2.131 pD17-6257 -- TCR_EL1
   ldr     x0, =0x00000001b51c351c                 // 0b 0000/0000/0000/0000/0000/0000/0 0 0 0/0 001/10 11/01 01/0 0 01/1100/00 11/01 01/0 0 01/1100
                                                   // 0x    0    0    0    0    0    0       0     1     b     5      1    c     3     5      1    c
                                                   //
@@ -404,12 +410,13 @@ post_gic_setup:
                                                   // T0SZ:    0b011100 => TTBR0_EL1 region size = 2^(64-28) = 2^36 bytes = 64GB
   msr     tcr_el1, x0
 
+                                                  // [ARMV8] sD17.2.97 pD17-6103 -- MAIR_EL1, Memory Attribute Indirection Register
   ldr     x0, =0x004404ff
   msr     mair_el1, x0                            // mair_el1 = 0x00000000004404ff => attr index 0 => normal (WB-WA), attr index 1 => device (nGnRE), attr index 2 => normal non-cacheable
   ldr     x2, =10f                                // use ldr x2, =<label> to make sure not to get relative address (could also just orr top 16 bits)
-  mrs     x0, sctlr_el1                           // fetch System Control Register (EL1)
+  mrs     x0, sctlr_el1                           // fetch System Control Register (EL1) [ARMV8] sD17.2.118 pD17-6169 -- SCTLR_EL1
   mov     x1, #0x1005
-  orr     x0, x0, x1                              // enable MMU (0x1), data cache (0x4) and instruction cache (0x1000)
+  orr     x0, x0, x1                              // enable MMU (bit 0), data cache (bit 2) and instruction cache (bit 12)
   msr     sctlr_el1, x0                           // update System Control Register (EL1) to enable MMU
   dsb     ishst                                   // ensure page table writes are complete (inner shareable - not really needed as nothing else running in domain)
   tlbi    vmalle1                                 // invalidate all EL1/EL0 TLB entries for current VMID (VMID=0 since EL2 disabled)
@@ -905,7 +912,7 @@ pcie_init:
 
 # RPi 3B (bcm2837):
 #   * https://github.com/raspberrypi/documentation/issues/325 (explains differences between bcm2835 and bcm2837)
-#   * https://www.raspberrypi.org/app/uploads/2012/02/BCM2835-ARM-Peripherals.pdf
+#   * [BCM2837] -- BCM2837 peripherals are based on BCM2835
 .align 3
 base_rpi3:
 # rpi3 mailbox_base
@@ -944,7 +951,7 @@ base_rpi3:
 
 .align 2
 set_peripherals_addresses:
-  mrs     x0, midr_el1                            // See https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
+  mrs     x0, midr_el1                            // [ARMV8] sD17.2.100 pD17-6115 -- MIDR_EL1, Main ID Register
                                                   // x0 = Main ID Register value 0xNNNNNNNNIIVAPPPR, where:
                                                   //
                                                   // NNNNNNNN = N/A (reserved)
@@ -1051,8 +1058,8 @@ set_clocks:
                                                   // | BCM ARM LOCAL CONTROL |
                                                   // +=======================+
                                                   //
-                                                  // rpi3: https://datasheets.raspberrypi.com/bcm2836/bcm2836-peripherals.pdf page 9
-                                                  // rpi4: https://datasheets.raspberrypi.com/bcm2711/bcm2711-peripherals.pdf page 93
+                                                  // rpi3: [BCM2836] s4.2 p9 -- ARM Local Control register
+                                                  // rpi4: [BCM2711] s6.5 p93 -- ARM Local Control register
                                                   //
                                                   // TIMER_INCREMENT [8] = 0b0 => main timer increments by 1 (not 2)
                                                   // PROC_CLK_TIMER  [7] = 0b0 => main timer driven by fixed frequency crystal clock reference

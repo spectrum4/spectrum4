@@ -62,6 +62,9 @@ enable_ic_bcm283x:
 
 
 enable_ic_bcm2711:
+                                                  // [GIC400] s3.2 p3-3 Table 3-1 -- GIC-400 register map: Distributor at base+0x1000, CPU Interface at base+0x2000
+                                                  // [GIC400] s3.3 p3-4 Table 3-2 -- Distributor register summary
+                                                  // [GIC400] s3.5 p3-10 Table 3-6 -- CPU interface register summary
   adrp    x1, 0xff841000 + _start                 // x1 = GICD base address
   str     wzr, [x1]                               // [0xff841000]     = [GICD_CTLR]        = 0x00000000                                             => disable GIC distributor
   mov     w3, #0x8
@@ -92,12 +95,12 @@ enable_ic_bcm2711:
                                                   // So no need to update GICD_ICFGR11 (0xff841c2c) to e.g. 0x200 for interrupt 180 (PCIE_0_MSI).
 
                                                   // Note: reads of [GICD_ICFGRn] will return even bits set, e.g. 0x55555555
-                                                  // From https://developer.arm.com/documentation/ddi0471/b/programmers-model/distributor-register-descriptions/interrupt-configuration-registers--gicd-icfgrn?lang=en:
+                                                  // [GIC400] s3.4.2 p3-6 -- GICD_ICFGRn:
                                                   //   The GIC-400 also implements the legacy encoding of the even bits in the register, designated
                                                   //   Int_config[0] in the architecture specification. The Int_config[0] bits are always read-only and
                                                   //   [are]* only provide support for legacy software. They must not be used by new software.
                                                   // *) Probably a typo
-                                                  // From https://developer.arm.com/documentation/ihi0048/b/Programmers--Model/Distributor-register-descriptions/Interrupt-Configuration-Registers--GICD-ICFGRn?lang=en#BEIBFHCH:
+                                                  // [GICv2] s4.3.13 p4-109 -- GICD_ICFGRn:
                                                   //   On a GIC where the handling mode of peripheral interrupts is configurable, the encoding of Int_config[0] for PPIs and SPIs, is:
                                                   //     0 Corresponding interrupt is handled using the N-N model.
                                                   //     1 Corresponding interrupt is handled using the 1-N model.
@@ -109,7 +112,7 @@ enable_ic_bcm2711:
   str     w4, [x1]                                // [0xff841000]     = [GICD_CTLR]        = 0x00000001                                            => forward group 1 interrupts from GIC distributor
   mov     w5, #0xf0
   str     w5, [x1, #0x1004]                       // [0xff842004]     = [GICC_PMR]         = 0x000000f0                                            => priority mask = 0xf0
-  mov     w6, #0x261
+  mov     w6, #0x261                              // [GICv2] s4.4.1 p4-125 Table 4-30 -- GICC_CTLR Non-secure copy (EL1)
   str     w6, [x1, #0x1000]                       // [0xff842000]     = [GICC_CTLR]        = 0x00000261                                            => EOImodeNS: 1, IRQBypDisGrp1: 1, FIQBypDisGrp1: 1, EnableGrp1: 1
   mov     w4, #0x40000000
   str     w4, [x1, #0x100]                        // [0xff841100]     = [GICD_ISENABLER0]  = 0x40000000                                            => enable interrupt 30  (0x1e) - Generic Timer (CNTP)
@@ -123,8 +126,8 @@ handle_irq_bcm283x:
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adrp    x1, 0x40000000 + _start
   ldr     w7, [x1, #0x60]                         // w7 = [0x40000060] = "Core0 IRQ Source" register
-                                                  //   https://datasheets.raspberrypi.com/bcm2836/bcm2836-peripherals.pdf (page 7)
-  cmp     w7, #0x2                                // test bit 1 (CNTPNSIRQ, page 16)
+                                                  //   [BCM2836] s4.10 p7 -- Core0 IRQ Source register at offset 0x60
+  cmp     w7, #0x2                                // test bit 1 (CNTPNSIRQ) [BCM2836] s4.10 p16
   b.eq    1f
   b       panic_unknown_interrupt
 1:
@@ -137,8 +140,8 @@ handle_irq_bcm2711:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adrp    x8, 0xff842000 + _start
-  ldr     w7, [x8, #0xc]                          // w7 = [0xff84200c] = [GICC_IAR]
-  str     w7, [x8, #0x10]                         // [0xff842010] = [GICC_EOIR] = [GICC_IAR]
+  ldr     w7, [x8, #0xc]                          // w7 = [0xff84200c] = [GICC_IAR]   [GIC400] s3.5 p3-10 -- offset 0x000C
+  str     w7, [x8, #0x10]                         // [0xff842010] = [GICC_EOIR] = [GICC_IAR]  [GIC400] s3.5 p3-10 -- offset 0x0010
                                                   // Note: Writing to GICC_EOIR before servicing interrupt, which I believe means the
                                                   // interrupt routine will be reentrant at this point. Writing to EOIR after
                                                   // handling timer may be safer.
@@ -159,7 +162,7 @@ handle_irq_bcm2711:
   bl      handle_xhci_irq
 3:
 .endif
-  str     w7, [x8, #0x1000]                       // [0xff843000] = [GICC_DIR]  = [GICC_IAR]
+  str     w7, [x8, #0x1000]                       // [0xff843000] = [GICC_DIR]  = [GICC_IAR]  [GIC400] s3.5 p3-10 -- offset 0x1000
                                                   // Note: Could set GICC_CTLR.EOImodeNS to 0 and not have separate GICC_EOIR and
                                                   // GICC_DIR writes, i.e. just write to GICC_EOIR after servicing interrupt.
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.

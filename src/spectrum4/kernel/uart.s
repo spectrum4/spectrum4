@@ -3,27 +3,27 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 # ------------------------------------------------------------------------------
-# See "BCM2837 ARM Peripherals" datasheet pages 8-19:
-#   https://cs140e.sergio.bz/docs/BCM2837-ARM-Peripherals.pdf
+# [BCM2837] s2.1 p8 -- Auxiliary peripherals (Mini UART registers)
+# See references.inc for spec URL
 # ------------------------------------------------------------------------------
-# AUX_ENABLES,    0x0004                       // Auxiliary Enables
-# AUX_MU_IO,      0x0040                       // Mini Uart I/O Data
-# AUX_MU_IER,     0x0044                       // Mini Uart Interrupt Enable
-# AUX_MU_IIR,     0x0048                       // Mini Uart Interrupt Identify
-# AUX_MU_LCR,     0x004c                       // Mini Uart Line Control
-# AUX_MU_MCR,     0x0050                       // Mini Uart Modem Control
-# AUX_MU_LSR,     0x0054                       // Mini Uart Line Status
-# AUX_MU_CNTL,    0x0060                       // Mini Uart Extra Control
-# AUX_MU_BAUD,    0x0068                       // Mini Uart Baudrate
+# AUX_ENABLES,    0x0004                       // Auxiliary Enables          [BCM2837] s2.1.1 p9
+# AUX_MU_IO,      0x0040                       // Mini Uart I/O Data        [BCM2837] s2.2.2 p11
+# AUX_MU_IER,     0x0044                       // Mini Uart Interrupt Enable [BCM2837] s2.2.2 p12
+# AUX_MU_IIR,     0x0048                       // Mini Uart Interrupt Identify [BCM2837] s2.2.2 p13
+# AUX_MU_LCR,     0x004c                       // Mini Uart Line Control    [BCM2837] s2.2.2 p14
+# AUX_MU_MCR,     0x0050                       // Mini Uart Modem Control   [BCM2837] s2.2.2 p14
+# AUX_MU_LSR,     0x0054                       // Mini Uart Line Status     [BCM2837] s2.2.2 p15
+# AUX_MU_CNTL,    0x0060                       // Mini Uart Extra Control   [BCM2837] s2.2.2 p16
+# AUX_MU_BAUD,    0x0068                       // Mini Uart Baudrate        [BCM2837] s2.2.2 p19
 
 
 # ------------------------------------------------------------------------------
-# See "BCM2837 ARM Peripherals" datasheet pages 90-104:
-#   https://cs140e.sergio.bz/docs/BCM2837-ARM-Peripherals.pdf
+# [BCM2837] s6.1 p90 -- General Purpose I/O (GPIO)
+# See references.inc for spec URL
 # ------------------------------------------------------------------------------
-# GPFSEL1,        0x0004                       // GPIO Function Select 1
-# GPPUD,          0x0094                       // GPIO Pin Pull-up/down Enable
-# GPPUDCLK0,      0x0098                       // GPIO Pin Pull-up/down Enable Clock 0
+# GPFSEL1,        0x0004                       // GPIO Function Select 1    [BCM2837] s6.1 p92
+# GPPUD,          0x0094                       // GPIO Pin Pull-up/down Enable [BCM2837] s6.1 p101
+# GPPUDCLK0,      0x0098                       // GPIO Pin Pull-up/down Enable Clock 0 [BCM2837] s6.1 p101
 
 .text
 

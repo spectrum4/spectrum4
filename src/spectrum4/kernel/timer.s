@@ -6,19 +6,20 @@
 
 
 # Sets a system timer for 0x2000000 ticks in the future and enables it.
+# [ARMV8] sD17.11 pD17-7124 -- Generic Timer registers: CNTPCT_EL0, CNTP_CVAL_EL0, CNTP_CTL_EL0
 #
 # On exit:
 #   x1: new timer value ([next_interrupt])
 #   x2: 1
 .align 2
 timer_init:
-  mrs     x1, cntpct_el0
+  mrs     x1, cntpct_el0                          // [ARMV8] sD17.11.20 pD17-7095 -- CNTPCT_EL0
   mov     x2, #0x2000000                          // TODO: this value should be dependent on clock speed (different for rpi3/rpi4)
   add     x1, x1, x2
   str     x1, [x28, next_interrupt-sysvars]
-  msr     cntp_cval_el0, x1
+  msr     cntp_cval_el0, x1                       // [ARMV8] sD17.11.17 pD17-7085 -- CNTP_CVAL_EL0
   mov     x2, #0x1
-  msr     cntp_ctl_el0, x2
+  msr     cntp_ctl_el0, x2                        // [ARMV8] sD17.11.16 pD17-7081 -- CNTP_CTL_EL0
   ret
 
 

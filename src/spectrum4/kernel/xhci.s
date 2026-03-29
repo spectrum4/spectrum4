@@ -27,12 +27,12 @@
 #   17: CSC (Connect Status Change)     30: DR (Device Removable)
 
 
-# ring_write_trb — Write a TRB to any ring, handling cycle bit and link TRB wrapping.
+# ring_write_trb: Write a TRB to any ring, handling cycle bit and link TRB wrapping.
 #
 # Inputs:
 #   x0  = pointer to ring metadata block (32-byte struct: enqueue, PCS, start, end)
 #   x1  = TRB dword 0-1 (data field, 8 bytes)
-#   x2  = TRB dword 2-3 (status in lower 32, control in upper 32) — WITHOUT cycle bit set
+#   x2  = TRB dword 2-3 (status in lower 32, control in upper 32), WITHOUT cycle bit set
 #
 # Outputs:
 #   Ring metadata updated (enqueue pointer advanced, PCS toggled on wrap)
@@ -53,7 +53,7 @@ ring_write_trb:
   cmp     x3, x5
   b.lo    1f                                      // if enqueue < link TRB slot, just store and return
 
-  // Enqueue has reached the link TRB slot — handle wrapping
+  // Enqueue has reached the link TRB slot, handle wrapping
   // Update link TRB's cycle bit to match current PCS so xHC follows it
   ldr     w3, [x5, #0x0c]                         // w3 = link TRB control dword (at offset 0x0c from link TRB)
   bfi     w3, w4, #0, #1                          // set link TRB cycle bit (bit 0 of control dword) to current PCS
@@ -151,7 +151,7 @@ consume_xhci_events:
   strxi   x10, x12, xhci_event_dequeue-xhci_vars
                                                   // advance event dequeue pointer
 
-  // Deferred keyboard interrupt resubmit — done AFTER the event loop exits
+  // Deferred keyboard interrupt resubmit, done AFTER the event loop exits
   // so the next Transfer Event arrives via the next IRQ, not inside this loop
   ldrb    w3, [x12, #xhci_kbd_resubmit-xhci_vars]
   cbz     w3, 4f
@@ -195,7 +195,7 @@ port_status_change_event:
   strwi   w18, x17, #0x410                        // write value back to clear RW1CS changes, potentially reset port
   tbnz    w19, #0, 2b                             // if resetting port, return and wait for next port status change
 
-  // Port is enabled — issue Enable Slot command via ring_write_trb
+  // Port is enabled, issue Enable Slot command via ring_write_trb
   // [XHCI] s6.4.3.2 p488 -- Enable Slot Command TRB
   adr     x0, xhci_cmd_ring_meta
   mov     x1, xzr                                 // TRB data = 0
@@ -304,7 +304,7 @@ handle_address_device_done:
 
 
 handle_set_configuration_hub_done:
-  // Handle SET_CONFIGURATION transfer completion — issue Configure Endpoint command
+  // Handle SET_CONFIGURATION transfer completion, issue Configure Endpoint command
   // [XHCI] s4.6.6 p115 -- Configure Endpoint; [XHCI] s6.4.3.5 p491 -- Configure Endpoint Command TRB
 
   // Input context is already prepared (handle_address_device_done did it)
@@ -326,7 +326,7 @@ handle_set_configuration_hub_done:
 
 
 handle_configure_endpoint_hub_done:
-  // Handle Configure Endpoint command completion — hub is fully configured
+  // Handle Configure Endpoint command completion, hub is fully configured
   // Start scanning hub ports for connected devices
 
   // Keyboard is on port 4 (hardcoded for this hardware)
@@ -383,7 +383,7 @@ handle_hub_port_powered:
   ldr     x2, =0x0003084000000008                 // TRB Type=2, TRT=3 (IN), IDT=1; Transfer Length=8
   bl      ring_write_trb
 
-  // Data Stage TRB — 4 bytes of port status
+  // Data Stage TRB, 4 bytes of port status
   adrp    x1, slot1_descriptor
   add     x1, x1, :lo12:slot1_descriptor
   mov     w3, #0x4
@@ -405,7 +405,7 @@ handle_hub_port_powered:
 
 
 handle_hub_port_status:
-  // Handle GET_PORT_STATUS completion — check if device is connected
+  // Handle GET_PORT_STATUS completion, check if device is connected
   // [USB2] s11.24.2.7.1 Table 11-21 p426 -- Port Status
   //   bit 0: PORT_CONNECTION
   //   bit 1: PORT_ENABLE
@@ -421,7 +421,7 @@ handle_hub_port_status:
 
   tbz     w18, #0, hub_port_try_next              // if PORT_CONNECTION not set, try next port
 
-  // Device connected — issue SET_PORT_FEATURE(PORT_RESET, port)
+  // Device connected, issue SET_PORT_FEATURE(PORT_RESET, port)
   // [USB2] s11.24.2.13 p420 Table 11-17 -- Hub Class Feature Selectors
   ldrb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
   adr     x0, xhci_xfer_s1e0_ring_meta
@@ -447,14 +447,14 @@ handle_hub_port_status:
   b       2b
 
 hub_port_try_next:
-  // No device on this port — try next port
+  // No device on this port, try next port
   ldrb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
   add     w16, w16, #1
   strb    w16, [x12, #xhci_hub_scan_port-xhci_vars]
   ldrb    w17, [x12, #xhci_hub_num_ports-xhci_vars]
   cmp     w16, w17
   b.le    hub_port_power_next                     // try next port
-  // No more ports — no keyboard found, just continue boot
+  // No more ports, no keyboard found, just continue boot
   b       2b
 
 
@@ -497,7 +497,7 @@ handle_hub_port_reset_done:
 
 
 handle_hub_port_reset_confirmed:
-  // Handle GET_PORT_STATUS after reset — verify port enabled
+  // Handle GET_PORT_STATUS after reset, verify port enabled
   adrp    x3, slot1_descriptor
   add     x3, x3, :lo12:slot1_descriptor
   dc      ivac, x3
@@ -509,7 +509,7 @@ handle_hub_port_reset_confirmed:
   cmp     w17, #0x3                               // both PORT_CONNECTION and PORT_ENABLE must be set
   b.ne    hub_port_try_next                       // if not, try next port
 
-  // Port is enabled with a device — extract speed from bits 9-10
+  // Port is enabled with a devic, extract speed from bits 9-10
   // [USB2] s11.24.2.7.1 Table 11-21 -- Port Status bits 9-10: speed
   //   00 = Full Speed, 01 = Low Speed, 10 = High Speed
   ubfx    w19, w18, #9, #2                        // w19 = speed (0=FS, 1=LS, 2=HS)
@@ -562,7 +562,7 @@ handle_enable_slot_keyboard_done:
   // Conversion: FS(0→1), LS(1→2), HS(2→3) => xhci_speed = usb_speed + 1
   ldrb    w19, [x12, #xhci_hub_scan_port-xhci_vars]
                                                   // w19 = port number (reloaded; was clobbered)
-  // Reconstruct speed from port status — need to re-read it
+  // Reconstruct speed from port status, need to re-read it
   // Actually, w19 was set to speed earlier but got clobbered by ring_write_trb
   // Re-read port status from buffer
   adrp    x3, slot1_descriptor
@@ -687,7 +687,7 @@ handle_address_device_keyboard_done:
 
   // [XHCI] s6.2.3 p449 -- Endpoint Context
   // EP1 IN Context (at offset 0x80)
-  // DWORD0: Interval — for LS/FS interrupt endpoint behind HS hub:
+  // DWORD0: Interval; for LS/FS interrupt endpoint behind HS hub:
   //   xHCI Interval = ceiling(log2(bInterval * 8)), valid range 3-10
   //   [XHCI] s6.2.3.6 p456
   //   For bInterval=10 (10ms): ceiling(log2(80)) = 7 => 2^6 * 125us = 8ms
@@ -838,13 +838,13 @@ handle_keyboard_input:
   // Extract first keycode (byte 2 of HID boot report)
   // [HUT] s10 p83 -- Keyboard/Keypad Page
   ubfx    w0, w18, #16, #8                        // w0 = HID scancode (byte 2)
-  cbz     w0, 1f                                  // key release (no keys pressed) — skip decode
+  cbz     w0, 1f                                  // key release (no keys pressed), skip decode
 
   // Linear scan of HID-to-Spectrum lookup table
   adr     x3, hid_to_spectrum_table
 3:
   ldrb    w1, [x3]                                // w1 = HID scancode entry (0 = end of table)
-  cbz     w1, 1f                                  // end of table — no match
+  cbz     w1, 1f                                  // end of table, no match
   ldrb    w2, [x3, #1]                            // w2 = Spectrum terminal code
   add     x3, x3, #2                              // advance to next entry
   cmp     w0, w1
@@ -857,7 +857,7 @@ handle_keyboard_input:
   strb    w1, [x28, FLAGS-sysvars]                // [FLAGS] = w1
 
 1:
-  // Defer resubmit to after event loop exits — prevents the keyboard interrupt
+  // Defer resubmit to after event loop exits, prevents the keyboard interrupt
   // loop from starving the main boot flow. The resubmit happens at label 4: in
   // consume_xhci_events, so the next Transfer Event arrives via a fresh IRQ.
   mov     w3, #1
@@ -1017,7 +1017,7 @@ slot1_input_context:
                                                   // Average TRB Length = 8 bytes (bits 15:0 of DWORD4; used by xHC for bandwidth scheduling)
                                                   // TR Dequeue Pointer = DMA address (transfer_ring_slot1_EP0)
 
-# EP1 OUT Context (DCI 2) — unused placeholder, required to reach EP1 IN at correct offset
+# EP1 OUT Context (DCI 2), unused placeholder, required to reach EP1 IN at correct offset
 # [XHCI] s6.2.3 p449 -- Endpoint Context
 .word 0x00000000
 .word 0x00000000
@@ -1028,7 +1028,7 @@ slot1_input_context:
 .word 0x00000000
 .word 0x00000000
 
-# EP1 IN Context (DCI 3) — hub interrupt endpoint
+# EP1 IN Context (DCI 3), hub interrupt endpoint
 # [XHCI] s6.2.3 p449 -- Endpoint Context
 # Pre-populated with hardcoded VL805 hub values (Interval=12, CErr=3, EPType=7, MaxPkt=1)
 .word 0x000C0000                                  // DWORD0: Interval=12 in bits 23:16

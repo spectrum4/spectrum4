@@ -38,7 +38,7 @@ wait_key_press:                          // L2653
   strb    w0, [x28, FLAGS-sysvars]
   ldrb    w0, [x28, LASTK-sysvars]                // w0 = key code
 
-  // Dispatch key press (skip key click for now — no sound hardware)
+  // Dispatch key press (skip key click for now, no sound hardware)
   bl      process_key                             // L2669: process the key press
 
   b       wait_key_press                          // Loop

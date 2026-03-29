@@ -22,14 +22,14 @@ process_key:                             // L2669
 
   // Check if menu is displayed
   ldrb    w1, [x28, EC0D-sysvars]
-  tbz     w1, #1, 1f                              // bit 1 clear = no menu — editor path (not yet implemented)
+  tbz     w1, #1, 1f                              // bit 1 clear = no menu, editor path (not yet implemented)
 
-  // Menu is displayed — search menu keys table
+  // Menu is displayed, search menu keys table
   adr     x1, menu_keys_codes
   mov     w2, #(menu_keys_count)                  // w2 = number of entries
   mov     w3, #0                                  // w3 = index
 2:
-  cbz     w2, 1f                                  // no more entries — no match
+  cbz     w2, 1f                                  // no more entries, no match
   ldrb    w4, [x1, x3]                            // w4 = key code from table
   cmp     w0, w4
   b.eq    3f                                      // match found
@@ -37,7 +37,7 @@ process_key:                             // L2669
   sub     w2, w2, #1
   b       2b
 3:
-  // Match found — call handler at menu_keys_handlers[w3]
+  // Match found, call handler at menu_keys_handlers[w3]
   adr     x1, menu_keys_handlers
   ldr     x4, [x1, x3, lsl #3]                    // x4 = handler address
   blr     x4

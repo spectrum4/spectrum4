@@ -237,7 +237,7 @@ pcie_init_bcm2711:
   //   * PCIE_RC_CFG_PRIV1_LINK_CAPABILITY
 
   ldrwi   w0, x10, #0x4dc
-  bic     w0, w0, #0xc00                          // Clear bits 10 (ASPM L0s), 11 (ASPM L1) — disable power saving
+  bic     w0, w0, #0xc00                          // Clear bits 10 (ASPM L0s), 11 (ASPM L1), disable power saving
   strwi   w0, x10, #0x4dc                         // of [0xfd5004dc] (PCIE_RC_CFG_PRIV1_LINK_CAPABILITY)
 
   // For config space accesses on the RC, show the right class for a PCIe-PCIe bridge
@@ -882,7 +882,7 @@ pcie_init_bcm2711:
   add     x1, x2, #(transfer_ring_slot2_EP1_end - transfer_ring_slot2_EP1)
   str     x1, [x8, #xhci_xfer_s2e1_end-xhci_vars]
 
-  // Callback handler pointers — initialise to panic (catches unexpected completions)
+  // Callback handler pointers, initialise to panic (catches unexpected completions)
   adr     x1, xhci_unexpected_event
   str     x1, [x8, #xhci_command_handler-xhci_vars]
   str     x1, [x8, #xhci_transfer_handler-xhci_vars]

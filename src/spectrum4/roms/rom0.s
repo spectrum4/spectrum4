@@ -47,6 +47,8 @@
 .include "init_mode.s"                   // L2584
 .include "main_menu.s"                   // L259F
 .include "wait_key_press.s"              // L2653
+.include "process_key.s"                 // L2669
+.include "menu_keys.s"                            // L2577, L272E, L2731, L2717
 .include "tape_tester.s"                 // L2816
 .include "tape_loader.s"                 // L2831
 .include "basic_128k.s"                  // L286C

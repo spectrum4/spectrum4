@@ -835,12 +835,50 @@ handle_keyboard_input:
   dsb     ish
   ldrxi   x18, x3, #0x0                           // x18 = 8-byte HID report
 
+  // Extract first keycode (byte 2 of HID boot report)
+  // [HUT] s10 p83 -- Keyboard/Keypad Page
+  ubfx    w0, w18, #16, #8                        // w0 = HID scancode (byte 2)
+  cbz     w0, 1f                                  // key release (no keys pressed) — skip decode
+
+  // Linear scan of HID-to-Spectrum lookup table
+  adr     x3, hid_to_spectrum_table
+3:
+  ldrb    w1, [x3]                                // w1 = HID scancode entry (0 = end of table)
+  cbz     w1, 1f                                  // end of table — no match
+  ldrb    w2, [x3, #1]                            // w2 = Spectrum terminal code
+  add     x3, x3, #2                              // advance to next entry
+  cmp     w0, w1
+  b.ne    3b
+
+  // Write terminal code to LASTK and set FLAGS bit 5 (signal new key available)
+  strb    w2, [x28, LASTK-sysvars]                // [LASTK] = Spectrum terminal code
+  ldrb    w1, [x28, FLAGS-sysvars]                // w1 = [FLAGS]
+  orr     w1, w1, #0x20                           // set bit 5
+  strb    w1, [x28, FLAGS-sysvars]                // [FLAGS] = w1
+
+1:
   // Defer resubmit to after event loop exits — prevents the keyboard interrupt
   // loop from starving the main boot flow. The resubmit happens at label 4: in
   // consume_xhci_events, so the next Transfer Event arrives via a fresh IRQ.
   mov     w3, #1
   strb    w3, [x12, #xhci_kbd_resubmit-xhci_vars]
   b       2b
+
+// HID scancode to Spectrum terminal code lookup table
+// [HUT] s10 p83 -- Keyboard/Keypad Page
+// Format: pairs of (HID scancode, Spectrum code), terminated by 0x00
+.align 0
+hid_to_spectrum_table:
+  .byte 0x52, 0x0b                                // Cursor Up
+  .byte 0x51, 0x0a                                // Cursor Down
+  .byte 0x28, 0x0d                                // Enter
+  .byte 0x29, 0x07                                // Edit/Escape (128K menu select)
+  .byte 0x2a, 0x0c                                // Backspace/Delete
+  .byte 0x4f, 0x09                                // Cursor Right
+  .byte 0x50, 0x08                                // Cursor Left
+  .byte 0x2c, 0x20                                // Space
+  .byte 0x00                                      // end of table
+.align 2
 
 
 command_completion_event:

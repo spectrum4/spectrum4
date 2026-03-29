@@ -81,6 +81,7 @@ MODE:            .space 1                         // L5C41: Specifies cursor typ
                                                   //   $01='E'.
                                                   //   $02='G'.
                                                   //   $04='K'.
+LASTK:           .space 1                         // L5C08: Last key press. Read by wait_key_press when FLAGS bit 5 is set.
 
 # --------------------------
 # Editor Workspace Variables

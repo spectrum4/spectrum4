@@ -228,15 +228,16 @@ pcie_init_bcm2711:
   strwi   wzr, x4, #0x3c                          // Disable third inbound window (RC3)
   strwi   wzr, x4, #0x40                          //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1302-L1306
 
-  // Enable ASPM power modes L0s and L1
-  // My rpi400 already had them enabled after a reset, so this might be unnecessary
+  // Disable ASPM power modes L0s and L1
+  // Prevents the PCIe link from entering low-power states which could cause
+  // the xHCI controller or keyboard to stop responding during keyboard input
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1002-L1009
   //
   // Updates registers:
   //   * PCIE_RC_CFG_PRIV1_LINK_CAPABILITY
 
   ldrwi   w0, x10, #0x4dc
-  orr     w0, w0, #0xc00                          // Set bits 10 (ASPM power mode L0s), 11 (ASPM power mode L1)
+  bic     w0, w0, #0xc00                          // Clear bits 10 (ASPM L0s), 11 (ASPM L1) — disable power saving
   strwi   w0, x10, #0x4dc                         // of [0xfd5004dc] (PCIE_RC_CFG_PRIV1_LINK_CAPABILITY)
 
   // For config space accesses on the RC, show the right class for a PCIe-PCIe bridge

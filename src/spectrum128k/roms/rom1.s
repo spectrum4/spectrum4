@@ -1445,11 +1445,11 @@ k_digit:
         CP      $38                       ; is character '8' ?
         JR      NC,k_8_and_9              ; to K-8-&-9 if greater than '7'
 
-        SUB     $20                       ; reduce to ink range $10-$17
+        SUB     $20                       ; reduce to paper range $10-$17
         INC     B                         ; shift ?
         RET     Z                         ; return if not.
 
-        ADD     A,$08                     ; add 8 to give paper range $18 - $1F
+        ADD     A,$08                     ; add 8 to give ink range $18 - $1F
         RET                               ; return
 
 ; ---
@@ -6052,7 +6052,7 @@ key_flag:
 
 ; ---
 
-; now deal with colour controls - 16-23 ink, 24-31 paper
+; now deal with colour controls - 16-23 paper, 24-31 ink
 
 key_contr:
         LD      B,A                       ; make a copy of character.

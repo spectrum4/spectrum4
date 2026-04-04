@@ -280,6 +280,11 @@ new:                                     // L019D
   strb    w12, [x28, ATTR_P-sysvars]
   strb    w12, [x28, ATTR_T-sysvars]
   strb    w12, [x28, BORDCR-sysvars]
+.if DEMO_AUTORUN
+  bl      demo                                    // Show demo (screenshots, memory dumps) before menu.
+  mov     w0, 0x400000                            // ~4 second pause after demo.
+  bl      wait_usec
+.endif
   movl    w0, BORDER_COLOUR                       // w0 = default border colour
   bl      paint_border
   mov     w13, 0x0523                             // The values five and thirty five.

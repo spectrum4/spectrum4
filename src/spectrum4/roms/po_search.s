@@ -1,39 +1,39 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# ------------
-# Table search
-# ------------
-# This subroutine looks up the address of the (w3+2)'th zero-terminated byte
-# sequence (message) starting at address x4. If entry w3 < 0x20, or first char
-# of message < 'A', carry will be clear (and negative will be set). Otherwise
-# carry will be set (and negative will be clear).
-#
-# On entry:
-#   w3 = index:
-#          first message cannot be returned
-#          0 for second message
-#          1 for third message
-#          ...
-#   x4 = address of message table
-# On exit:
-#   x0 = if w3 < 0x20:
-#          0
-#        else:
-#          first char of result
-#   x4 = address of found message
-#   w6 = 0
-#   NZCV = if w3 < 0x20:
-#            0b1000
-#          else if first char == 'A':
-#            0b0110
-#          else if first char < 'A':
-#            0b1000
-#          else: (first char > 'A')
-#            0b0010
+// ------------------------------------------------------------------------------
+// Table search
+// This subroutine looks up the address of the (w3+2)'th zero-terminated byte
+// sequence (message) starting at address x4. If entry w3 < 0x20, or first char
+// of message < 'A', carry will be clear (and negative will be set). Otherwise
+// carry will be set (and negative will be clear).
+// ------------------------------------------------------------------------------
+// On entry:
+//   w3 = index:
+//          first message cannot be returned
+//          0 for second message
+//          1 for third message
+//          ...
+//   x4 = address of message table
+// On exit:
+//   x0 = if w3 < 0x20:
+//          0
+//        else:
+//          first char of result
+//   x4 = address of found message
+//   w6 = 0
+//   NZCV = if w3 < 0x20:
+//            0b1000
+//          else if first char == 'A':
+//            0b0110
+//          else if first char < 'A':
+//            0b1000
+//          else: (first char > 'A')
+//            0b0010
 po_search:                               // L0C41
   add     w6, w3, #1                              // Adjust for initial step-over token.
 1:

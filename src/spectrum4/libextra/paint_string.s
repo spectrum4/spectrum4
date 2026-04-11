@@ -1,21 +1,25 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
 
 
-# paint_string paints the zero byte delimited text string pointed to by x0 to the screen in the
-# system font (16x16 pixels) at the screen print coordinates given by w1, w2. The ink colour is
-# taken from w3 and paper colour from w4.
-#
-# On entry:
-#   x0 = pointer to string
-#   w1 = x
-#   w2 = y
-#   w3 = ink colour
-#   w4 = paper colour
+// ------------------------------------------------------------------------------
+// paint_string paints the zero byte delimited text string pointed to by x0 to the screen in the
+// system font (16x16 pixels) at the screen print coordinates given by w1, w2. The ink colour is
+// taken from w3 and paper colour from w4.
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = pointer to string
+//   w1 = x
+//   w2 = y
+//   w3 = ink colour
+//   w4 = paper colour
+// On exit:
+//   TODO
 paint_string:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

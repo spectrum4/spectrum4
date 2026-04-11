@@ -1,17 +1,19 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# -------------------------
-# Print spaces up to column
-# -------------------------
-# Keep printing a space character until cursor x position = (w4%108). If at
-# least one space is printed, set system flag to suppress leading spaces.
-#
-# On entry:
-#   w4 = new x character position plus arbitrary multiple of 108 (0-65535)
+// ------------------------------------------------------------------------------
+// Print spaces up to column
+// Keep printing a space character until cursor x position = (w4%108). If at
+// least one space is printed, set system flag to suppress leading spaces.
+// ------------------------------------------------------------------------------
+// On entry:
+//   w4 = new x character position plus arbitrary multiple of 108 (0-65535)
+// On exit:
+//   TODO
 po_fill:                                 // L0AC3
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

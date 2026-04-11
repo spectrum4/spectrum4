@@ -1,75 +1,76 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# ---------------
-# Test for scroll
-# ---------------
-# This test routine is called when printing carriage return, when considering
-# PRINT AT and from the general PRINT ALL characters routine to test if
-# scrolling is required, prompting the user if necessary.
-#
-#
-# If printer in use:
-#   On entry:
-#     Bit 1 of FLAGS set
-#   On exit:
-#     w4 = [FLAGS]
-#
-# If upper screen in use:
-#   On entry:
-#     Bit 1 of FLAGS clear
-#     Bit 0 of [TV_FLAG] clear
-#     [DF_SZ] set to number of lines for lower screen
-#     w0 = 60 - actual screen row (60 = top line, 59 = second line, etc)
-#     w1 = (109 - actual column) or 0x01 for past end of line but no carriage return
-#   On exit:
-#     If w0 > [DF_SZ]:
-#       [S_POSN_Y] = x0
-#       [S_POSN_X] = x1
-#       [DF_CC] = display_file + 2*(109-x1) + ((60-x0)/20)*216*16*20 + 216*((60-x0)%20)
-#       x2 = display_file + 2*(109-x1) + ((60-x0)/20)*216*16*20 + 216*((60-x0)%20)
-#       w3 = [TV_FLAG]
-#       w4 = (60-x0)%20
-#       w5 = 216
-#       w6 = 0x10e00
-#       NZCV = 0b0010
-#     If w0 == [DF_SZ]:
-#       TODO (scrolling occurs)
-#     If w0 < [DF_SZ]:
-#       TODO (out of screen)
-#
-# If lower screen in use:
-#   On entry:
-#     Bit 1 of FLAGS clear
-#     Bit 0 of [TV_FLAG] set
-#     [DF_SZ] set to number of lines for lower screen
-#     w0 = 120 - [DF_SZ] - actual screen row (60 = top line of lower screen, 59 = second line of lower screen, etc)
-#     w1 = (109 - actual column) or 0x01 for past end of line but no carriage return
-#   On exit:
-#     If 1 > w0 > 60-[DF_SZ]:
-#       [S_POSN_Y_L] = x0
-#       [S_POSN_X_L] = x1
-#       [ECHO_E_Y] = x0
-#       [ECHO_E_X] = x1
-#       [DF_CC_L] = display_file + 2*(109-x1) + ((120-x0-[DF_SZ])/20)*216*16*20 + 216*((120-x0-[DF_SZ])%20)
-#       x2 = display_file + 2*(109-x1) + ((120-x0-[DF_SZ])/20)*216*16*20 + 216*((120-x0-[DF_SZ])%20)
-#       w3 = [TV_FLAG]
-#       w4 = (120-x0-[DF_SZ])%20
-#       w5 = 216
-#       w6 = 0x10e00
-#       If w0 == 61-[DF_SZ]:
-#         NZCV = 0b0110
-#       Else:
-#         NZCV = 0b0010
-#     If w0 == 60-[DF_SZ]:
-#       TODO (scrolling occurs)
-#     If w0 < 2:
-#       TODO (out of screen)
-#     If w0 < 60-[DF_SZ]:
-#       TODO (out of screen)
+// ------------------------------------------------------------------------------
+// Test for scroll
+// This test routine is called when printing carriage return, when considering
+// PRINT AT and from the general PRINT ALL characters routine to test if
+// scrolling is required, prompting the user if necessary.
+//
+//
+// If printer in use:
+// ------------------------------------------------------------------------------
+//   On entry:
+//     Bit 1 of FLAGS set
+//   On exit:
+//     w4 = [FLAGS]
+//
+// If upper screen in use:
+//   On entry:
+//     Bit 1 of FLAGS clear
+//     Bit 0 of [TV_FLAG] clear
+//     [DF_SZ] set to number of lines for lower screen
+//     w0 = 60 - actual screen row (60 = top line, 59 = second line, etc)
+//     w1 = (109 - actual column) or 0x01 for past end of line but no carriage return
+//   On exit:
+//     If w0 > [DF_SZ]:
+//       [S_POSN_Y] = x0
+//       [S_POSN_X] = x1
+//       [DF_CC] = display_file + 2*(109-x1) + ((60-x0)/20)*216*16*20 + 216*((60-x0)%20)
+//       x2 = display_file + 2*(109-x1) + ((60-x0)/20)*216*16*20 + 216*((60-x0)%20)
+//       w3 = [TV_FLAG]
+//       w4 = (60-x0)%20
+//       w5 = 216
+//       w6 = 0x10e00
+//       NZCV = 0b0010
+//     If w0 == [DF_SZ]:
+//       TODO (scrolling occurs)
+//     If w0 < [DF_SZ]:
+//       TODO (out of screen)
+//
+// If lower screen in use:
+//   On entry:
+//     Bit 1 of FLAGS clear
+//     Bit 0 of [TV_FLAG] set
+//     [DF_SZ] set to number of lines for lower screen
+//     w0 = 120 - [DF_SZ] - actual screen row (60 = top line of lower screen, 59 = second line of lower screen, etc)
+//     w1 = (109 - actual column) or 0x01 for past end of line but no carriage return
+//   On exit:
+//     If 1 > w0 > 60-[DF_SZ]:
+//       [S_POSN_Y_L] = x0
+//       [S_POSN_X_L] = x1
+//       [ECHO_E_Y] = x0
+//       [ECHO_E_X] = x1
+//       [DF_CC_L] = display_file + 2*(109-x1) + ((120-x0-[DF_SZ])/20)*216*16*20 + 216*((120-x0-[DF_SZ])%20)
+//       x2 = display_file + 2*(109-x1) + ((120-x0-[DF_SZ])/20)*216*16*20 + 216*((120-x0-[DF_SZ])%20)
+//       w3 = [TV_FLAG]
+//       w4 = (120-x0-[DF_SZ])%20
+//       w5 = 216
+//       w6 = 0x10e00
+//       If w0 == 61-[DF_SZ]:
+//         NZCV = 0b0110
+//       Else:
+//         NZCV = 0b0010
+//     If w0 == 60-[DF_SZ]:
+//       TODO (scrolling occurs)
+//     If w0 < 2:
+//       TODO (out of screen)
+//     If w0 < 60-[DF_SZ]:
+//       TODO (out of screen)
 po_scr:                                  // L0C55
   ldrb    w4, [x28, FLAGS-sysvars]                // w4 = [FLAGS]
   tbnz    w4, #1, 9f                              // If printer in use, jump forward to 9:.
@@ -95,6 +96,13 @@ po_scr:                                  // L0C55
   and     w1, w1, #~0x10                          // Signal automatic program listing complete (since end of screen reached).
   strb    w1, [x28, TV_FLAG-sysvars]              // [TV_FLAG] = w1
   b       8f                                      // Exit routine.
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 po_scr_2:                                // L0C88
 // TODO - test code below
   ldrb    w9, [x28, SCR_CT-sysvars]               // w9 = [SCR_CT]
@@ -119,9 +127,21 @@ po_scr_2:                                // L0C88
   orr     w9, w9, #0x08                           // Set bit 3 - signal 'L' mode.
   and     w9, w9, #~0x20                          // Clear bit 5 - signal no new key.
   strb    w9, [x28, FLAGS-sysvars]                // [FLAGS] = w9[0-7]
+// ------------------------------------------------------------------------------
 // TODO
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 po_scr_3:                                // L0CD2
+// ------------------------------------------------------------------------------
 // TODO
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 po_scr_4:                                // L0D02
   cmp     w0, #0x02
   b.lo    report_5                                // w0 < 2 => Out of screen

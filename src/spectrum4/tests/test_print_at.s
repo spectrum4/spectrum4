@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -55,6 +55,7 @@
   .include "tkn_table.s"
 .endif
 
+
 .text
 
 
@@ -69,10 +70,12 @@ print_at_01_setup:
   _resbit 1, FLAGS
   ret
 
+
 print_at_01_setup_regs:
   mov     w8, #0x2b
   mov     w9, #0x3c
   ret
+
 
 print_at_01_effects:
   _strb   0x3c-0x2b, S_POSN_Y                     // screen line 43
@@ -80,6 +83,7 @@ print_at_01_effects:
   _strh   0x2b16, TVDATA
   _str    display_file + 2*216*20*16 + 3*216 + 60*2 + 0x0*20*216, DF_CC
   ret
+
 
 print_at_01_effects_regs:
   mov     w0, #0x11

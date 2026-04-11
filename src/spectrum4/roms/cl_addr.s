@@ -1,24 +1,24 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# -------------------------------
-# Handle display with line number
-# -------------------------------
-# This subroutine is called from four places to calculate the address
-# of the start of a screen character line.
-#
-# On entry:
-#   x0 = 60 - screen line
-# On exit:
-#   x1 = screen line
-#   x2 = address of top left pixel of line to clear inside display file
-#   x3 = screen line / 20
-#   x4 = screen line % 20
-#   x5 = 216
-#   x6 = 69120 (0x10e00)
+// ------------------------------------------------------------------------------
+// Handle display with line number
+// This subroutine is called from four places to calculate the address
+// of the start of a screen character line.
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = 60 - screen line
+// On exit:
+//   x1 = screen line
+//   x2 = address of top left pixel of line to clear inside display file
+//   x3 = screen line / 20
+//   x4 = screen line % 20
+//   x5 = 216
+//   x6 = 69120 (0x10e00)
 cl_addr:                                 // L0E9B
   mov     x1, #60
   sub     x1, x1, x0

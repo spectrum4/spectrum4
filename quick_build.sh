@@ -2,7 +2,7 @@
 
 # This file is part of the Spectrum +4 Project.
 # Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+# (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 ################################################################################
 # This is a quick way to build, if you don't want to run all the tests...

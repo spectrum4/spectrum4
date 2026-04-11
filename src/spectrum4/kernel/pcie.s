@@ -1,35 +1,46 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 
+
 ##########################################################################
-# Information gleaned from the following sources:
-#   * Linux Kernel:
-#     + https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c
-#   * Raspberry Pi Forums:
-#     + https://forums.raspberrypi.com/viewtopic.php?p=1675084
-#     + https://forums.raspberrypi.com/viewtopic.php?p=2087624
+// Information gleaned from the following sources:
+//   * Linux Kernel:
+//     + https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c
+//   * Raspberry Pi Forums:
+//     + https://forums.raspberrypi.com/viewtopic.php?p=1675084
+//     + https://forums.raspberrypi.com/viewtopic.php?p=2087624
 ##########################################################################
 
-# On return:
-#   [heap+0x00]: last read status register
-#   [heap+0x04]: number of iterations of 1ms reading status register
-#   [heap+0x08]: initial class code
-#   [heap+0x0c]: updated class code
-#   [heap+0x10]: SSC configuration steps successfully completed (0-6)
-#   [heap+0x12]: link capabilities
-#   [heap+0x14]: revision number
-#   [heap+0x18]: vid
-#   [heap+0x1a]: did
-#   [heap+0x1c]: header type (lower 8 bits)
-#   [heap+0x20]: bus 1 class (upper 24 bits) and revision (lower 8 bits)
-#   [heap+0x24]: bus 1 header type (lower 8 bits)
-#   [heap+0x28]: SSC status register
-#   [heap+0x2c]: XHCI_REG_CAP_HCIVERSION (16 bits)
+
+// On return:
+//   [heap+0x00]: last read status register
+//   [heap+0x04]: number of iterations of 1ms reading status register
+//   [heap+0x08]: initial class code
+//   [heap+0x0c]: updated class code
+//   [heap+0x10]: SSC configuration steps successfully completed (0-6)
+//   [heap+0x12]: link capabilities
+//   [heap+0x14]: revision number
+//   [heap+0x18]: vid
+//   [heap+0x1a]: did
+//   [heap+0x1c]: header type (lower 8 bits)
+//   [heap+0x20]: bus 1 class (upper 24 bits) and revision (lower 8 bits)
+//   [heap+0x24]: bus 1 header type (lower 8 bits)
+//   [heap+0x28]: SSC status register
+//   [heap+0x2c]: XHCI_REG_CAP_HCIVERSION (16 bits)
+
 
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 pcie_init_bcm2711:
 
   mov     x5, x30
@@ -445,6 +456,7 @@ pcie_init_bcm2711:
   // Exit early if in endpoint mode, not in root complex mode => implies PCIe misconfiguration
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L980-L983
 
+
 //  tbz     w0, #7, 4f                            // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 4:
 
   // Extends the timeout period for an access to an internal bus to 4s
@@ -699,7 +711,6 @@ pcie_init_bcm2711:
                                                   // 0b ----/--- -/1 -1-/--- -  SET BITS
                                                   // 0x    0     0     a     0
 
-
   mov     w1, #0x00a4
   strhi   w1, x13, #0x92
 
@@ -725,7 +736,6 @@ pcie_init_bcm2711:
   // Enable MSI bit in PCI_MSI_FLAGS
   mov     w1, #0x00a5
   strhi   w1, x13, #0x92
-
 
   //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
   //  fd500000 e4 14 11 27 06 00 10 00 20 00 04 06 00 00 01 00 00 00 00 00 00 00 00 00 00 01 01 00 00 00 00 20
@@ -832,7 +842,6 @@ pcie_init_bcm2711:
   //  fd500680 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd5006a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
 
-
   // VL805 configuration space
 
   //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
@@ -898,7 +907,6 @@ pcie_init_bcm2711:
   //  fd5083a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd5083c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
   //  fd5083e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
 
   ldrwi   w2, x13, #0x8                           // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)
                                                   //   class should be 0x0c0330, revision should be 0x01
@@ -979,6 +987,7 @@ pcie_init_bcm2711:
   add     x3, x2, erst-event_ring                 // x3 = ERST (virtual)
   bfi     x2, x4, #32, #32                        // x2 = event_ring (DMA)
 
+
 // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
 // Section 6.5 (page 514)
   strxi   x2, x3, #0x0                            // [ERST] = event_ring (DMA)
@@ -1035,36 +1044,43 @@ pcie_init_bcm2711:
   ret     x5
 
 
-# ------------------------------
-# Read from a MDIO register/port
-# ------------------------------
-# Read a value from an MDIO register. This is a two stage process. First,
-# register [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) is written to with details of
-# the desired MDIO register to read from, and then register [0xfd501108]
-# (PCIE_RC_DL_MDIO_RD_DATA) is polled to retrieve the value. The polling occurs
-# at 10us intervals, with a maximum of 10 attempts.
-#
-# Linux implementation:
-#  https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L331-L349
-#
-# On entry:
-#   w0 = MDIO register/port to read from
-#          bits 21-31: clear (required)
-#          bit 20: ignored
-#          bits 16-19: port (usually 0x0)
-#          bits 0-15: regad
-#            0x0001: SSC_STATUS
-#            0x0002: SSC_CNTL
-#            0x001f: SET_ADDR
-# On return:
-#   w0 corrupted
-#   w1 = bits 0-30: MDIO register value
-#        bit 31: set if read was successful, clear if read was unsuccessful
-#   w2 corrupted
-#   w3 corrupted
-#   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
-#   x11 = return address of function
+// ------------------------------
+// Read from a MDIO register/port
+// ------------------------------
+// Read a value from an MDIO register. This is a two stage process. First,
+// register [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) is written to with details of
+// the desired MDIO register to read from, and then register [0xfd501108]
+// (PCIE_RC_DL_MDIO_RD_DATA) is polled to retrieve the value. The polling occurs
+// at 10us intervals, with a maximum of 10 attempts.
+//
+// Linux implementation:
+//  https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L331-L349
+//
+// On entry:
+//   w0 = MDIO register/port to read from
+//          bits 21-31: clear (required)
+//          bit 20: ignored
+//          bits 16-19: port (usually 0x0)
+//          bits 0-15: regad
+//            0x0001: SSC_STATUS
+//            0x0002: SSC_CNTL
+//            0x001f: SET_ADDR
+// On return:
+//   w0 corrupted
+//   w1 = bits 0-30: MDIO register value
+//        bit 31: set if read was successful, clear if read was unsuccessful
+//   w2 corrupted
+//   w3 corrupted
+//   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
+//   x11 = return address of function
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 mdio_read:
   mov     x11, x30
   orr     w0, w0, 0x00100000                      // set bit 20 => command = 0x001 (read operation)
@@ -1090,42 +1106,52 @@ mdio_read:
 .endif
   b       sleep
 
+
 .if UART_DEBUG
-msg_mdio_read_timeout: .asciz "Timeout in mdio_read\r\n"
+msg_mdio_read_timeout:
+  .asciz "Timeout in mdio_read\r\n"
 .endif
 
-# -----------------------------
-# Write to a MDIO register/port
-# -----------------------------
-# Write a value to an MDIO register. This is a three stage process. First,
-# register [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) is written to with details of
-# the desired MDIO register to update, and then register [0xfd501104]
-# (PCIE_RC_DL_MDIO_WR_DATA) is written to with the target value. Finally, the
-# same register [0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA) is polled to determine
-# if the update was successful. The polling occurs at 10us intervals, with a
-# maximum of 10 attempts.
-#
-# Linux implementation:
-#  https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L351-L370
-#
-# On entry:
-#   w0 = MDIO register/port to write to
-#          bits 20-31: clear (required)
-#          bits 16-19: port (usually 0x0)
-#          bits 0-15: regad
-#            0x0002: SSC_CNTL
-#            0x001f: SET_ADDR
-#   w1 = bits 0-30: desired value to write to MDIO register
-#        bit 31: ignored
-# On return:
-#   w0 corrupted
-#   w1 = bits 0-30: unchanged, if successful
-#        bit 31: clear if read was successful, set if read was unsuccessful
-#   w2 corrupted
-#   w3 corrupted
-#   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
-#   x11 = return address of function
+
+// -----------------------------
+// Write to a MDIO register/port
+// -----------------------------
+// Write a value to an MDIO register. This is a three stage process. First,
+// register [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) is written to with details of
+// the desired MDIO register to update, and then register [0xfd501104]
+// (PCIE_RC_DL_MDIO_WR_DATA) is written to with the target value. Finally, the
+// same register [0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA) is polled to determine
+// if the update was successful. The polling occurs at 10us intervals, with a
+// maximum of 10 attempts.
+//
+// Linux implementation:
+//  https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L351-L370
+//
+// On entry:
+//   w0 = MDIO register/port to write to
+//          bits 20-31: clear (required)
+//          bits 16-19: port (usually 0x0)
+//          bits 0-15: regad
+//            0x0002: SSC_CNTL
+//            0x001f: SET_ADDR
+//   w1 = bits 0-30: desired value to write to MDIO register
+//        bit 31: ignored
+// On return:
+//   w0 corrupted
+//   w1 = bits 0-30: unchanged, if successful
+//        bit 31: clear if read was successful, set if read was unsuccessful
+//   w2 corrupted
+//   w3 corrupted
+//   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
+//   x11 = return address of function
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 mdio_write:
   mov     x11, x30
   strwi   w0, x10, #0x1100                        // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (command | port | regad)
@@ -1153,55 +1179,57 @@ mdio_write:
 .endif
   b       sleep
 
+
 .if UART_DEBUG
-msg_mdio_write_timeout: .asciz "Timeout in mdio_write\r\n"
+msg_mdio_write_timeout:
+  .asciz "Timeout in mdio_write\r\n"
 .endif
 
 
-# # Return the PCIe register address for a given PCI bus, device function and
-# # config space address offset.
-# #
-# # The bus is considered a root bus if the bus parent address is 0 (i.e. unset).
-# # The root bus is accessed directly via the the root config registers. For
-# # other devices, first write the request to the config space index register
-# # (ECAM), and return the address of the result register.
-# #
-# # On entry:
-# #   x0 = pci_bus address
-# #   x1 = devfn
-# #   w2 = where (pci reg offset)
-# #
-# # On exit:
-# #   x0 = pcie register address
-# #   x1 untouched
-# #   w2 untouched
-# #   x3 disturbed
-# #   x4 disturbed
-# #
-# # Based on:
-# #   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L707-L722
-# .align 2
-# map_conf:
-#   ldrxi   x3, x0, #0x0                            // x3 = [bus address] = parent
-#   cbnz    x3, 1f                                  // if parent bus non-zero (i.e. has been set), jump ahead to 1:
-#   adrp    x4, 0xfd500000 + _start                 // x4 = pcie_base
-#   add     x4, x4, x2                              // x4 = x4 + x2 = pcie_base + where
-#   tst     x1, #0xf8                               // set flags based on AND upper 5 bits of devfn (device number)
-#   csel    x0, x4, xzr, eq                         // if dev number == 0, x0 = pcie_base + where, otherwise 0
-#   ret
-# 1:
-#   ldrbi   w3, x0, #8                              // w3 = [x3 + 8] = bus number
-#   ubfiz   w4, w1, #12, #8                         // w4 = (w1 & 0xff) << 12 = (devfn & 0xff) << 12
-#   orr     w4, w4, w3, lsl #20                     // w4 = (devfn & 0xff) << 12 | (bus number << 20)
-#   dmb     oshst                                   // Data Memory Barrier Operation, Outer Shareable, Shareability Type
-#   adrp    x0, 0xfd509000 + _start                 // x0 = pcie_base + 0x9000
-#   strwi   w4, x0, #0                              // [pcie_base + 0x9000] = (devfn & 0xff) << 12 | (bus number << 20)
-#   adrp    x0, 0xfd508000 + _start                 // x0 = pcie_base + 0x8000
-#   add     x0, x0, x2                              // x0 = pcie_base + 0x8000 + where
-#   ret
+// # Return the PCIe register address for a given PCI bus, device function and
+// # config space address offset.
+// #
+// # The bus is considered a root bus if the bus parent address is 0 (i.e. unset).
+// # The root bus is accessed directly via the the root config registers. For
+// # other devices, first write the request to the config space index register
+// # (ECAM), and return the address of the result register.
+// #
+// # On entry:
+// #   x0 = pci_bus address
+// #   x1 = devfn
+// #   w2 = where (pci reg offset)
+// #
+// # On exit:
+// #   x0 = pcie register address
+// #   x1 untouched
+// #   w2 untouched
+// #   x3 disturbed
+// #   x4 disturbed
+// #
+// # Based on:
+// #   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L707-L722
+// .align 2
+// map_conf:
+//   ldrxi   x3, x0, #0x0                            // x3 = [bus address] = parent
+//   cbnz    x3, 1f                                  // if parent bus non-zero (i.e. has been set), jump ahead to 1:
+//   adrp    x4, 0xfd500000 + _start                 // x4 = pcie_base
+//   add     x4, x4, x2                              // x4 = x4 + x2 = pcie_base + where
+//   tst     x1, #0xf8                               // set flags based on AND upper 5 bits of devfn (device number)
+//   csel    x0, x4, xzr, eq                         // if dev number == 0, x0 = pcie_base + where, otherwise 0
+//   ret
+// 1:
+//   ldrbi   w3, x0, #8                              // w3 = [x3 + 8] = bus number
+//   ubfiz   w4, w1, #12, #8                         // w4 = (w1 & 0xff) << 12 = (devfn & 0xff) << 12
+//   orr     w4, w4, w3, lsl #20                     // w4 = (devfn & 0xff) << 12 | (bus number << 20)
+//   dmb     oshst                                   // Data Memory Barrier Operation, Outer Shareable, Shareability Type
+//   adrp    x0, 0xfd509000 + _start                 // x0 = pcie_base + 0x9000
+//   strwi   w4, x0, #0                              // [pcie_base + 0x9000] = (devfn & 0xff) << 12 | (bus number << 20)
+//   adrp    x0, 0xfd508000 + _start                 // x0 = pcie_base + 0x8000
+//   add     x0, x0, x2                              // x0 = pcie_base + 0x8000 + where
+//   ret
 
 
-# Memory block for requesting VL805 host controller firmware reset
+// Memory block for requesting VL805 host controller firmware reset
 .align 4
 vl805_reset_req:
   .word (vl805_reset_req_end-vl805_reset_req)     // Buffer size
@@ -1219,14 +1247,18 @@ vl805_reset_req_end:
 
 .align 3
 xhci_vars:
-xhci_event_dequeue: .space 8                      // keep together!!!
-xhci_event_ccs: .space 8                          // since loaded and stored with ldp/stp!!!
-xhci_transfer_keyboard_EP0_dequeue: .space 8
-xhci_transfer_keyboard_EP1_dequeue: .space 8
-# xhci_mmio: .space 8                             // = 0x600000000 (pcie base = xhci base) (capability registers)
-# xhci_mmio_op: .space 8                          // operational registers address
-# xhci_mmio_db: .space 8                          // doorbell registers address
-# xhci_mmio_rt: .space 8                          // runtime registers address
-# xhci_mmio_pt: .space 8                          // port register set address
-# xhci_cap_cache: .space 16                       // capability cache values
-# xhci_mmio_ec: .space 8                          // extended capabilities address
+xhci_event_dequeue:
+  .space 8                                        // keep together!!!
+xhci_event_ccs:
+  .space 8                                        // since loaded and stored with ldp/stp!!!
+xhci_transfer_keyboard_EP0_dequeue:
+  .space 8
+xhci_transfer_keyboard_EP1_dequeue:
+  .space 8
+// xhci_mmio: .space 8                             // = 0x600000000 (pcie base = xhci base) (capability registers)
+// xhci_mmio_op: .space 8                          // operational registers address
+// xhci_mmio_db: .space 8                          // doorbell registers address
+// xhci_mmio_rt: .space 8                          // runtime registers address
+// xhci_mmio_pt: .space 8                          // port register set address
+// xhci_cap_cache: .space 16                       // capability cache values
+// xhci_mmio_ec: .space 8                          // extended capabilities address

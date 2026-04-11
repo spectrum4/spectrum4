@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -14,8 +14,10 @@
 
 .text
 
-# Since there is considerable test coverage of po_search, po_table and
-# po_tokens, only minimal testing provided here.
+
+// Since there is considerable test coverage of po_search, po_table and
+// po_tokens, only minimal testing provided here.
+
 
 .align 0
 msg_po_table_test:
@@ -27,16 +29,19 @@ msg_po_table_bakery0:
 msg_po_table_door:
   .asciz "door"
 
+
 .align 2
 po_table_01_setup:
   _str    fake_channel_block, CURCHL
   ret
+
 
 po_table_01_setup_regs:
   mov     x3, #0x2
   adr     x4, msg_po_table_test
   mov     x5, #0x50
   ret
+
 
 po_table_01_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -45,6 +50,7 @@ po_table_01_effects:
   bl      print_message                           // Expected output.
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
+
 
 po_table_01_effects_regs:
   mov     x0, #0x00

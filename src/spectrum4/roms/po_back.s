@@ -1,46 +1,45 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# -------------------
-# Cursor left routine
-# -------------------
-# For screen:
-#   If in leftmost column:
-#     If on first line:
-#       No change
-#     Otherwise:
-#       To rightmost column of previous line
-#   Otherwise:
-#     Backspace a char
-# For ZX printer:
-#   If in leftmost column:
-#     No change
-#   Otherwise:
-#     Backspace a char
-#
-# On entry:
-#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
-#   w1 = (109 - column), or 1 for end-of-line
-#   x2 = address in display file / printer buffer
-#   w3 = 0x08 (chr 8)
-#
-# On exit:
-#   If upper screen in use:
-#     [S_POSN_Y]
-#     [S_POSN_X]
-#     [DF_CC]
-#   If lower screen in use:
-#     [S_POSN_Y_L]
-#     [S_POSN_X_L]
-#     [ECHO_E_Y]
-#     [ECHO_E_X]
-#     [DF_CC_L]
-#   If printer in use:
-#     [P_POSN_X]
-#     [PR_CC]
+// ------------------------------------------------------------------------------
+// Cursor left routine
+// For screen:
+//   If in leftmost column:
+//     If on first line:
+//       No change
+//     Otherwise:
+//       To rightmost column of previous line
+//   Otherwise:
+//     Backspace a char
+// For ZX printer:
+//   If in leftmost column:
+//     No change
+//   Otherwise:
+//     Backspace a char
+// ------------------------------------------------------------------------------
+// On entry:
+//   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+//   w1 = (109 - column), or 1 for end-of-line
+//   x2 = address in display file / printer buffer
+//   w3 = 0x08 (chr 8)
+// On exit:
+//   If upper screen in use:
+//     [S_POSN_Y]
+//     [S_POSN_X]
+//     [DF_CC]
+//   If lower screen in use:
+//     [S_POSN_Y_L]
+//     [S_POSN_X_L]
+//     [ECHO_E_Y]
+//     [ECHO_E_X]
+//     [DF_CC_L]
+//   If printer in use:
+//     [P_POSN_X]
+//     [PR_CC]
 po_back:                                 // L0A23
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

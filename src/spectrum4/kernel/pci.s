@@ -1,33 +1,37 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
 
-# pci_bus memory block
-#   0x00-0x07: parent bus address (or 0 if root bus)
-#   0x08-0x0f: bus number
+
+// pci_bus memory block
+//   0x00-0x07: parent bus address (or 0 if root bus)
+//   0x08-0x0f: bus number
 
 
-# On entry:
-#   x0 = bus data address
-#   x1 = devfn
-#   x2 = where (pci reg offset)
-#   w3 = size
-#
-# On return:
-#   w0 = 0x00 (PCI successful), or
-#        0x86 (PCI device not found), or
-#        0x87 (PCI bad register number => unaligned access)
-#   w1 = value read (if access was aligned)
-#   w2 = untouched
-#   x3 disturbed
-#   w5 = size - 1
-#
-# Based on
-#   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/access.c#L35-L48
-#   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/access.c#L77-L96
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = bus data address
+//   x1 = devfn
+//   x2 = where (pci reg offset)
+//   w3 = size
+// On exit:
+//   w0 = 0x00 (PCI successful), or
+//        0x86 (PCI device not found), or
+//        0x87 (PCI bad register number => unaligned access)
+//   w1 = value read (if access was aligned)
+//   w2 = untouched
+//   x3 disturbed
+//   w5 = size - 1
+//
+// Based on
+//   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/access.c#L35-L48
+//   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/access.c#L77-L96
 pci_read:
   sub     w5, w3, #1
   tst     w2, w5
@@ -60,10 +64,17 @@ pci_read:
   mov     w0, #0x87                               // PCIBIOS_BAD_REGISTER_NUMBER (unaligned access)
   ret
 
-# TODO work in progress
-#
-# Based on
-#   * https://github.com/petemoore/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2333-L2348
+
+// ------------------------------------------------------------------------------
+// TODO work in progress
+//
+// Based on
+//   * https://github.com/petemoore/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2333-L2348
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 pci_dev_vendor_id:
   stp     x29, x30, [sp, #-16]!
   mov     x29, sp

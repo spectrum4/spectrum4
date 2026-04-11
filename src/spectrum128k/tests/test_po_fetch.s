@@ -1,36 +1,36 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+; This file is part of the Spectrum +4 Project.
+; Licencing information can be found in the LICENCE file
+; (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 .text
 
 
 
-# The condition flags are set by either the BIT 1, (IY+(FLAGS-C_IY))
-# instruction at the start of po_fetch routine, or the
-# BIT 0, (IY+(TV_FLAG-C_IY)) further down.
-#
-# Condition flag effects for BIT n, (IY+a) are described (unofficially)
-# in http://www.z80.info/zip/z80-documented.pdf:
-#
-#   S_FLAG set if n = 7 and tested bit is set.
-#   Z_FLAG set if the tested bit is clear.
-#   H_FLAG always set.
-#   PV_FLAG set just like ZF flag.
-#   N_FLAG always clear.
-#   C_FLAG unchanged.
-#
-# The effects on X3_FLAG and X5_FLAG of BIT n, (IX+a) instructions
-# are also described, but not BIT n, (IY+a) instructions. However
-# the FUSE emulator tests suggest the latter instructions affect the
-# X3/X5 flags the same way as the former instructions, so I'll go
-# with that unless I'm proved wrong:
-#
-#   X3 = bit 3 of MSB of address IY+a
-#   X5 = bit 5 of MSB of address IY+a
+; The condition flags are set by either the BIT 1, (IY+(FLAGS-C_IY))
+; instruction at the start of po_fetch routine, or the
+; BIT 0, (IY+(TV_FLAG-C_IY)) further down.
+;
+; Condition flag effects for BIT n, (IY+a) are described (unofficially)
+; in http://www.z80.info/zip/z80-documented.pdf:
+;
+;   S_FLAG set if n = 7 and tested bit is set.
+;   Z_FLAG set if the tested bit is clear.
+;   H_FLAG always set.
+;   PV_FLAG set just like ZF flag.
+;   N_FLAG always clear.
+;   C_FLAG unchanged.
+;
+; The effects on X3_FLAG and X5_FLAG of BIT n, (IX+a) instructions
+; are also described, but not BIT n, (IY+a) instructions. However
+; the FUSE emulator tests suggest the latter instructions affect the
+; X3/X5 flags the same way as the former instructions, so I'll go
+; with that unless I'm proved wrong:
+;
+;   X3 = bit 3 of MSB of address IY+a
+;   X5 = bit 5 of MSB of address IY+a
 
 
-# Test printer in use.
+; Test printer in use.
 
 po_fetch_printer_setup:
   _setbit 1, FLAGS
@@ -45,7 +45,7 @@ po_fetch_printer_effects_regs:
   ret
 
 
-# Test upper screen in use.
+; Test upper screen in use.
 
 po_fetch_upper_screen_setup:
   _resbit 1, FLAGS
@@ -61,7 +61,7 @@ po_fetch_upper_screen_effects_regs:
   ret
 
 
-# Test lower screen in use.
+; Test lower screen in use.
 
 po_fetch_lower_screen_setup:
   _resbit 1, FLAGS

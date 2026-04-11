@@ -1,44 +1,43 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# --------------------------
-# The Table INDEXING routine
-# --------------------------
-# Routine indexer searches an in-memory key/value store for x0.
-#
-# Keys and values are double words (64 bit values). Each record contains a single
-# key and a single value. Keys and values may have unrestricted 64 bit values.
-#
-# The structure of the key/value store is:
-#
-#   uint64: number of records
-#   [
-#     uint64: key
-#     uint64: value
-#   ] * number of records
-#
-# Therefore the size of the store is [ 2*(number of records)+1 ] * 8 bytes (since
-# 64 bits require 8 bytes of storage).
-#
-# * The key/value store must be 8 byte aligned in memory.
-# * Records may be stored in an arbitrary order; however if a duplicate key exists,
-#   the record with the lowest address in memory will take precendence.
-# * Callers should check for non-zero x1 before using x2.
-#
-# On entry:
-#   x0 = 64 bit key to search for
-#   x1 = address of key/value store (8 byte aligned)
-#
-# On exit:
-#   x0 unchanged
-#   x1 = address of 64 bit key if found, otherwise 0
-#   x2 = 64 bit value for key if found, otherwise unchanged
-#   x9 = number of records after found key
-#  x10 = x0 if found, otherwise value of last key in table
-#  NZCV = result of `cmp x0, x10` (0b0110 if key found)
+// ------------------------------------------------------------------------------
+// The Table INDEXING routine
+// Routine indexer searches an in-memory key/value store for x0.
+//
+// Keys and values are double words (64 bit values). Each record contains a single
+// key and a single value. Keys and values may have unrestricted 64 bit values.
+//
+// The structure of the key/value store is:
+//
+//   uint64: number of records
+//   [
+//     uint64: key
+//     uint64: value
+//   ] * number of records
+//
+// Therefore the size of the store is [ 2*(number of records)+1 ] * 8 bytes (since
+// 64 bits require 8 bytes of storage).
+//
+// * The key/value store must be 8 byte aligned in memory.
+// * Records may be stored in an arbitrary order; however if a duplicate key exists,
+//   the record with the lowest address in memory will take precendence.
+// * Callers should check for non-zero x1 before using x2.
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = 64 bit key to search for
+//   x1 = address of key/value store (8 byte aligned)
+// On exit:
+//   x0 unchanged
+//   x1 = address of 64 bit key if found, otherwise 0
+//   x2 = 64 bit value for key if found, otherwise unchanged
+//   x9 = number of records after found key
+//  x10 = x0 if found, otherwise value of last key in table
+//  NZCV = result of `cmp x0, x10` (0b0110 if key found)
 indexer:                                 // L16DC
   ldr     x9, [x1], #-8                           // x9 = number of records
                                                   // x1 = lookup table address - 8 = address of first record - 16

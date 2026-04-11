@@ -1,18 +1,21 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
-# -------------------------------
-# THE 'ZX SPECTRUM CHARACTER SET'
-# -------------------------------
+// -------------------------------
+// THE 'ZX SPECTRUM CHARACTER SET'
+// -------------------------------
+
 
 .text
+
 
 .align 5
 char_set:
 
-# 0x20 - Character: ' '          CHR$(32)
+
+// 0x20 - Character: ' '          CHR$(32)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -31,7 +34,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x21 - Character: '!'          CHR$(33)
+
+// 0x21 - Character: '!'          CHR$(33)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -50,7 +54,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x22 - Character: '"'          CHR$(34)
+
+// 0x22 - Character: '"'          CHR$(34)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -69,7 +74,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x23 - Character: '#'          CHR$(35)
+
+// 0x23 - Character: '#'          CHR$(35)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -88,7 +94,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x24 - Character: '$'          CHR$(36)
+
+// 0x24 - Character: '$'          CHR$(36)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -107,7 +114,8 @@ char_set:
   _hwordbe  0b0000000011000000
   _hwordbe  0b0000000011000000
 
-# 0x25 - Character: '%'          CHR$(37)
+
+// 0x25 - Character: '%'          CHR$(37)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -126,7 +134,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x26 - Character: '&'          CHR$(38)
+
+// 0x26 - Character: '&'          CHR$(38)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000001110000000
@@ -145,7 +154,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x27 - Character: '''          CHR$(39)
+
+// 0x27 - Character: '''          CHR$(39)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -164,7 +174,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x28 - Character: '('          CHR$(40)
+
+// 0x28 - Character: '('          CHR$(40)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -183,7 +194,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x29 - Character: ')'          CHR$(41)
+
+// 0x29 - Character: ')'          CHR$(41)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -202,7 +214,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x2A - Character: '*'          CHR$(42)
+
+// 0x2a - Character: '*'          CHR$(42)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -221,7 +234,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x2B - Character: '+'          CHR$(43)
+
+// 0x2b - Character: '+'          CHR$(43)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -240,7 +254,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x2C - Character: ','          CHR$(44)
+
+// 0x2c - Character: ','          CHR$(44)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -259,7 +274,8 @@ char_set:
   _hwordbe  0b0000001110000000
   _hwordbe  0b0000001100000000
 
-# 0x2D - Character: '-'          CHR$(45)
+
+// 0x2d - Character: '-'          CHR$(45)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -278,7 +294,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x2E - Character: '.'          CHR$(46)
+
+// 0x2e - Character: '.'          CHR$(46)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -297,7 +314,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x2F - Character: '/'          CHR$(47)
+
+// 0x2f - Character: '/'          CHR$(47)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -316,7 +334,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x30 - Character: '0'          CHR$(48)
+
+// 0x30 - Character: '0'          CHR$(48)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -335,7 +354,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x31 - Character: '1'          CHR$(49)
+
+// 0x31 - Character: '1'          CHR$(49)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -354,7 +374,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x32 - Character: '2'          CHR$(50)
+
+// 0x32 - Character: '2'          CHR$(50)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -373,7 +394,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x33 - Character: '3'          CHR$(51)
+
+// 0x33 - Character: '3'          CHR$(51)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -392,7 +414,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x34 - Character: '4'          CHR$(52)
+
+// 0x34 - Character: '4'          CHR$(52)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -411,7 +434,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x35 - Character: '5'          CHR$(53)
+
+// 0x35 - Character: '5'          CHR$(53)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -430,7 +454,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x36 - Character: '6'          CHR$(54)
+
+// 0x36 - Character: '6'          CHR$(54)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -449,7 +474,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x37 - Character: '7'          CHR$(55)
+
+// 0x37 - Character: '7'          CHR$(55)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -468,7 +494,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x38 - Character: '8'          CHR$(56)
+
+// 0x38 - Character: '8'          CHR$(56)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -487,7 +514,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x39 - Character: '9'          CHR$(57)
+
+// 0x39 - Character: '9'          CHR$(57)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -506,7 +534,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x3A - Character: ':'          CHR$(58)
+
+// 0x3a - Character: ':'          CHR$(58)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -525,7 +554,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x3B - Character: ';'          CHR$(59)
+
+// 0x3b - Character: ';'          CHR$(59)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -544,7 +574,8 @@ char_set:
   _hwordbe  0b0000111000000000
   _hwordbe  0b0000110000000000
 
-# 0x3C - Character: '<'          CHR$(60)
+
+// 0x3c - Character: '<'          CHR$(60)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -563,7 +594,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x3D - Character: '='          CHR$(61)
+
+// 0x3d - Character: '='          CHR$(61)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -582,7 +614,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x3E - Character: '>'          CHR$(62)
+
+// 0x3e - Character: '>'          CHR$(62)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -601,7 +634,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x3F - Character: '?'          CHR$(63)
+
+// 0x3f - Character: '?'          CHR$(63)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -620,7 +654,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x40 - Character: '@'          CHR$(64)
+
+// 0x40 - Character: '@'          CHR$(64)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -639,7 +674,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x41 - Character: 'A'          CHR$(65)
+
+// 0x41 - Character: 'A'          CHR$(65)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -658,7 +694,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x42 - Character: 'B'          CHR$(66)
+
+// 0x42 - Character: 'B'          CHR$(66)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -677,7 +714,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x43 - Character: 'C'          CHR$(67)
+
+// 0x43 - Character: 'C'          CHR$(67)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -696,7 +734,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x44 - Character: 'D'          CHR$(68)
+
+// 0x44 - Character: 'D'          CHR$(68)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -715,7 +754,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x45 - Character: 'E'          CHR$(69)
+
+// 0x45 - Character: 'E'          CHR$(69)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -734,7 +774,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x46 - Character: 'F'          CHR$(70)
+
+// 0x46 - Character: 'F'          CHR$(70)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -753,7 +794,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x47 - Character: 'G'          CHR$(71)
+
+// 0x47 - Character: 'G'          CHR$(71)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -772,7 +814,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x48 - Character: 'H'          CHR$(72)
+
+// 0x48 - Character: 'H'          CHR$(72)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -791,7 +834,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x49 - Character: 'I'          CHR$(73)
+
+// 0x49 - Character: 'I'          CHR$(73)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -810,7 +854,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x4A - Character: 'J'          CHR$(74)
+
+// 0x4a - Character: 'J'          CHR$(74)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -829,7 +874,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x4B - Character: 'K'          CHR$(75)
+
+// 0x4b - Character: 'K'          CHR$(75)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -848,7 +894,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x4C - Character: 'L'          CHR$(76)
+
+// 0x4c - Character: 'L'          CHR$(76)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -867,7 +914,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x4D - Character: 'M'          CHR$(77)
+
+// 0x4d - Character: 'M'          CHR$(77)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -886,7 +934,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x4E - Character: 'N'          CHR$(78)
+
+// 0x4e - Character: 'N'          CHR$(78)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -905,7 +954,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x4F - Character: 'O'          CHR$(79)
+
+// 0x4f - Character: 'O'          CHR$(79)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -924,7 +974,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x50 - Character: 'P'          CHR$(80)
+
+// 0x50 - Character: 'P'          CHR$(80)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -943,7 +994,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x51 - Character: 'Q'          CHR$(81)
+
+// 0x51 - Character: 'Q'          CHR$(81)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -962,7 +1014,8 @@ char_set:
   _hwordbe  0b0000000000011100
   _hwordbe  0b0000000000000000
 
-# 0x52 - Character: 'R'          CHR$(82)
+
+// 0x52 - Character: 'R'          CHR$(82)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -981,7 +1034,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x53 - Character: 'S'          CHR$(83)
+
+// 0x53 - Character: 'S'          CHR$(83)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1000,7 +1054,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x54 - Character: 'T'          CHR$(84)
+
+// 0x54 - Character: 'T'          CHR$(84)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1019,7 +1074,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x55 - Character: 'U'          CHR$(85)
+
+// 0x55 - Character: 'U'          CHR$(85)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1038,7 +1094,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x56 - Character: 'V'          CHR$(86)
+
+// 0x56 - Character: 'V'          CHR$(86)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1057,7 +1114,8 @@ char_set:
   _hwordbe  0b0000000110000000
   _hwordbe  0b0000000000000000
 
-# 0x57 - Character: 'W'          CHR$(87)
+
+// 0x57 - Character: 'W'          CHR$(87)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1076,7 +1134,8 @@ char_set:
   _hwordbe  0b0001100000011000
   _hwordbe  0b0000000000000000
 
-# 0x58 - Character: 'X'          CHR$(88)
+
+// 0x58 - Character: 'X'          CHR$(88)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1095,7 +1154,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x59 - Character: 'Y'          CHR$(89)
+
+// 0x59 - Character: 'Y'          CHR$(89)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1114,7 +1174,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x5A - Character: 'Z'          CHR$(90)
+
+// 0x5a - Character: 'Z'          CHR$(90)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1133,7 +1194,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x5B - Character: '['          CHR$(91)
+
+// 0x5b - Character: '['          CHR$(91)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1152,7 +1214,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x5C - Character: '\'          CHR$(92)
+
+// 0x5c - Character: '\'          CHR$(92)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1171,7 +1234,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x5D - Character: ']'          CHR$(93)
+
+// 0x5d - Character: ']'          CHR$(93)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1190,7 +1254,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x5E - Character: '^'          CHR$(94)
+
+// 0x5e - Character: '^'          CHR$(94)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1209,7 +1274,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x5F - Character: '_'          CHR$(95)
+
+// 0x5f - Character: '_'          CHR$(95)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1228,7 +1294,8 @@ char_set:
   _hwordbe  0b1111111111111111
   _hwordbe  0b1111111111111111
 
-# 0x60 - Character: '`'          CHR$(96)
+
+// 0x60 - Character: '`'          CHR$(96)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1247,7 +1314,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x61 - Character: 'a'          CHR$(97)
+
+// 0x61 - Character: 'a'          CHR$(97)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1266,7 +1334,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x62 - Character: 'b'          CHR$(98)
+
+// 0x62 - Character: 'b'          CHR$(98)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1285,7 +1354,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x63 - Character: 'c'          CHR$(99)
+
+// 0x63 - Character: 'c'          CHR$(99)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1304,7 +1374,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x64 - Character: 'd'          CHR$(100)
+
+// 0x64 - Character: 'd'          CHR$(100)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1323,7 +1394,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x65 - Character: 'e'          CHR$(101)
+
+// 0x65 - Character: 'e'          CHR$(101)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1342,7 +1414,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x66 - Character: 'f'          CHR$(102)
+
+// 0x66 - Character: 'f'          CHR$(102)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1361,7 +1434,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x67 - Character: 'g'          CHR$(103)
+
+// 0x67 - Character: 'g'          CHR$(103)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1380,7 +1454,8 @@ char_set:
   _hwordbe  0b0000111111100000
   _hwordbe  0b0000111111000000
 
-# 0x68 - Character: 'h'          CHR$(104)
+
+// 0x68 - Character: 'h'          CHR$(104)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1399,7 +1474,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x69 - Character: 'i'          CHR$(105)
+
+// 0x69 - Character: 'i'          CHR$(105)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1418,7 +1494,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x6A - Character: 'j'          CHR$(106)
+
+// 0x6a - Character: 'j'          CHR$(106)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1437,7 +1514,8 @@ char_set:
   _hwordbe  0b0000011111100000
   _hwordbe  0b0000001111000000
 
-# 0x6B - Character: 'k'          CHR$(107)
+
+// 0x6b - Character: 'k'          CHR$(107)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1456,7 +1534,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x6C - Character: 'l'          CHR$(108)
+
+// 0x6c - Character: 'l'          CHR$(108)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1475,7 +1554,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x6D - Character: 'm'          CHR$(109)
+
+// 0x6d - Character: 'm'          CHR$(109)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1494,7 +1574,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x6E - Character: 'n'          CHR$(110)
+
+// 0x6e - Character: 'n'          CHR$(110)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1513,7 +1594,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x6F - Character: 'o'          CHR$(111)
+
+// 0x6f - Character: 'o'          CHR$(111)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1532,7 +1614,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x70 - Character: 'p'          CHR$(112)
+
+// 0x70 - Character: 'p'          CHR$(112)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1551,7 +1634,8 @@ char_set:
   _hwordbe  0b0011000000000000
   _hwordbe  0b0011000000000000
 
-# 0x71 - Character: 'q'          CHR$(113)
+
+// 0x71 - Character: 'q'          CHR$(113)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1570,7 +1654,8 @@ char_set:
   _hwordbe  0b0000000000111100
   _hwordbe  0b0000000000111100
 
-# 0x72 - Character: 'r'          CHR$(114)
+
+// 0x72 - Character: 'r'          CHR$(114)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1589,7 +1674,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x73 - Character: 's'          CHR$(115)
+
+// 0x73 - Character: 's'          CHR$(115)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1608,7 +1694,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x74 - Character: 't'          CHR$(116)
+
+// 0x74 - Character: 't'          CHR$(116)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1627,7 +1714,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x75 - Character: 'u'          CHR$(117)
+
+// 0x75 - Character: 'u'          CHR$(117)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1646,7 +1734,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x76 - Character: 'v'          CHR$(118)
+
+// 0x76 - Character: 'v'          CHR$(118)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1665,7 +1754,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x77 - Character: 'w'          CHR$(119)
+
+// 0x77 - Character: 'w'          CHR$(119)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1684,7 +1774,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x78 - Character: 'x'          CHR$(120)
+
+// 0x78 - Character: 'x'          CHR$(120)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1703,7 +1794,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x79 - Character: 'y'          CHR$(121)
+
+// 0x79 - Character: 'y'          CHR$(121)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1722,7 +1814,8 @@ char_set:
   _hwordbe  0b0000111111100000
   _hwordbe  0b0000111111000000
 
-# 0x7A - Character: 'z'          CHR$(122)
+
+// 0x7a - Character: 'z'          CHR$(122)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1741,7 +1834,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x7B - Character: '{'          CHR$(123)
+
+// 0x7b - Character: '{'          CHR$(123)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1760,7 +1854,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x7C - Character: '|'          CHR$(124)
+
+// 0x7c - Character: '|'          CHR$(124)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1779,7 +1874,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x7D - Character: '}'          CHR$(125)
+
+// 0x7d - Character: '}'          CHR$(125)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1798,7 +1894,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x7E - Character: '~'          CHR$(126)
+
+// 0x7e - Character: '~'          CHR$(126)
 
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
@@ -1817,7 +1914,8 @@ char_set:
   _hwordbe  0b0000000000000000
   _hwordbe  0b0000000000000000
 
-# 0x7F - Character: '(c)'        CHR$(127)
+
+// 0x7f - Character: '(c)'        CHR$(127)
 
   _hwordbe  0b0000011111100000
   _hwordbe  0b0001111111111000

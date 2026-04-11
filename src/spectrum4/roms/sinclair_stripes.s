@@ -1,17 +1,20 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 
-# -----------------------------
-# Menu Sinclair Stripes Bitmaps
-# -----------------------------
-# Bit-patterns for the Sinclair stripes used on the menus.
+
+// -----------------------------
+// Menu Sinclair Stripes Bitmaps
+// -----------------------------
+// Bit-patterns for the Sinclair stripes used on the menus.
 .align 1
 sinclair_stripes:                        // L3802
 
-# 0x20 - Character: ' '          CHR$(32)
+
+// 0x20 - Character: ' '          CHR$(32)
 
   _hwordbe  0b0000000000000001
   _hwordbe  0b0000000000000011
@@ -30,7 +33,8 @@ sinclair_stripes:                        // L3802
   _hwordbe  0b0111111111111111
   _hwordbe  0b1111111111111111
 
-# 0x21 - Character: '!'          CHR$(33)
+
+// 0x21 - Character: '!'          CHR$(33)
 
   _hwordbe  0b1111111111111110
   _hwordbe  0b1111111111111100
@@ -50,11 +54,11 @@ sinclair_stripes:                        // L3802
   _hwordbe  0b0000000000000000
 
 
-# -----------------------
-# Sinclair Stripes 'Text'
-# -----------------------
-# CHARS points to RAM at $5A98, and characters ' ' and '!' redefined
-# as the Sinclair strips using the bit patterns above.
+// -----------------------
+// Sinclair Stripes 'Text'
+// -----------------------
+// CHARS points to RAM at 0x5a98, and characters ' ' and '!' redefined
+// as the Sinclair strips using the bit patterns above.
 .align 0
 sinclair_stripes_text:                   // L3812
   .byte 0x10, 0x02, ' '                           // INK 2;
@@ -65,10 +69,17 @@ sinclair_stripes_text:                   // L3812
   .byte 0xff
 
 
-# --------------------------------------
-# Print the Sinclair stripes on the menu
-# --------------------------------------
+// --------------------------------------
+// Print the Sinclair stripes on the menu
+// --------------------------------------
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 print_sinclair_stripes:                  // L3822
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

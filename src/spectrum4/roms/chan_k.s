@@ -1,25 +1,26 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# --------------
-# Channel K flag
-# --------------
-# Flag setting routine for lower screen/keyboard channel ('K' channel).
-#
-# On entry:
-# On exit:
-#   [TV_FLAG] : set bit 0
-#   [FLAGS] : clear bit 1 and bit 5
-#   [FLAGS2] : set bit 4
-#   [ATTR_T] = [BORDCR]
-#   [MASK_T] = 0
-#   [P_FLAG] : temp (even) bits set to zero
-#   w0 = new [P_FLAG]
-#   w1 = [BORDCR]
-#   w9 = [FLAGS2]
+// ------------------------------------------------------------------------------
+// Channel K flag
+// Flag setting routine for lower screen/keyboard channel ('K' channel).
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   [TV_FLAG] : set bit 0
+//   [FLAGS] : clear bit 1 and bit 5
+//   [FLAGS2] : set bit 4
+//   [ATTR_T] = [BORDCR]
+//   [MASK_T] = 0
+//   [P_FLAG] : temp (even) bits set to zero
+//   w0 = new [P_FLAG]
+//   w1 = [BORDCR]
+//   w9 = [FLAGS2]
 chan_k:                                  // L1634
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

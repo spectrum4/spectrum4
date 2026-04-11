@@ -1,55 +1,52 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# ---------------------------
-# Set line and column numbers
-# ---------------------------
-# Calculate the character output address for screens or printer based on the
-# line/column for screens for current K/S/P channel.
-#
-# On entry:
-#
-#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
-#     for K: x0 = 120 - [DF_SZ] - actual screen row (x0 range: 1 -> 60)
-#     for S: x0 = 60 - actual screen row (x0 range: 1 -> 60)
-#     for P: x0 not used since printer buffer is a single line, so no Y coordinate
-#   w1 = 109 - actual column
-#     from 109 (leftmost column) to 2 (rightmost column) or 1 indicates entire
-#     line printed, but no explicit carriage return (so lines needn't be
-#     scrolled, and backspace still possible on printer).
-#
-# On exit:
-#
-#   If upper screen in use (bit 1 of FLAGS clear and bit 0 of TV_FLAG clear):
-#     [S_POSN_Y] = x0
-#     [S_POSN_X] = x1
-#     [DF_CC] = display_file + 2*(109-x1) + ((60-x0)/20)*216*16*20 + 216*((60-x0)%20)
-#     x2 = display_file + 2*(109-x1) + ((60-x0)/20)*216*16*20 + 216*((60-x0)%20)
-#     w3 = [TV_FLAG]
-#     w4 = (60-x0)%20
-#     w5 = 216
-#     w6 = 0x10e00
-#
-#   If lower screen in use (bit 1 of FLAGS clear and bit 0 of TV_FLAG set):
-#     [S_POSN_Y_L] = x0
-#     [S_POSN_X_L] = x1
-#     [ECHO_E_Y] = x0
-#     [ECHO_E_X] = x1
-#     [DF_CC_L] = display_file + 2*(109-x1) + ((120-x0-[DF_SZ])/20)*216*16*20 + 216*((120-x0-[DF_SZ])%20)
-#     x2 = display_file + 2*(109-x1) + ((120-x0-[DF_SZ])/20)*216*16*20 + 216*((120-x0-[DF_SZ])%20)
-#     w3 = [TV_FLAG]
-#     w4 = (120-x0-[DF_SZ])%20
-#     w5 = 216
-#     w6 = 0x10e00
-#
-#   If printer in use (bit 1 of FLAGS set):
-#     [P_POSN_X] = x1
-#     [PR_CC] = printer_buffer + 109 - x1
-#     x2 = printer_buffer + 109 - x1
-#     w3 = [FLAGS]
+// ------------------------------------------------------------------------------
+// Set line and column numbers
+// Calculate the character output address for screens or printer based on the
+// line/column for screens for current K/S/P channel.
+// ------------------------------------------------------------------------------
+// On entry:
+//   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+//     for K: x0 = 120 - [DF_SZ] - actual screen row (x0 range: 1 -> 60)
+//     for S: x0 = 60 - actual screen row (x0 range: 1 -> 60)
+//     for P: x0 not used since printer buffer is a single line, so no Y coordinate
+//   w1 = 109 - actual column
+//     from 109 (leftmost column) to 2 (rightmost column) or 1 indicates entire
+//     line printed, but no explicit carriage return (so lines needn't be
+//     scrolled, and backspace still possible on printer).
+// On exit:
+//   If upper screen in use (bit 1 of FLAGS clear and bit 0 of TV_FLAG clear):
+//     [S_POSN_Y] = x0
+//     [S_POSN_X] = x1
+//     [DF_CC] = display_file + 2*(109-x1) + ((60-x0)/20)*216*16*20 + 216*((60-x0)%20)
+//     x2 = display_file + 2*(109-x1) + ((60-x0)/20)*216*16*20 + 216*((60-x0)%20)
+//     w3 = [TV_FLAG]
+//     w4 = (60-x0)%20
+//     w5 = 216
+//     w6 = 0x10e00
+//
+//   If lower screen in use (bit 1 of FLAGS clear and bit 0 of TV_FLAG set):
+//     [S_POSN_Y_L] = x0
+//     [S_POSN_X_L] = x1
+//     [ECHO_E_Y] = x0
+//     [ECHO_E_X] = x1
+//     [DF_CC_L] = display_file + 2*(109-x1) + ((120-x0-[DF_SZ])/20)*216*16*20 + 216*((120-x0-[DF_SZ])%20)
+//     x2 = display_file + 2*(109-x1) + ((120-x0-[DF_SZ])/20)*216*16*20 + 216*((120-x0-[DF_SZ])%20)
+//     w3 = [TV_FLAG]
+//     w4 = (120-x0-[DF_SZ])%20
+//     w5 = 216
+//     w6 = 0x10e00
+//
+//   If printer in use (bit 1 of FLAGS set):
+//     [P_POSN_X] = x1
+//     [PR_CC] = printer_buffer + 109 - x1
+//     x2 = printer_buffer + 109 - x1
+//     w3 = [FLAGS]
 cl_set:                                  // L0DD9
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

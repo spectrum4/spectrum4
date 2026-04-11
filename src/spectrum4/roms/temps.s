@@ -1,31 +1,31 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# ----------------------
-# Temporary colour items
-# ----------------------
-# This subroutine copies the permanent colour items to the temporary ones.
-#
-# On entry:
-# On exit:
-#
-#   If Channel K (bit 0 of TV_FLAG is set):
-#     [ATTR_T] = [BORDCR]
-#     [MASK_T] = 0
-#     [P_FLAG] : temp bits set to zero
-#     w0 = new [P_FLAG]
-#     w1 = [BORDCR]
-#
-#   If Channel S (bit 0 of TV_FLAG is clear):
-#     [ATTR_T] = [ATTR_P]
-#     [MASK_T] = [MASK_P]
-#     [P_FLAG] : perm copied to temp bits
-#     w0 = new [P_FLAG]
-#     w1 = ([MASK_P] << 8) | [ATTR_P]
-#     w2 = [P_FLAG] with temp bits copied from perm bits; perm bits cleared
+// ------------------------------------------------------------------------------
+// Temporary colour items
+// This subroutine copies the permanent colour items to the temporary ones.
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   If Channel K (bit 0 of TV_FLAG is set):
+//     [ATTR_T] = [BORDCR]
+//     [MASK_T] = 0
+//     [P_FLAG] : temp bits set to zero
+//     w0 = new [P_FLAG]
+//     w1 = [BORDCR]
+//
+//   If Channel S (bit 0 of TV_FLAG is clear):
+//     [ATTR_T] = [ATTR_P]
+//     [MASK_T] = [MASK_P]
+//     [P_FLAG] : perm copied to temp bits
+//     w0 = new [P_FLAG]
+//     w1 = ([MASK_P] << 8) | [ATTR_P]
+//     w2 = [P_FLAG] with temp bits copied from perm bits; perm bits cleared
 temps:                                   // L0D4D
   ldrb    w0, [x28, P_FLAG-sysvars]               // w0 = [P_FLAG]
   and     w0, w0, 0xaaaaaaaa                      // w0 = [P_FLAG] with temp bits cleared, perm bits unaltered

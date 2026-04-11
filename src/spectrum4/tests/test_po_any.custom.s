@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -36,6 +36,7 @@
   .include "temps.s"
   .include "tkn_table.s"
 .endif
+
 
 .text
 
@@ -75,6 +76,7 @@ po_any_G_81_setup:
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
+
 .align 2
 po_any_G_81_setup_regs:
   mov     w0, 60-11-0*20
@@ -83,6 +85,7 @@ po_any_G_81_setup_regs:
   mov     w1, 109-9
   mov     w3, 0x81
   ret
+
 
 .align 2
 po_any_G_81_effects:
@@ -116,6 +119,7 @@ po_any_G_81_effects:
   bl      po_attr
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
+
 
 .align 2
 po_any_G_81_effects_regs:

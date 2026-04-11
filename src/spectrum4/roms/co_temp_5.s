@@ -1,46 +1,53 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
 
-# -------------------------------------------------------------------------
-#
-#         {fl}{br}{   paper   }{  ink    }    The temporary colour attributes
-#          ___ ___ ___ ___ ___ ___ ___ ___    system variable.
-# ATTR_T  |   |   |   |   |   |   |   |   |
-#         |   |   |   |   |   |   |   |   |
-#         |___|___|___|___|___|___|___|___|
-#           7   6   5   4   3   2   1   0
-#
-#
-#         {fl}{br}{   paper   }{  ink    }    The temporary mask used for
-#          ___ ___ ___ ___ ___ ___ ___ ___    transparent colours. Any bit
-# MASK_T  |   |   |   |   |   |   |   |   |   that is 1 shows that the
-#         |   |   |   |   |   |   |   |   |   corresponding attribute is
-#         |___|___|___|___|___|___|___|___|   taken not from ATTR-T but from
-#           7   6   5   4   3   2   1   0     what is already on the screen.
-#
-#
-#         {paper9 }{ ink9 }{ inv1 }{ over1}   The print flags. Even bits are
-#          ___ ___ ___ ___ ___ ___ ___ ___    temporary flags. The odd bits
-# P_FLAG  |   |   |   |   |   |   |   |   |   are the permanent flags.
-#         | p | t | p | t | p | t | p | t |
-#         |___|___|___|___|___|___|___|___|
-#           7   6   5   4   3   2   1   0
-#
-# -----------------------------------------------------------------------
 
-# ------------------------------------
-#  The colour system variable handler.
-# ------------------------------------
-# This is an exit branch from PO-1-OPER, PO-2-OPER
-# w5 holds control character 0x10 (INK) to 0x15 (OVER)
-# w0 holds legal/illegal parameter. Legal values are:
-#   0-9 for ink/paper
-#   0,1 or 8 for bright/flash,
-#   0 or 1 for over/inverse.
+// -------------------------------------------------------------------------
+//
+//         {fl}{br}{   paper   }{  ink    }    The temporary colour attributes
+//          ___ ___ ___ ___ ___ ___ ___ ___    system variable.
+// ATTR_T  |   |   |   |   |   |   |   |   |
+//         |   |   |   |   |   |   |   |   |
+//         |___|___|___|___|___|___|___|___|
+//           7   6   5   4   3   2   1   0
+//
+//
+//         {fl}{br}{   paper   }{  ink    }    The temporary mask used for
+//          ___ ___ ___ ___ ___ ___ ___ ___    transparent colours. Any bit
+// MASK_T  |   |   |   |   |   |   |   |   |   that is 1 shows that the
+//         |   |   |   |   |   |   |   |   |   corresponding attribute is
+//         |___|___|___|___|___|___|___|___|   taken not from ATTR-T but from
+//           7   6   5   4   3   2   1   0     what is already on the screen.
+//
+//
+//         {paper9 }{ ink9 }{ inv1 }{ over1}   The print flags. Even bits are
+//          ___ ___ ___ ___ ___ ___ ___ ___    temporary flags. The odd bits
+// P_FLAG  |   |   |   |   |   |   |   |   |   are the permanent flags.
+//         | p | t | p | t | p | t | p | t |
+//         |___|___|___|___|___|___|___|___|
+//           7   6   5   4   3   2   1   0
+//
+// -----------------------------------------------------------------------
+
+
+// ------------------------------------------------------------------------------
+//  The colour system variable handler.
+// This is an exit branch from PO-1-OPER, PO-2-OPER
+// w5 holds control character 0x10 (INK) to 0x15 (OVER)
+// w0 holds legal/illegal parameter. Legal values are:
+//   0-9 for ink/paper
+//   0,1 or 8 for bright/flash,
+//   0 or 1 for over/inverse.
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 co_temp_5:                               // L2211
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -162,5 +169,13 @@ co_temp_5:                               // L2211
   orr     w3, w3, w1
   b       11b
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 report_k:                                // L2244
   ret

@@ -1,17 +1,22 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# -----------------------
-# Just one space required
-# -----------------------
-# This routine is called once only to create a single space
-# in workspace by ADD-CHAR. It is slightly quicker than using a RST 30H.
-# There are several instances in the calculator where the sequence
-# ld bc, 1; rst $30 could be replaced by a call to this routine but it
-# only gives a saving of one byte each time.
+// ------------------------------------------------------------------------------
+// Just one space required
+// This routine is called once only to create a single space
+// in workspace by ADD-CHAR. It is slightly quicker than using a RST 30H.
+// There are several instances in the calculator where the sequence
+// ld bc, 1; rst 0x30 could be replaced by a call to this routine but it
+// only gives a saving of one byte each time.
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 one_space:                               // L1652
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

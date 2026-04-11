@@ -1,17 +1,26 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 
-# ------------------------
-# Display Menu
-# ------------------------
-#
-# On entry:
-#   w1 = menu row number (0 based, 0 = top row)
-# On exit:
+
+// ------------------------
+// Display Menu
+// ------------------------
+//
+// On entry:
+//   w1 = menu row number (0 based, 0 = top row)
+// On exit:
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 toggle_menu_highlight:                   // L37CA
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

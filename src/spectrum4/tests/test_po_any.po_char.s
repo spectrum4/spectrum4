@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -42,12 +42,14 @@
 .set po_any1_screenthird, 2
 .set po_any1_yoffset, 3
 
+
 .set po_any1_dfaddr, display_file + 216*20*16*po_any1_screenthird + po_any1_yoffset*216 + po_any1_x*2
 .set po_any1_afaddr, attributes_file + 108*20*po_any1_screenthird + po_any1_yoffset*108 + po_any1_x
 
 
 .text
 .align 2
+
 
 po_any_1_setup:
   _str    char_set-32*32, CHARS
@@ -87,6 +89,7 @@ po_any_1_setup:
                                                   //   INK 6
   ret
 
+
 po_any_1_setup_regs:
   mov     w0, (60-20*po_any1_screenthird-po_any1_yoffset)
   mov     w1, (109-po_any1_x)
@@ -109,6 +112,7 @@ po_any_1_setup_regs:
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
   ret
+
 
 po_any_1_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -154,6 +158,7 @@ po_any_1_effects:
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
+
 po_any_1_effects_regs:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -173,8 +178,10 @@ po_any_1_effects_regs:
 .set po_any2_screenthird, 2
 .set po_any2_yoffset, 3
 
+
 .set po_any2_dfaddr, display_file + 216*20*16*po_any2_screenthird + po_any2_yoffset*216 + po_any2_x*2
 .set po_any2_afaddr, attributes_file + 108*20*po_any2_screenthird + po_any2_yoffset*108 + po_any2_x
+
 
 po_any_space_end_of_line_setup:
   _str    char_set-32*32, CHARS
@@ -196,12 +203,14 @@ po_any_space_end_of_line_setup:
                                                   //   INK 6
   ret
 
+
 po_any_space_end_of_line_setup_regs:
   mov     w0, (60-20*po_any2_screenthird-po_any2_yoffset)
   mov     w1, (109-po_any2_x)
   ldr     x2, =po_any2_dfaddr
   mov     w3, ' '
   ret
+
 
 po_any_space_end_of_line_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -214,6 +223,7 @@ po_any_space_end_of_line_effects:
   bl      po_attr
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
+
 
 po_any_space_end_of_line_effects_regs:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.

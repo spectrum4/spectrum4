@@ -1,6 +1,7 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .if ROMS_INCLUDE
 .else
@@ -63,10 +64,18 @@
   .include "tkn_table.s"
 .endif
 
+
 .text
 .align 2
 
-# Copy default STRMS and CHANS to heap
+
+// ------------------------------------------------------------------------------
+// Copy default STRMS and CHANS to heap
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 test_chan_open_init:
   add     x5, x28, STRMS-sysvars
   mov     x6, (initial_stream_data_END - initial_stream_data)/2
@@ -90,18 +99,20 @@ test_chan_open_init:
   ret
 
 
-
 chan_open_minus_01_setup:
   b       test_chan_open_init
+
 
 chan_open_minus_01_setup_regs:
   mov     x0, #-1
   ret
 
+
 chan_open_minus_01_effects:
   _str    heap + 0x18*2, CURCHL                   //  Current channel is 'R'
   _resbit 4, FLAGS2                               //  K channel not in use
   ret
+
 
 chan_open_minus_01_effects_regs:
   mov     x0, 'R'
@@ -112,15 +123,16 @@ chan_open_minus_01_effects_regs:
   ret
 
 
-
 chan_open_00_setup:
   _strb   0x03, BORDCR
   _strb   0b10100110, P_FLAG
   b       test_chan_open_init
 
+
 chan_open_00_setup_regs:
   mov     x0, #0x00
   ret
+
 
 chan_open_00_effects:
   _str    heap, CURCHL                            // Current channel is keyboard
@@ -133,6 +145,7 @@ chan_open_00_effects:
   _strb   0b10100010, P_FLAG                      // even (temp) bits cleared
   ret
 
+
 chan_open_00_effects_regs:
   mov     x0, 0b10100010                          // [P_FLAG]
   mov     x1, 0x03                                // [BORDCR]
@@ -143,15 +156,16 @@ chan_open_00_effects_regs:
   ret
 
 
-
 chan_open_01_setup:
   _strb   0x03, BORDCR
   _strb   0b10100110, P_FLAG
   b       test_chan_open_init
 
+
 chan_open_01_setup_regs:
   mov     x0, #0x01
   ret
+
 
 chan_open_01_effects:
   _str    heap, CURCHL                            // Current channel is keyboard
@@ -164,6 +178,7 @@ chan_open_01_effects:
   _strb   0b10100010, P_FLAG
   ret
 
+
 chan_open_01_effects_regs:
   mov     x0, 0b10100010                          // [P_FLAG]
   mov     x1, 0x03                                // [BORDCR]
@@ -174,16 +189,17 @@ chan_open_01_effects_regs:
   ret
 
 
-
 chan_open_02_setup:
   _strb   0b10100010, P_FLAG
   _strb   0x57, ATTR_P
   _strb   0x23, MASK_P
   b       test_chan_open_init
 
+
 chan_open_02_setup_regs:
   mov     x0, #0x02
   ret
+
 
 chan_open_02_effects:
   _str    heap + 0x18*1, CURCHL                   // Current channel is screen
@@ -195,6 +211,7 @@ chan_open_02_effects:
   _strb   0b11110011, P_FLAG                      // Perm bits copied to temp bits
   ret
 
+
 chan_open_02_effects_regs:
   mov     x0, 0b11110011                          // [P_FLAG]
   mov     x1, 0x2357                              // ([MASK_P] << 8) | [ATTR_P]
@@ -205,19 +222,21 @@ chan_open_02_effects_regs:
   ret
 
 
-
 chan_open_03_setup:
   b       test_chan_open_init
+
 
 chan_open_03_setup_regs:
   mov     x0, #0x03
   ret
+
 
 chan_open_03_effects:
   _str    heap + 0x18*3, CURCHL                   // Current channel is printer
   _setbit 1, FLAGS                                // Printer in use
   _resbit 4, FLAGS2                               // K channel not in use
   ret
+
 
 chan_open_03_effects_regs:
   ldrb    w0, [x28, FLAGS-sysvars]

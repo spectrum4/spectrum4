@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -8,16 +8,19 @@
   .include "tkn_table.s"
 .endif
 
+
 .text
 .align 2
 
 
-# po_search_1 calls po_search with a custom search table to retrieve the 5th item.
+// po_search_1 calls po_search with a custom search table to retrieve the 5th item.
+
 
 po_search_1_setup_regs:
   mov     x3, #0x3
   adr     x4, test_message_table
   ret
+
 
 po_search_1_effects_regs:
   mov     x0, #0                                  // x0 = first char of result if w3 >= 0x20; otherwise 0
@@ -27,12 +30,14 @@ po_search_1_effects_regs:
   ret
 
 
-# po_search_2 tests case w3 >= 0x20 && first char < 'A'
+// po_search_2 tests case w3 >= 0x20 && first char < 'A'
+
 
 po_search_2_setup_regs:
   mov     x3, #0x22
   adr     x4, tkn_table
   ret
+
 
 po_search_2_effects_regs:
   mov     x0, '<'                                 // x0 = first char of result if w3 >= 0x20; otherwise 0
@@ -42,12 +47,14 @@ po_search_2_effects_regs:
   ret
 
 
-# po_search_3 tests case w3 >= 0x20 and first char > 'A'
+// po_search_3 tests case w3 >= 0x20 and first char > 'A'
+
 
 po_search_3_setup_regs:
   mov     x3, #0x20
   adr     x4, tkn_table
   ret
+
 
 po_search_3_effects_regs:
   mov     x0, 'O'                                 // x0 = first char of result if w3 >= 0x20; otherwise 0
@@ -57,12 +64,14 @@ po_search_3_effects_regs:
   ret
 
 
-# po_search_4 tests retrieving very last entry in table
+// po_search_4 tests retrieving very last entry in table
+
 
 po_search_4_setup_regs:
   mov     x3, #0x5a
   adr     x4, tkn_table
   ret
+
 
 po_search_4_effects_regs:
   mov     x0, 'C'                                 // x0 = first char of result if w3 >= 0x20; otherwise 0
@@ -72,12 +81,14 @@ po_search_4_effects_regs:
   ret
 
 
-# po_search_5 tests retreiving first entry (excluding step-over token, of course)
+// po_search_5 tests retreiving first entry (excluding step-over token, of course)
+
 
 po_search_5_setup_regs:
   mov     x3, #0x0
   adr     x4, tkn_table
   ret
+
 
 po_search_5_effects_regs:
   mov     x0, #0                                  // x0 = first char of result if w3 >= 0x20; otherwise 0
@@ -87,12 +98,14 @@ po_search_5_effects_regs:
   ret
 
 
-# po_search_6 tests case w3 >= 0x20 and first char == 'A'
+// po_search_6 tests case w3 >= 0x20 and first char == 'A'
+
 
 po_search_6_setup_regs:
   mov     x3, #0x21
   adr     x4, tkn_table
   ret
+
 
 po_search_6_effects_regs:
   mov     x0, 'A'                                 // x0 = first char of result if w3 >= 0x20; otherwise 0

@@ -1,19 +1,21 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# -----------------------
-# Perform carriage return
-# -----------------------
-# A carriage return is 'printed' to screen or printer buffer.
-#
-# On entry:
-#   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
-#   w1 = (109 - column), or 1 for end-of-line
-#   x2 = address in display file / printer buffer
-#   w3 = 0x0d (chr 13)
+// ------------------------------------------------------------------------------
+// Perform carriage return
+// A carriage return is 'printed' to screen or printer buffer.
+// ------------------------------------------------------------------------------
+// On entry:
+//   w0 = 60 - line offset into section (60 = top line of S/K, 59 = second line, etc)
+//   w1 = (109 - column), or 1 for end-of-line
+//   x2 = address in display file / printer buffer
+//   w3 = 0x0d (chr 13)
+// On exit:
+//   TODO
 po_enter:                                // L0A4F
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

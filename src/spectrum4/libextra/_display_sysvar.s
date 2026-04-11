@@ -1,38 +1,46 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 
 
-# Logs sysvar to UART. No leading/trailing whitespace.
-#
-# Examples:
-#   [0x000000000003b871] WIDTH: 0x50
-#   [0x000000000003b890] RNFIRST: 0x000a
-#   [0x000000000003b8c8] SFNEXT: 0x0000000000170a10
-#   [0x000000000003b894] STRMS: 01 00 19 00 31 00 01 00 01 00 19 00 49 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-#
-# On entry:
-#   x20: address of sysvar metadata (sysvar_XXXXXX label)
-#   x28: address of sysvars
-# On exit:
-#   x0 =
-#     1 byte sysvar: stack pointer - 61
-#     2 byte sysvar: stack pointer - 59
-#     4 byte sysvar: stack pointer - 55
-#     8 byte sysvar: stack pointer - 47
-#         otherwise: stack pointer - 60
-#   x1 = [aux_base]
-#   x2 = 0
-#   x3 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals)
-#   x4 =
-#     1/2/4/8 byte sysvar: sysvar value
-#               otherwise: unchanged
-#   NZCV =
-#     1/2/4/8 byte sysvar: 0b1000
-#               otherwise: 0b0110
+// Logs sysvar to UART. No leading/trailing whitespace.
+//
+// Examples:
+//   [0x000000000003b871] WIDTH: 0x50
+//   [0x000000000003b890] RNFIRST: 0x000a
+//   [0x000000000003b8c8] SFNEXT: 0x0000000000170a10
+//   [0x000000000003b894] STRMS: 01 00 19 00 31 00 01 00 01 00 19 00 49 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+//
+// On entry:
+//   x20: address of sysvar metadata (sysvar_XXXXXX label)
+//   x28: address of sysvars
+// On exit:
+//   x0 =
+//     1 byte sysvar: stack pointer - 61
+//     2 byte sysvar: stack pointer - 59
+//     4 byte sysvar: stack pointer - 55
+//     8 byte sysvar: stack pointer - 47
+//         otherwise: stack pointer - 60
+//   x1 = [aux_base]
+//   x2 = 0
+//   x3 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals)
+//   x4 =
+//     1/2/4/8 byte sysvar: sysvar value
+//               otherwise: unchanged
+//   NZCV =
+//     1/2/4/8 byte sysvar: 0b1000
+//               otherwise: 0b0110
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 display_sysvar:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -60,6 +68,13 @@ display_sysvar:
   ret
 
 
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 display_sysvar_value:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -120,5 +135,7 @@ display_sysvar_value:
   ret
 
 
-msg_title_sysvars:             .asciz "System Variables\r\n================\r\n"
-msg_0x:                        .asciz "0x"
+msg_title_sysvars:
+  .asciz "System Variables\r\n================\r\n"
+msg_0x:
+  .asciz "0x"

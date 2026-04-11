@@ -1,20 +1,20 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# ---------------------------
-# Clear text lines of display
-# ---------------------------
-# This subroutine, called from cl_all, cls_lower and auto_list and above,
-# clears text lines at bottom of display.
-#
-# On entry:
-#   x0 = number of lines to be cleared (1-60)
-# On exit:
-#   x0/x1/x2/x3/x4/x5/x6 corrupted
-#   plus whatever poke_address also corrupts
+// ------------------------------------------------------------------------------
+// Clear text lines of display
+// This subroutine, called from cl_all, cls_lower and auto_list and above,
+// clears text lines at bottom of display.
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = number of lines to be cleared (1-60)
+// On exit:
+//   x0/x1/x2/x3/x4/x5/x6 corrupted
+//   plus whatever poke_address also corrupts
 cl_line:                                 // L0E44
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -34,7 +34,7 @@ cl_line:                                 // L0E44
   umsubl  x19, w4, w5, x6                         // x19 = number of lines in top screen third * 216 = byte count for one pixel row across first screen third
   umull   x20, w0, w5                             // x20 = 216 * line count
   mov     x22, x3                                 // x22 = top screen section (0/1/2)
-#
+//
   // counters
   mov     x26, x2                                 // x26 = address of first pixel in first section of current pixel row
   mov     w23, #16                                // x23 = number of remaining pixel lines to clear (0-15)

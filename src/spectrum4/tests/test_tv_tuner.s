@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -66,6 +66,7 @@
   .include "tkn_table.s"
 .endif
 
+
 .text
 .align 2
 
@@ -99,9 +100,10 @@ tv_tuner_01_setup:
     add     x0, x0, #0x01
     cmp     x0, x2
     b.ne    2b
-# _strb   DUMP_DISPLAY, sp4_test_flags            // Dump display updates to test log
+// _strb   DUMP_DISPLAY, sp4_test_flags            // Dump display updates to test log
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
+
 
 tv_tuner_01_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -139,6 +141,7 @@ tv_tuner_01_effects:
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
+
 tv_tuner_01_effects_regs:
   adrp    x0, attributes_file_end - 20*108 - 2
   add     x0, x0, :lo12:(attributes_file_end - 20*108 - 2)
@@ -170,6 +173,7 @@ tv_tuner_01_effects_regs:
   mov     x21, x20
   nzcv    0b0110
   ret
+
 
 .align 3
 tv_tuner_fake_chans:

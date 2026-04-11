@@ -1,41 +1,41 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# ------------------------------------------------------
-# Print message and possibly a leading/trailing space(s)
-# ------------------------------------------------------
-#
-# Prints leading space if bit 0 of FLAGS clear and carry flag set.
-# Prints trailing space if w5 >= 0x03 and (last char >= 'A' or last char == '$').
-#
-# On entry:
-#   x4 = address of zero-terminated string to print
-#   w5 = trailing space indicator:
-#     w5 < 0x03 => no trailing space
-#     w5 >= 0x03 => trailing space if last char >= 'A' or last char == '$'
-#   x28 = sysvars
-#   bit 0 of FLAGS clear and carry flag set if leading space required
-#   [[CURCHL]] = print routine to call
-#   ... any settings that routine at [[CURCHL]] requires ...
-# On exit:
-#   x0 =
-#     if w5 >= 3 and (last char >= 'A' or last char == '$')
-#       ' '
-#     else:
-#       0x0
-#   x1 = [[CURCHL]]
-#   x4 = first address after zero-terminated string
-#   x6 = last char of keyword (not including the trailing zero byte)
-#   NZCV =
-#     if w5 > 3 and (last char >= 'A' or last char == '$'):
-#       0b0010
-#     for w5 == 0x03 and (last char >= 'A' or last char == '$'):
-#       0b0110
-#     else:
-#       0b1000
+// ------------------------------------------------------------------------------
+// Print message and possibly a leading/trailing space(s)
+//
+// Prints leading space if bit 0 of FLAGS clear and carry flag set.
+// Prints trailing space if w5 >= 0x03 and (last char >= 'A' or last char == '$').
+// ------------------------------------------------------------------------------
+// On entry:
+//   x4 = address of zero-terminated string to print
+//   w5 = trailing space indicator:
+//     w5 < 0x03 => no trailing space
+//     w5 >= 0x03 => trailing space if last char >= 'A' or last char == '$'
+//   x28 = sysvars
+//   bit 0 of FLAGS clear and carry flag set if leading space required
+//   [[CURCHL]] = print routine to call
+//   ... any settings that routine at [[CURCHL]] requires ...
+// On exit:
+//   x0 =
+//     if w5 >= 3 and (last char >= 'A' or last char == '$')
+//       ' '
+//     else:
+//       0x0
+//   x1 = [[CURCHL]]
+//   x4 = first address after zero-terminated string
+//   x6 = last char of keyword (not including the trailing zero byte)
+//   NZCV =
+//     if w5 > 3 and (last char >= 'A' or last char == '$'):
+//       0b0010
+//     for w5 == 0x03 and (last char >= 'A' or last char == '$'):
+//       0b0110
+//     else:
+//       0b1000
 po_table_1:                              // L0C17
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -34,12 +34,14 @@
 .set rejoin_po_t_udg_1_screenthird, 2
 .set rejoin_po_t_udg_1_yoffset, 3
 
+
 .set rejoin_po_t_udg_1_dfaddr, display_file + 216*20*16*rejoin_po_t_udg_1_screenthird + rejoin_po_t_udg_1_yoffset*216 + rejoin_po_t_udg_1_x*2
 .set rejoin_po_t_udg_1_afaddr, attributes_file + 108*20*rejoin_po_t_udg_1_screenthird + rejoin_po_t_udg_1_yoffset*108 + rejoin_po_t_udg_1_x
 
 
 .text
 .align 2
+
 
 rejoin_po_t_udg_1_setup:
   _str    char_set+('f'-' ')*32, UDG
@@ -79,6 +81,7 @@ rejoin_po_t_udg_1_setup:
                                                   //   INK 6
   ret
 
+
 rejoin_po_t_udg_1_setup_regs:
   mov     w0, (60-20*rejoin_po_t_udg_1_screenthird-rejoin_po_t_udg_1_yoffset)
   mov     w1, (109-rejoin_po_t_udg_1_x)
@@ -101,6 +104,7 @@ rejoin_po_t_udg_1_setup_regs:
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
   ret
+
 
 rejoin_po_t_udg_1_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -145,6 +149,7 @@ rejoin_po_t_udg_1_effects:
   bl      po_attr
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
+
 
 rejoin_po_t_udg_1_effects_regs:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.

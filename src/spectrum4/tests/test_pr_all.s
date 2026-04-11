@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -35,8 +35,10 @@
 .set pr_all1_screenthird, 2
 .set pr_all1_yoffset, 3
 
+
 .set pr_all1_dfaddr, display_file + 216*20*16*pr_all1_screenthird + pr_all1_yoffset*216 + pr_all1_x*2
 .set pr_all1_afaddr, attributes_file + 108*20*pr_all1_screenthird + pr_all1_yoffset*108 + pr_all1_x
+
 
 pr_all_upperscreen_paper9_over1_setup:
   _resbit 1, FLAGS
@@ -75,6 +77,7 @@ pr_all_upperscreen_paper9_over1_setup:
                                                   //   INK 6
   ret
 
+
 pr_all_upperscreen_paper9_over1_setup_regs:
   mov     w0, (60-20*pr_all1_screenthird-pr_all1_yoffset)
   mov     w1, (109-pr_all1_x)
@@ -98,6 +101,7 @@ pr_all_upperscreen_paper9_over1_setup_regs:
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
   ret
+
 
 pr_all_upperscreen_paper9_over1_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -142,6 +146,7 @@ pr_all_upperscreen_paper9_over1_effects:
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
+
 pr_all_upperscreen_paper9_over1_effects_regs:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -160,8 +165,10 @@ pr_all_upperscreen_paper9_over1_effects_regs:
 .set pr_all2_screenthird, 2
 .set pr_all2_yoffset, 19
 
+
 .set pr_all2_dfaddr, display_file + 216*20*16*pr_all2_screenthird + pr_all2_yoffset*216 + pr_all2_x*2
 .set pr_all2_afaddr, attributes_file + 108*20*pr_all2_screenthird + pr_all2_yoffset*108 + pr_all2_x
+
 
 pr_all_lowerscreen_ink9_inverse1_setup:
   _resbit 1, FLAGS
@@ -192,6 +199,7 @@ pr_all_lowerscreen_ink9_inverse1_setup:
   _strb   0b00101011, pr_all2_afaddr              // Attributes file
   ret
 
+
 pr_all_lowerscreen_ink9_inverse1_setup_regs:
   mov     w0, (120-8-20*pr_all2_screenthird-pr_all2_yoffset)
   mov     w1, (109-pr_all2_x)
@@ -215,6 +223,7 @@ pr_all_lowerscreen_ink9_inverse1_setup_regs:
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
   ret
+
 
 pr_all_lowerscreen_ink9_inverse1_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -243,6 +252,7 @@ pr_all_lowerscreen_ink9_inverse1_effects:
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
+
 pr_all_lowerscreen_ink9_inverse1_effects_regs:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -261,8 +271,10 @@ pr_all_lowerscreen_ink9_inverse1_effects_regs:
 .set pr_all3_screenthird, 2
 .set pr_all3_yoffset, 18
 
+
 .set pr_all3_dfaddr, display_file + 216*20*16*pr_all3_screenthird + pr_all3_yoffset*216 + pr_all3_x*2
 .set pr_all3_afaddr, attributes_file + 108*20*pr_all3_screenthird + pr_all3_yoffset*108 + pr_all3_x
+
 
 pr_all_lowerscreen_inverse1_over1_endofline_setup:
   _resbit 1, FLAGS
@@ -295,6 +307,7 @@ pr_all_lowerscreen_inverse1_over1_endofline_setup:
   _strhbe 0b1010101010101010, pr_all3_dfaddr+20*216*15
   ret
 
+
 pr_all_lowerscreen_inverse1_over1_endofline_setup_regs:
   mov     w0, (120-2-20*pr_all3_screenthird-pr_all3_yoffset)
   mov     w1, (109-pr_all3_x)
@@ -318,6 +331,7 @@ pr_all_lowerscreen_inverse1_over1_endofline_setup_regs:
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
   ret
+
 
 pr_all_lowerscreen_inverse1_over1_endofline_effects:
                                                   // Display file
@@ -475,6 +489,7 @@ pr_all_lowerscreen_inverse1_over1_endofline_effects:
   _strb   59, ECHO_E_Y
   _str    pr_all3_dfaddr, DF_CC_L
   ret
+
 
 pr_all_lowerscreen_inverse1_over1_endofline_effects_regs:
   sub     x0, x0, #1

@@ -1,10 +1,17 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# Entry point for NEW (with interrupts disabled when running in bare metal since this routine will enable interrupts)
+// ------------------------------------------------------------------------------
+// Entry point for NEW (with interrupts disabled when running in bare metal since this routine will enable interrupts)
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 new:                                     // L019D
   adrp    x0, char_set - 0x20 * 0x20
   add     x0, x0, :lo12:(char_set - 0x20 * 0x20)  // x0 = where, in theory character zero would be.
@@ -29,8 +36,9 @@ new:                                     // L019D
   blr     x0
 9:
 
+
 .if UART_DEBUG
-# RPi version logging
+// RPi version logging
   adr     x0, msg_rpi_model
   bl      uart_puts
   ldr     w0, rpi_model
@@ -55,7 +63,8 @@ new:                                     // L019D
   bl      uart_x0
   bl      uart_newline
 
-# Register logging
+
+// Register logging
   logarm  AIDR_EL1
   logarm  CCSIDR_EL1
   logarm  CLIDR_EL1
@@ -103,30 +112,33 @@ new:                                     // L019D
   logarm  TTBR0_EL1
   logarm  TTBR1_EL1
 
-# PCIe status logging
 
-# PCIe revision: 0x0000000000000304
-# PCIe link is ready
-# PCIe status register: 0x00000000000000b0
-# PCIe loop iterations: 0x000000000000002e
-# PCIe class code (initial): 0x0000000020060400
-# PCIe class code (updated): 0x0000000020060400
-# SSC configuration stage / link capabilities: 0x0000000090120006
-# SSC status register: 0x0000000080001c17
-# VID/DID: 0x00000000000014e4/0x0000000000002711
-# Header type: 0x0000000000000001
+// PCIe status logging
 
-#   [heap+0x00]: last read status register
-#   [heap+0x04]: number of iterations of 1ms reading status register
-#   [heap+0x08]: initial class code
-#   [heap+0x0c]: updated class code
-#   [heap+0x10]: SSC configuration steps successfully completed (0-6)
-#   [heap+0x12]: link capabilities
-#   [heap+0x14]: revision number
-#   [heap+0x18]: vid
-#   [heap+0x1a]: did
-#   [heap+0x1c]: header type
-#   [heap+0x20]: SSC status register
+
+// PCIe revision: 0x0000000000000304
+// PCIe link is ready
+// PCIe status register: 0x00000000000000b0
+// PCIe loop iterations: 0x000000000000002e
+// PCIe class code (initial): 0x0000000020060400
+// PCIe class code (updated): 0x0000000020060400
+// SSC configuration stage / link capabilities: 0x0000000090120006
+// SSC status register: 0x0000000080001c17
+// VID/DID: 0x00000000000014e4/0x0000000000002711
+// Header type: 0x0000000000000001
+
+
+//   [heap+0x00]: last read status register
+//   [heap+0x04]: number of iterations of 1ms reading status register
+//   [heap+0x08]: initial class code
+//   [heap+0x0c]: updated class code
+//   [heap+0x10]: SSC configuration steps successfully completed (0-6)
+//   [heap+0x12]: link capabilities
+//   [heap+0x14]: revision number
+//   [heap+0x18]: vid
+//   [heap+0x1a]: did
+//   [heap+0x1c]: header type
+//   [heap+0x20]: SSC status register
 
   ldr     x0, pcie_init
   cbz     x0, 4f                                  // skip PCIE logging if no pcie (e.g. rpi3b)
@@ -214,14 +226,14 @@ new:                                     // L019D
   orr     w1, w1, #0x10                           // w1 = [FLAGS] with bit 4 set.
                                                   // [This bit is unused by 48K BASIC].
   strb    w1, [x28, FLAGS-sysvars]                // Update [FLAGS] to have bit 4 set.
-  mov     w2, 0x000B                              // = 11; timing constant for 9600 baud. Maybe useful for UART?
-  strh    w2, [x28, BAUD-sysvars]                 // [BAUD] = 0x000B
-  strb    wzr, [x28, SERFL-sysvars]               // 0x5B61. Indicate no byte waiting in RS232 receive buffer.
-  strb    wzr, [x28, COL-sysvars]                 // 0x5B63. Set RS232 output column position to 0.
-  strb    wzr, [x28, TVPARS-sysvars]              // 0x5B65. Indicate no control code parameters expected.
+  mov     w2, 0x000b                              // = 11; timing constant for 9600 baud. Maybe useful for UART?
+  strh    w2, [x28, BAUD-sysvars]                 // [BAUD] = 0x000b
+  strb    wzr, [x28, SERFL-sysvars]               // 0x5b61. Indicate no byte waiting in RS232 receive buffer.
+  strb    wzr, [x28, COL-sysvars]                 // 0x5b63. Set RS232 output column position to 0.
+  strb    wzr, [x28, TVPARS-sysvars]              // 0x5b65. Indicate no control code parameters expected.
   mov     w3, 0x50                                // Default to a printer width of 80 columns.
-  strb    w3, [x28, WIDTH-sysvars]                // 0x5B64. Set RS232 printer output width.
-  mov     w4, 0x000A                              // Use 10 as the initial renumber line and increment.
+  strb    w3, [x28, WIDTH-sysvars]                // 0x5b64. Set RS232 printer output width.
+  mov     w4, 0x000a                              // Use 10 as the initial renumber line and increment.
   strh    w4, [x28, RNFIRST-sysvars]              // Store the initial line number when renumbering.
   strh    w4, [x28, RNSTEP-sysvars]               // Store the renumber line increment.
   adrp    x5, heap
@@ -244,7 +256,7 @@ new:                                     // L019D
   mov     w10, 0x80
   strb    w10, [x5], 1
   str     x5, [x28, E_LINE-sysvars]
-  mov     w11, 0x0D
+  mov     w11, 0x0d
   strb    w11, [x5], 1
   strb    w10, [x5], 1
   str     x5, [x28, WORKSP-sysvars]
@@ -260,8 +272,8 @@ new:                                     // L019D
   strh    w13, [x28, REPDEL-sysvars]              // REPDEL. Set the default values for key delay and key repeat.
 // Not translated the following instructions, since they may well need to work differently.
 // TODO: check this after implementing keyboard reading routines
-//   DEC  (IY-0x3A)     // Set KSTATE+0 to 0xFF.
-//   DEC  (IY-0x36)     // Set KSTATE+4 to 0xFF.
+//   DEC  (IY-0x3a)     // Set KSTATE+0 to 0xff.
+//   DEC  (IY-0x36)     // Set KSTATE+4 to 0xff.
   add     x5, x28, STRMS - sysvars
   mov     x6, (initial_stream_data_END - initial_stream_data)/2
                                                   // x6 = number of half words (2 bytes) in initial_stream_data block
@@ -281,7 +293,7 @@ new:                                     // L019D
   strb    w5, [x28, DF_SZ-sysvars]                // Set the lower screen size to two rows.
   bl      cls
 // TODO: Commented out, since this method doesn't return unless a key is pressed, and we don't have keypress routines yet...
-# bl      tv_tuner
+// bl      tv_tuner
   ldrb    w2, [x28, S_POSN_X_L-sysvars]
   sub     w2, w2, #0x28
   strb    w2, [x28, S_POSN_X_L-sysvars]
@@ -299,74 +311,94 @@ new:                                     // L019D
 // TODO: Check this - but I think swap stack routines aren't needed at all. On
 // the 128K, I believe the stack is in the RAM page that gets paged out, and so
 // it is forced to use separate stacks per RAM bank that gets paged in.
-# add     x0, x28, TSTACK-sysvars
-# str     x0, [x28, OLDSP-sysvars]
-# bl      swap_stack
+// add     x0, x28, TSTACK-sysvars
+// str     x0, [x28, OLDSP-sysvars]
+// bl      swap_stack
   mov     w0, #0x38
   strb    w0, [x28, EC11-sysvars]
   strb    w0, [x28, EC0F-sysvars]
   bl      init_mode
-# bl      swap_stack
+// bl      swap_stack
   b       main_menu
 
 
 .if UART_DEBUG
 
+
 msg_rpi_model:
   .asciz "Raspberry Pi model: "
+
 
 msg_rpi_revision:
   .asciz "Raspberry Pi revision: "
 
+
 msg_midr_el1:
   .asciz "Register MIDR_EL1 value: "
+
 
 msg_revidr_el1:
   .asciz "Register REVIDR_EL1 value: "
 
+
 msg_no_pcie:
   .asciz "No PCIe on this machine\r\n"
+
 
 msg_pcie_revision:
   .asciz "PCIe revision: "
 
+
 msg_pcie_status_register:
   .asciz "PCIe status register: "
+
 
 msg_pcie_loop_iterations:
   .asciz "PCIe loop iterations: "
 
+
 msg_pcie_not_ready:
   .asciz "ERROR: PCIe link not ready!\r\n"
+
 
 msg_pcie_not_in_rc_mode:
   .asciz "ERROR: PCIe link not in RC mode!\r\n"
 
+
 msg_pcie_link_ready:
   .asciz "PCIe link is ready\r\n"
+
 
 msg_class_code_initial:
   .asciz "PCIe class code (initial): "
 
+
 msg_class_code_updated:
   .asciz "PCIe class code (updated): "
+
 
 msg_ssc_config_state_link_capabilities:
   .asciz "SSC configuration stage / link capabilities: "
 
+
 msg_ssc_status:
   .asciz "SSC status register: "
+
 
 msg_vid_did:
   .asciz "VID/DID: "
 
+
 msg_header_type:
   .asciz "Header type: "
+
 
 msg_framebuffer_start:
   .asciz "Framebuffer start address: "
 
+
 msg_framebuffer_end:
   .asciz "Framebuffer end address: "
+
 
 .endif

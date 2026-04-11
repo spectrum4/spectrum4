@@ -1,28 +1,28 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .text
 .align 2
 
 
-# This test calls po_attr passing the address of a pixel from the display file (section 1,
-# line 5, column 4, pixel row 6). It first sets the current attribute of the character cell to
-# 0b01010101, and ATTR_T, MASK_T, P_FLAG to other interesting values.
+// This test calls po_attr passing the address of a pixel from the display file (section 1,
+// line 5, column 4, pixel row 6). It first sets the current attribute of the character cell to
+// 0b01010101, and ATTR_T, MASK_T, P_FLAG to other interesting values.
 
 
 po_attr_cjs_setup:
   _strb   0b10010101, ATTR_T                      // See http://www.breakintoprogstack.co.uk/computers/zx-spectrum/screen-memory-layout
                                                   // temp colours: FLASH 1; BRIGHT 0; PAPER 2; INK 5
-  # TODO - set screen attribute value to something more interesting than 0b01010101
+  // TODO - set screen attribute value to something more interesting than 0b01010101
   _strb   0b01010101, attributes_file + 1*108*20 + 5*108 + 4
                                                   // Current screen attributes are 0b01010101 => FLASH 0; BRIGHT 1; PAPER 2; INK 5
   _strb   0b01010110, MASK_T                      // Read attribute bits 1,2,4,6 from screen (0b01010101), and 0,3,5,7 from ATTR_T (0b10010101)
                                                   // => 0b11010101 => INK 5; PAPER 2; BRIGHT 1; FLASH 1
   _strb   0b10010111, P_FLAG                      // OVER 1; INVERSE 1; INK 9 (=> INK 7 since PAPER 2) => 0b11010111 = 0xd7
                                                   // => FLASH 1: BRIGHT 1: PAPER 2: INK 7
-  # CJ's Elephant Antics brick sprite
+  // CJ's Elephant Antics brick sprite
   _strhbe 0b0000000000000000, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x0*20*216
   _strhbe 0b0111111111111100, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x1*20*216
   _strhbe 0b1101101010000110, display_file + 1*216*20*16 + 5*216 + 4*2 + 0x2*20*216
@@ -183,7 +183,7 @@ po_attr_cjs_effects:
   ret
 
 
-# TODO: comment all of this!!!
+// TODO: comment all of this!!!
 po_attr_cjs_effects_regs:
 // section 1, line 5, character 4, plus 16 pixel row increments of 216*20
   adrp    x0, display_file + 1*216*16*20 + 5*216 + 4*2 + 16*216*20

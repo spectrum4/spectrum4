@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+; This file is part of the Spectrum +4 Project.
+; Licencing information can be found in the LICENCE file
+; (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 .text
 
@@ -11,15 +11,15 @@ cls_1_setup:
   _strb   0x38, BORDCR
   _strh   sysvars_48k_end, CHANS
 
-  ld      hl, init_chan                   ; address: init-chan in ROM.
+  ld      hl, init_chan                           ; address: init-chan in ROM.
   ld      de, sysvars_48k_end
-  ld      bc, 0x0015                      ; there are 21 bytes of initial data in ROM.
-  ldir                                    ; copy the bytes to RAM.
+  ld      bc, 0x0015                              ; there are 21 bytes of initial data in ROM.
+  ldir                                            ; copy the bytes to RAM.
 
-  ld      hl, init_strm                   ; set source to ROM Address: init-strm
-  ld      de, STRMS                       ; set destination to system variable STRM-FD
-  ld      bc, 0x000e                      ; copy the 14 bytes of initial 7 streams data
-  ldir                                    ; from ROM to RAM.
+  ld      hl, init_strm                           ; set source to ROM Address: init-strm
+  ld      de, STRMS                               ; set destination to system variable STRM-FD
+  ld      bc, 0x000e                              ; copy the 14 bytes of initial 7 streams data
+  ldir                                            ; from ROM to RAM.
 
   ret
 

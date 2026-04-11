@@ -1,24 +1,25 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# --------------
-# Channel S flag
-# --------------
-# Flag setting routine for upper screen channel ('S' channel).
-#
-# On entry:
-# On exit:
-#   [TV_FLAG] - clears bit 0 to signal main screen in use.
-#   [FLAGS] - clears bit 1 to signal printer not in use.
-#   [ATTR_T] = [ATTR_P]
-#   [MASK_T] = [MASK_P]
-#   [P_FLAG] = perm copied to temp bits
-#   w0 = new [P_FLAG]
-#   w1 = ([MASK_P] << 8) | [ATTR_P]
-#   w2 = [P_FLAG] with temp bits copied from perm bits; perm bits cleared
+// ------------------------------------------------------------------------------
+// Channel S flag
+// Flag setting routine for upper screen channel ('S' channel).
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   [TV_FLAG] - clears bit 0 to signal main screen in use.
+//   [FLAGS] - clears bit 1 to signal printer not in use.
+//   [ATTR_T] = [ATTR_P]
+//   [MASK_T] = [MASK_P]
+//   [P_FLAG] = perm copied to temp bits
+//   w0 = new [P_FLAG]
+//   w1 = ([MASK_P] << 8) | [ATTR_P]
+//   w2 = [P_FLAG] with temp bits copied from perm bits; perm bits cleared
 chan_s:                                  // L1642
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

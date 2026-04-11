@@ -1,23 +1,25 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 
 
-# Logs all sysvars to UART.
-#
-# On entry:
-#   <nothing>
-# On exit:
-#   x0 = 0x0a
-#   x1 = [aux_base]
-#   x2 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals) when waiting to send final newline
-#   x3 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals) when waiting to write final sysvar value
-#   x4 = value of last logged 1/2/4/8 byte sysvar (currently [PR_CC])
-#   NZCV: depends on size of last sysvar, currently last sysvar is MEMBOT, so 0b0110
-#     if last sysvar is 1/2/4/8 byte sysvar: 0b1000
-#     otherwise: 0b0110
+// ------------------------------------------------------------------------------
+// Logs all sysvars to UART.
+// ------------------------------------------------------------------------------
+// On entry:
+//   <nothing>
+// On exit:
+//   x0 = 0x0a
+//   x1 = [aux_base]
+//   x2 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals) when waiting to send final newline
+//   x3 = [AUX_MU_LSR] = 0x21 / 0x61 (see page 15 of BCM ARM2835/7 ARM Peripherals) when waiting to write final sysvar value
+//   x4 = value of last logged 1/2/4/8 byte sysvar (currently [PR_CC])
+//   NZCV: depends on size of last sysvar, currently last sysvar is MEMBOT, so 0b0110
+//     if last sysvar is 1/2/4/8 byte sysvar: 0b1000
+//     otherwise: 0b0110
 display_sysvars:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

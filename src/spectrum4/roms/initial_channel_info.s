@@ -1,23 +1,24 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 3
-# ---------------------------------
-# The 'Initial Channel Information'
-# ---------------------------------
-# Initially there are four channels ('K', 'S', 'R', & 'P') for communicating
-# with the 'keyboard', 'screen', 'workspace' and 'printer'. For each channel
-# the output routine address comes before the input routine address and the
-# channel's code. This table is almost identical to that in ROM 1 at 0x15AF but
-# with changes to the channel P routines to use the RS232 port instead of the
-# ZX Printer.
-# Used at 0x01DD (ROM 0).
+// ---------------------------------
+// The 'Initial Channel Information'
+// ---------------------------------
+// Initially there are four channels ('K', 'S', 'R', & 'P') for communicating
+// with the 'keyboard', 'screen', 'workspace' and 'printer'. For each channel
+// the output routine address comes before the input routine address and the
+// channel's code. This table is almost identical to that in ROM 1 at 0x15af but
+// with changes to the channel P routines to use the RS232 port instead of the
+// ZX Printer.
+// Used at 0x01dd (ROM 0).
 initial_channel_info:                    // L0589
   .quad print_out                                 // PRINT_OUT - K channel output routine.
   .quad key_input                                 // KEY_INPUT - K channel input routine.
-  .byte 'K',0,0,0,0,0,0,0                         // 0x4B      - Channel identifier 'K'.
+  .byte 'K',0,0,0,0,0,0,0                         // 0x4b      - Channel identifier 'K'.
   .quad print_out                                 // PRINT_OUT - S channel output routine.
   .quad report_j                                  // REPORT_J  - S channel input routine.
   .byte 'S',0,0,0,0,0,0,0                         // 0x53      - Channel identifier 'S'.

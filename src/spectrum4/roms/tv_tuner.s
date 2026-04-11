@@ -1,24 +1,29 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
 
-# This routine generates a display showing all possible colours and emitting a
-# continuous cycle of a 440 Hz tone for 1 second followed by silence for 1
-# second. Its purpose on the Spectrum 128K was to ease the tuning in of TV sets
-# to the Spectrum 128's RF signal. For the Spectrum +4 it is mostly there for
-# the sake of nostalgia. The display consists of vertical stripes of width 12
-# character squares showing each of the eight colours available at both their
-# normal (six chargs) and bright (six chars) intensities. The display begins
-# with white (colour 7) on the left progressing down to black on the right
-# (colour 0). Within each colour stripe in the first eight rows the year '2022'
-# is shown in varying ink colours. This leads to a display that shows all
-# possible ink colours on all possible paper colours.
-#
-# On entry:
-# On exit:
+
+// ------------------------------------------------------------------------------
+// This routine generates a display showing all possible colours and emitting a
+// continuous cycle of a 440 Hz tone for 1 second followed by silence for 1
+// second. Its purpose on the Spectrum 128K was to ease the tuning in of TV sets
+// to the Spectrum 128's RF signal. For the Spectrum +4 it is mostly there for
+// the sake of nostalgia. The display consists of vertical stripes of width 12
+// character squares showing each of the eight colours available at both their
+// normal (six chargs) and bright (six chars) intensities. The display begins
+// with white (colour 7) on the left progressing down to black on the right
+// (colour 0). Within each colour stripe in the first eight rows the year '2022'
+// is shown in varying ink colours. This leads to a display that shows all
+// possible ink colours on all possible paper colours.
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 tv_tuner:                                // L3C10
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -58,9 +63,10 @@ tv_tuner:                                // L3C10
   cmp     x20, x21
   b.ne    6b
 7:
-# b       7b
+// b       7b
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
+
 
 tvt_data:                                // L3C8F
   .byte   0x13, 0x00                              // Bright, off

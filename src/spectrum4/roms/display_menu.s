@@ -1,18 +1,27 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 
-# ------------------------
-# Display Menu
-# ------------------------
-#
-# On entry:
-#   x19 = jump table
-#   x20 = menu text
-# On exit:
+
+// ------------------------
+// Display Menu
+// ------------------------
+//
+// On entry:
+//   x19 = jump table
+//   x20 = menu text
+// On exit:
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 display_menu:                            // L36A8
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -73,9 +82,9 @@ display_menu:                            // L36A8
   ret
 
 
-# ------------------------
-# Menu Title Colours Table
-# ------------------------
+// ------------------------
+// Menu Title Colours Table
+// ------------------------
 .align 0
 menu_title_colours:                      // L37EC
   .byte 0x16, 0x19, 0x2f                          // AT 25, 47;
@@ -87,9 +96,9 @@ menu_title_colours:                      // L37EC
   .byte 0xff                                      // end marker
 
 
-# ----------------------
-# Menu Title Space Table
-# ----------------------
+// ----------------------
+// Menu Title Space Table
+// ----------------------
 .align 0
 menu_title_space:                        // L37FA
   .byte 0x11, 0x00                                // PAPER 0

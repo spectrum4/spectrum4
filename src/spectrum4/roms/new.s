@@ -155,14 +155,19 @@ new:                                     // L019D
   mov     x0, x8
   bl      uart_x0
   bl      uart_newline
-  adr     x0, msg_ssc_config_state_link_capabilities
+  adr     x0, msg_ssc_config_stage
   bl      uart_puts
   ldr     w0, [x10, #0x10]                        // w0 = ssc config stage / link capabilities
   bl      uart_x0
   bl      uart_newline
+  adr     x0, msg_link_status
+  bl      uart_puts
+  ldrh    w0, [x10, #0x12]                        // w0 = link status (PCI_EXP_LNKSTA)
+  bl      uart_x0
+  bl      uart_newline
   adr     x0, msg_ssc_status
   bl      uart_puts
-  ldr     w0, [x10, #0x20]                        // w0 = ssc status
+  ldr     w0, [x10, #0x28]                        // w0 = ssc status (stored at heap+0x28 by pcie_init)
   bl      uart_x0
   bl      uart_newline
   adr     x0, msg_vid_did
@@ -179,19 +184,26 @@ new:                                     // L019D
   ldr     w0, [x10, #0x1c]                        // w0 = RC header type
   bl      uart_x0
   bl      uart_newline
+  adr     x0, msg_bus1_class
+  bl      uart_puts
+  ldr     w0, [x10, #0x20]                        // w0 = bus 1 class (upper 24 bits) + revision (lower 8 bits)
+  bl      uart_x0
+  bl      uart_newline
+  adr     x0, msg_bus1_header_type
+  bl      uart_puts
+  ldr     w0, [x10, #0x24]                        // w0 = bus 1 header type
+  bl      uart_x0
+  bl      uart_newline
+  adr     x0, msg_xhci_version
+  bl      uart_puts
+  ldrh    w0, [x10, #0x2c]                        // w0 = XHCI_REG_CAP_HCIVERSION
+  bl      uart_x0
+  bl      uart_newline
   b       5f
 4:
   adr     x0, msg_no_pcie
   bl      uart_puts
 5:
-  // Dump MMU tables
-  adrp    x0, pg_dir
-  adrp    x21, pg_dir_end
-  7:
-    bl      display_page
-    mov     x0, x19
-    cmp     x0, x21
-    b.lt    7b
 .endif
 
   ldrb    w1, [x28, FLAGS-sysvars]                // w1 = [FLAGS].
@@ -354,8 +366,12 @@ msg_class_code_updated:
   .asciz "PCIe class code (updated): "
 
 
-msg_ssc_config_state_link_capabilities:
-  .asciz "SSC configuration stage / link capabilities: "
+msg_ssc_config_stage:
+  .asciz "SSC configuration stage: "
+
+
+msg_link_status:
+  .asciz "Link status (PCI_EXP_LNKSTA): "
 
 
 msg_ssc_status:
@@ -367,7 +383,19 @@ msg_vid_did:
 
 
 msg_header_type:
-  .asciz "Header type: "
+  .asciz "RC header type: "
+
+
+msg_bus1_class:
+  .asciz "Bus 1 class/revision: "
+
+
+msg_bus1_header_type:
+  .asciz "Bus 1 header type: "
+
+
+msg_xhci_version:
+  .asciz "xHCI version: "
 
 
 msg_framebuffer_start:

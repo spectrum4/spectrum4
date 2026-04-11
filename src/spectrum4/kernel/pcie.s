@@ -17,12 +17,22 @@
 
 
 // On return:
+
+
+.align 2
+// ------------------------------------------------------------------------------
+// Initialise BCM2711 PCIe bridge, enumerate VL805, and configure xHCI controller
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO: register updates
 //   [heap+0x00]: last read status register
 //   [heap+0x04]: number of iterations of 1ms reading status register
 //   [heap+0x08]: initial class code
 //   [heap+0x0c]: updated class code
 //   [heap+0x10]: SSC configuration steps successfully completed (0-6)
-//   [heap+0x12]: link capabilities
+//   [heap+0x12]: link status (PCI_EXP_LNKSTA)
 //   [heap+0x14]: revision number
 //   [heap+0x18]: vid
 //   [heap+0x1a]: did
@@ -31,22 +41,13 @@
 //   [heap+0x24]: bus 1 header type (lower 8 bits)
 //   [heap+0x28]: SSC status register
 //   [heap+0x2c]: XHCI_REG_CAP_HCIVERSION (16 bits)
-
-
-.align 2
-// ------------------------------------------------------------------------------
-// TODO: Description
-// ------------------------------------------------------------------------------
-// On entry:
-//   TODO
-// On exit:
-//   TODO
 pcie_init_bcm2711:
 
   mov     x5, x30
+                                                  // [BCM2711] s6.5 p93 -- PCIe is at low peripheral address range; config space mapped by firmware
   adrp    x10, 0xfd500000 + _start                // x10 = RC config space base address
   adrp    x4, 0xfd504000 + _start                 // x4 = Broadcom PCIe Set Top Box registers
-  adrp    x13, 0xfd508000 + _start                // x13 = VL805 USB Controller config space base address
+  adrp    x13, 0xfd508000 + _start                // x13 = VL805 USB Controller config space base address (bus 1 via ECAM)
   adrp    x14, 0xfd509000 + _start                // x14 = ECAM Index register
   adrp    x7, heap
   add     x7, x7, :lo12:heap                      // x7 = heap
@@ -95,7 +96,10 @@ pcie_init_bcm2711:
                                                   //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L2228
                                                   //     https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L950-L974
 
-  // Clear SERDES_IDDQ, i.e. put the PCIe Serializer/Deserializer PHY into IDDQ (deep power-down mode)
+  // Clear SERDES_IDDQ to power up the PCIe SerDes (Serializer/Deserializer) PHY.
+  // SERDES_IDDQ=1 means deep power-down (IDDQ mode); clearing it brings the SerDes out of
+  // power-down and into normal operation. The wait below is for the SerDes to stabilise after
+  // power-up.
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1399-L1404
                                                   // +=============================================+
   ldrwi   w6, x4, #0x204                          // | PCIE_MISC_HARD_PCIE_HARD_DEBUG [0xfd504204] |
@@ -178,8 +182,8 @@ pcie_init_bcm2711:
                                                   // 0b 1---/1 ---/-- --/----/-- 1 1/- 1 --/1 -- -/---- SET BITS
   ldr     w8, =0x88003480                         // 0x    8     8     0    0      3      4      8    0
   orr     w6, w6, w8                              //
-                                                  // SCB0_SIZE = 0b10001 = 17 (number of bits required to address bus - 15)
-                                                  //   => System Control Bus size is > 2GB, and <= 4GB
+                                                  // SCB0_SIZE = 0b10001 = 17 (encoded as ilog2(size) - 15, so size = 2^(17+15) = 2^32 = 4GB)
+                                                  //   => System Control Bus size is 4GB
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L932
                                                   //
                                                   // SCB_MAX_BURST_SIZE = 0b00
@@ -244,6 +248,10 @@ pcie_init_bcm2711:
 
   ldrwi   w0, x10, #0x4dc
   orr     w0, w0, #0xc00                          // Set bits 10 (ASPM power mode L0s), 11 (ASPM power mode L1)
+
+  // If enabling ASPM turns out to be problematic we could disable it as follows: (and update comment above about enabling it)
+  // bic     w0, w0, #0xc00                       // Clear bits 10 (ASPM L0s), 11 (ASPM L1), disable power saving
+
   strwi   w0, x10, #0x4dc                         // of [0xfd5004dc] (PCIE_RC_CFG_PRIV1_LINK_CAPABILITY)
 
   // For config space accesses on the RC, show the right class for a PCIe-PCIe bridge
@@ -319,7 +327,7 @@ pcie_init_bcm2711:
   ldrwi   w0, x4, #0x6c                           // w0 = [0xfd50406c] (PCIE_MISC_REVISION)
   strwi   w0, x7, #0x14                           // store revision number on heap
 
-  // MSI initisalisation
+  // MSI initialisation
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L623-L641
   //
   // Updates registers:
@@ -351,10 +359,10 @@ pcie_init_bcm2711:
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L639-L640
 
   // Preserve device id, vendor id on the heap
-  ldrwi   w2, x10, #0x0                           // x2 bits 0-15: did, bits 16-31: vid
+  ldrwi   w2, x10, #0x0                           // x2 bits 0-15: vid (Vendor ID), bits 16-31: did (Device ID)
   // Preserve header type on the heap
   ldrbi   w3, x10, #0xe                           // w3 = header type
-  stp     w2, w3, [x7, #0x18]                     // store did/vid and header type on heap
+  stp     w2, w3, [x7, #0x18]                     // store vid/did and header type on heap
 4:
 
   // RC: Set LTR Enable bit in PCI Express Device Control 2 register (PCI_EXP_DEVCTL2) of the root complex, i.e. turn LTR on.
@@ -365,7 +373,7 @@ pcie_init_bcm2711:
   strhi   w1, x10, #0xd4                          // [0xfd5000d4] = 0x0400 (was 0x0000)
 
   // RC: Set SERR forwarding bit (bit 1) in PCI bridge control of root complex.
-  // In contrast, Cirlce sets bit 0 instead which enables parity detection on secondary interface.
+  // In contrast, Circle sets bit 0 instead which enables parity detection on secondary interface.
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2207-L2223
   mov     w1, #0x0002
   strhi   w1, x10, #0x3e                          // [0xfd50003e] = 0x0002 (was 0x0000)
@@ -451,13 +459,6 @@ pcie_init_bcm2711:
      tbz     w0, #5, 1b                           // repeat loop if bit 5 is clear (PCIE_MISC_PCIE_STATUS_PCIE_DL_ACTIVE)
  2:
    stp     w0, w8, [x7]                           // store last read status register value and number of 1ms on heap
-// cbz     w8, 4f                                 // exit early if failed to wake up
-
-  // Exit early if in endpoint mode, not in root complex mode => implies PCIe misconfiguration
-  //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L980-L983
-
-
-//  tbz     w0, #7, 4f                            // if bit 7 is clear (PCIE_MISC_PCIE_STATUS_PCIE_PORT) branch ahead to 4:
 
   // Extends the timeout period for an access to an internal bus to 4s
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1537-L1554
@@ -466,9 +467,8 @@ pcie_init_bcm2711:
 
   // Provides L0s, L1, and L1SS, but not compliant to provide Clock Power
   // Management; specifically, may not be able to meet the Tclron max timing of
-  // 400ns as specified in "Dynamic Clock Control", section 3.2.5.2.2 of the
-  // PCIe spec. This situation is atypical and should happen only with older
-  // devices.
+  // 400ns as specified in [PCIE] s3.2.5.2.2 -- Dynamic Clock Control (section not found in PCIe 5.0; may be from an older revision). This
+  // situation is atypical and should happen only with older devices.
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1594-L1601
 
   // Updates registers:
@@ -514,10 +514,10 @@ pcie_init_bcm2711:
 3:
   strhi   w6, x7, #0x10                           // store w6 on heap to record which configuration stage SSC reached
 
-  ldrhi   w0, x10, #0xbe                          // Query link capabilities
+  ldrhi   w0, x10, #0xbe                          // Query link status (PCI_EXP_LNKSTA at 0xac + 0x12 = 0xbe)
                                                   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L1028-L1033
 
-  strhi   w0, x7, #0x12                           // store w0 on heap to record link capabilities register
+  strhi   w0, x7, #0x12                           // store w0 on heap to record link status register
 
   // RC Disable:
   //   PCI_EXP_RTCTL_SECEE      0x0001     System Error on Correctable Error
@@ -539,7 +539,7 @@ pcie_init_bcm2711:
   strhi   w1, x10, #0xc8                          // [0xfd5000c8] = 0x0010 (was 0x0000)
 
   // PCIe RC ECAM Index Register (offset 0x9000 from base, x14 + 0x0)
-  // Mounts VL805 (bus 1, device 0, function 0, offset 0) configuration space at physical address [0xfd58000] (x13)
+  // Mounts VL805 (bus 1, device 0, function 0, offset 0) configuration space at physical address [0xfd508000] (x13)
   // 0b0000 bbbb bbbb dddd dfff oooo oooo oooo (b = bus, d = device, f = function, o = offset)
   // 0b0000 0000 0001 0000 0000 0000 0000 0000
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L707-L722
@@ -549,14 +549,16 @@ pcie_init_bcm2711:
   // VL805: Disable Power Management (clear bit 8) and clear Power Management Status (by setting bit 15) of PCI_PM_CTRL register.
   // Power Management capability starts at offset 0x80, and PCI_PM_CTRL has offset 0x04 from start of capability,
   // i.e. offset is 0x80 + 0x04 = 0x84
+  // [PCIE] s7.5.2.2 p714 -- Power Management Control/Status Register
   //   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/pci.c#L2354-L2368
-  ldrhi   w1, x13, #0x84                          // w1 = [0xfd50004c] (=0x2008) = current value of PCI_PM_CTRL for root complex
+  ldrhi   w1, x13, #0x84                          // w1 = [0xfd508084] = current value of PCI_PM_CTRL for VL805
   and     w1, w1, #~0x0100                        // clear bit 8 (PCI_PM_CTRL_PME_ENABLE)
   orr     w1, w1, #0x8000                         //   and set bit 15 (PCI_PM_CTRL_PME_STATUS)
-  strhi   w1, x13, #0x84                          // of [0xfd50004c] (PCI_PM_CTRL)
+  strhi   w1, x13, #0x84                          // of [0xfd508084] (PCI_PM_CTRL)
 
   // VL805: Enable PCIe error reporting
-  ldrhi   w1, x13, #0xcc                          // PCI_EXP_DEVCTL (offset 0x8 from 0xac where PCIe device capability starts)
+  // [PCIE] s7.5.3.4 p725 -- Device Control Register
+  ldrhi   w1, x13, #0xcc                          // PCI_EXP_DEVCTL (offset 0x8 from 0xc4 where PCIe capability starts on VL805)
   orr     w1, w1, #0xf                            //  PCI_EXP_DEVCTL_CERE    0x01    Correctable Error Reporting Enable
                                                   //  PCI_EXP_DEVCTL_NFERE   0x02    Non-Fatal Error Reporting Enable
                                                   //  PCI_EXP_DEVCTL_FERE    0x04    Fatal Error Reporting Enable
@@ -677,10 +679,12 @@ pcie_init_bcm2711:
   adrp    x10, 0xfd500000 + _start                // x10 = PCI to PCI bridge config space base address
 
   // VL805: PCI cache line size
+  // [PCIE] s7.5.1.1.7 p692 -- Cache Line Size Register (offset 0x0c)
   mov     w1, #0x10
   strbi   w1, x13, #0xc                           // PCI cache line size = 0x10 (64/4) (was 0x00)
 
   // VL805: configure MSI
+  // [XHCI] s5.2.8 p377 -- Message Signaled Interrupts (MSI & MSI-X) Capability
   //   Configure Queue size: 0b010 (log2 => 4)
   //   Disable MSI enable, if enabled
 
@@ -714,15 +718,20 @@ pcie_init_bcm2711:
   mov     w1, #0x00a4
   strhi   w1, x13, #0x92
 
-  // VL805:
+  // VL805: Set MSI message address (low 32 bits) = 0xfffffffc
+  // Matches the RC MSI target address configured in PCIE_MISC_MSI_BAR_CONFIG_LO above.
+  // The device will write to this address when raising an MSI interrupt.
   mov     w1, #0xfffffffc
-  strwi   w1, x13, #0x94                          // was 0x00000000
+  strwi   w1, x13, #0x94                          // [0xfd508094] (MSI Message Address Lo) = 0xfffffffc (was 0x00000000)
 
-  // VL805:
+  // VL805: Set MSI message data = 0x6540
+  // Matches the lower 16 bits of PCIE_MISC_MSI_DATA_CONFIG (0xffe06540) configured above.
+  // The RC uses this value to identify which MSI vector was triggered.
   mov     w1, #0x6540
-  strhi   w1, x13, #0x9c                          // was 0x0000
+  strhi   w1, x13, #0x9c                          // [0xfd50809c] (MSI Message Data) = 0x6540 (was 0x0000)
 
   // VL805: Set PCI command
+  // [PCIE] s7.5.1.1.3 p686 -- Command Register (offset 0x04)
   // 0b0000 0101 0100 0110
   // set bit 1  => Enable response in Memory space
   // set bit 2  => Enable bus mastering
@@ -737,176 +746,39 @@ pcie_init_bcm2711:
   mov     w1, #0x00a5
   strhi   w1, x13, #0x92
 
-  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
-  //  fd500000 e4 14 11 27 06 00 10 00 20 00 04 06 00 00 01 00 00 00 00 00 00 00 00 00 00 01 01 00 00 00 00 20
-  //  fd500020 00 c0 00 c0 f1 ff 01 00 00 00 00 00 00 00 00 00 00 00 00 00 48 00 00 00 00 00 00 00 00 01 02 00
+  // Observed BCM2711 PCIe Bridge configuration (bus 0, device 0, at fd500000)
+  // These values were read from hardware and are consistent across boots.
+  // [PCIE] s7.5.1 p586 -- Type 1 Configuration Space Header
   //
-  //  fd500000: 0x14e4     Vendor ID (Broadcom Inc. and subsidiaries)
-  //  fd500002: 0x2711     Device ID (BCM2711 PCIe Bridge)
-  //  fd500004: 0x0006     Command
-  //  fd500006: 0x0010     Status
-  //  fd500008: 0x20       Revision ID
-  //  fd500009: 0x060400   Class Code
-  //  fd50000c: 0x00       Cache Line Size
-  //  fd50000d: 0x00       Latency Timer
-  //  fd50000e: 0x01       Header Type
-  //  fd50000f: 0x00       BIST
-  //  fd500010: 0x00000000 Base Address 0
-  //  fd500014: 0x00000000 Base Address 1
-  //  fd500018: 0x00       Primary Bus Number (set by us)
-  //  fd500019: 0x01       Secondary Bus Number (set by us)
-  //  fd50001a: 0x01       Subordinate Bus Number (set by us)
-  //  fd50001b: 0x00       Secondary Latency Timer (set by us)
-  //  fd50001c: 0x00       I/O Base
-  //  fd50001d: 0x00       I/O Limit
-  //  fd50001e: 0x2000     Secondary Status
-  //  fd500020: 0xc000     Memory Base
-  //  fd500022: 0xc000     Memory Limit
-  //  fd500024: 0xfff1     Prefetchable Memory Base
-  //  fd500026: 0x0001     Prefetchable Memory Limit
-  //  fd500028: 0x00000000 Prefetchable Base upper 32 bits
-  //  fd50002c: 0x00000000 Prefetchable Limit upper 32 bits
-  //  fd500030: 0x0000     I/O Base upper 16 bits
-  //  fd500032: 0x0000     I/O Limit upper 16 bits
-  //  fd500034: 0x48       Capabilities Pointer
-  //  fd500035: 0x000000   Reserved
-  //  fd500038: 0x00000000 Expansion ROM Base Address
-  //  fd50003c: 0x00       Interrupt Line
-  //  fd50003d: 0x01       Interrupt Pin
-  //  fd50003e: 0x0002     Bridge Control (set by us)
+  //   Vendor=0x14e4 (Broadcom), Device=0x2711, Class=0x060400 (PCI-to-PCI bridge)
+  //   Revision=0x20, Header Type=0x01 (bridge), BIST=0x00
+  //   Primary Bus=0, Secondary Bus=1, Subordinate Bus=1 (set by us)
+  //   Memory Base/Limit=0xc000, Capabilities Pointer=0x48
+  //   Bridge Control=0x0002 (set by us)
   //
-  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
-  //  fd500040 00 00 00 00 00 00 00 00 01 ac 13 48 08 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500060 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500080 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5000a0 00 00 00 00 00 00 00 00 00 00 00 00 10 00 42 00 02 80 00 00 10 2c 00 00 12 cc 64 00 40 00 12 d0
-  //  fd5000c0 00 00 00 00 00 00 40 00 10 00 01 00 00 00 00 00 1f 08 08 00 00 04 00 00 06 00 00 80 02 00 00 00
-  //  fd5000e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //   Capabilities (at 0x48):
+  //     0x48: Power Management
+  //     0xac: PCI Express
   //
-  //  Unknown purpose
+  //   Extended config space (fd500100-fd5006a0) is mostly zero.
+
+  // Observed VL805 USB 3.0 Host Controller configuration (bus 1, device 0, at fd508000)
+  // [PCIE] s7.5.1 p586 -- Type 0 Configuration Space Header
   //
-  //  fd500040: 0x00000000 ????
-  //  fd500044: 0x00000000 ????
+  //   Vendor=0x1106, Device=0x3483, Class=0x0c0330 (USB xHCI), Revision=0x01
+  //   BAR0=0xc0000004 (64-bit, memory-mapped)
+  //   Subsystem Vendor=0x1106, Subsystem ID=0x3483
+  //   Interrupt Pin=1, Interrupt Line=0x3e
   //
-  //  Capabilities
+  //   Capabilities (at 0x80):
+  //     0x80: Power Management
+  //     0x90: MSI (Message Signalled Interrupts)
+  //     0xc4: PCI Express
   //
-  //  fd500048: 0x01 Power Management (13 48 08 20 00...)
-  //                                         ^^^^^
-  //  fd5000ac: 0x10 PCI Express (42 00 02 80 00 00 10 2c 00 00 12 cc 64 00 40 00 12 d0 00 00 00 00 00 00 40 00 10 00 01 00 00 00 00 00 1f 08 08 00 00 04 00 00 06 00 00 80 02 00...)
-  //                                                                                                            ^^^^^                               ^^^^^
-  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
-  //  fd500100 01 00 01 18 00 00 00 00 00 00 00 00 30 20 06 00 00 00 00 00 00 20 00 00 00 00 00 00 00 00 00 00
-  //  fd500120 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500140 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500160 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500180 0b 00 01 24 00 00 80 02 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5001a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5001c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5001e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500200 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500220 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500240 1e 00 01 00 1f 08 28 00 00 01 00 00 28 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500260 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500280 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5002a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5002c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5002e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500300 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500320 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500340 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500360 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500380 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5003a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5003c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5003e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500400 00 00 00 00 00 00 00 00 10 00 01 00 00 00 00 80 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500420 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 11 27 e4 14 e4 14 11 27 00 04 06 20
-  //  fd500440 48 30 00 00 e4 0a 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500460 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500480 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5004a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5004c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 40 00 00 00 02 80 00 00 00 00 00 00 12 5e 31 00
-  //  fd5004e0 00 00 00 00 1f 00 08 00 00 00 00 80 00 00 00 00 02 00 00 00 00 00 00 00 0f 00 00 00 00 00 00 00
-  //  fd500500 03 00 01 40 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500520 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500540 1f 08 28 00 1e 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 80 02 0f 00 00 00 00 00 00 00
-  //  fd500560 0f 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500580 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5005a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5005c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5005e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500600 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500620 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500640 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500660 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd500680 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5006a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-
-  // VL805 configuration space
-
-  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
-  //  fd508000 06 11 83 34 46 05 10 00 01 30 03 0c 10 00 00 00 04 00 00 c0 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd508020 00 00 00 00 00 00 00 00 00 00 00 00 06 11 83 34 00 00 00 00 80 00 00 00 00 00 00 00 3e 01 00 00
-
-  //  fd508009-fd50800b: 0c0330 => usb3 xhci (0c = serial bus controller, 0c = usb host controller, 30 = usb3 xhci)
-
-  // VL805 legacy data
-
-  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
-  //  fd508040 00 00 00 00 00 01 00 00 09 00 00 0e 04 00 00 00 c0 38 01 00 00 00 00 00 00 00 00 00 06 11 83 34
-  //  fd508060 30 20 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 08 00 03 00 01 00 00 18
-
-  //  fd508048: Mirror of xHCI Command Ring Control Register lower 32 bits (0x0e000009)
-  //    Bits 31:6 (address) = 0x0e000000 -> Command Ring 64 byte aligned Base Address lower 32 bits
-  //    Bits 5:0 (flags) = 0x09 -> 0b001001
-  //      Bit 5: CRCS (Command Ring Cycle State) -> 0
-  //      Bit 4: CA (Command Abort) -> 0
-  //      Bit 3: CRR (Command Ring Running) -> 1
-  //      Bit 2: Reserved -> 0
-  //      Bit 1: Reserved -> 0
-  //      Bit 0: RCS (Ring Cycle State) -> 1
-  //  fd508050: Firmware version 0x000138c0
-
-  //  fd508060: 30 => release 3.0 (not 3.1 or 3.2)
-  //  fd508061: 20 (default) => SOF cycle time of 60000
-
-  // VL805 Capabilities
-
-  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
-  //  fd508080 01 90 03 48 00 00 00 00 00 00 00 00 00 00 00 00 05 c4 85 00 fc ff ff ff 00 00 00 00 40 65 00 00
-  //  fd5080a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5080c0 00 20 00 00 10 00 02 00 01 80 00 00 10 28 19 00 12 5c 06 00 40 00 12 10 00 00 00 00 00 00 00 00
-  //  fd5080e0 00 00 00 00 00 00 00 00 12 00 00 00 00 00 00 00 00 00 00 00 22 00 01 00 00 00 00 00 00 00 00 00
-
-  //  fd508080: 0x01 Power Management (03 48 00 00 00 00 00 00 00 00 00 00 00 00)
-  //  fd508090: 0x05 Message Signalled Interrupts (85 00 fc ff ff ff 00 00 00 00 40 65 00 00 ....)
-  //  fd5080c4: 0x10 PCI Express (02 00 01 80 00 00 10 28 19 00 12 5c 06 00 40 00 12 10 00 00 00 00 00 00 00 00 ...)
-
-  //           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f
-  //  fd508100 01 00 01 00 00 00 10 00 00 00 00 00 31 20 06 00 00 20 00 00 00 20 00 00 14 00 00 00 00 00 00 00
-  //  fd508120 00 00 00 01 03 00 00 00 01 00 00 05 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd508140 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd508160 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd508180 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5081a0 43 20 50 64 ff 03 c2 00 00 00 00 00 00 00 00 00 00 00 41 81 07 00 a1 0b 00 00 06 09 3a 09 0e 57
-  //  fd5081c0 05 e0 a7 8a 04 00 00 00 00 00 00 00 00 cf 18 00 d8 20 07 28 01 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5081e0 01 12 22 21 00 80 c3 01 01 00 00 00 00 00 00 00 00 00 20 06 00 00 66 01 00 00 00 00 00 00 00 00
-  //  fd508200 00 00 00 00 00 00 00 00 00 03 3c 3e 00 00 00 00 00 00 00 22 22 00 00 00 95 db 22 00 00 00 00 00
-  //  fd508220 00 11 11 00 94 00 00 00 00 00 c0 ff 24 45 45 65 13 65 03 24 0d 0d 00 00 00 00 00 00 ff ff ff ff
-  //  fd508240 00 00 ff ff 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 3f 1f 00 00 00 00 00 00 00 00 00
-  //  fd508260 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd508280 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5082a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5082c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5082e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd508300 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd508320 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd508340 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd508360 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd508380 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5083a0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5083c0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
-  //  fd5083e0 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  //   VL805-specific registers:
+  //     0x48: Mirror of xHCI CRCR (Command Ring Control Register)
+  //     0x50: Firmware version = 0x000138c0
+  //     0x60: USB release 3.0, SOF cycle time = 60000 (default)
 
   ldrwi   w2, x13, #0x8                           // w2 = bus 1 class (upper 24 bits) revision (lower 8 bits)
                                                   //   class should be 0x0c0330, revision should be 0x01
@@ -919,8 +791,7 @@ pcie_init_bcm2711:
   strhi   w1, x7, #0x2c                           // store [XHCI_REG_CAP_HCIVERSION] on heap (should be 0x0110)
 
   // reset the Host Controller
-  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-  // Section 4.2 (page 80): Host Controller Initialization
+  // [XHCI] s4.2 p80 -- Host Controller Initialization
   // wait until (USBSTS.CNR == 0) and (USBSTS.HCHalted == 1)
   // TODO: should probably have a timeout here
   6:
@@ -953,7 +824,7 @@ pcie_init_bcm2711:
   mov     w3, #0x20
   strwi   w3, x0, #0x58                           // [XHCI_REG_OP_CONFIG] = 32 (=> maximum 32 device slots)
 
-  adrp    x1, scratchpad_bufs                     // x1 = scratchpad_bufs (virutal)
+  adrp    x1, scratchpad_bufs                     // x1 = scratchpad_bufs (virtual)
   mov     w4, #0x4                                // upper 32 bits for DMA addresses
   adrp    x9, dcbaa                               // x9 = dcbaa (virtual)
 
@@ -981,15 +852,14 @@ pcie_init_bcm2711:
   adrp    x2, event_ring                          // x2 = event_ring (virtual)
   adr     x8, xhci_vars
   mov     x9, #(1<<32)                            // bit 32 of x9 stores event ring consumer cycle state, initially set to 1
-                                                  // Section 4.9.4 (page 179)
+                                                  // [XHCI] s4.9.4 p179 -- Event Ring Management
   stp     x2, x9, [x8, xhci_event_dequeue-xhci_vars]
                                                   // keep internal record of event ring dequeue pointer (virtual)
   add     x3, x2, erst-event_ring                 // x3 = ERST (virtual)
   bfi     x2, x4, #32, #32                        // x2 = event_ring (DMA)
 
 
-// https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-// Section 6.5 (page 514)
+// [XHCI] s6.5 p514 -- Event Ring Segment Table
   strxi   x2, x3, #0x0                            // [ERST] = event_ring (DMA)
   mov     w9, #0x00fc
   strhi   w9, x3, #0x8                            // [ERST+0x8] = 0xfc (event ring has 252 TRBs)
@@ -1015,12 +885,12 @@ pcie_init_bcm2711:
 
   // Note, it is assumed CRR (bit 3 of physical address 0x600000038) is already
   // 0, otherwise the below writes to the same address would be ineffective.
-  // https://www.intel.com/content/dam/www/public/us/en/documents/technical-specifications/extensible-host-controler-interface-usb-xhci.pdf
-  // Section 4.6.1 (page 104) and Table 5-24 (pages 402, 403)
+  // [XHCI] s4.6.1 p104 -- Command Ring Operation; Table 5-24 p402 -- CRCR
   strwi   w1, x0, #0x38                           // [XHCI_REG_OP_CRCR_LO] = lower32(command_ring (virtual)) | 0x1 = lower32(command_ring (DMA)) | 0x1
   strwi   w4, x0, #0x3c                           // [XHCI_REG_OP_CRCR_HI] = 4 = upper32(command_ring (DMA))
 
-  dsb     sy                                      // not needed if using device memory, but if we switch memory attributes of coherent region to 0x44, we will need this!
+  dsb     sy                                      // Essential: ensures all Normal Non-Cacheable writes (TRBs, DCBAA, ERST, scratchpad ptrs)
+                                                  // are committed to memory before the xHC starts reading them via RUN_STOP below.
 
   // set USBCMD.RUN_STOP = 1 and USBCMD.INTE = 1
   ldrwi   w3, x0, #0x20                           // w3 = [USBCMD]
@@ -1044,9 +914,8 @@ pcie_init_bcm2711:
   ret     x5
 
 
-// ------------------------------
-// Read from a MDIO register/port
-// ------------------------------
+.align 2
+// ------------------------------------------------------------------------------
 // Read a value from an MDIO register. This is a two stage process. First,
 // register [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) is written to with details of
 // the desired MDIO register to read from, and then register [0xfd501108]
@@ -1055,7 +924,7 @@ pcie_init_bcm2711:
 //
 // Linux implementation:
 //  https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L331-L349
-//
+// ------------------------------------------------------------------------------
 // On entry:
 //   w0 = MDIO register/port to read from
 //          bits 21-31: clear (required)
@@ -1065,7 +934,7 @@ pcie_init_bcm2711:
 //            0x0001: SSC_STATUS
 //            0x0002: SSC_CNTL
 //            0x001f: SET_ADDR
-// On return:
+// On exit:
 //   w0 corrupted
 //   w1 = bits 0-30: MDIO register value
 //        bit 31: set if read was successful, clear if read was unsuccessful
@@ -1073,14 +942,6 @@ pcie_init_bcm2711:
 //   w3 corrupted
 //   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
 //   x11 = return address of function
-.align 2
-// ------------------------------------------------------------------------------
-// TODO: Description
-// ------------------------------------------------------------------------------
-// On entry:
-//   TODO
-// On exit:
-//   TODO
 mdio_read:
   mov     x11, x30
   orr     w0, w0, 0x00100000                      // set bit 20 => command = 0x001 (read operation)
@@ -1096,7 +957,7 @@ mdio_read:
     sub     w8, w8, #1                            // decrement loop counter
     mov     x0, #10
     bl      wait_usec                             // sleep 10us
-    ldrwi   w1, x10, #0x1108                      // w0=[0xfd501108] (PCIE_RC_DL_MDIO_RD_DATA)
+    ldrwi   w1, x10, #0x1108                      // w1=[0xfd501108] (PCIE_RC_DL_MDIO_RD_DATA)
     tbz     w1, #31, 1b                           // repeat loop if bit 31 is clear (=> read value before register update was complete)
   ret     x11
 2:
@@ -1113,9 +974,8 @@ msg_mdio_read_timeout:
 .endif
 
 
-// -----------------------------
-// Write to a MDIO register/port
-// -----------------------------
+.align 2
+// ------------------------------------------------------------------------------
 // Write a value to an MDIO register. This is a three stage process. First,
 // register [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) is written to with details of
 // the desired MDIO register to update, and then register [0xfd501104]
@@ -1126,7 +986,7 @@ msg_mdio_read_timeout:
 //
 // Linux implementation:
 //  https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L351-L370
-//
+// ------------------------------------------------------------------------------
 // On entry:
 //   w0 = MDIO register/port to write to
 //          bits 20-31: clear (required)
@@ -1136,7 +996,7 @@ msg_mdio_read_timeout:
 //            0x001f: SET_ADDR
 //   w1 = bits 0-30: desired value to write to MDIO register
 //        bit 31: ignored
-// On return:
+// On exit:
 //   w0 corrupted
 //   w1 = bits 0-30: unchanged, if successful
 //        bit 31: clear if read was successful, set if read was unsuccessful
@@ -1144,14 +1004,6 @@ msg_mdio_read_timeout:
 //   w3 corrupted
 //   w8 = 0 for failure / 1-9 for success (number of remaining attempts)
 //   x11 = return address of function
-.align 2
-// ------------------------------------------------------------------------------
-// TODO: Description
-// ------------------------------------------------------------------------------
-// On entry:
-//   TODO
-// On exit:
-//   TODO
 mdio_write:
   mov     x11, x30
   strwi   w0, x10, #0x1100                        // set [0xfd501100] (PCIE_RC_DL_MDIO_ADDR) = w0 (command | port | regad)
@@ -1169,7 +1021,7 @@ mdio_write:
     sub     w8, w8, #1                            // decrement loop counter
     mov     x0, #10
     bl      wait_usec                             // sleep 10us
-    ldrwi   w1, x10, #0x1104                      // w0=[0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA)
+    ldrwi   w1, x10, #0x1104                      // w1=[0xfd501104] (PCIE_RC_DL_MDIO_WR_DATA)
     tbnz    w1, #31, 1b                           // repeat loop if bit 31 is set (=> read value before register update was complete)
   ret     x11
 2:
@@ -1184,49 +1036,6 @@ mdio_write:
 msg_mdio_write_timeout:
   .asciz "Timeout in mdio_write\r\n"
 .endif
-
-
-// # Return the PCIe register address for a given PCI bus, device function and
-// # config space address offset.
-// #
-// # The bus is considered a root bus if the bus parent address is 0 (i.e. unset).
-// # The root bus is accessed directly via the the root config registers. For
-// # other devices, first write the request to the config space index register
-// # (ECAM), and return the address of the result register.
-// #
-// # On entry:
-// #   x0 = pci_bus address
-// #   x1 = devfn
-// #   w2 = where (pci reg offset)
-// #
-// # On exit:
-// #   x0 = pcie register address
-// #   x1 untouched
-// #   w2 untouched
-// #   x3 disturbed
-// #   x4 disturbed
-// #
-// # Based on:
-// #   https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/controller/pcie-brcmstb.c#L707-L722
-// .align 2
-// map_conf:
-//   ldrxi   x3, x0, #0x0                            // x3 = [bus address] = parent
-//   cbnz    x3, 1f                                  // if parent bus non-zero (i.e. has been set), jump ahead to 1:
-//   adrp    x4, 0xfd500000 + _start                 // x4 = pcie_base
-//   add     x4, x4, x2                              // x4 = x4 + x2 = pcie_base + where
-//   tst     x1, #0xf8                               // set flags based on AND upper 5 bits of devfn (device number)
-//   csel    x0, x4, xzr, eq                         // if dev number == 0, x0 = pcie_base + where, otherwise 0
-//   ret
-// 1:
-//   ldrbi   w3, x0, #8                              // w3 = [x3 + 8] = bus number
-//   ubfiz   w4, w1, #12, #8                         // w4 = (w1 & 0xff) << 12 = (devfn & 0xff) << 12
-//   orr     w4, w4, w3, lsl #20                     // w4 = (devfn & 0xff) << 12 | (bus number << 20)
-//   dmb     oshst                                   // Data Memory Barrier Operation, Outer Shareable, Shareability Type
-//   adrp    x0, 0xfd509000 + _start                 // x0 = pcie_base + 0x9000
-//   strwi   w4, x0, #0                              // [pcie_base + 0x9000] = (devfn & 0xff) << 12 | (bus number << 20)
-//   adrp    x0, 0xfd508000 + _start                 // x0 = pcie_base + 0x8000
-//   add     x0, x0, x2                              // x0 = pcie_base + 0x8000 + where
-//   ret
 
 
 // Memory block for requesting VL805 host controller firmware reset
@@ -1245,6 +1054,7 @@ vl805_reset_req:
 vl805_reset_req_end:
 
 
+// xHCI runtime state: event ring dequeue pointer and consumer cycle status
 .align 3
 xhci_vars:
 xhci_event_dequeue:
@@ -1255,10 +1065,3 @@ xhci_transfer_keyboard_EP0_dequeue:
   .space 8
 xhci_transfer_keyboard_EP1_dequeue:
   .space 8
-// xhci_mmio: .space 8                             // = 0x600000000 (pcie base = xhci base) (capability registers)
-// xhci_mmio_op: .space 8                          // operational registers address
-// xhci_mmio_db: .space 8                          // doorbell registers address
-// xhci_mmio_rt: .space 8                          // runtime registers address
-// xhci_mmio_pt: .space 8                          // port register set address
-// xhci_cap_cache: .space 16                       // capability cache values
-// xhci_mmio_ec: .space 8                          // extended capabilities address

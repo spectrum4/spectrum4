@@ -6,7 +6,9 @@
 .text
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: check this routine uses correct registers in subroutine calls and that subroutines don't corrupt needed registers
+// Clear the lower screen area and reset its size to two rows
+// TODO: check this routine uses correct registers in subroutine calls and that
+// subroutines don't corrupt needed registers.
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO

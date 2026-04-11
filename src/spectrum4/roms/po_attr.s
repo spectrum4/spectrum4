@@ -72,7 +72,7 @@ po_attr:                                 // L0BDB
                                                   // w17[8-15] = [MASK_T]
   and     w17, w17, w1, lsr #8                    // w17 = attribute data EOR [ATTR_T] AND [MASK_T] (bits 8-31 clear)
   eor     w17, w17, w1                            // w17[0-7] = attribute data EOR [ATTR_T] AND [MASK_T] EOR [ATTR_T]
-                                                  // w17[0-8] = [MASK_T]
+                                                  // w17[8-15] = [MASK_T]
                                                   // So lower 8 bits of w17 are taken from current screen values when
                                                   // MASK_T bit is 1, and taken from ATTR_T when MASK_T bit is 0.
   ldrb    w0, [x28, P_FLAG-sysvars]               // w0 = [P_FLAG]

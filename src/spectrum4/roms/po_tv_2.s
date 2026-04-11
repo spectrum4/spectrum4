@@ -6,7 +6,7 @@
 .text
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Store first operand of a 2-byte control code and set po_cont as next output
 // ------------------------------------------------------------------------------
 // On entry:
 //   w0 = first byte of 2 byte control code

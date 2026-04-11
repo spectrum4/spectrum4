@@ -112,34 +112,6 @@ new:                                     // L019D
   logarm  TTBR0_EL1
   logarm  TTBR1_EL1
 
-
-// PCIe status logging
-
-
-// PCIe revision: 0x0000000000000304
-// PCIe link is ready
-// PCIe status register: 0x00000000000000b0
-// PCIe loop iterations: 0x000000000000002e
-// PCIe class code (initial): 0x0000000020060400
-// PCIe class code (updated): 0x0000000020060400
-// SSC configuration stage / link capabilities: 0x0000000090120006
-// SSC status register: 0x0000000080001c17
-// VID/DID: 0x00000000000014e4/0x0000000000002711
-// Header type: 0x0000000000000001
-
-
-//   [heap+0x00]: last read status register
-//   [heap+0x04]: number of iterations of 1ms reading status register
-//   [heap+0x08]: initial class code
-//   [heap+0x0c]: updated class code
-//   [heap+0x10]: SSC configuration steps successfully completed (0-6)
-//   [heap+0x12]: link capabilities
-//   [heap+0x14]: revision number
-//   [heap+0x18]: vid
-//   [heap+0x1a]: did
-//   [heap+0x1c]: header type
-//   [heap+0x20]: SSC status register
-
   ldr     x0, pcie_init
   cbz     x0, 4f                                  // skip PCIE logging if no pcie (e.g. rpi3b)
   adr     x0, msg_pcie_revision
@@ -199,12 +171,12 @@ new:                                     // L019D
   bl      uart_x0
   mov     x0, '/'
   bl      uart_send
-  ldrh    w0, [x10, #0x1a]                        // w8 = did
+  ldrh    w0, [x10, #0x1a]                        // w0 = did
   bl      uart_x0
   bl      uart_newline
   adr     x0, msg_header_type
   bl      uart_puts
-  ldr     w0, [x10, #0x1c]                        // w9 = header type
+  ldr     w0, [x10, #0x1c]                        // w0 = RC header type
   bl      uart_x0
   bl      uart_newline
   b       5f

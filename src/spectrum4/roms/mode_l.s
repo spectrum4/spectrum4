@@ -6,7 +6,7 @@
 .text
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Select L mode and reset repeat key duration
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -17,7 +17,7 @@ mode_l:                                  // L365E
   mov     w0, #0x2
   strb    w0, [x28, REPPER-sysvars]               // Reset repeat key duration to 2.
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Set L mode flags in FLAGS and update FLAGS3 from EC0D
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO

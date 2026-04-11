@@ -25,7 +25,7 @@ cl_addr:                                 // L0E9B
   adrp    x2, display_file
   add     x2, x2, :lo12:display_file
   mov     x3, #0xcccccccccccccccc
-  add     x3, x3, #1                              // x3 = 0x0xcccccccccccccccd
+  add     x3, x3, #1                              // x3 = 0xcccccccccccccccd
   umulh   x3, x3, x1                              // x3 = 14757395258967641293 * x1 / 2^64 = int(0.8*x1)
   lsr     x3, x3, #4                              // x3 = int(x1/20)
   add     x4, x3, x3, lsl #2                      // x4 = 5 * int(x1/20)

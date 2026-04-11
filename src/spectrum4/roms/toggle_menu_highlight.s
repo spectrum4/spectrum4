@@ -6,19 +6,12 @@
 .text
 
 
-// ------------------------
-// Display Menu
-// ------------------------
-//
-// On entry:
-//   w1 = menu row number (0 based, 0 = top row)
-// On exit:
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Toggle the highlight on a menu row by flipping attribute bit 4
 // ------------------------------------------------------------------------------
 // On entry:
-//   TODO
+//   w1 = menu row number (0 based, 0 = top row)
 // On exit:
 //   TODO
 toggle_menu_highlight:                   // L37CA

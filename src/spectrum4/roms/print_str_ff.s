@@ -8,7 +8,7 @@
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Print a 0xff-terminated string byte by byte via print_w0
 // ------------------------------------------------------------------------------
 // On entry:
 //   x4 = address of string in memory

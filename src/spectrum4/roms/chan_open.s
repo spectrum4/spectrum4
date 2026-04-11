@@ -77,7 +77,7 @@ chan_open:                               // L1601
   b       2f
 1:
   ldr     x9, [x28, CHANS-sysvars]                // x9 = [CHANS]
-  add     x10, x10, x9                            // w10 = [CHANS] + CHANS offset + 1
+  add     x10, x10, x9                            // x10 = [CHANS] + CHANS offset + 1
   sub     x0, x10, #1                             // x0 = address of channel data in CHANS
   bl      chan_flag
 2:

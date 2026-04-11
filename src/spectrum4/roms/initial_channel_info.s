@@ -5,9 +5,9 @@
 
 .text
 .align 3
-// ---------------------------------
-// The 'Initial Channel Information'
-// ---------------------------------
+
+
+// ------------------------------------------------------------------------------
 // Initially there are four channels ('K', 'S', 'R', & 'P') for communicating
 // with the 'keyboard', 'screen', 'workspace' and 'printer'. For each channel
 // the output routine address comes before the input routine address and the
@@ -15,6 +15,7 @@
 // with changes to the channel P routines to use the RS232 port instead of the
 // ZX Printer.
 // Used at 0x01dd (ROM 0).
+// ------------------------------------------------------------------------------
 initial_channel_info:                    // L0589
   .quad print_out                                 // PRINT_OUT - K channel output routine.
   .quad key_input                                 // KEY_INPUT - K channel input routine.

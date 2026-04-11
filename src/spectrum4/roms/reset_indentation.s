@@ -6,7 +6,7 @@
 .text
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Reset indentation system variable FD6A to default values
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO

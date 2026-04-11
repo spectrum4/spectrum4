@@ -11,7 +11,7 @@
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Run the diagnostic demo: display ZX screen, memory dumps, and sysvars
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -20,9 +20,6 @@
 demo:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
-  bl      paint_copyright                         // Paint the copyright text ((C) 1982 Amstrad....)
-  mov     w0, 0x400000
-  bl      wait_usec
   bl      display_zx_screen
   mov     w0, 0x400000
   bl      wait_usec
@@ -32,33 +29,11 @@ demo:
   mov     x1, #1
   mov     x2, #0
   bl      display_memory
-  adrp    x0, fb_req
-  add     x0, x0, :lo12:fb_req
-  mov     x1, #5
-  mov     x2, #3
-  bl      display_memory
-  mov     x0, x28                                 // x0 = sysvars
-  mov     x1, #10
-  mov     x2, #10
-  bl      display_memory
   adrp    x0, heap
   add     x0, x0, #:lo12:heap                     // x0 = heap
   sub     x0, x0, #0x60
   mov     x1, #8
-  mov     x2, #22
-  bl      display_memory
-  add     x0, x28, STRMS-sysvars
-  mov     x1, #2
-  mov     x2, #32
-  bl      display_memory
-  ldr     x0, [x28, CHANS-sysvars]
-  mov     x1, #2
-  mov     x2, #36
-  bl      display_memory
-  adrp    x0, transfer_ring_keyboard_EP0
-  add     x0, x0, :lo12:transfer_ring_keyboard_EP0
-  mov     x1, #2
-  mov     x2, #40
+  mov     x2, #3
   bl      display_memory
   bl      display_sysvars
 .if PCI_INCLUDE
@@ -105,28 +80,7 @@ demo:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
-// ------------------------------------------------------------------------------
-// On entry:
-//   TODO
-// On exit:
-//   TODO
-paint_copyright:
-  stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
-  mov     x29, sp                                 // Update frame pointer to new stack location.
-  adrp    x0, msg_demo_copyright
-  add     x0, x0, :lo12:msg_demo_copyright        // x0 = location of demo copyright message.
-  mov     w1, 38                                  // Print at x=38.
-  mov     w2, 40                                  // Print at y=40.
-  movl    w3, INK_COLOUR                          // Ink colour is default system ink colour.
-  movl    w4, PAPER_COLOUR                        // Paper colour is default system paper colour.
-  bl      paint_string                            // Paint the copyright string to screen.
-  ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
-  ret
-
-
-// ------------------------------------------------------------------------------
-// TODO: Description
+// Display a hex dump of memory as painted text on screen
 // ------------------------------------------------------------------------------
 // On entry:
 //   x0 = start address
@@ -185,7 +139,7 @@ display_memory:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Display a 4KB page as four 1KB hex dump sections on screen
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -209,7 +163,7 @@ display_page:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Dump a 4KB page of 32-bit registers to UART, skipping zero values
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -242,7 +196,7 @@ display_page_32bit:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Copy the static ZX screen data into the display and attributes files
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -271,8 +225,5 @@ display_zx_screen:
 
 msg_hex_header:
   .asciz "           00 01 02 03 04 05 06 07 08 09 0a 0b 0c 0d 0e 0f 10 11 12 13 14 15 16 17 18 19 1a 1b 1c 1d 1e 1f  "
-msg_demo_copyright:                      // L0561
-  .byte 0x7f                                      // '(c)'.
-  .asciz " 2022 Spectrum +4 Demo Authors"
 msg_demo_completed:
   .asciz "Demo completed!"

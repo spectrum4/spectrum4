@@ -9,6 +9,10 @@
 # This script runs tup under docker to build and test everything.
 # To see how the docker image was created, see the dev-setup/docker subdirectory.
 
+set -eu
+set -o pipefail
+export SHELLOPTS
+
 cd "$(dirname "${0}")"
 TAG="$(cat dev-setup/docker/TAG)"
 # use --init to capture signals correctly (e.g. Ctrl-C)

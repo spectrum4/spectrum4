@@ -4,6 +4,10 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
+set -eu
+set -o pipefail
+export SHELLOPTS
+
 function test_po_mosaic_half {
 
   w3_bit0=$((w3 % 2))

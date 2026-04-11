@@ -5,6 +5,8 @@
 # (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 set -eu
+set -o pipefail
+export SHELLOPTS
 
 function output {
   id="${carry}${flagsbit0}_${w5}_$(printf %x "'${lastchar}")"

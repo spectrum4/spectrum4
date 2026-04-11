@@ -307,8 +307,6 @@ EC15:
 // Editor workspace variables
 FC9A:
   .space 2                                        // The line number at the top of the screen, or 0x0000 for the first line.
-
-
 REPDEL:
   .space 1                                        // L5C09: Place REPDEL in .align 1 section since REPDEL+REPPER is read/written together as a halfword.
                                                   // Time (in 50ths of a second) that a key must be held down before it repeats. This starts off at 35.
@@ -321,10 +319,11 @@ E_PPC_hi:
 BAUD:
   .space 2                                        // L5B5F: Baud rate timing constant for RS232 socket. Default value of 11. [Name clash with ZX Interface 1 system variable at 0x5cc3]
 SERFL:
-  .space 2                                        // L5B61: Byte 0: Second character received flag:
-                                                  //           Bit 0   : 1=Character in buffer.
-                                                  //           Bits 1-7: Not used (always hold 0).
-                                                  //        Byte 1: Received Character.
+  .space 2                                        // L5B61:
+                                                  //   Byte 0: Second character received flag:
+                                                  //     Bit 0   : 1=Character in buffer.
+                                                  //     Bits 1-7: Not used (always hold 0).
+                                                  //   Byte 1: Received Character.
 RNFIRST:
   .space 2                                        // L5B94: Starting line number when renumbering. Default value of 10.
 RNSTEP:
@@ -362,6 +361,12 @@ F6F0:
                                                   // place the cursor on this column when the user moves up or down to a new line.
 F6F1:
   .space 1                                        // Edit area info - Top row threshold for scrolling up.
+KSTATE:
+  .space 4                                        // L5C00: 4-byte keyboard state block. Used by handle_keyboard_input (xhci.s), k_new / k_end / k_repeat / keyboard (roms/).
+                                                  //   +0: held HID scancode (0 = no key held; scancode 0 is reserved so safe as sentinel).
+                                                  //   +1: unused on spectrum4 (Z80 used this for the 5-frame debounce counter; USB firmware debounces so we don't need it).
+                                                  //   +2: REPDEL / REPPER frame countdown.
+                                                  //   +3: cached terminal code for k_repeat to re-deliver.
 COORDS_X:
   .space 2                                        // L5C7D: X-coordinate of last point plotted.
 COORDS_Y:

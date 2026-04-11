@@ -13,7 +13,7 @@
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Read a value from PCI configuration space via ECAM
 // ------------------------------------------------------------------------------
 // On entry:
 //   x0 = bus data address
@@ -69,7 +69,7 @@ pci_read:
 // TODO work in progress
 //
 // Based on
-//   * https://github.com/petemoore/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2333-L2348
+//   * https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/pci/probe.c#L2333-L2348
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO

@@ -6,7 +6,7 @@
 .text
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Continue processing a control code by handling its second operand
 // ------------------------------------------------------------------------------
 // On entry:
 //   w0 = first byte of 1 byte control code or second byte of 2 byte control code

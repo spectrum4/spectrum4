@@ -403,7 +403,7 @@ random_block_zeros:
 
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Dump memory contents as .quad directives to UART for debugging
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -426,7 +426,7 @@ uart_memory_dump:
 
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Log a memory address in hex to UART for test failure reporting
 // ------------------------------------------------------------------------------
 // On entry:
 //   x8 = Memory location
@@ -447,7 +447,7 @@ log_ram:
 
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Log a system variable name to UART for test failure reporting
 // ------------------------------------------------------------------------------
 // On entry:
 //   x20 = Memory location of sysvar metadata record
@@ -465,7 +465,7 @@ log_sysvar:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Log a register name (e.g. "x9") to UART for test failure reporting
 // ------------------------------------------------------------------------------
 // On entry:
 //   x9 = x register index (0-30)
@@ -487,7 +487,7 @@ log_register:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Compare two register values and set flags accordingly
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -611,7 +611,7 @@ test_fail:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Take a compressed snapshot of all RAM regions (sysvars, BSS, framebuffer)
 // ------------------------------------------------------------------------------
 // On entry:
 //   x2 = location to write compressed data to
@@ -675,7 +675,7 @@ snapshot_all_ram:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Compress a memory region into a run-length encoded snapshot buffer
 // ------------------------------------------------------------------------------
 // On entry:
 //   x0 = start address to compress (inclusive) -> 8 byte aligned
@@ -758,7 +758,7 @@ snapshot_memory:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Restore all RAM regions from a compressed snapshot
 // ------------------------------------------------------------------------------
 // On entry:
 //   x2 = location of snapshot
@@ -794,7 +794,7 @@ restore_all_ram:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Decompress a run-length encoded snapshot back into a memory region
 // ------------------------------------------------------------------------------
 // On entry:
 //   x0 = start address to decompress to (inclusive) -> 8 byte aligned
@@ -843,7 +843,7 @@ restore_snapshot:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Compare pre- and post-test snapshots for all sysvars and memory regions
 // ------------------------------------------------------------------------------
 // On entry:
 //   x6 = pre-test compressed snapshot address
@@ -892,7 +892,7 @@ compare_all_snapshots:
     ldr     x12, [x20]                            // x12 = address offset of sys var
     add     x14, x12, x28                         // x14 = expected value reference
     add     x13, x12, x7                          // x13 = post-test value reference
-    add     x12, x12, x6                          // x13 = post-test value reference
+    add     x12, x12, x6                          // x12 = pre-test value reference
     bl      test_fail                             // report mismatched sysvar values
   4:
     subs    w9, w9, #1
@@ -914,7 +914,7 @@ compare_all_snapshots:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Compare pre- and post-test compressed snapshots for one memory region
 // ------------------------------------------------------------------------------
 // On entry:
 //   x6 = pre-test compressed snapshot address
@@ -977,7 +977,7 @@ compare_snapshots:
     ldp     x17, x4, [x6], #16                    // x17 = repeat count (1 less than total entries), x4 = value
   3:
   // x17 and x4 correctly set now
-    cbz     x18, 4f                               // If not still repeating previous pre-test value, jump ahead to 4:
+    cbz     x18, 4f                               // If not still repeating previous post-test value, jump ahead to 4:
     sub     x18, x18, #1                          // Decrement counter
     b       5f                                    // x5 already set from previous iteration, so jump ahead
   4:
@@ -1055,7 +1055,7 @@ fill_memory_with_junk:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Fill a memory region with pseudo-random data from the random block
 // ------------------------------------------------------------------------------
 // On entry:
 //   x4: random block length
@@ -1103,7 +1103,7 @@ fake_reg_update_channel_block:
 
 .align 3
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Fake print output routine: append character to test capture buffer
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -1120,7 +1120,7 @@ fake_printout:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Fake print output that also clobbers non-preserved registers
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO

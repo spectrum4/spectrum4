@@ -8,7 +8,7 @@
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Convert the low N bits of x0 to hex ASCII and write to memory at x1
 // ------------------------------------------------------------------------------
 // On entry:
 //   x0 = hex value to convert to text

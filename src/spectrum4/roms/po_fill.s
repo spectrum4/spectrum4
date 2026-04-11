@@ -33,7 +33,7 @@ po_fill:                                 // L0AC3
   ldrb    w6, [x28, FLAGS-sysvars]                // w6 = [FLAGS]
   orr     w6, w6, #0x1                            // Set bit 0 (signal suppress leading space)
   strb    w6, [x28, FLAGS-sysvars]                // [FLAGS] = w6
-  // Loop to print chr$ 128 (w19+1) times.
+  // Loop to print space character w2 times.
   2:
     mov     x0, ' '                               // x0 = space character (' ')
     bl      print_w0                              // Print it.

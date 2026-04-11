@@ -100,8 +100,8 @@ pr_all:                                  // L0B7F
   bfi     x24, x7, #32, #32                       // Move w7 (OVER mask) into upper 32 bits of x24
   mov     w19, #16                                // 16 pixel rows to update
   tbz     w20, #1, 3f                             // If printer not in use, jump ahead to 3:.
-  ldrb    w10, [x28, FLAGS2-sysvars]              // w9 = [FLAGS2]
-  orr     w10, w10, #0x2                          // w9 = [FLAGS2] with bit 1 set
+  ldrb    w10, [x28, FLAGS2-sysvars]              // w10 = [FLAGS2]
+  orr     w10, w10, #0x2                          // w10 = [FLAGS2] with bit 1 set
   strb    w10, [x28, FLAGS2-sysvars]              // Update [FLAGS2] to have bit 1 set (signal printer buffer has been used).
   3:
     ldrh    w11, [x21]                            // w11 = current screen bit pattern
@@ -117,7 +117,7 @@ pr_all:                                  // L0B7F
     bfxil   w1, w23, #8, #8                       // Next 8 bits of pattern for RHS
   // disturbs x0, x3, x5, x6, x7, x8, x9, x10, x11, x12, x13, x14, x15, x16, x17, x18
     bl      poke_address                          // Update RHS byte
-    tbnz    w20, #1, 4f                           // If printer in use, jump ahead to 6:.
+    tbnz    w20, #1, 4f                           // If printer in use, jump ahead to 4:.
   // Printer not in use.
     add     x21, x21, 0x0870                      // 20*216 = 0x10e0 is too big to add in one step, so do it in two steps.
     add     x21, x21, 0x0870                      // Gives next pixel line down.

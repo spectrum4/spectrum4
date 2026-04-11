@@ -6,9 +6,10 @@
 .text
 
 
-// -------------------
-// The Plot subroutine
-// -------------------
+.align 2
+// ------------------------------------------------------------------------------
+// Plot a single pixel with OVER/INVERSE handling and attribute update
+//
 // A screen byte holds 8 pixels so it is necessary to rotate a mask
 // into the correct position to leave the other 7 pixels unaffected.
 // However all 256 pixels in the character cell take any embedded colour
@@ -16,19 +17,10 @@
 // A pixel can be reset (inverse 1), toggled (over 1), or set (with inverse
 // and over switches off). With both switches on, the byte is simply put
 // back on the screen though the colours may change.
-//
+// ------------------------------------------------------------------------------
 // On entry:
 //   x12 = y (0 to 927)
 //   x13 = x (0 to 1727)
-// On exit:
-
-
-.align 2
-// ------------------------------------------------------------------------------
-// TODO: Description
-// ------------------------------------------------------------------------------
-// On entry:
-//   TODO
 // On exit:
 //   TODO
 plot_sub_1:                              // L22E9

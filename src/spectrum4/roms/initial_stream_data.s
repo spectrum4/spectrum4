@@ -5,9 +5,6 @@
 
 .text
 .align 1
-// -------------------------
-// The 'Initial Stream Data'
-// -------------------------
 // Initially there are seven streams: -3 to 3.
 // This table is identical to that in ROM 1 at 0x15c6.
 initial_stream_data:                     // L059E

@@ -39,7 +39,7 @@
 //     w0 = new [P_FLAG]
 //     w1 = ([MASK_P] << 8) | [ATTR_P]
 //     x2 = [P_FLAG] with temp bits copied from perm bits; perm bits cleared
-//     w9 = 1
+//     w9 = 1 (remaining records in chn_cd_lu after 'S' entry, set by indexer)
 //     x10 = 'S'
 //     NZCV = 0b0110
 //
@@ -68,7 +68,7 @@ chan_flag:                               // L1615
   ldrb    w9, [x28, FLAGS2-sysvars]               // w9 = [FLAGS2].
   and     w9, w9, #~0x10                          // w9 = [FLAGS2] with bit 4 clear.
   strb    w9, [x28, FLAGS2-sysvars]               // Update [FLAGS2] to have bit 4 clear (signal K channel not in use).
-  ldr     x0, [x0, 16]                            // w0 = channel letter (stored at CHANS record address + 16)
+  ldr     x0, [x0, 16]                            // x0 = channel letter (stored at CHANS record address + 16)
   adr     x1, chn_cd_lu                           // x1 = address of flag setting routine lookup table
   bl      indexer                                 // look up flag setting routine
   cbz     x1, 1f                                  // If not found then there is no routine (channel 'R' or custom user channel) to call.

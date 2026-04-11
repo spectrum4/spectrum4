@@ -10,7 +10,7 @@
 //   w0 = colour to paint border
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Paint the four border rectangles around the screen edge
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -51,7 +51,7 @@ paint_border:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Fill a solid rectangle in the framebuffer at the given coordinates
 // ------------------------------------------------------------------------------
 // On entry:
 //   w0 = x
@@ -82,7 +82,7 @@ paint_rectangle:
 
 
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Paint the main screen area inside the border
 // ------------------------------------------------------------------------------
 // On entry:
 //   w0 = colour to paint main screen

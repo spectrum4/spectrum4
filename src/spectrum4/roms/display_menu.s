@@ -6,20 +6,13 @@
 .text
 
 
-// ------------------------
-// Display Menu
-// ------------------------
-//
+.align 2
+// ------------------------------------------------------------------------------
+// Render a menu: save screen area, draw title, items, border, and highlight
+// ------------------------------------------------------------------------------
 // On entry:
 //   x19 = jump table
 //   x20 = menu text
-// On exit:
-.align 2
-// ------------------------------------------------------------------------------
-// TODO: Description
-// ------------------------------------------------------------------------------
-// On entry:
-//   TODO
 // On exit:
 //   TODO
 display_menu:                            // L36A8
@@ -82,9 +75,7 @@ display_menu:                            // L36A8
   ret
 
 
-// ------------------------
 // Menu Title Colours Table
-// ------------------------
 .align 0
 menu_title_colours:                      // L37EC
   .byte 0x16, 0x19, 0x2f                          // AT 25, 47;
@@ -96,9 +87,7 @@ menu_title_colours:                      // L37EC
   .byte 0xff                                      // end marker
 
 
-// ----------------------
 // Menu Title Space Table
-// ----------------------
 .align 0
 menu_title_space:                        // L37FA
   .byte 0x11, 0x00                                // PAPER 0

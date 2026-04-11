@@ -69,12 +69,9 @@ sinclair_stripes_text:                   // L3812
   .byte 0xff
 
 
-// --------------------------------------
-// Print the Sinclair stripes on the menu
-// --------------------------------------
 .align 2
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Print the Sinclair stripes on the menu using redefined characters
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO

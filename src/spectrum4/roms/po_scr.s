@@ -96,8 +96,10 @@ po_scr:                                  // L0C55
   and     w1, w1, #~0x10                          // Signal automatic program listing complete (since end of screen reached).
   strb    w1, [x28, TV_FLAG-sysvars]              // [TV_FLAG] = w1
   b       8f                                      // Exit routine.
+
+
 // ------------------------------------------------------------------------------
-// TODO: Description
+// Handle scroll prompt when screen counter SCR_CT reaches zero
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -127,16 +129,21 @@ po_scr_2:                                // L0C88
   orr     w9, w9, #0x08                           // Set bit 3 - signal 'L' mode.
   and     w9, w9, #~0x20                          // Clear bit 5 - signal no new key.
   strb    w9, [x28, FLAGS-sysvars]                // [FLAGS] = w9[0-7]
+
+
 // ------------------------------------------------------------------------------
-// TODO
+// Perform the actual screen scroll (stub)
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
 // On exit:
 //   TODO
 po_scr_3:                                // L0CD2
-// ------------------------------------------------------------------------------
 // TODO
+
+
+// ------------------------------------------------------------------------------
+// Test for scroll when lower screen is in use
 // ------------------------------------------------------------------------------
 // On entry:
 //   TODO
@@ -158,6 +165,13 @@ po_scr_4:                                // L0D02
   ret
 
 
+// ------------------------------------------------------------------------------
+// Report error 5 - Out of screen (stub)
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 report_5:                                // L0C86
 // TODO
 

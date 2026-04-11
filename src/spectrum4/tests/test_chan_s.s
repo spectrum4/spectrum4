@@ -1,20 +1,24 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .if ROMS_INCLUDE
 .else
   .include "temps.s"
 .endif
 
+
 .text
 .align 2
+
 
 chan_s_01_setup:
   _strb   0x3c, ATTR_P
   _strb   0x2b, MASK_P
   _strb   0b00011100, P_FLAG
   ret
+
 
 chan_s_01_effects:
   _resbit 0, TV_FLAG
@@ -23,6 +27,7 @@ chan_s_01_effects:
   _strb   0x2b, MASK_T
   _strb   0b00001100, P_FLAG
   ret
+
 
 chan_s_01_effects_regs:
   mov     x0, 0b00001100

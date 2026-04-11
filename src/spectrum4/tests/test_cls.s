@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -69,6 +69,7 @@
   .include "tkn_table.s"
 .endif
 
+
 .text
 .align 2
 
@@ -101,8 +102,10 @@ cls_1_setup:
     b.ne    4b
   ret
 
+
 cls_1_setup_regs:
   ret
+
 
 cls_1_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -153,6 +156,7 @@ cls_1_effects:
   _str    display_file + 2*16*20*216 + 19*216, DF_CC_L
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
+
 
 cls_1_effects_regs:
   mov     x0, 0x000000000000003b

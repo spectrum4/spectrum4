@@ -1,21 +1,23 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .text
 .align 2
 
 
-# indexer_1 looks up a key that is not in the lookup table. The key happens
-# to match the record count total, in case record count record is misused as a
-# key, and also a record added past the end of the lookup table, to be sure
-# scannings stops at the end of the table.
+// indexer_1 looks up a key that is not in the lookup table. The key happens
+// to match the record count total, in case record count record is misused as a
+// key, and also a record added past the end of the lookup table, to be sure
+// scannings stops at the end of the table.
+
 
 indexer_1_setup_regs:
   mov     x0, #4
   adr     x1, indexer_test_table
   ret
+
 
 indexer_1_effects_regs:
   mov     x1, #0                                  // 0 => record not found
@@ -25,12 +27,14 @@ indexer_1_effects_regs:
   ret
 
 
-# indexer_2 looks up a key that is in the lookup table twice.
+// indexer_2 looks up a key that is in the lookup table twice.
+
 
 indexer_2_setup_regs:
   ldr     x0, =0x0001020304050607
   adr     x1, indexer_test_table
   ret
+
 
 indexer_2_effects_regs:
   adr     x1, indexer_test_table_rec_0            // address of record 0 key
@@ -41,13 +45,15 @@ indexer_2_effects_regs:
   ret
 
 
-# indexer_3 looks up the last key in the lookup table, to make sure
-# the complete table is scanned.
+// indexer_3 looks up the last key in the lookup table, to make sure
+// the complete table is scanned.
+
 
 indexer_3_setup_regs:
   ldr     x0, =0x1324354657687980
   adr     x1, indexer_test_table
   ret
+
 
 indexer_3_effects_regs:
   adr     x1, indexer_test_table_rec_3            // address of record 3 key
@@ -58,12 +64,14 @@ indexer_3_effects_regs:
   ret
 
 
-# indexer_4 checks that 0 is a valid key
+// indexer_4 checks that 0 is a valid key
+
 
 indexer_4_setup_regs:
   mov     x0, #0
   adr     x1, indexer_test_table
   ret
+
 
 indexer_4_effects_regs:
   adr     x1, indexer_test_table_rec_2            // address of record 2 key
@@ -76,25 +84,25 @@ indexer_4_effects_regs:
 
 .align 3
 indexer_test_table:
-# Record count
+// Record count
   .quad 0x0000000000000004
-# record 0
+// record 0
 indexer_test_table_rec_0:
   .quad 0x0001020304050607
   .quad 0x1232343454565676
-# record 1
+// record 1
 indexer_test_table_rec_1:
   .quad 0x0001020304050607                        // duplicate key from record 0
   .quad 0xffffffffffffffff
-# record 2
+// record 2
 indexer_test_table_rec_2:
   .quad 0x0000000000000000
   .quad 0x0000000000000001
-# record 3
+// record 3
 indexer_test_table_rec_3:
   .quad 0x1324354657687980
   .quad 0x0123456789abcdef
-# this record is past end of table!
+// this record is past end of table!
 indexer_test_table_rec_past_end:
   .quad 0x0000000000000004
   .quad 0x0101010101010101

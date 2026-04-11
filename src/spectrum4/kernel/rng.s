@@ -1,14 +1,23 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
-# These bcm283x hardware random number generator routines are inspired by:
-#   https://github.com/torvalds/linux/blob/d4f6d923238dbdb69b8525e043fedef2670d4f2c/drivers/char/hw_random/bcm2835-rng.c
+// These bcm283x hardware random number generator routines are inspired by:
+//   https://github.com/torvalds/linux/blob/d4f6d923238dbdb69b8525e043fedef2670d4f2c/drivers/char/hw_random/bcm2835-rng.c
+
 
 .text
 
+
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 rand_init_bcm283x:
   mov     x5, x30
 .if UART_DEBUG
@@ -32,6 +41,13 @@ rand_init_bcm283x:
   ret     x5
 
 
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 rand_x0_bcm283x:
   adrp    x1, 0x3f104000 + _start
   1:                                              // Wait until ([0x3f104004] >> 24) >= 1
@@ -48,16 +64,17 @@ rand_x0_bcm283x:
   ret
 
 
-# Write random data to a buffer.
-#
-# On entry:
-#   x0 = address of buffer (4 byte aligned)
-#   x1 = size of buffer (multiple of 4 bytes)
-# On exit:
-#   x0 = first address after buffer
-#   x1 = 0
-#   x2 = 0x3f104000
-#   x3 = last random word written to buffer
+// ------------------------------------------------------------------------------
+// Write random data to a buffer.
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = address of buffer (4 byte aligned)
+//   x1 = size of buffer (multiple of 4 bytes)
+// On exit:
+//   x0 = first address after buffer
+//   x1 = 0
+//   x2 = 0x3f104000
+//   x3 = last random word written to buffer
 rand_block_bcm283x:
   and     x0, x0, #~0b11
   and     x1, x1, #~0b11
@@ -74,10 +91,17 @@ rand_block_bcm283x:
   ret
 
 
-# For iproc (bcm2711, used on rpi4/rpi400 etc), see
-# https://github.com/raspberrypi/linux/blob/cc333a8a1e59968156c5312c7d375b702d7d73ac/drivers/char/hw_random/iproc-rng200.c#L176-L232
+// For iproc (bcm2711, used on rpi4/rpi400 etc), see
+// https://github.com/raspberrypi/linux/blob/cc333a8a1e59968156c5312c7d375b702d7d73ac/drivers/char/hw_random/iproc-rng200.c#L176-L232
 
 
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 rand_init_iproc:
   mov     x5, x30
 .if UART_DEBUG
@@ -99,6 +123,13 @@ rand_init_iproc:
   ret     x5
 
 
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 rand_x0_iproc:
   adrp    x1, 0xfe104000 + _start
   1:                                              // Wait until [0xfe10400c] >= 16
@@ -115,16 +146,17 @@ rand_x0_iproc:
   ret
 
 
-# Write random data to a buffer.
-#
-# On entry:
-#   x0 = address of buffer (4 byte aligned)
-#   x1 = size of buffer (multiple of 4 bytes)
-# On exit:
-#   x0 = first address after buffer
-#   x1 = 0
-#   x2 = 0xfe104000
-#   x3 = last random word written to buffer
+// ------------------------------------------------------------------------------
+// Write random data to a buffer.
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = address of buffer (4 byte aligned)
+//   x1 = size of buffer (multiple of 4 bytes)
+// On exit:
+//   x0 = first address after buffer
+//   x1 = 0
+//   x2 = 0xfe104000
+//   x3 = last random word written to buffer
 rand_block_iproc:
   and     x0, x0, #~0b11
   and     x1, x1, #~0b11

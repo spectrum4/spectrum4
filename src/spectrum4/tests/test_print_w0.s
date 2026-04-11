@@ -1,14 +1,14 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .text
 .align 2
 
 
-# Test print_w0 routine using a fake print routine that just buffers what is
-# printed.
+// Test print_w0 routine using a fake print routine that just buffers what is
+// printed.
 
 
 print_w0_1_setup:

@@ -1,8 +1,9 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
-# Based on https://raw.githubusercontent.com/s-matyukevich/raspberry-pi-os/master/src/lesson03/src/entry.S
+
+// Based on https://raw.githubusercontent.com/s-matyukevich/raspberry-pi-os/master/src/lesson03/src/entry.S
 
 
 .macro handle_invalid_entry type
@@ -15,10 +16,12 @@
   b       sleep
 .endm
 
+
 .macro ventry label
   .align 7
   b       \label
 .endm
+
 
 .macro kernel_entry
   sub     sp, sp, #16 * 16
@@ -39,6 +42,7 @@
   stp     x28, x29, [sp, #16 * 14]
   str     x30, [sp, #16 * 15]
 .endm
+
 
 .macro kernel_exit
   ldp     x0, x1, [sp, #16 * 0]
@@ -61,7 +65,9 @@
   eret
 .endm
 
+
 .text
+
 
 /*
  * Exception vectors.
@@ -88,54 +94,182 @@ vectors:
   ventry  fiq_invalid_el0_32                      // FIQ 32-bit EL0
   ventry  error_invalid_el0_32                    // Error 32-bit EL0
 
+
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 sync_invalid_el1t:
   handle_invalid_entry  0
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 irq_invalid_el1t:
   handle_invalid_entry  1
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 fiq_invalid_el1t:
   handle_invalid_entry  2
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 error_invalid_el1t:
   handle_invalid_entry  3
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 sync_invalid_el1h:
   handle_invalid_entry  4
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 el1_irq:
   kernel_entry
   ldr     x0, handle_irq
   blr     x0
   kernel_exit
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 fiq_invalid_el1h:
   handle_invalid_entry  6
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 error_invalid_el1h:
   handle_invalid_entry  7
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 sync_invalid_el0_64:
   handle_invalid_entry  8
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 irq_invalid_el0_64:
   handle_invalid_entry  9
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 fiq_invalid_el0_64:
   handle_invalid_entry  10
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 error_invalid_el0_64:
   handle_invalid_entry  11
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 sync_invalid_el0_32:
   handle_invalid_entry  12
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 irq_invalid_el0_32:
   handle_invalid_entry  13
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 fiq_invalid_el0_32:
   handle_invalid_entry  14
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 error_invalid_el0_32:
   handle_invalid_entry  15

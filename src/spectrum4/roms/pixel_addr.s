@@ -1,23 +1,32 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 
-# -----------------
-# Get Pixel Address
-# -----------------
-#
-# On entry:
-#   x12 = y (0 to 927)
-#   x13 = x (0 to 1727)
-# On exit:
-#   x11 = display_file + 216*(20*(16*((927-y)/320)+(((927-y)%320)&0x0f))+((927-y)%320>>4))+x/8
-#   x12 = display_file
-#   x14 = x%8
+
+// -----------------
+// Get Pixel Address
+// -----------------
+//
+// On entry:
+//   x12 = y (0 to 927)
+//   x13 = x (0 to 1727)
+// On exit:
+//   x11 = display_file + 216*(20*(16*((927-y)/320)+(((927-y)%320)&0x0f))+((927-y)%320>>4))+x/8
+//   x12 = display_file
+//   x14 = x%8
 
 
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 pixel_addr:                              // L22AA
   mov     x11, 927
   sub     x12, x11, x12                           // x12 = 927-y

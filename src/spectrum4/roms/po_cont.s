@@ -1,11 +1,17 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# On entry:
-#   w0 = first byte of 1 byte control code or second byte of 2 byte control code
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   w0 = first byte of 1 byte control code or second byte of 2 byte control code
+// On exit:
+//   TODO
 po_cont:                                 // L0A87
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

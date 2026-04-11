@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .text
@@ -13,11 +13,13 @@ temps_chan_k_setup:
   _setbit 0, TV_FLAG
   ret
 
+
 temps_chan_k_effects:
   _strb   0x34, ATTR_T
   _strb   0, MASK_T
   _strb   0b10000010, P_FLAG
   ret
+
 
 temps_chan_k_effects_regs:
   mov     x0, 0b10000010
@@ -32,11 +34,13 @@ temps_chan_s_setup:
   _resbit 0, TV_FLAG
   ret
 
+
 temps_chan_s_effects:
   _strb   0x3c, ATTR_T
   _strb   0x2b, MASK_T
   _strb   0b00001100, P_FLAG
   ret
+
 
 temps_chan_s_effects_regs:
   mov     x0, 0b00001100

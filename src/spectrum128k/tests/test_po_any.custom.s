@@ -1,16 +1,16 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+; This file is part of the Spectrum +4 Project.
+; Licencing information can be found in the LICENCE file
+; (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 .text
 
 
 po_any_G_81_setup:
-  _resbit 0, TV_FLAG                      ; lower screen not in use (used by po_fetch)
-  _setbit 4, FLAGS                        ; 128K mode
-  _strb   0b00001111, P_FLAG              ; OVER 1, INVERSE 1
-  _resbit 1, FLAGS                        ; printer not in use
-  _strb   0x05, DF_SZ                     ; lower screen is 5 lines
+  _resbit 0, TV_FLAG                              ; lower screen not in use (used by po_fetch)
+  _setbit 4, FLAGS                                ; 128K mode
+  _strb   0b00001111, P_FLAG                      ; OVER 1, INVERSE 1
+  _resbit 1, FLAGS                                ; printer not in use
+  _strb   0x05, DF_SZ                             ; lower screen is 5 lines
   _strb   0b01010011, MASK_T
   _strb   0b01100101, ATTR_T
   _strb   0b00111000, attributes_file + 32*8*0 + 7*32 + 9

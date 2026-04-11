@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -34,16 +34,18 @@
   .include "tkn_table.s"
 .endif
 
-# This first test tests printing character 0x9a (154), which is UDG 'K'. [UDG]
-# is set so that this maps to the standard 'k' character in char_set. The
-# display file and attributes file are first prepared, and various system
-# variables are updated that affect the printing, in order to test as many
-# parameters as possible of the rendering process.  Prints to upper screen.
+
+// This first test tests printing character 0x9a (154), which is UDG 'K'. [UDG]
+// is set so that this maps to the standard 'k' character in char_set. The
+// display file and attributes file are first prepared, and various system
+// variables are updated that affect the printing, in order to test as many
+// parameters as possible of the rendering process.  Prints to upper screen.
 
 
 .set print_token_udg_patch_01_x,11
 .set print_token_udg_patch_01_screenthird, 0
 .set print_token_udg_patch_01_yoffset, 5
+
 
 .set print_token_udg_patch_01_dfaddr, display_file + 216*20*16*print_token_udg_patch_01_screenthird + print_token_udg_patch_01_yoffset*216 + print_token_udg_patch_01_x*2
 .set print_token_udg_patch_01_afaddr, attributes_file + 108*20*print_token_udg_patch_01_screenthird + print_token_udg_patch_01_yoffset*108 + print_token_udg_patch_01_x
@@ -90,6 +92,7 @@ print_token_udg_patch_01_setup:
                                                   //   INK 6
   ret
 
+
 print_token_udg_patch_01_setup_regs:
   mov     x0, (60-20*print_token_udg_patch_01_screenthird-print_token_udg_patch_01_yoffset)
   mov     x1, (109-print_token_udg_patch_01_x)
@@ -112,6 +115,7 @@ print_token_udg_patch_01_setup_regs:
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
   ret
+
 
 print_token_udg_patch_01_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -166,6 +170,7 @@ print_token_udg_patch_01_effects:
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
+
 print_token_udg_patch_01_effects_regs:
   mov     x0, (60-20*print_token_udg_patch_01_screenthird-print_token_udg_patch_01_yoffset)
   mov     x1, (109-print_token_udg_patch_01_x)-1
@@ -191,20 +196,20 @@ print_token_udg_patch_01_effects_regs:
   ret
 
 
+// This test tests printing character 0xa4 (164), which is UDG 'U'. [UDG] is set
+// so that this maps to the standard 'k' character in char_set. The display file
+// and attributes file are first prepared, and various system variables are
+// updated that affect the printing, in order to test as many parameters as
+// possible of the rendering process. Prints to upper screen.
 
-# This test tests printing character 0xa4 (164), which is UDG 'U'. [UDG] is set
-# so that this maps to the standard 'k' character in char_set. The display file
-# and attributes file are first prepared, and various system variables are
-# updated that affect the printing, in order to test as many parameters as
-# possible of the rendering process. Prints to upper screen.
 
-
-# Choose an arbitrary location on screen to print to
+// Choose an arbitrary location on screen to print to
 .set print_token_udg_patch_02_x,11
 .set print_token_udg_patch_02_screenthird, 0
 .set print_token_udg_patch_02_yoffset, 5
 
-# Calculate display file and attributes file addresses for the above character cell location
+
+// Calculate display file and attributes file addresses for the above character cell location
 .set print_token_udg_patch_02_dfaddr, display_file + 216*20*16*print_token_udg_patch_02_screenthird + print_token_udg_patch_02_yoffset*216 + print_token_udg_patch_02_x*2
 .set print_token_udg_patch_02_afaddr, attributes_file + 108*20*print_token_udg_patch_02_screenthird + print_token_udg_patch_02_yoffset*108 + print_token_udg_patch_02_x
 
@@ -251,6 +256,7 @@ print_token_udg_patch_02_setup:
                                                   //   INK 6
   ret
 
+
 print_token_udg_patch_02_setup_regs:
   mov     w0, (60-20*print_token_udg_patch_02_screenthird-print_token_udg_patch_02_yoffset)
   mov     w1, (109-print_token_udg_patch_02_x)
@@ -273,6 +279,7 @@ print_token_udg_patch_02_setup_regs:
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
   ret
+
 
 print_token_udg_patch_02_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -319,6 +326,7 @@ print_token_udg_patch_02_effects:
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 
+
 print_token_udg_patch_02_effects_regs:
   mov     w0, (60-20*print_token_udg_patch_02_screenthird-print_token_udg_patch_02_yoffset)
   mov     w1, (109-print_token_udg_patch_02_x)-1
@@ -346,15 +354,15 @@ print_token_udg_patch_02_effects_regs:
   ret
 
 
-
-# This is the same as print_token_udg_patch_01 but prints at end-of-line
-# (entry x1=1). This results in [S_POSN_X], [S_POSN_Y], [DF_CC] getting
-# updated.
+// This is the same as print_token_udg_patch_01 but prints at end-of-line
+// (entry x1=1). This results in [S_POSN_X], [S_POSN_Y], [DF_CC] getting
+// updated.
 
 
 .set print_token_udg_patch_03_x, 0
 .set print_token_udg_patch_03_screenthird, 0
 .set print_token_udg_patch_03_yoffset, 5
+
 
 .set print_token_udg_patch_03_dfaddr, display_file + 216*20*16*print_token_udg_patch_03_screenthird + print_token_udg_patch_03_yoffset*216 + print_token_udg_patch_03_x*2
 .set print_token_udg_patch_03_afaddr, attributes_file + 108*20*print_token_udg_patch_03_screenthird + print_token_udg_patch_03_yoffset*108 + print_token_udg_patch_03_x
@@ -401,6 +409,7 @@ print_token_udg_patch_03_setup:
                                                   //   INK 6
   ret
 
+
 print_token_udg_patch_03_setup_regs:
   mov     x0, (60-20*print_token_udg_patch_03_screenthird-print_token_udg_patch_03_yoffset+1)
   mov     x1, #1
@@ -423,6 +432,7 @@ print_token_udg_patch_03_setup_regs:
                                                   //   0b0000000000000000
                                                   //   0b0000000000000000
   ret
+
 
 print_token_udg_patch_03_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -471,6 +481,7 @@ print_token_udg_patch_03_effects:
 
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
+
 
 print_token_udg_patch_03_effects_regs:
   mov     x0, (60-20*print_token_udg_patch_03_screenthird-print_token_udg_patch_03_yoffset)

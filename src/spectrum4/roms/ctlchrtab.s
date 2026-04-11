@@ -1,14 +1,15 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
-# -----------------------
-# Control character table
-# -----------------------
-# For control characters in the range 6 - 23 the following table
-# is indexed to provide an offset to the handling routine that
-# follows the table.
+// -----------------------
+// Control character table
+// -----------------------
+// For control characters in the range 6 - 23 the following table
+// is indexed to provide an offset to the handling routine that
+// follows the table.
 .align 3
 ctlchrtab:                               // L0A11
   .quad po_comma                                  // chr 0x06

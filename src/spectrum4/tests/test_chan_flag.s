@@ -1,6 +1,7 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .if ROMS_INCLUDE
 .else
@@ -62,10 +63,18 @@
   .include "tkn_table.s"
 .endif
 
+
 .text
 .align 2
 
-# Copy default CHANS to heap
+
+// ------------------------------------------------------------------------------
+// Copy default CHANS to heap
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 test_chan_flag_init:
   adrp    x5, heap
   add     x5, x5, #:lo12:heap                     // x5 = start of heap
@@ -83,15 +92,18 @@ test_chan_flag_init:
 chan_flag_01_setup:
   b       test_chan_flag_init
 
+
 chan_flag_01_setup_regs:
   adrp    x0, (heap + 0x18*2)
   add     x0, x0, #:lo12:(heap + 0x18*2)
   ret
 
+
 chan_flag_01_effects:
   _str    heap + 0x18*2, CURCHL                   //  Current channel is 'R'
   _resbit 4, FLAGS2                               //  K channel not in use
   ret
+
 
 chan_flag_01_effects_regs:
   mov     x0, 'R'

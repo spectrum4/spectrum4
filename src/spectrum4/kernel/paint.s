@@ -1,13 +1,21 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .text
 
-# On entry:
-#   w0 = colour to paint border
+
+// On entry:
+//   w0 = colour to paint border
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 paint_border:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -42,12 +50,17 @@ paint_border:
   ret
 
 
-# On entry:
-#   w0 = x
-#   w1 = y
-#   w2 = width (pixels)
-#   w3 = height (pixels)
-#   w4 = colour
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   w0 = x
+//   w1 = y
+//   w2 = width (pixels)
+//   w3 = height (pixels)
+//   w4 = colour
+// On exit:
+//   TODO
 paint_rectangle:
   adr     x9, fb_req                              // x9 = address of mailbox request.
   ldr     w10, [x9, framebuffer-fb_req]           // w10 = physical address of framebuffer
@@ -68,8 +81,13 @@ paint_rectangle:
   ret
 
 
-# On entry:
-#   w0 = colour to paint main screen
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   w0 = colour to paint main screen
+// On exit:
+//   TODO
 paint_window:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.

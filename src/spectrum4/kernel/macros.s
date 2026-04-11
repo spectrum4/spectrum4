@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .macro _strb val, addr
@@ -19,7 +19,7 @@
 .endm
 
 
-# like _strh, but val in *big endian* format
+// like _strh, but val in *big endian* format
 .macro _strhbe val, addr
   mov     w0, ((\val & 0xff) << 8) | ((\val & 0xff00) >> 8)
   adrp    x1, \addr
@@ -28,7 +28,7 @@
 .endm
 
 
-# like hword, but in *big endian* format (useful for linear pixel maps)
+// like hword, but in *big endian* format (useful for linear pixel maps)
 .macro _hwordbe val
   .hword   ((\val & 0xff) << 8) | ((\val & 0xff00) >> 8)
 .endm
@@ -84,7 +84,7 @@
 .endm
 
 
-# Load a 32-bit immediate using mov.
+// Load a 32-bit immediate using mov.
 .macro movl Wn, imm
   movz    \Wn, \imm & 0xffff
   movk    \Wn, (\imm >> 16) & 0xffff, lsl #16
@@ -240,7 +240,7 @@
 .macro strbi val, base, offset
 .if UART_DEBUG
   str     \val, [sp, #-16]!
-# read_write_immediate ldrb, msg_read, 8, \val, \base, \offset
+// read_write_immediate ldrb, msg_read, 8, \val, \base, \offset
   ldr     \val, [sp], #16
 .endif
   read_write_immediate strb, msg_write, 8, \val, \base, \offset
@@ -250,7 +250,7 @@
 .macro strhi val, base, offset
 .if UART_DEBUG
   str     \val, [sp, #-16]!
-# read_write_immediate ldrh, msg_read, 16, \val, \base, \offset
+// read_write_immediate ldrh, msg_read, 16, \val, \base, \offset
   ldr     \val, [sp], #16
 .endif
   read_write_immediate strh, msg_write, 16, \val, \base, \offset
@@ -260,7 +260,7 @@
 .macro strwi val, base, offset
 .if UART_DEBUG
   str     \val, [sp, #-16]!
-# read_write_immediate ldr, msg_read, 32, \val, \base, \offset
+// read_write_immediate ldr, msg_read, 32, \val, \base, \offset
   ldr     \val, [sp], #16
 .endif
   read_write_immediate str, msg_write, 32, \val, \base, \offset
@@ -270,7 +270,7 @@
 .macro strxi val, base, offset
 .if UART_DEBUG
   str     \val, [sp, #-16]!
-# read_write_immediate ldr, msg_read, 64, \val, \base, \offset
+// read_write_immediate ldr, msg_read, 64, \val, \base, \offset
   ldr     \val, [sp], #16
 .endif
   read_write_immediate str, msg_write, 64, \val, \base, \offset

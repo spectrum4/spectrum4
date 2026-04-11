@@ -1,12 +1,15 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .arch armv8-a
 .cpu cortex-a53
 
-# Note, if we target just rpi4 / rpi400 later, we can change this as follows:
-# .cpu cortex-a72
+
+// Note, if we target just rpi4 / rpi400 later, we can change this as follows:
+// .cpu cortex-a72
+
 
 .global _start
 
@@ -17,6 +20,7 @@
 .set BORDER_RIGHT,     96
 .set BORDER_TOP,       128
 .set BORDER_BOTTOM,    112
+
 
 .set FIRST_UDG_CHAR,   'A'
 .set UDG_COUNT,        21                         // Number of User Defined Graphics to copy (=> 'A'-'U').
@@ -190,6 +194,13 @@ _start:
   add     x2, x2, #0x80                           // x2 = 0xff842080
   mov     x0, #0x20
   mov     w1, #~0                                 // group 1 all the things
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
   gic_loop:
     subs    x0, x0, #4                            // x0 = 0x1c, 0x18, 0x14, 0x10, 0x0c, 0x08, 0x04, 0x00
     str     w1, [x2, x0]                          // [0xff84209c] / [0xff82098] / [0xff82094] / [0xff82090] / [0xff8208c] / [0xff82088] / [0xff82084] / [0xff82080] = 0xffffffff
@@ -199,9 +210,8 @@ post_gic_setup:
 
 
 ##################################################
-# We are in EL3
-# Move from EL3 to EL1 directly (skip EL2)
-
+// We are in EL3
+// Move from EL3 to EL1 directly (skip EL2)
 
                                                   // +============================================+
                                                   // | SCR_EL3 Secure Configuration Register, EL3 |
@@ -282,8 +292,9 @@ post_gic_setup:
   msr     elr_el3, x0                             // Update Exception Link Register (EL3):
                                                   //   set to return address after next `eret`
   eret
-# Move from EL3 to EL1 completed
+// Move from EL3 to EL1 completed
 ##################################################
+
 
 1:
   bl      set_peripherals_addresses
@@ -291,7 +302,8 @@ post_gic_setup:
   bl      init_rpi_model                          // Fetch raspberry pi model identifier into system variable rpi_model.
   bl      init_framebuffer                        // Allocate a frame buffer with chosen screen settings.
 
-# Configure page tables
+
+// Configure page tables
   adrp    x0, pg_dir                              // x0 = pg_dir (page aligned, so no additional add needed)
   mov     x1, pg_dir_end - pg_dir                 // clear 6 pages
   bl      memzero
@@ -449,6 +461,14 @@ post_gic_setup:
                                                   // is the converted ZX Spectrum 128k code.
 .endif
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 sleep:
   msr     daifset, #0x3
 1:
@@ -457,6 +477,13 @@ sleep:
   b       1b
 
 
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 init_rpi_model:
   adr     x0, rpi_model_req                       // x0 = memory block pointer for mailbox call to get rpi model identifier
   mov     x27, x30                                // preserve link register in x27
@@ -464,6 +491,13 @@ init_rpi_model:
   ret     x27
 
 
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 init_framebuffer:
   adr     x0, fb_req                              // x0 = memory block pointer for mailbox call.
   mov     x27, x30
@@ -474,7 +508,7 @@ init_framebuffer:
   ret     x27
 
 
-# Memory block for Raspberry Pi model identifier mailbox call
+// Memory block for Raspberry Pi model identifier mailbox call
 .align 4
 rpi_model_req:
   .word (rpi_model_req_end-rpi_model_req)         // Buffer size
@@ -488,7 +522,6 @@ rpi_model:
   .word 0x00010002                                // Tag 1 - Get board revision
   .word 4                                         //   value buffer size (response > request, so use response size)
   .word 0                                         //   request: should be 0          response: 0x80000000 (success) / 0x80000001 (failure)
-
 
                                                   // +=============================+
                                                   // | Raspberry Pi Revision Codes |
@@ -547,7 +580,7 @@ rpi_revision:
 rpi_model_req_end:
 
 
-# Memory block for GPU mailbox call to allocate framebuffer
+// Memory block for GPU mailbox call to allocate framebuffer
 .align 4
 fb_req:
   .word (fb_req_end-fb_req)                       // Buffer size
@@ -599,15 +632,22 @@ arm_size:
 fb_req_end:
 
 
-# On entry:
-#   x0 = address of mailbox request
-# On exit:
-#   x0 unchanged
-#   x9 corrupted
-#   x10 corrupted
-#   x11 corrupted
-#   x12 corrupted
+// On entry:
+//   x0 = address of mailbox request
+// On exit:
+//   x0 unchanged
+//   x9 corrupted
+//   x10 corrupted
+//   x11 corrupted
+//   x12 corrupted
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 mbox_call:
   dsb     sy                                      // Data Sync Barrier, probably not needed since we always pass statically initialised data
   ldr     x9, mailbox_base                        // x9 = [mailbox_base] (Mailbox Peripheral Address) = 0xfffffff03f00b880 (rpi3) or 0xfffffff0fe00b880 (rpi4)
@@ -627,16 +667,22 @@ mbox_call:
   b.ne    2b                                      // If not, try again.
   dmb     sy                                      // Data Memory Barrier
 
-# TODO: check tag responses for errors here. loop through tags until last tag
-# found, checking each response code. report tag code for every failure and break
-# to sleep if any failures.
+
+// TODO: check tag responses for errors here. loop through tags until last tag
+// found, checking each response code. report tag code for every failure and break
+// to sleep if any failures.
 
   ret
 
 
-# On entry:
-#   x0 = address
-#   w1 = 8 bit value
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = address
+//   w1 = 8 bit value
+// On exit:
+//   TODO
 poke_address:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -764,24 +810,29 @@ poke_address:
   ret
 
 
-# ------------------------------------------------------------------------------
-# Wait (at least) x0 instruction cycles.
-# ------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
+// Wait (at least) x0 instruction cycles.
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 wait_cycles:
   subs    x0, x0, #0x1                            // x0 -= 1
   b.ne    wait_cycles                             // Repeat until x0 == 0.
   ret                                             // Return.
 
 
-# ------------------------------------------------------------------------------
-# Wait x0 microseconds
-#
-# On exit:
-#   x0 corrupted
-#   x1 corrupted
-#   x2 corrupted
-#   x3 corrupted
-# ------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------
+// Wait x0 microseconds
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   x0 corrupted
+//   x1 corrupted
+//   x2 corrupted
+//   x3 corrupted
 wait_usec:
   isb                                             // Instruction Sync Barrier - Circle has this, not sure why
   mrs     x1, cntpct_el0                          // Physical count value in all 64 bits
@@ -810,20 +861,21 @@ wait_usec:
 .include "paint.s"
 
 
-# Converts a uint64 value to ASCII decimal representation. The caller must
-# provide a buffer of at least 21 bytes. The result will be written to the end of
-# the buffer, including a trailing 0 byte. The start address will be returned.
-# The generated decimal string has no left padding with 0's or spaces etc.
-#
-# On entry:
-#   x0 = address of 21 (or more) byte buffer to write to
-#   x2 = value to convert to decimal
-# On exit:
-#   x0 = address of start of string within buffer
-#   x1 = first char (byte) of generated string (e.g. 48-57 for '0'-'9', _not_ the address)
-#   x2 = 0
-#   x3 = 0xcccccccccccccccd
-#   x4 = 0
+// ------------------------------------------------------------------------------
+// Converts a uint64 value to ASCII decimal representation. The caller must
+// provide a buffer of at least 21 bytes. The result will be written to the end of
+// the buffer, including a trailing 0 byte. The start address will be returned.
+// The generated decimal string has no left padding with 0's or spaces etc.
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = address of 21 (or more) byte buffer to write to
+//   x2 = value to convert to decimal
+// On exit:
+//   x0 = address of start of string within buffer
+//   x1 = first char (byte) of generated string (e.g. 48-57 for '0'-'9', _not_ the address)
+//   x2 = 0
+//   x3 = 0xcccccccccccccccd
+//   x4 = 0
 base10:
   add     x0, x0, #0x14                           // x0 = address of last allocated byte
   strb    wzr, [x0]                               // Store 0 in last allocated byte
@@ -843,10 +895,14 @@ base10:
 
 
 .if UART_DEBUG
-msg_init_rand:                 .asciz "Initialising random number generator unit... "
-msg_done:                      .asciz "DONE.\r\n"
-msg_read:                      .asciz "read "
-msg_write:                     .asciz "write "
+msg_init_rand:
+  .asciz "Initialising random number generator unit... "
+msg_done:
+  .asciz "DONE.\r\n"
+msg_read:
+  .asciz "read "
+msg_write:
+  .asciz "write "
 .endif
 
 
@@ -859,11 +915,12 @@ msg_write:                     .asciz "write "
 .include "timer.s"
 
 
-# Set initial values to rpi4 values, and replace at runtime if different machine.
-#
-# RPi 4/400 (bcm2711):
-#   * https://datasheets.raspberrypi.com/bcm2711/bcm2711-peripherals.pdf
-#   * https://github.com/raspberrypi/firmware/issues/1374 (implies that low peripherals mode is enabled by default by VPU)
+// Set initial values to rpi4 values, and replace at runtime if different machine.
+//
+// RPi 4/400 (bcm2711):
+//   * https://datasheets.raspberrypi.com/bcm2711/bcm2711-peripherals.pdf
+//   * https://github.com/raspberrypi/firmware/issues/1374 (implies that low peripherals mode is enabled by default by VPU)
+
 
 .align 3
 mailbox_base:
@@ -903,46 +960,53 @@ pcie_init:
 .endif
 
 
-# RPi 3B (bcm2837):
-#   * https://github.com/raspberrypi/documentation/issues/325 (explains differences between bcm2835 and bcm2837)
-#   * https://www.raspberrypi.org/app/uploads/2012/02/BCM2835-ARM-Peripherals.pdf
+// RPi 3B (bcm2837):
+//   * https://github.com/raspberrypi/documentation/issues/325 (explains differences between bcm2835 and bcm2837)
+//   * https://www.raspberrypi.org/app/uploads/2012/02/BCM2835-ARM-Peripherals.pdf
 .align 3
 base_rpi3:
-# rpi3 mailbox_base
+// rpi3 mailbox_base
   .quad     0x3f00b880 + _start
-# rpi3 gpio_base
+// rpi3 gpio_base
   .quad     0x3f200000 + _start
-# rpi3 aux_base
+// rpi3 aux_base
   .quad     0x3f215000 + _start
-# rpi3 rand_init
+// rpi3 rand_init
   .quad     rand_init_bcm283x
-# rpi3 rand_block
+// rpi3 rand_block
   .quad     rand_block_bcm283x
-# rpi3 rand_x0
+// rpi3 rand_x0
   .quad     rand_x0_bcm283x
-# rpi3 aux_mu_baud_reg
+// rpi3 aux_mu_baud_reg
   .word     0x0000010e
-# rpi3 cntfrq
+// rpi3 cntfrq
   .word     19200000
-# rpi3 local_control (physical address, not virtual)
+// rpi3 local_control (physical address, not virtual)
   .quad     0x0000000040000000
-# rpi3 timer_base
+// rpi3 timer_base
   .quad     0x3f003000 + _start
-# rpi3 enable_ic
+// rpi3 enable_ic
   .quad     enable_ic_bcm283x
-# rpi3 handle_irq
+// rpi3 handle_irq
   .quad     handle_irq_bcm283x
-# rpi3 peripherals_start (physical address, not virtual)
+// rpi3 peripherals_start (physical address, not virtual)
   .quad     0x000000003f000000
-# rpi3 peripherals_end (physical address, not virtual)
+// rpi3 peripherals_end (physical address, not virtual)
   .quad     0x0000000040200000
 .if PCI_INCLUDE
-# rpi3 pcie_init
+// rpi3 pcie_init
   .quad     0x0000000000000000                    // 0 => no pcie
 .endif
 
 
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 set_peripherals_addresses:
   mrs     x0, midr_el1                            // See https://developer.arm.com/documentation/ddi0601/2022-09/AArch64-Registers/MIDR-EL1--Main-ID-Register?lang=en
                                                   // x0 = Main ID Register value 0xNNNNNNNNIIVAPPPR, where:
@@ -992,7 +1056,8 @@ set_peripherals_addresses:
                                                   //   => Part Number = 0xd08 (presumably, Raspberry Pi 4)
                                                   //   => Revision = 0x3 (p3 for r0p3)
 
-# mrs     x1, revidr_el1                          // e.g. x1 = 0x80 (value on my Raspberry Pi 3 Model B)
+
+// mrs     x1, revidr_el1                          // e.g. x1 = 0x80 (value on my Raspberry Pi 3 Model B)
                                                   //           0x00 (value on my Raspberry Pi 400)
   and     x0, x0, #0xfff0
   mov     x1, #0xd030
@@ -1043,8 +1108,14 @@ set_peripherals_addresses:
 
 
 .align 2
-# Emulates https://github.com/raspberrypi/tools/blob/2e59fc67d465510179155973d2b959e50a440e47/armstubs/armstub8.S#L98-L102
-# which seems to be important for the frequency at which ARM register cntpct_el0 increments (used by wait_usec)
+// ------------------------------------------------------------------------------
+// Emulates https://github.com/raspberrypi/tools/blob/2e59fc67d465510179155973d2b959e50a440e47/armstubs/armstub8.S#L98-L102
+// which seems to be important for the frequency at which ARM register cntpct_el0 increments (used by wait_usec)
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 set_clocks:
   ldr     x0, local_control
                                                   // +=======================+
@@ -1062,12 +1133,21 @@ set_clocks:
   str     w1, [x0, 8]
   ret
 
+
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 memzero:
 1:
   str     xzr, [x0], #8
   subs    x1, x1, #0x8
   b.gt    1b
   ret
+
 
 .include "armregs.s"
 .include "font.s"

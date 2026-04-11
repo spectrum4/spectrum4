@@ -1,50 +1,51 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# -------------------------
-# Fetch position parameters
-# -------------------------
-# This routine fetches the line/column and display file address
-# of the upper or lower screen or, if the printer is in use,
-# the column position and absolute memory address.
-#
-# If printer in use:
-#   On entry:
-#     Bit 1 of FLAGS set
-#     [P_POSN_X] set to printer position
-#     [PR_CC] set to printer buffer address
-#     x28 = sysvars
-#   On exit:
-#     w0 = [FLAGS]
-#     w1 = [P_POSN_X] (109 - actual printer column)
-#     x2 = [PR_CC] (address in printer buffer)
-#
-# If upper screen in use:
-#   On entry:
-#     Bit 1 of FLAGS clear
-#     Bit 0 of [TV_FLAG] clear
-#     [S_POSN_{X,Y}] set to upper screen position
-#     [DF_CC] set to display file address of upper screen position
-#     x28 = sysvars
-#   On exit:
-#     w0 = [S_POSN_Y] (60 - actual upper screen row)
-#     w1 = [S_POSN_X] (109 - actual upper screen column)
-#     x2 = [DF_CC] (address of upper screen cursor in display file)
-#
-# If lower screen in use:
-#   On entry:
-#     Bit 1 of FLAGS clear
-#     Bit 0 of [TV_FLAG] set
-#     [S_POSN_{X,Y}_L] set to lower screen position
-#     [DF_CC_L] set to display file address of lower screen position
-#     x28 = sysvars
-#   On exit:
-#     w0 = [S_POSN_Y_L] (120 - [DF_SZ] - actual lower screen row)
-#     w1 = [S_POSN_X_L] (109 - actual lower screen column)
-#     x2 = [DF_CC_L] (address of lower screen cursor in display file)
+// ------------------------------------------------------------------------------
+// Fetch position parameters
+// This routine fetches the line/column and display file address
+// of the upper or lower screen or, if the printer is in use,
+// the column position and absolute memory address.
+//
+// If printer in use:
+// ------------------------------------------------------------------------------
+//   On entry:
+//     Bit 1 of FLAGS set
+//     [P_POSN_X] set to printer position
+//     [PR_CC] set to printer buffer address
+//     x28 = sysvars
+//   On exit:
+//     w0 = [FLAGS]
+//     w1 = [P_POSN_X] (109 - actual printer column)
+//     x2 = [PR_CC] (address in printer buffer)
+//
+// If upper screen in use:
+//   On entry:
+//     Bit 1 of FLAGS clear
+//     Bit 0 of [TV_FLAG] clear
+//     [S_POSN_{X,Y}] set to upper screen position
+//     [DF_CC] set to display file address of upper screen position
+//     x28 = sysvars
+//   On exit:
+//     w0 = [S_POSN_Y] (60 - actual upper screen row)
+//     w1 = [S_POSN_X] (109 - actual upper screen column)
+//     x2 = [DF_CC] (address of upper screen cursor in display file)
+//
+// If lower screen in use:
+//   On entry:
+//     Bit 1 of FLAGS clear
+//     Bit 0 of [TV_FLAG] set
+//     [S_POSN_{X,Y}_L] set to lower screen position
+//     [DF_CC_L] set to display file address of lower screen position
+//     x28 = sysvars
+//   On exit:
+//     w0 = [S_POSN_Y_L] (120 - [DF_SZ] - actual lower screen row)
+//     w1 = [S_POSN_X_L] (109 - actual lower screen column)
+//     x2 = [DF_CC_L] (address of lower screen cursor in display file)
 po_fetch:                                // L0B03
   ldrb    w0, [x28, FLAGS-sysvars]                // w0 = [FLAGS]
   tbnz    w0, #1, 2f                              // If printer in use, jump forward to 2:.

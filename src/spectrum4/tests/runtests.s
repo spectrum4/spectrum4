@@ -1,22 +1,25 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
-# sp4_test_flags
+
+// sp4_test_flags
 .set DUMP_DISPLAY,    0b00000001                  // Indicates that test runner should dump snapshot of display
                                                   // memory after calling routine under test, in order that this
                                                   // can be converted to a .png file for visual inspection and
                                                   // validation, and if correct, included in test for restoring
                                                   // in <test>_effects routine.
 
+
 .text
 .align 2
-# Run all system tests.
-#
-# On entry:
-#   <nothing>
-# On exit:
-#   God knows
+// ------------------------------------------------------------------------------
+// Run all system tests.
+// ------------------------------------------------------------------------------
+// On entry:
+//   <nothing>
+// On exit:
+//   God knows
 run_tests:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -382,6 +385,7 @@ run_tests:
     add     sp, sp, #0x10
     cbnz    x10, 1b                               // Loop if more tests to run
 
+
 12:
   adr     x0, msg_all_tests_completed
   bl      uart_puts                               // Log "All tests completed.\r\n"
@@ -398,6 +402,13 @@ random_block_zeros:
 
 
 .align 2
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 uart_memory_dump:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -414,8 +425,13 @@ uart_memory_dump:
 
 
 .align 2
-# On entry:
-#   x8 = Memory location
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x8 = Memory location
+// On exit:
+//   TODO
 log_ram:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -430,8 +446,13 @@ log_ram:
 
 
 .align 2
-# On entry:
-#   x20 = Memory location of sysvar metadata record
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x20 = Memory location of sysvar metadata record
+// On exit:
+//   TODO
 log_sysvar:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -443,8 +464,13 @@ log_sysvar:
   ret
 
 
-# On entry:
-#   x9 = x register index (0-30)
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x9 = x register index (0-30)
+// On exit:
+//   TODO
 log_register:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -460,26 +486,34 @@ log_register:
   ret
 
 
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 compare_registers:
   cmp     x0, x1
   ret
 
 
-# Compares two address regions, w21 bytes long. The first region starts at
-# address x0, the second at x1. If the regions hold identical bytes, on return
-# Z flag is set, otherwise clear. Regions may overlap.
-#
-# On entry:
-#   x0 = address of first memory location
-#   x1 = address of second memory location
-#   w21 = size in bytes of memory to compare
-# On exit:
-#   x0, x1 address first byte after first non-matching byte, or first address after memory region if matching.
-#   w21 = 0 if regions match, otherwise 1 => last byte mismatch, 2=> second last byte mismatch, etc
-#   w16 = value of first mismatched byte from first memory location, or last byte if match
-#   w17 = value of first mismatched byte from second memory location, or last byte if match
-#   Z flag clear => regions don't match
-#   Z flag set => regions match
+// ------------------------------------------------------------------------------
+// Compares two address regions, w21 bytes long. The first region starts at
+// address x0, the second at x1. If the regions hold identical bytes, on return
+// Z flag is set, otherwise clear. Regions may overlap.
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = address of first memory location
+//   x1 = address of second memory location
+//   w21 = size in bytes of memory to compare
+// On exit:
+//   x0, x1 address first byte after first non-matching byte, or first address after memory region if matching.
+//   w21 = 0 if regions match, otherwise 1 => last byte mismatch, 2=> second last byte mismatch, etc
+//   w16 = value of first mismatched byte from first memory location, or last byte if match
+//   w17 = value of first mismatched byte from second memory location, or last byte if match
+//   Z flag clear => regions don't match
+//   Z flag set => regions match
 compare_ram:
   cbz     w21, 2f
   1:                                              // loop through bytes of sysvar to see if any value is different
@@ -493,29 +527,30 @@ compare_ram:
   ret
 
 
-# Log test failure message
-#
-# Report a failure message to UART if values are equal but should not be, or
-# are not equal but should be. Otherwise do nothing.
-#
-# Report lines as follows:
-#
-# FAIL: po_change test case 1: Register x3 changed from 0x8ceb064787d0b39b to 0x0000000000001a68, but should not have changed.
-# FAIL: po_change test case 1: System variable CURCHL changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
-# FAIL: po_change test case 1: Register x5 unchanged from 0xfe87f64783bc7a76 but should have changed to 0x00000f00f00f00f0.
-#
-# On entry:
-#   x8 = RAM test failure only: address that failed
-#   x9 = Register failure only: x register index
-#   x12 = pre-test value reference
-#   x13 = post-test value reference
-#   x14 = expected value reference
-#   x16 = function to log entity description
-#   x22 = function to compare two values
-#   x23 = address of test name minus 0x10
-#   x27 = function to log entity value
-# On exit:
-#   x0 / x1 / x2 / x3 corrupted (uart_puts / x16 / uart_x0 / hex_x0)
+// ------------------------------------------------------------------------------
+// Log test failure message
+//
+// Report a failure message to UART if values are equal but should not be, or
+// are not equal but should be. Otherwise do nothing.
+//
+// Report lines as follows:
+//
+// FAIL: po_change test case 1: Register x3 changed from 0x8ceb064787d0b39b to 0x0000000000001a68, but should not have changed.
+// FAIL: po_change test case 1: System variable CURCHL changed from 0x0000000000001a60 to 0x000000000ed00100, but should have changed to 0x00000f00f00f00f0.
+// FAIL: po_change test case 1: Register x5 unchanged from 0xfe87f64783bc7a76 but should have changed to 0x00000f00f00f00f0.
+// ------------------------------------------------------------------------------
+// On entry:
+//   x8 = RAM test failure only: address that failed
+//   x9 = Register failure only: x register index
+//   x12 = pre-test value reference
+//   x13 = post-test value reference
+//   x14 = expected value reference
+//   x16 = function to log entity description
+//   x22 = function to compare two values
+//   x23 = address of test name minus 0x10
+//   x27 = function to log entity value
+// On exit:
+//   x0 / x1 / x2 / x3 corrupted (uart_puts / x16 / uart_x0 / hex_x0)
 test_fail:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -575,20 +610,23 @@ test_fail:
   ret
 
 
-# On entry:
-#   x2 = location to write compressed data to
-#   x3 = first address after buffer for compressed data
-# On exit:
-#   x0 = start address of last continuous region
-#   x1 = end address (exclusive) of last continuous region
-#   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
-#   x4 = [x1 - 16]
-#   x5 = [x1 - 8]
-#   x7 = first address after random block
-#   x8 = address in random block
-#   x11 = rand_data
-#   x26 = repeat count of last quad (excluding original entry, i.e. n-1 where n = length of repeated sequence)
-#   x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x2 = location to write compressed data to
+//   x3 = first address after buffer for compressed data
+// On exit:
+//   x0 = start address of last continuous region
+//   x1 = end address (exclusive) of last continuous region
+//   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
+//   x4 = [x1 - 16]
+//   x5 = [x1 - 8]
+//   x7 = first address after random block
+//   x8 = address in random block
+//   x11 = rand_data
+//   x26 = repeat count of last quad (excluding original entry, i.e. n-1 where n = length of repeated sequence)
+//   x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
 snapshot_all_ram:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -636,22 +674,25 @@ snapshot_all_ram:
   ret
 
 
-# On entry:
-#   x0 = start address to compress (inclusive) -> 8 byte aligned
-#   x1 = end address to compress (exclusive) -> 8 byte aligned, at least 16 more than x0
-#   x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
-#   x3 = end address of compressed data buffer (exclusive) -> 8 byte aligned
-#   w4 = random block length
-#   x11 = address of random data
-# On exit:
-#   x0 = x1
-#   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
-#   x4 = [x1 - 16]
-#   x5 = [x1 - 8]
-#   x7 = first address after random block
-#   x8 = address in random block
-#   x26 = repeat count of last quad (excluding original entry, i.e. n-1 where n = length of repeated sequence)
-#   x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = start address to compress (inclusive) -> 8 byte aligned
+//   x1 = end address to compress (exclusive) -> 8 byte aligned, at least 16 more than x0
+//   x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
+//   x3 = end address of compressed data buffer (exclusive) -> 8 byte aligned
+//   w4 = random block length
+//   x11 = address of random data
+// On exit:
+//   x0 = x1
+//   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
+//   x4 = [x1 - 16]
+//   x5 = [x1 - 8]
+//   x7 = first address after random block
+//   x8 = address in random block
+//   x26 = repeat count of last quad (excluding original entry, i.e. n-1 where n = length of repeated sequence)
+//   x27 = 0x6a09e667bb67ae85 (reserved code to denote that a count and repeated value follow)
 snapshot_memory:
   add     x2, x2, #16                             // Number of bytes required to store start and end addresses in buffer
   cmp     x2, x3                                  // Check buffer has enough space for storing start/end addresses
@@ -716,8 +757,13 @@ snapshot_memory:
   b       sleep
 
 
-# On entry:
-#   x2 = location of snapshot
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x2 = location of snapshot
+// On exit:
+//   TODO
 restore_all_ram:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -747,19 +793,22 @@ restore_all_ram:
   ret
 
 
-# On entry:
-#   x0 = start address to decompress to (inclusive) -> 8 byte aligned
-#   x1 = end address to decompress to (exclusive) -> 8 byte aligned, at least 16 more than x0
-#   x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
-#   w4 = random block length
-#   x11 = address of random data
-# On exit:
-#   x0 = x1
-#   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
-#   x4 = [x1 - 8]
-#   x5 = 0
-#   x27 = 0x6a09e667bb67ae85
-#  TODO: update reg list
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = start address to decompress to (inclusive) -> 8 byte aligned
+//   x1 = end address to decompress to (exclusive) -> 8 byte aligned, at least 16 more than x0
+//   x2 = start address of compressed data buffer (inclusive) -> 8 byte aligned
+//   w4 = random block length
+//   x11 = address of random data
+// On exit:
+//   x0 = x1
+//   x2 = end address of used compressed data (exclusive) -> 8 byte aligned
+//   x4 = [x1 - 8]
+//   x5 = 0
+//   x27 = 0x6a09e667bb67ae85
+//  TODO: update reg list
 restore_snapshot:
   udiv    x8, x0, x4                              // x8 = int(start_address_decompressed/x4)
   mul     x8, x8, x4
@@ -793,31 +842,34 @@ restore_snapshot:
   ret
 
 
-# On entry:
-#   x6 = pre-test compressed snapshot address
-#   x7 = post-test compressed snapshot address
-# On exit:
-#   x0
-#   x1
-#   x2
-#   x3
-#   x4
-#   x5
-#   x6
-#   x7
-#   x8
-#   x9
-#   x11
-#   x12
-#   x13
-#   x14
-#   x15
-#   x16
-#   x17
-#   x18
-#   x22
-#   x25
-#   x27
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x6 = pre-test compressed snapshot address
+//   x7 = post-test compressed snapshot address
+// On exit:
+//   x0
+//   x1
+//   x2
+//   x3
+//   x4
+//   x5
+//   x6
+//   x7
+//   x8
+//   x9
+//   x11
+//   x12
+//   x13
+//   x14
+//   x15
+//   x16
+//   x17
+//   x18
+//   x22
+//   x25
+//   x27
 compare_all_snapshots:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
@@ -861,32 +913,35 @@ compare_all_snapshots:
   ret
 
 
-# On entry:
-#   x6 = pre-test compressed snapshot address
-#   x7 = post-test compressed snapshot address
-#   x8 = start memory address (inclusive) of expected data (uncompressed)
-#   x9 = end memory address (exclusive) of expected data (uncompressed)
-# On exit:
-#   x0
-#   x1
-#   x2
-#   x3
-#   x4
-#   x5
-#   x6
-#   x7
-#   x8
-#   x11
-#   x12
-#   x13
-#   x14
-#   x15
-#   x16
-#   x17
-#   x18
-#   x22
-#   x25
-# TODO: Custom output for system vars
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x6 = pre-test compressed snapshot address
+//   x7 = post-test compressed snapshot address
+//   x8 = start memory address (inclusive) of expected data (uncompressed)
+//   x9 = end memory address (exclusive) of expected data (uncompressed)
+// On exit:
+//   x0
+//   x1
+//   x2
+//   x3
+//   x4
+//   x5
+//   x6
+//   x7
+//   x8
+//   x11
+//   x12
+//   x13
+//   x14
+//   x15
+//   x16
+//   x17
+//   x18
+//   x22
+//   x25
+// TODO: Custom output for system vars
 compare_snapshots:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   stp     x26, x27, [sp, #-16]!
@@ -955,8 +1010,14 @@ compare_snapshots:
   ret
 
 
-# Fill with repeating sequence of random data, with random length one of
-# 0x40/0x50/0x60/0x70/0x80/0x90/0xa0/0xb0.
+// ------------------------------------------------------------------------------
+// Fill with repeating sequence of random data, with random length one of
+// 0x40/0x50/0x60/0x70/0x80/0x90/0xa0/0xb0.
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 fill_memory_with_junk:
   mov     x11, x30
   adr     x0, msg_filling_memory_with_junk
@@ -993,11 +1054,16 @@ fill_memory_with_junk:
   ret     x11
 
 
-# On entry:
-#   x4: random block length
-#   x5: random bytes
-#   x6: end address (exclusive)
-#   x8: start address (inclusive)
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x4: random block length
+//   x5: random bytes
+//   x6: end address (exclusive)
+//   x8: start address (inclusive)
+// On exit:
+//   TODO
 fill_region_with_junk:
   mov     x0, x30
   udiv    x9, x8, x4                              // x9 = int(__bss_start/x4)
@@ -1036,6 +1102,13 @@ fake_reg_update_channel_block:
 
 
 .align 3
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 fake_printout:
   stp     x1, x2, [sp, #-16]!
   adr     x1, fake_print_buffer_location
@@ -1046,17 +1119,24 @@ fake_printout:
   ret
 
 
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 fake_printout_touch_regs:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   bl      fake_printout
   mov     x0, #0x0a00
   mov     x1, #0x0a01
-# mov     x2, #0x0a02                             // x2 must be preserved
-# mov     x3, #0x0a03                             // x3 must be preserved
-# mov     x4, #0x0a04                             // x4 must be preserved
-# mov     x5, #0x0a05                             // x5 must be preserved
-# mov     x6, #0x0a06                             // x6 must be preserved
+// mov     x2, #0x0a02                             // x2 must be preserved
+// mov     x3, #0x0a03                             // x3 must be preserved
+// mov     x4, #0x0a04                             // x4 must be preserved
+// mov     x5, #0x0a05                             // x5 must be preserved
+// mov     x6, #0x0a06                             // x6 must be preserved
   mov     x7, #0x0a07
   mov     x8, #0x0a08
   mov     x9, #0x0a09
@@ -1078,8 +1158,8 @@ fake_printout_touch_regs:
   mov     x25, #0x0a19
   mov     x26, #0x0a1a
   mov     x27, #0x0a1b
-# x28 must be preserved!!!
-# mov     x28, #0x0a1c
+// x28 must be preserved!!!
+// mov     x28, #0x0a1c
   mov     x29, #0x0a1d
   mov     x30, #0x0a1e
   nzcv    #0b0101
@@ -1093,50 +1173,74 @@ fake_print_buffer_location:
 
 
 ##############################################################
-#
-# The following is intentionally in .text not .data so that
-# adr instructions can be used rather than adrp/add to reduce
-# code size. It may be that performance is better with a .data
-# section in terms of cache utilisation due to the colocation
-# of data, but I haven't tested. Could also be that it makes
-# no difference if the caches are big enough
-#
+//
+// The following is intentionally in .text not .data so that
+// adr instructions can be used rather than adrp/add to reduce
+// code size. It may be that performance is better with a .data
+// section in terms of cache utilisation due to the colocation
+// of data, but I haven't tested. Could also be that it makes
+// no difference if the caches are big enough
+//
 ##############################################################
 
+
 .align 0
-msg_fail:                      .asciz "FAIL: "
-msg_fail_0:                    .asciz "Register x"
-msg_fail_1:                    .asciz " changed from "
-msg_fail_2:                    .asciz " unchanged from "
-msg_fail_3:                    .asciz " to "
-msg_fail_4:                    .asciz ", but should have changed to "
-# Intentionally .ascii not .asciz, in order to join with msg_fail_6.
-msg_fail_5:                    .ascii ", but should not have changed"
-msg_fail_6:                    .asciz ".\r\n"
-msg_fail_7:                    .asciz "System variable "
-msg_fail_8:                    .asciz "Memory location ["
-msg_filling_memory_with_junk:  .asciz "Filling memory with junk... "
-msg_out_of_memory:             .asciz "Out of memory!\r\n"
-# msg_rebooting:                 .asciz "Rebooting..."
-msg_running_test_part_1:       .asciz "Running test "
-msg_running_test_part_2:       .asciz "...\r\n"
-msg_should_be_set:             .asciz " should be set.\r\n"
-msg_should_not_be_set:         .asciz " should not be set.\r\n"
-msg_all_tests_completed:       .asciz "All tests completed.\r\n"
-msg_dot_quad:                  .asciz ".quad "
+msg_fail:
+  .asciz "FAIL: "
+msg_fail_0:
+  .asciz "Register x"
+msg_fail_1:
+  .asciz " changed from "
+msg_fail_2:
+  .asciz " unchanged from "
+msg_fail_3:
+  .asciz " to "
+msg_fail_4:
+  .asciz ", but should have changed to "
+// Intentionally .ascii not .asciz, in order to join with msg_fail_6.
+msg_fail_5:
+  .ascii ", but should not have changed"
+msg_fail_6:
+  .asciz ".\r\n"
+msg_fail_7:
+  .asciz "System variable "
+msg_fail_8:
+  .asciz "Memory location ["
+msg_filling_memory_with_junk:
+  .asciz "Filling memory with junk... "
+msg_out_of_memory:
+  .asciz "Out of memory!\r\n"
+// msg_rebooting:                 .asciz "Rebooting..."
+msg_running_test_part_1:
+  .asciz "Running test "
+msg_running_test_part_2:
+  .asciz "...\r\n"
+msg_should_be_set:
+  .asciz " should be set.\r\n"
+msg_should_not_be_set:
+  .asciz " should not be set.\r\n"
+msg_all_tests_completed:
+  .asciz "All tests completed.\r\n"
+msg_dot_quad:
+  .asciz ".quad "
+
 
 flag_msg_offsets:
 .byte msg_flag_n - .
 .byte msg_flag_z - .
 .byte msg_flag_c - .
 .byte msg_flag_v - .
-msg_flag_c:                    .asciz "Carry flag (C)"
-msg_flag_n:                    .asciz "Negative flag (N)"
-msg_flag_v:                    .asciz "Overflow flag (V)"
-msg_flag_z:                    .asciz "Zero flag (Z)"
+msg_flag_c:
+  .asciz "Carry flag (C)"
+msg_flag_n:
+  .asciz "Negative flag (N)"
+msg_flag_v:
+  .asciz "Overflow flag (V)"
+msg_flag_z:
+  .asciz "Zero flag (Z)"
 
 
-# Used by various unit tests....
+// Used by various unit tests....
 test_message_table:
   .asciz "hello"
   .asciz "dog"
@@ -1150,32 +1254,44 @@ test_message_supper:
 
 .bss
 
-# Note, the start of this bss section is included in memory snapshots since
-# snapshots are from 0 -> bss_debug_start, and bss_debug_start is declared
-# further down in this file.
+
+// Note, the start of this bss section is included in memory snapshots since
+// snapshots are from 0 -> bss_debug_start, and bss_debug_start is declared
+// further down in this file.
+
 
 .align 0
 fake_print_buffer:
   .space 1024
 
+
 #########################################
-# End of RAM snapshots
+// End of RAM snapshots
 #########################################
 
 
 .align 4
 bss_debug_start:
 
-.align 0
-uart_disable: .space 1
-sp4_test_flags: .space 1
 
 .align 0
-rand_seq_length: .space 1
+uart_disable:
+  .space 1
+sp4_test_flags:
+  .space 1
+
+
+.align 0
+rand_seq_length:
+  .space 1
+
 
 .align 3
-memory_dumps: .space MEMORY_DUMPS_BUFFER_SIZE
+memory_dumps:
+  .space MEMORY_DUMPS_BUFFER_SIZE
 memory_dumps_end:
 
+
 .align 4
-rand_data: .space 0x100
+rand_data:
+  .space 0x100

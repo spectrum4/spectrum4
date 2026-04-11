@@ -1,6 +1,6 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .if ROMS_INCLUDE
@@ -55,11 +55,12 @@
   .include "tkn_table.s"
 .endif
 
+
 .text
 
 
-# Need a loooooong table here, since leading space requires >= 32 entries
-# to occur.
+// Need a loooooong table here, since leading space requires >= 32 entries
+// to occur.
 .align 0
 msg_po_msg_test:
   .asciz "potato"
@@ -103,23 +104,27 @@ msg_33:
   .asciz "33"
 msg_34:
 
-# Output adds a leading space...
+
+// Output adds a leading space...
 .align 0
 msg_32_out:
   .asciz " msg32"
 
 
-# po_msg_01 just prints a regular message with no leading space
+// po_msg_01 just prints a regular message with no leading space
+
 
 .align 2
 po_msg_01_setup:
   _str    fake_channel_block, CURCHL
   ret
 
+
 po_msg_01_setup_regs:
   mov     x3, #0x2
   adr     x4, msg_po_msg_test
   ret
+
 
 po_msg_01_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -128,6 +133,7 @@ po_msg_01_effects:
   bl      print_message                           // Expected output.
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
+
 
 po_msg_01_effects_regs:
   mov     x0, #0x00
@@ -139,7 +145,8 @@ po_msg_01_effects_regs:
   ret
 
 
-# po_msg_02 prints a message with leading space, since first char >= 'A', index >= 32 and FLAGS bit 0 is clear
+// po_msg_02 prints a message with leading space, since first char >= 'A', index >= 32 and FLAGS bit 0 is clear
+
 
 .align 2
 po_msg_02_setup:
@@ -147,10 +154,12 @@ po_msg_02_setup:
   _resbit 0, FLAGS
   ret
 
+
 po_msg_02_setup_regs:
   mov     x3, #32
   adr     x4, msg_po_msg_test
   ret
+
 
 po_msg_02_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -159,6 +168,7 @@ po_msg_02_effects:
   bl      print_message                           // Expected output.
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
+
 
 po_msg_02_effects_regs:
   mov     x0, #0x00
@@ -170,7 +180,8 @@ po_msg_02_effects_regs:
   ret
 
 
-# po_msg_03 shouldn't print leading space, despite index >= 32 and FLAGS bit 0 being clear, since first char = '3' (i.e. not >= 'A')
+// po_msg_03 shouldn't print leading space, despite index >= 32 and FLAGS bit 0 being clear, since first char = '3' (i.e. not >= 'A')
+
 
 .align 2
 po_msg_03_setup:
@@ -178,10 +189,12 @@ po_msg_03_setup:
   _resbit 0, FLAGS
   ret
 
+
 po_msg_03_setup_regs:
   mov     x3, #33
   adr     x4, msg_po_msg_test
   ret
+
 
 po_msg_03_effects:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
@@ -190,6 +203,7 @@ po_msg_03_effects:
   bl      print_message                           // Expected output.
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
+
 
 po_msg_03_effects_regs:
   mov     x0, #0x00
@@ -201,13 +215,13 @@ po_msg_03_effects_regs:
   ret
 
 
-# This test checks that if we print a string which contains the control code
-# sequence 0x10, 0x03, 0x11, 0x02, 0x11, 0x09, 0x10, 0x09 (INK 3, PAPER 2,
-# PAPER 9, INK 9) that we end up with ATTR_T holding INK 0 and PAPER 7.
-#
-# Note this is different to what we get if we swap the order of the control
-# codes from PAPER 9, INK 9 to INK 9, PAPER 9 which is demonstrated in the
-# subsequent test.
+// This test checks that if we print a string which contains the control code
+// sequence 0x10, 0x03, 0x11, 0x02, 0x11, 0x09, 0x10, 0x09 (INK 3, PAPER 2,
+// PAPER 9, INK 9) that we end up with ATTR_T holding INK 0 and PAPER 7.
+//
+// Note this is different to what we get if we swap the order of the control
+// codes from PAPER 9, INK 9 to INK 9, PAPER 9 which is demonstrated in the
+// subsequent test.
 .align 2
 po_msg_paper_ink_9_1_setup:
   _str    heap, CHANS
@@ -216,10 +230,12 @@ po_msg_paper_ink_9_1_setup:
   _strh   0x01, STRMS
   ret
 
+
 po_msg_paper_ink_9_1_setup_regs:
   mov     x3, xzr
   adr     x4, po_msg_paper_ink_9_1_text
   ret
+
 
 po_msg_paper_ink_9_1_effects_regs:
   mov     x0, #0x00
@@ -229,6 +245,7 @@ po_msg_paper_ink_9_1_effects_regs:
   mov     x6, #0x09
   nzcv    0b1000
   ret
+
 
 po_msg_paper_ink_9_1_effects:
   _strb   0x10, TVDATA                            // last control code in string (INK)
@@ -253,6 +270,7 @@ po_msg_paper_ink_9_1_effects:
   _setbit 6, P_FLAG                               // paper 9
   ret
 
+
 po_msg_paper_ink_9_1_text:
   .byte   0x00                                    // initial marker
   .byte   0x10, 0x03                              // ink 3
@@ -262,13 +280,13 @@ po_msg_paper_ink_9_1_text:
   .byte   0x00                                    // end marker
 
 
-# This test checks that if we print a string which contains the control code
-# sequence 0x10, 0x03, 0x11, 0x02, 0x10, 0x09, 0x11, 0x09 (INK 3, PAPER 2,
-# INK 9, PAPER 9) that we end up with ATTR_T holding INK 7 and PAPER 0.
-#
-# Note this is different to what we get if we swap the order of the control
-# codes from INK 9, PAPER 9 to PAPER 9, INK 9 which is demonstrated in the
-# previous test.
+// This test checks that if we print a string which contains the control code
+// sequence 0x10, 0x03, 0x11, 0x02, 0x10, 0x09, 0x11, 0x09 (INK 3, PAPER 2,
+// INK 9, PAPER 9) that we end up with ATTR_T holding INK 7 and PAPER 0.
+//
+// Note this is different to what we get if we swap the order of the control
+// codes from INK 9, PAPER 9 to PAPER 9, INK 9 which is demonstrated in the
+// previous test.
 .align 2
 po_msg_paper_ink_9_2_setup:
   _str    heap, CHANS
@@ -277,10 +295,12 @@ po_msg_paper_ink_9_2_setup:
   _strh   0x01, STRMS
   ret
 
+
 po_msg_paper_ink_9_2_setup_regs:
   mov     x3, xzr
   adr     x4, po_msg_paper_ink_9_2_text
   ret
+
 
 po_msg_paper_ink_9_2_effects_regs:
   mov     x0, #0x00
@@ -290,6 +310,7 @@ po_msg_paper_ink_9_2_effects_regs:
   mov     x6, #0x09
   nzcv    0b1000
   ret
+
 
 po_msg_paper_ink_9_2_effects:
   _strb   0x11, TVDATA                            // last control code in string (PAPER)
@@ -313,6 +334,7 @@ po_msg_paper_ink_9_2_effects:
   _setbit 4, P_FLAG                               // ink 9
   _setbit 6, P_FLAG                               // paper 9
   ret
+
 
 po_msg_paper_ink_9_2_text:
   .byte   0x00                                    // initial marker

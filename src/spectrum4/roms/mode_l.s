@@ -1,15 +1,28 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
-# On entry:
-# On exit:
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 mode_l:                                  // L365E
   strb    wzr, [x28, MODE-sysvars]                // Select 'L' mode ([MODE] = 0).
   mov     w0, #0x2
   strb    w0, [x28, REPPER-sysvars]               // Reset repeat key duration to 2.
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   TODO
+// On exit:
+//   TODO
 mode_l_2:                                // L3668
   ldrb    w1, [x28, FLAGS-sysvars]
   orr     w1, w1, #0x0c

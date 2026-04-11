@@ -1,20 +1,24 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
 
 .text
 .align 2
 
 
-# On entry:
-#   x0 = hex value to convert to text
-#   x1 = address to write text to (no trailing 0)
-#   x2 = number of bits to convert (multiple of 4)
-# On exit:
-#   x0 = <unchanged>
-#   x1 = address of next unused char (x1 += x2/4)
-#   x2 = 0
-#   x3 = last char in text
+// ------------------------------------------------------------------------------
+// TODO: Description
+// ------------------------------------------------------------------------------
+// On entry:
+//   x0 = hex value to convert to text
+//   x1 = address to write text to (no trailing 0)
+//   x2 = number of bits to convert (multiple of 4)
+// On exit:
+//   x0 = <unchanged>
+//   x1 = address of next unused char (x1 += x2/4)
+//   x2 = 0
+//   x3 = last char in text
 hex_x0:
   ror     x0, x0, x2
 1:

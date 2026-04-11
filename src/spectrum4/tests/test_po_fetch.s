@@ -1,19 +1,21 @@
-# This file is part of the Spectrum +4 Project.
-# Licencing information can be found in the LICENCE file
-# (C) 2021 Spectrum +4 Authors. All rights reserved.
+// This file is part of the Spectrum +4 Project.
+// Licencing information can be found in the LICENCE file
+// (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
 .text
 .align 2
 
 
-# Test printer in use.
+// Test printer in use.
+
 
 po_fetch_printer_setup:
   _setbit 1, FLAGS
   _strb   0x3, P_POSN_X
   _str    0x3421, PR_CC
   ret
+
 
 po_fetch_printer_effects_regs:
   ldrb    w0, [x28, FLAGS-sysvars]
@@ -22,7 +24,8 @@ po_fetch_printer_effects_regs:
   ret
 
 
-# Test upper screen in use.
+// Test upper screen in use.
+
 
 po_fetch_upper_screen_setup:
   _resbit 1, FLAGS
@@ -32,6 +35,7 @@ po_fetch_upper_screen_setup:
   _str    0x1bce, DF_CC
   ret
 
+
 po_fetch_upper_screen_effects_regs:
   mov     x0, 0x35
   mov     x1, 0x2f
@@ -39,7 +43,8 @@ po_fetch_upper_screen_effects_regs:
   ret
 
 
-# Test lower screen in use.
+// Test lower screen in use.
+
 
 po_fetch_lower_screen_setup:
   _resbit 1, FLAGS
@@ -48,6 +53,7 @@ po_fetch_lower_screen_setup:
   _strb   0xe2, S_POSN_Y_L
   _str    0x523c, DF_CC_L
   ret
+
 
 po_fetch_lower_screen_effects_regs:
   mov     x0, 0xe2

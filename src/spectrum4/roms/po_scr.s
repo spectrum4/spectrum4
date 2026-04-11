@@ -83,7 +83,7 @@ po_scr:                                  // L0C55
   b.lo    report_5                                // w0 < [DF_SZ] => Out of screen (number of lines of upper screen < line offset).
   b.ne    8f                                      // No need to scroll - call cl_set and return.
 // w0 == w2
-  tbz     w1, #4, po_scr_2                        // Test TV_FLAG: if not an automatic listing, jump ahead to po_scr_2.
+  tbz     w4, #4, po_scr_2                        // Test TV_FLAG bit 4: if not an automatic listing, jump ahead to po_scr_2.
 // TODO - test code below
 // Automatic program listing
   ldrb    w7, [x28, BREG-sysvars]                 // w7 = [BREG] (scroll line count)

@@ -16,6 +16,8 @@ mode_l:                                  // L365E
   strb    wzr, [x28, MODE-sysvars]                // Select 'L' mode ([MODE] = 0).
   mov     w0, #0x2
   strb    w0, [x28, REPPER-sysvars]               // Reset repeat key duration to 2.
+
+
 // ------------------------------------------------------------------------------
 // Set L mode flags in FLAGS and update FLAGS3 from EC0D
 // ------------------------------------------------------------------------------

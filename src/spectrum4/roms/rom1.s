@@ -44,6 +44,23 @@
 .include "error_1.s"                     // L0008
 .include "print_w0.s"                    // L0010
 .include "tkn_table.s"                   // L0095
+.include "keyboard.s"                    // L02BF
+.include "k_new.s"                       // L02F1
+.include "k_end.s"                       // L0308
+.include "k_repeat.s"                    // L0310
+.include "k_decode.s"                    // L0333
+.include "addit.s"                       // L033E
+.include "k_look_up.s"                   // L034A
+.include "k_gra_dgt.s"                   // L0389
+// HID-specific lookup tables (no Z80 L-address — modifier-indexed rather than matrix-indexed)
+.include "hid_special_keys.s"
+.include "hid_table_plain.s"
+.include "hid_table_shift.s"
+.include "hid_table_alt.s"
+.include "hid_table_altshift.s"
+.include "hid_ctrl_editor.s"
+.include "hid_ctrl_keywords.s"
+.include "hid_altctrl_digits.s"
 .include "print_out.s"                   // L09F4
 .include "ctlchrtab.s"                   // L0A11
 .include "po_back.s"                     // L0A23
@@ -87,6 +104,7 @@
 .include "add_char.s"                    // L0F81
 .include "add_ch_1.s"                    // L0F8B
 .include "key_input.s"                   // L10A8
+.include "key_m_cl.s"                    // L10DB
 .include "report_j.s"                    // L15C4
 .include "chan_open.s"                   // L1601
 .include "chan_flag.s"                   // L1615

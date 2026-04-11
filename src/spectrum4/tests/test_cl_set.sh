@@ -4,6 +4,10 @@
 # Licencing information can be found in the LICENCE file
 # (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
+set -eu
+set -o pipefail
+export SHELLOPTS
+
 function header {
   echo '// This file is part of the Spectrum +4 Project.'
   echo '// Licencing information can be found in the LICENCE file'

@@ -16,6 +16,7 @@
 
 set -eu
 set -o pipefail
+export SHELLOPTS
 
 cd "$(dirname "${0}")"
 

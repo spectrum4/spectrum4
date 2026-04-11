@@ -5,6 +5,8 @@
 # (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 set -eu
+set -o pipefail
+export SHELLOPTS
 
 keywords=(
   "RND"

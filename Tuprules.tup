@@ -3,9 +3,8 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 &utilsdir = utils
-!calls-asm-format = | &(utilsdir)/asm-format/asm-format |> ./%f |>
-!check-asm-formatted = | &(utilsdir)/asm-format/asm-format |> ^o^ cat %f | &(utilsdir)/asm-format/asm-format check |>
-!check-shell-formatted = |> shfmt -sr -ci -d -i 2 %f |>
+!lint = | &(utilsdir)/linter/linter |> ^o^ &(utilsdir)/linter/linter check %f |>
+!calls-linter = | &(utilsdir)/linter/linter |> ^o^ ./%f |>
 
 LDFLAGS_AARCH64 += --fix-cortex-a53-835769
 LDFLAGS_AARCH64 += --fix-cortex-a53-843419

@@ -3,6 +3,9 @@
 # (C) 2021 Spectrum +4 Authors. All rights reserved.
 
 .gitignore
+
+include_rules
+
 # Specify main.go explicitly so that go build doesn't call `git status
 # --porcelain` which would read all files in repository, so that if any file is
 # updated, the whole DAG underneath this `go build` would run again.
@@ -11,3 +14,5 @@
 # comment here would cause a rebuild, so for now using main.go is the better
 # solution to avoid the unnecessary file scanning of the go build system.
 : |> go build -o %o main.go |> tzx-code-loader
+
+: foreach * ^.gitignore |> !lint |>

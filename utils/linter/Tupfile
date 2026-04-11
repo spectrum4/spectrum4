@@ -1,0 +1,11 @@
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
+.gitignore
+# List source files explicitly so that test file changes don't rebuild the
+# linter binary (which would retrigger all lint checks across the repo).
+: |> ^o^ go build -trimpath -ldflags="-buildid=" -o %o main.go filetype.go gofmt.go rules.go shfmt.go |> linter
+: linter |> go test *.go >/dev/null |>
+# Cannot !lint own source files — circular dependency (linter binary depends on them).
+# Go formatting is enforced by gofmt via lint.sh.

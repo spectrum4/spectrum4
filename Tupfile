@@ -6,4 +6,4 @@
 
 include_rules
 
-: foreach *.sh |> !check-shell-formatted |>
+: foreach * ^.gitignore |> !lint |>

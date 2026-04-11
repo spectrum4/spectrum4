@@ -18934,7 +18934,7 @@ ln:
         DEFB    $31                       ;;duplicate
         DEFB    $37                       ;;greater-0
         DEFB    $00                       ;;jump-true
-        DEFB    $04                       ;;to valid, VALID
+        DEFB    $04                       ;;to valid
 
         DEFB    $38                       ;;end-calc
 
@@ -18965,7 +18965,7 @@ valid:
         DEFB    $03                       ;;subtract
         DEFB    $37                       ;;greater-0
         DEFB    $00                       ;;jump-true
-        DEFB    $08                       ;;to gre.8, GRE.8
+        DEFB    $08                       ;;to gre_8
 
         DEFB    $01                       ;;exchange
         DEFB    $A1                       ;;stk-one
@@ -18977,7 +18977,7 @@ valid:
 
         RST     28H                       ;; FP-CALC
 
-gre.8:
+gre_8:
         DEFB    $01                       ;;exchange
         DEFB    $34                       ;;stk-data
         DEFB    $F0                       ;;Exponent: $80, Bytes: 4

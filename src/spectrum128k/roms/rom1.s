@@ -1575,11 +1575,11 @@ k_digit:
   cp      0x38                                    ; is character '8' ?
   jr      nc, k_8_and_9                           ; to K-8-&-9 if greater than '7'
 
-  sub     0x20                                    ; reduce to ink range 0x10-0x17
+  sub     0x20                                    ; reduce to paper range 0x10-0x17
   inc     b                                       ; shift ?
   ret     z                                       ; return if not.
 
-  add     a, 0x08                                 ; add 8 to give paper range 0x18 - 0x1f
+  add     a, 0x08                                 ; add 8 to give ink range 0x18 - 0x1f
   ret                                             ; return
 
 ; ---
@@ -6182,7 +6182,7 @@ key_flag:
 
 ; ---
 
-; now deal with colour controls - 16-23 ink, 24-31 paper
+; now deal with colour controls - 16-23 paper, 24-31 ink
 
 key_contr:
   ld      b, a                                    ; make a copy of character.

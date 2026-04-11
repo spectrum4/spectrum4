@@ -27,8 +27,9 @@ if [ "${#}" -ne 1 ]; then
 fi
 
 test_name="${1}"
-# TODO: elsewhere we use sed rather than grep - one less thing needed for docker image and setup instructions if we can switch to sed here too...
-suite="$(grep -l "${test_name}"'\(_setup\|_setup_regs\|_effects\|_effects_regs\)$' ../targets/test_*.symbols | sed 's/\.symbols$//' | sed 's/.*\/test_//')"
+suite="$(for f in ../targets/test_*.symbols; do
+  if [ -n "$(sed -n -E "/${test_name}_(setup(_regs)?|effects(_regs)?)$/p" "$f" | head -1)" ]; then echo "$f"; fi
+done | sed 's/\.symbols$//' | sed 's/.*\/test_//')"
 routine="$(echo "${suite}" | sed 's/\..*//')"
 first_break_command="$(cat "../targets/test_${suite}.symbols" | sed -n "s/${test_name}_//p" | sed 's/_regs$//' | sed 's/ effects$/ setup/' | sed -n 's/^.*: *0*\([^ ]*\).*setup$/b *0x\1/p' | head -1)"
 second_break_command="$(cat "../targets/test_${suite}.symbols" | sed -n 's/^.*: *0*\([^ ]*\).* '"${routine}"'$/b *0x\1/p')"

@@ -58,4 +58,4 @@ kernel=spectrum4.img
 # If no display is connected, still enable HDMI, so that tests can still be run
 # without a display connected. Also allows display to be powered on after
 # spectrum4 kernel start up.
-hdmi_force_hotplug=1
+# hdmi_force_hotplug=1

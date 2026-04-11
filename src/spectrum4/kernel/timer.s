@@ -6,23 +6,25 @@
 .text
 
 
-// Sets a system timer for 0x2000000 ticks in the future and enables it.
+// Sets up the generic timer for 20ms (50 Hz) interrupts.
+// Period derived from cntfrq so rpi3 (19.2 MHz) and rpi4 (54 MHz) match.
 // [ARMV8] sD17.11 pD17-7124 -- Generic Timer registers: CNTPCT_EL0, CNTP_CVAL_EL0, CNTP_CTL_EL0
-//
-// On exit:
-//   x1: new timer value ([next_interrupt])
-//   x2: 1
 .align 2
 // ------------------------------------------------------------------------------
-// Set up the generic timer comparator and enable timer interrupts
+// Compute the 20ms timer period and arm the generic timer comparator
 // ------------------------------------------------------------------------------
 // On entry:
-//   TODO
+//   x28 = sysvars base
 // On exit:
-//   TODO
+//   x1 corrupted
+//   x2 corrupted
+//   x3 corrupted
 timer_init:
+  ldr     w2, cntfrq                              // w2 = clock frequency (54 MHz rpi4, 19.2 MHz rpi3)
+  mov     w3, #50
+  udiv    w2, w2, w3                              // w2 = cntfrq / 50 = ticks per 20ms frame
+  str     w2, [x28, timer_period-sysvars]
   mrs     x1, cntpct_el0                          // [ARMV8] sD17.11.20 pD17-7095 -- CNTPCT_EL0
-  mov     x2, #0x2000000                          // TODO: this value should be dependent on clock speed (different for rpi3/rpi4)
   add     x1, x1, x2
   str     x1, [x28, next_interrupt-sysvars]
   msr     cntp_cval_el0, x1                       // [ARMV8] sD17.11.17 pD17-7085 -- CNTP_CVAL_EL0
@@ -31,23 +33,19 @@ timer_init:
   ret
 
 
-// On exit:
-//   x1: new timer value ([next_interrupt])
-//   x2: 0x2000000
-//   plus any changes made by timed_interrupt routine (potentially replacing x1/x2 changes above)
 .align 2
 // ------------------------------------------------------------------------------
-// Handle timer interrupt: advance comparator and call timed_interrupt
+// Handle timer interrupt: advance comparator by 20ms and call timed_interrupt
 // ------------------------------------------------------------------------------
 // On entry:
-//   TODO
+//   x28 = sysvars base
 // On exit:
 //   TODO
 handle_timer_irq:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   ldr     x1, [x28, next_interrupt-sysvars]
-  mov     x2, #0x2000000                          // TODO: this value should be dependent on clock speed (different for rpi3/rpi4)
+  ldr     w2, [x28, timer_period-sysvars]         // ticks per 20ms frame (populated by timer_init)
   add     x1, x1, x2
   str     x1, [x28, next_interrupt-sysvars]
   msr     cntp_cval_el0, x1
@@ -58,12 +56,17 @@ handle_timer_irq:
 
 
 // ------------------------------------------------------------------------------
-// Periodic timer callback (stub, currently a no-op)
+// 50 Hz timer tick dispatch. Currently only drives keyboard auto-repeat via
+// k_repeat (roms/k_repeat.s). Future time-based work (audio sample feeder, etc.)
+// would also hook in here.
 // ------------------------------------------------------------------------------
 // On entry:
-//   TODO
+//   x28 = sysvars base
 // On exit:
-//   TODO
+//   x0-x2 corrupted (via k_repeat)
 timed_interrupt:
-// log     '.'                                     // uncomment to check that interrupt routine is firing
-  ret
+.if ROMS_INCLUDE
+  b       keyboard
+.else
+  ret                                             // no roms loaded (test build) -- nothing to do
+.endif

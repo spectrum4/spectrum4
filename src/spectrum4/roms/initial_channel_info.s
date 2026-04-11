@@ -33,4 +33,6 @@ initial_channel_info:                    // L0589
                                                   // points directly to entries in this table, so this table
                                                   // isn't iterated through when opening a channel.
 initial_channel_info_END:
-  nop                                             // remove this later - added so that labels are unique to avoid bugs in finding routines without tests
+.if UART_DEBUG                                    // when debugging, add space here, so that
+  .space 4                                        // initial_channel_info_END does not share value with
+.endif                                            // whatever symbol follows, to simplify debugging.

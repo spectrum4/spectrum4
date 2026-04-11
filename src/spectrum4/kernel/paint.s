@@ -55,16 +55,16 @@ paint_rectangle:
   ldr     w11, [x9, pitch-fb_req]                 // w11 = pitch
   umaddl  x10, w1, w11, x10                       // x10 = address of framebuffer + y*pitch
   add     x10, x10, x0, lsl #2                    // x10 = address of framebuffer + y*pitch + x*4
-  fill_rectangle:                                 // Fills entire rectangle
+  1:                                              // Fills entire rectangle
     mov     x12, x10                              // x12 = reference to start of line
     mov     w13, w2                               // w13 = width of line
-    fill_line:                                    // Fill a single row of the rectangle with colour.
+    2:                                            // Fill a single row of the rectangle with colour.
       str     w4, [x10], 4                        // Colour current point, and update x10 to next point.
       subs    w13, w13, 1                         // Decrease horizontal pixel counter.
-      b.ne    fill_line                           // Repeat until line complete.
+      b.ne    2b                                  // Repeat until line complete.
     add     x10, x12, x11                         // x10 = start of current line + pitch = start of new line.
     subs    w3, w3, 1                             // Decrease vertical pixel counter.
-    b.ne    fill_rectangle                        // Repeat until all framebuffer lines complete.
+    b.ne    1b                                    // Repeat until all framebuffer lines complete.
   ret
 
 

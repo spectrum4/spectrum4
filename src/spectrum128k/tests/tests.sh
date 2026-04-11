@@ -17,11 +17,11 @@ function generate_unit_tests {
   local routine="${4}"
   local bashflags="${-}"
   set +x
-  echo "# This file is part of the Spectrum +4 Project."
-  echo "# Licencing information can be found in the LICENCE file"
-  echo "# (C) 2021 Spectrum +4 Authors. All rights reserved."
+  echo "; This file is part of the Spectrum +4 Project."
+  echo "; Licencing information can be found in the LICENCE file"
+  echo "; (C) 2021-$(date +%Y) Spectrum +4 Authors. All rights reserved."
   echo
-  echo '# This file is generated, do not edit!'
+  echo '; This file is generated, do not edit!'
   echo
   echo '.global all_suites'
   echo '.include "lib.s"'
@@ -84,5 +84,12 @@ function generate_unit_tests {
 }
 
 test_source="${1}"
+output="${2}"
 routine="$(echo "${test_source}" | sed -n 's/^test_//p' | sed -n 's/\.[^.]*$//p')"
-[ -n "${routine}" ] && generate_unit_tests . .hword "" "${routine}" | ../../../utils/asm-format/asm-format
+if [ -n "${routine}" ]; then
+  generate_unit_tests . .hword "" "${routine}" > "${output}"
+  ../../../utils/linter/linter fix "${output}" > /dev/null
+else
+  echo "Routine for test source ${1} not found" >&2
+  exit 1
+fi

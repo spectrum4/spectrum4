@@ -240,6 +240,11 @@ new:                                     // L019D
   strb    w12, [x28, BORDCR-sysvars]
   movl    w0, BORDER_COLOUR                       // w0 = default border colour
   bl      paint_border
+.if DEMO_AUTORUN
+  bl      demo                                    // Show demo (screenshots, memory dumps) before menu.
+  mov     w0, 0x400000                            // ~4 second pause after demo.
+  bl      wait_usec
+.endif
   mov     w13, 0x0523                             // The values five and thirty five.
   strh    w13, [x28, REPDEL-sysvars]              // REPDEL. Set the default values for key delay and key repeat.
 // Not translated the following instructions, since they may well need to work differently.

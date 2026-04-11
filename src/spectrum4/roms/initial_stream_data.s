@@ -18,4 +18,6 @@ initial_stream_data:                     // L059E
   .byte 0x19, 0x00                                // Stream  2 leads to channel 'S'.
   .byte 0x49, 0x00                                // Stream  3 leads to channel 'P'.
 initial_stream_data_END:
-  nop                                             // remove this later - added so that labels are unique to avoid bugs in finding routines without tests
+.if UART_DEBUG                                    // when debugging, add space here, so that
+  .space 4                                        // initial_stream_data_END does not share value with
+.endif                                            // whatever symbol follows, to simplify debugging.

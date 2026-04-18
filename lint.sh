@@ -23,7 +23,7 @@ cd "$(dirname "${0}")"
 echo "Building linter..."
 linter="$(mktemp)"
 trap 'rm -f "$linter"' EXIT
-(cd utils/linter && go build -o "$linter" .)
+(cd utils/linter && go build -trimpath -buildvcs=false -ldflags="-buildid=" -mod=readonly -o "$linter" .)
 
 if [ "${1:-}" = "--all" ]; then
   file_list="$(git ls-files)"

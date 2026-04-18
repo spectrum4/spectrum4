@@ -13,6 +13,6 @@ include_rules
 # but then .gitignore file is read, and also this Tupfile, so changing a
 # comment here would cause a rebuild, so for now using main.go is the better
 # solution to avoid the unnecessary file scanning of the go build system.
-: |> go build -o %o main.go |> tzx-code-loader
+: |> ^o^ go build -trimpath -ldflags="-buildid=" -mod=readonly -o %o main.go |> tzx-code-loader
 
 : foreach * ^.gitignore |> !lint |>

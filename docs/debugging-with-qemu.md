@@ -7,8 +7,9 @@ Licencing information can be found in the LICENCE file
 # Debugging Spectrum +4 tests
 
 If a spectrum4 test fails and you would like to interactively debug it, you can
-do so using gnu gdb (cross compiled for `aarch64-none-elf`).  You will need it
-installed on your host (it isn't included in the docker container).
+do so using gnu gdb (cross compiled for `aarch64-none-elf`).  You will either
+need it installed on your host, or you can use the version included in the
+docker container.
 
 Run the following command, to see which commands you will need to debug the
 test:

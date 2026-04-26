@@ -44,7 +44,7 @@ main_menu_jump_table:                    // L2744
 // Text for the main 128K menu
 .align 0
 main_menu_text:                          // L2754
-  .asciz "128 +4  "                               // Menu title.
+  .asciz "4GB +4  "                               // Menu title.
   .asciz "Tape Loader"
   .asciz "+4 BASIC"
   .asciz "Calculator"

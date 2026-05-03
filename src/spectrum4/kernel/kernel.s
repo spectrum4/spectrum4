@@ -447,17 +447,6 @@ post_gic_setup:
   ldr     w0, arm_size
   orr     x0, x0, 0xfffffff000000000              // Convert to virtual address
   and     sp, x0, #~0xf                           // Set stack pointer at top of ARM memory
-  bl      irq_vector_init
-  bl      timer_init
-  ldr     x0, enable_ic
-  blr     x0
-  bl      enable_irq
-.if PCI_INCLUDE
-  ldr     x0, pcie_init
-  cbz     x0, 11f
-  blr     x0
-11:
-.endif
   bl      fill_memory_with_junk
   bl      run_tests
 .endif

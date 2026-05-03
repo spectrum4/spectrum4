@@ -570,6 +570,11 @@ slot1_descriptor:
 
 
 .align 6
+slot1_input_context:
+  .space 0xa0                                     // Input Control (0x20) + Slot (0x20) + EP0 (0x20) + EP1 OUT (0x20) + EP1 IN (0x20)
+
+
+.align 6
 slot2_device_context:
   .space 0x80                                     // Slot + Endpoint contexts for keyboard (4 contexts, each 0x20)
 

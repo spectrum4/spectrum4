@@ -260,10 +260,40 @@ handle_enable_slot_done:
   strwi   w16, x17, #0x0
   strwi   w18, x17, #0x4                          // dcbaa[slotID] = slot1_device_context (DMA)
 
-  // Issue Address Device command via ring_write_trb
-  // [XHCI] s6.4.3.4 p490 -- Address Device Command TRB
+  // Populate slot1_input_context for Address Device.
+  // slot1_input_context lives in .bss.coherent (Normal Non-Cacheable) and is
+  // pre-zeroed by pcie_init's xhci_start->xhci_end loop, so only non-zero
+  // fields need writing.
+  // [XHCI] s6.2.5 p459 -- Input Context
   adrp    x17, slot1_input_context
   add     x17, x17, :lo12:slot1_input_context
+  // Input Control Context: A0=1 (Slot), A1=1 (EP0)
+  // [XHCI] s6.2.5.1 p461 -- Input Control Context
+  mov     w19, #0x3
+  str     w19, [x17, #0x04]
+  // Slot Context DW0: Context Entries=1, Speed=3 (HS); Hub=0, MTT=0, Route String=0
+  // [XHCI] s6.2.2 p444 -- Slot Context
+  mov     w19, #0x08300000
+  str     w19, [x17, #0x20]
+  // Slot Context DW1: Root Hub Port Number=1; Number of Ports=0
+  mov     w19, #0x00010000
+  str     w19, [x17, #0x24]
+  // EP0 Context DW1: Max Packet Size=64, EP Type=4 (Control), CErr=3
+  // [XHCI] s6.2.3 p449 -- Endpoint Context
+  ldr     w19, =0x00400026
+  str     w19, [x17, #0x44]
+  // EP0 TR Dequeue Pointer | DCS=1
+  adrp    x4, transfer_ring_slot1_EP0
+  add     x4, x4, :lo12:transfer_ring_slot1_EP0
+  bfi     x4, x18, #32, #32                       // x4 = transfer_ring_slot1_EP0 (DMA)
+  orr     x4, x4, #1                              // DCS = 1
+  str     x4, [x17, #0x48]
+  // EP0 Average TRB Length = 8
+  mov     w19, #0x8
+  str     w19, [x17, #0x50]
+
+  // Issue Address Device command via ring_write_trb
+  // [XHCI] s6.4.3.4 p490 -- Address Device Command TRB
   mov     x1, x17                                 // TRB data = slot1_input_context (virtual)
   bfi     x1, x18, #32, #32                       // TRB data = slot1_input_context (DMA)
   ldr     x2, =0x01002c0000000000                 // Control: TRB Type=11 (Address Device), Slot 1; Status=0
@@ -296,31 +326,42 @@ handle_address_device_done:
   mov     w16, #4
   strb    w16, [x12, #xhci_hub_num_ports-xhci_vars]
 
-  // Prepare slot1_input_context for Configure Endpoint
-  // [XHCI] s6.2.5.1 p461 -- Input Control Context
+  // Update slot1_input_context for Configure Endpoint. EP0 context fields
+  // populated for Address Device are RsvdZ here (A1=0) and the xHC ignores
+  // them; EP1 OUT is RsvdZ (A2=0); we overwrite InCtx Add flags + Slot
+  // Context for hub config and populate EP1 IN context for the hub's
+  // status-change interrupt endpoint.
+  mov     w18, #0x4                               // upper 32 bits for DMA addresses
   adrp    x17, slot1_input_context
   add     x17, x17, :lo12:slot1_input_context
-  mov     w19, #0x09                              // Add Flags: A0=1 (Slot), A3=1 (EP1 IN DCI=3)
-  str     w19, [x17, #0x04]                       // Input Control Context DWORD1
-
+  // Input Control Context: A0=1 (Slot), A3=1 (EP1 IN, DCI=3)
+  // [XHCI] s6.2.5.1 p461 -- Input Control Context
+  mov     w19, #0x09
+  str     w19, [x17, #0x04]
+  // Slot Context DW0: Context Entries=3, Hub=1, Speed=3 (HS), Route String=0
   // [XHCI] s6.2.2 p444 -- Slot Context
-  // DWORD0: Context Entries=3, Hub=1, Speed=3 (HS), Route String=0
   mov     w19, #0x1c300000
   str     w19, [x17, #0x20]
-
-  // DWORD1: Number of Ports=4, Root Hub Port Number=1
+  // Slot Context DW1: Number of Ports=4, Root Hub Port Number=1
   mov     w19, #0x04010000
   str     w19, [x17, #0x24]
-
-  // EP1 IN context is pre-populated in .data with hardcoded hub values
-
-  // Cache clean the input context (it's in .data = cacheable memory)
-  dc      cvac, x17                               // clean cache line at x17 (input control + slot context)
-  add     x4, x17, #0x40
-  dc      cvac, x4                                // clean EP0 context area
-  add     x4, x4, #0x40
-  dc      cvac, x4                                // clean EP1 OUT + EP1 IN context area
-  dsb     sy
+  // EP1 IN Context (DCI 3) at offset 0x80; hardcoded VL805 hub values
+  // [XHCI] s6.2.3 p449 -- Endpoint Context
+  // DWORD0: Interval=12 (bits 23:16)
+  mov     w19, #0x000c0000
+  str     w19, [x17, #0x80]
+  // DWORD1: MaxPacketSize=1, CErr=3, EPType=7 (Interrupt IN)
+  ldr     w19, =0x0001003e
+  str     w19, [x17, #0x84]
+  // EP1 IN TR Dequeue Pointer | DCS=1
+  adrp    x4, transfer_ring_slot1_EP1
+  add     x4, x4, :lo12:transfer_ring_slot1_EP1
+  bfi     x4, x18, #32, #32                       // x4 = transfer_ring_slot1_EP1 (DMA)
+  orr     x4, x4, #1                              // DCS = 1
+  str     x4, [x17, #0x88]
+  // EP1 IN Average TRB Length = 1
+  mov     w19, #0x1
+  str     w19, [x17, #0x90]
 
   // Issue SET_CONFIGURATION(1) on slot 1 EP0
   // [USB2] s9.4.7 p256 -- Set Configuration
@@ -1140,106 +1181,3 @@ msg_transfer_failed:
 msg_unexpected_handler:
   .asciz "Unexpected xHCI completion (no handler set)\r\n"
 .endif
-
-
-.data
-
-
-// TODO: Consider moving this to .bss.coherent (non-cacheable) region. Currently in .data
-// (Normal Cacheable, AttrIndx 0). The xHC DMA-reads this during Address Device command.
-// Static .data is safe IF the CPU never modifies the cache lines, but placing it in the
-// coherent region alongside other DMA buffers would be cleaner and avoid any risk of
-// dirty cache line write-backs from adjacent data affecting the xHC's view.
-//
-// USB Slot 1 Input Context (Address Device Command)
-// Note: Slot 1 is the VL805's internal USB 2.0 hub (bDeviceClass=0x09, bDeviceProtocol=0x01 single TT).
-// A USB keyboard would be connected downstream of this hub, requiring hub enumeration first.
-// [XHCI] s6.2.5 p459 -- Input Context
-.align 6
-// ------------------------------------------------------------------------------
-// USB slot 1 (hub) input context for Address Device and Configure Endpoint
-// ------------------------------------------------------------------------------
-// On entry:
-//   TODO
-// On exit:
-//   TODO
-slot1_input_context:
-// Input Control Context
-// [XHCI] s6.2.5.1 p461 -- Input Control Context
-.word 0x00000000
-.word 0x00000003                                  // A0=1, A1=1
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-// Slot Context
-// [XHCI] s6.2.2 p444 -- Slot Context
-.word 0x08300000                                  // Context Entries=1, Speed=3 (HS); updated to 0x1c300000 at Configure Endpoint
-.word 0x00010000                                  // Root Hub Port Number=1; DWORD1 updated at Configure Endpoint
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-                                                  // Context Entries = 1 (only EP0 configured at Address Device time)
-                                                  // Hub = 0 (set to 0 for Address Device; would be updated via Configure Endpoint after reading hub descriptor)
-                                                  // MTT (Multiple TT support) = 0 (disabled; hub reports single TT via bDeviceProtocol=0x01)
-                                                  // Speed = 3 (High Speed / USB 2.0 - matches port 1's Supported Protocol capability)
-                                                  // Route String = 0 (directly attached to root hub port, no upstream hubs)
-                                                  // Number of Ports = 0 (set to 0 for Address Device; would be updated after reading hub descriptor)
-                                                  // Root Hub Port Number = 1 (VL805 port 1 = internal USB 2.0 hub)
-// Endpoint Context
-// [XHCI] s6.2.3 p449 -- Endpoint Context
-.word 0x00000000                                  // 0b00000000 00000000 0 00000 00 00000 000; Max ESIT Payload Hi = 0; Interval = 0; LSA = 0; MaxPStreams = 0; Mult = 0; RsvdZ = 0; EP State = 0
-.word 0x00400026                                  // 0b0000000001000000 00000000 0 0 100 11 0; Max Packet Size = 64; Max Burst Size = 0; HID = 0; RsvdZ = 0; EP Type = 4; CErr = 3; RsvdZ = 0
-.dword (transfer_ring_slot1_EP0-0xfffffff000000000+0x400000000+0x1)
-                                                  // TR Dequeue Pointer = DMA(transfer_ring_slot1_EP0); RsvdZ = 0; DCS = 1
-.word 0x00000008                                  // 0b0000000000000000 0000000000001000; Max ESIT Payload Lo = 0; Average TRB Length = 8
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-
-                                                  // EP State = 0 (Disabled - required for input contexts)
-                                                  // Mult = 0 (required for non-SS-Isochronous endpoint types)
-                                                  // MaxPStreams = 0; streams not supported => TR Dequeue Pointer is a transfer ring
-                                                  // LSA = 0; RsvdZ since MaxPStreams == 0
-                                                  // Interval = 0 (don't care for Control endpoints) [XHCI] s6.2.3.6 p456
-                                                  // Max ESIT Payload Hi = 0; RsvdZ since LEC == 0 (bits 31:24 of DWORD0)
-                                                  // Max ESIT Payload Lo = 0; RsvdZ since LEC == 0 (bits 31:16 of DWORD4)
-                                                  // CErr = 3; 3 attempts before giving up on executing a TD
-                                                  // EP Type = 4; Control (bidirectional)
-                                                  // HID = 0; does not apply to non-stream-enabled endpoints
-                                                  // Max Burst Size = 0 => burst size 1 (since encoding is zero-based)
-                                                  // Max Packet Size = 64 bytes (USB 2.0 High Speed devices always use 64 bytes for EP0;
-                                                  //   no need to start with 8 and update as you would for Full Speed devices)
-                                                  // DCS = 1; Dequeue Cycle State (initially 1, alternates each time we loop around ring)
-                                                  // Average TRB Length = 8 bytes (bits 15:0 of DWORD4; used by xHC for bandwidth scheduling)
-                                                  // TR Dequeue Pointer = DMA address (transfer_ring_slot1_EP0)
-
-
-// EP1 OUT Context (DCI 2), unused placeholder, required to reach EP1 IN at correct offset
-// [XHCI] s6.2.3 p449 -- Endpoint Context
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000
-
-
-// EP1 IN Context (DCI 3), hub interrupt endpoint
-// [XHCI] s6.2.3 p449 -- Endpoint Context
-// Pre-populated with hardcoded VL805 hub values (Interval=12, CErr=3, EPType=7, MaxPkt=1)
-.word 0x000c0000                                  // DWORD0: Interval=12 in bits 23:16
-.word 0x0001003e                                  // DWORD1: MaxPacketSize=1, CErr=3|EPType=7=0x3e
-.dword (transfer_ring_slot1_EP1-0xfffffff000000000+0x400000000+0x1)
-                                                  // TR Dequeue Pointer = DMA(transfer_ring_slot1_EP1); DCS = 1
-.word 0x00000001                                  // DWORD4: Average TRB Length = 1
-.word 0x00000000
-.word 0x00000000
-.word 0x00000000

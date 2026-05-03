@@ -813,9 +813,8 @@ pcie_init_bcm2711:
   ldrwi   w3, x0, #0x24                           // w3 = USBSTS
   tbnz    w3, #11, sleep                          // give up if CNR != 0
 
-  adrp    x1, xhci_start
-  adrp    x2, xhci_end
-  add     x2, x2, :lo12:xhci_end
+  adrp    x1, xhci_start                          // at 4KB boundary, so adrp sufficient
+  adrp    x2, xhci_end                            // at 4KB boundary, so adrp sufficient
   9:
     stp     xzr, xzr, [x1], #16
     cmp     x1, x2
@@ -850,13 +849,15 @@ pcie_init_bcm2711:
   adr     x8, xhci_vars
 
   // Command ring metadata
-  adrp    x1, command_ring                        // x1 = command_ring (virtual)
+  adrp    x1, command_ring
   str     x1, [x8, #xhci_cmd_ring_enqueue-xhci_vars]
+                                                  // [xhci_cmd_ring_enqueue] = command_ring (virtual)
   mov     w3, #1
-  strb    w3, [x8, #xhci_cmd_ring_pcs-xhci_vars]  // PCS = 1 (matches CRCR cycle bit)
+  strb    w3, [x8, #xhci_cmd_ring_pcs-xhci_vars]  // [xhci_cmd_ring_pcs] = 1 (matches CRCR cycle bit)
   str     x1, [x8, #xhci_cmd_ring_start-xhci_vars]
-  adrp    x2, command_ring_end
-  str     x2, [x8, #xhci_cmd_ring_end-xhci_vars]
+                                                  // [xhci_cmd_ring_start] = command_ring (virtual)
+  adrp    x2, command_ring_end                    // (adrp sufficient since command ring at 4KB boundary and 4KB in size)
+  str     x2, [x8, #xhci_cmd_ring_end-xhci_vars]  // [xhci_cmd_ring_end] = command_ring_end
 
   // Slot 1 EP0 transfer ring metadata
   adrp    x1, transfer_ring_slot1_EP0

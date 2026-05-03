@@ -9,10 +9,7 @@
 bss_start:
 
 
-.align 4                                          // Make sure sysvars at least start at a reasonable boundary (16 byte)
-                                                  // to aid caching, simplify copying memory block, etc.
-
-
+.align 12                                         // Ensure sysvars at 4KB boundary
 sysvars:
 .align 0
 COL:
@@ -548,12 +545,6 @@ scratchpad_ptrs:
 command_ring:
   .space 0x100 * 0x10                             // 256 entries
 command_ring_end:
-transfer_ring_slot1_EP0:
-  .space 0x20 * 0x10                              // 32 entries
-transfer_ring_slot1_EP0_end:
-transfer_ring_slot1_EP1:
-  .space 0x20 * 0x10                              // 32 entries
-transfer_ring_slot1_EP1_end:
 
 
 .align 12
@@ -590,7 +581,13 @@ keyboard_report:
   .space 0x08                                     // 8-byte HID boot protocol report buffer
 
 
-.align 12
+.align 4                                          // 16-byte boundary for transfer ring segments [XHCI] s4.11.5.1 p228
+transfer_ring_slot1_EP0:
+  .space 0x20 * 0x10                              // 32 entries
+transfer_ring_slot1_EP0_end:
+transfer_ring_slot1_EP1:
+  .space 0x20 * 0x10                              // 32 entries
+transfer_ring_slot1_EP1_end:
 transfer_ring_slot2_EP0:
   .space 0x20 * 0x10                              // 32 entries
 transfer_ring_slot2_EP0_end:

@@ -437,8 +437,7 @@ post_gic_setup:
   br      x2                                      // jump to next instruction so that program counter starts using virtual address
 10:
   msr     ttbr0_el1, xzr                          // disable ttbr0 to force all accesses via ttbr1 (upper va space)
-  adrp    x28, sysvars
-  add     x28, x28, :lo12:sysvars                 // x28 will remain at this constant value to make all sys vars available via an immediate offset.
+  adrp    x28, sysvars                            // x28 at 4KB boundary, so adrp sufficient
 .if UART_DEBUG
   bl      uart_init                               // Initialise UART interface.
 .endif

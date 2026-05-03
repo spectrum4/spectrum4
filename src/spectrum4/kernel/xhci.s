@@ -96,7 +96,7 @@ handle_xhci_irq:
 .endif
   adrp    x9, 0xfd504000 + _start                 // x9 = Broadcom PCIe STB register base (MSI registers at x9+0x500)
                                                   // BCM2711-proprietary MSI controller registers; see Linux kernel:
-                                                  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c
+                                                  //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L182
 .if UART_DEBUG
   ldr     w0, [x9, #0x500]                        // w0 = [MSI status]
   bl      uart_x0                                 // log MSI interrupt vectors

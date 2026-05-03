@@ -261,7 +261,7 @@ handle_enable_slot_done:
   strwi   w18, x17, #0x4                          // dcbaa[slotID] = slot1_device_context (DMA)
 
   // Populate slot1_input_context for Address Device.
-  // slot1_input_context lives in .bss.coherent (Normal Non-Cacheable) and is
+  // slot1_input_context lives in bss_coherent (Normal Non-Cacheable) and is
   // pre-zeroed by pcie_init's xhci_start->xhci_end loop, so only non-zero
   // fields need writing.
   // [XHCI] s6.2.5 p459 -- Input Context

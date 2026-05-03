@@ -52,7 +52,7 @@ function generate_test_suites {
   echo
   echo ".if TESTS_INCLUDE"
   echo "  .include \"runtests.s\""
-  echo "  .text"
+  echo '  .section text_tests, "ax"'
   echo -n "  ${ptralignstr}"
   echo "all_suites:"
   total=0

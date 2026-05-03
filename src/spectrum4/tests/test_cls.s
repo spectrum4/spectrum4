@@ -70,7 +70,7 @@
 .endif
 
 
-.text
+.section text_tests, "ax"
 .align 2
 
 
@@ -81,7 +81,6 @@ cls_1_setup:
   _str    heap, CHANS
 
   adrp    x5, heap
-  add     x5, x5, :lo12:heap
   mov     x6, (initial_channel_info_END - initial_channel_info)/8
   adrp    x7, initial_channel_info
   add     x7, x7, :lo12:initial_channel_info
@@ -93,7 +92,8 @@ cls_1_setup:
     b.ne    3b
   add     x5, x28, STRMS - sysvars
   mov     x6, (initial_stream_data_END - initial_stream_data)/2
-  adr     x7, initial_stream_data
+  adrp    x7, initial_stream_data
+  add     x7, x7, :lo12:initial_stream_data
   // Loop to copy initial_stream_data block to [STRMS]
   4:
     ldrh    w8, [x7], #2

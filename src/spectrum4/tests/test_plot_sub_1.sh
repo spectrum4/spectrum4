@@ -27,7 +27,7 @@ cd "$(dirname "${0}")"
   echo '.endif'
   echo
   echo
-  echo '.text'
+  echo '.section text_tests, "ax"'
   echo '.align 2'
 
   i=0

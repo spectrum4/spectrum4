@@ -26,8 +26,7 @@ cls_lower:                               // L0D6E
   bl      temps                                   // Routine temps picks up temporary colours.
   ldrb    w0, [x28, DF_SZ-sysvars]                // Fetch lower screen DF_SZ.
   bl      cl_line                                 // Routine CL-LINE clears lower part and sets permanent attributes.
-  adrp    x0, attributes_file_end                 // x0 = address of first byte after attributes file
-  add     x0, x0, :lo12:attributes_file_end
+  adr     x0, attributes_file_end                 // x0 = address of first byte after attributes file
   sub     x19, x0, 108*2                          // x19 = attribute address leftmost cell, second line up (first byte after last cell to clear)
   ldrb    w2, [x28, DF_SZ-sysvars]                // Fetch lower screen DF_SZ.
   mov     w3, #108

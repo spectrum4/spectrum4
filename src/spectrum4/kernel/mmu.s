@@ -3,8 +3,7 @@
 // (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
-.bss
-.align 12
+.section bss_kernel, "aw", %nobits
 
 
 // Raspberry Pi 3 Paging Tables
@@ -112,6 +111,7 @@
 //   0x5ff8: [0x000000063fe00000 - 0x000000063fffffff] (2MB) -> 0x000000063fe00405
 
 
+.align 12
 pg_dir:
 .space 0x6000
 pg_dir_end:

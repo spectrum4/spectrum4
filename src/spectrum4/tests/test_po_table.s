@@ -12,7 +12,7 @@
 .endif
 
 
-.text
+.section text_tests, "ax"
 
 
 // Since there is considerable test coverage of po_search, po_table and

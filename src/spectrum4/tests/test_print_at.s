@@ -56,7 +56,7 @@
 .endif
 
 
-.text
+.section text_tests, "ax"
 
 
 .align 2

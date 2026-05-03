@@ -13,8 +13,7 @@
 // On exit:
 //   TODO
 new:                                     // L019D
-  adrp    x0, char_set - 0x20 * 0x20
-  add     x0, x0, :lo12:(char_set - 0x20 * 0x20)  // x0 = where, in theory character zero would be.
+  adr     x0, char_set - 0x20 * 0x20              // x0 = where, in theory character zero would be.
   str     x0, [x28, CHARS-sysvars]                // [CHARS] = theoretical address of char zero.
   ldr     x1, [x28, RAMTOP-sysvars]               // x1 = [RAMTOP].
   add     x1, x1, 1                               // x1 = [RAMTOP] + 1.
@@ -117,7 +116,6 @@ new:                                     // L019D
   adr     x0, msg_pcie_revision
   bl      uart_puts
   adrp    x10, heap
-  add     x10, x10, :lo12:heap
   ldr     w0, [x10, #0x14]                        // w0 = revision number
   ldp     w8, w9, [x10]                           // w8 = last read status register,
                                                   // w9 = number of iterations of 1ms reading status register
@@ -221,12 +219,10 @@ new:                                     // L019D
   strh    w4, [x28, RNFIRST-sysvars]              // Store the initial line number when renumbering.
   strh    w4, [x28, RNSTEP-sysvars]               // Store the renumber line increment.
   adrp    x5, heap
-  add     x5, x5, #:lo12:heap                     // x5 = start of heap
   str     x5, [x28, CHANS-sysvars]                // [CHANS] = start of heap
   mov     x6, (initial_channel_info_END - initial_channel_info)/8
                                                   // x6 = number of double words (8 bytes) in initial_channel_info block
-  adrp    x7, initial_channel_info
-  add     x7, x7, :lo12:initial_channel_info
+  adr     x7, initial_channel_info
   // Loop to copy initial_channel_info block to [CHANS] = start of heap = heap
   8:
     ldr     x8, [x7], #8

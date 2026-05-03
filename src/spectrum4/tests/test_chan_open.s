@@ -65,7 +65,7 @@
 .endif
 
 
-.text
+.section text_tests, "ax"
 .align 2
 
 
@@ -80,17 +80,18 @@ test_chan_open_init:
   add     x5, x28, STRMS-sysvars
   mov     x6, (initial_stream_data_END - initial_stream_data)/2
                                                   // x6 = number of half words (2 bytes) in initial_stream_data block
-  adr     x7, initial_stream_data
+  adrp    x7, initial_stream_data
+  add     x7, x7, :lo12:initial_stream_data
   1:                                              // Loop to copy initial_stream_data block to [STRMS]
     ldrh    w8, [x7], #2
     strh    w8, [x5], #2
     subs    x6, x6, #1
     b.ne    1b
   adrp    x5, heap
-  add     x5, x5, #:lo12:heap                     // x5 = start of heap
   str     x5, [x28, CHANS-sysvars]                // [CHANS] = start of heap
   mov     x6, (initial_channel_info_END - initial_channel_info)/8
-  adr     x7, initial_channel_info
+  adrp    x7, initial_channel_info
+  add     x7, x7, :lo12:initial_channel_info
   2:                                              // Loop to copy initial_channel_info block to [CHANS] = start of heap
     ldr     x8, [x7], #8
     str     x8, [x5], #8
@@ -149,7 +150,8 @@ chan_open_00_effects:
 chan_open_00_effects_regs:
   mov     x0, 0b10100010                          // [P_FLAG]
   mov     x1, 0x03                                // [BORDCR]
-  adr     x2, chan_k
+  adrp    x2, chan_k
+  add     x2, x2, :lo12:chan_k
   ldrb    w9, [x28, FLAGS2-sysvars]
   mov     x10, 'K'                                // Key for chn-cd-lu table
   nzcv    #0b0110
@@ -182,7 +184,8 @@ chan_open_01_effects:
 chan_open_01_effects_regs:
   mov     x0, 0b10100010                          // [P_FLAG]
   mov     x1, 0x03                                // [BORDCR]
-  adr     x2, chan_k
+  adrp    x2, chan_k
+  add     x2, x2, :lo12:chan_k
   ldrb    w9, [x28, FLAGS2-sysvars]
   mov     x10, 'K'                                // Key for chn-cd-lu table
   nzcv    #0b0110
@@ -240,8 +243,11 @@ chan_open_03_effects:
 
 chan_open_03_effects_regs:
   ldrb    w0, [x28, FLAGS-sysvars]
-  adr     x1, chn_cd_lu + 0x08 + 2*0x10           // Third record in chn-cd-lu
-  adr     x2, chan_p
+  adrp    x1, chn_cd_lu + 0x08 + 2*0x10           // Third record in chn-cd-lu
+  add     x1, x1, :lo12:(chn_cd_lu + 0x08 + 2*0x10)
+                                                  // Third record in chn-cd-lu
+  adrp    x2, chan_p
+  add     x2, x2, :lo12:chan_p
   mov     w9, #0x00                               // No more records in chn-cd-lu
   mov     x10, 'P'                                // Key for chn-cd-lu table
   nzcv    #0b0110

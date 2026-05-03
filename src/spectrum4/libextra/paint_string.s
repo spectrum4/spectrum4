@@ -31,13 +31,11 @@ paint_string:
   ldr     x4, [sp], #0x10
   ldp     x2, x3, [sp], #0x10
   ldp     x0, x1, [sp], #0x10
-  adrp    x9, fb_req
-  add     x9, x9, :lo12:fb_req                    // x9 = address of mailbox request.
+  adr     x9, fb_req                              // x9 = address of mailbox request.
   ldr     w10, [x9, framebuffer-fb_req]           // w10 = physical address of framebuffer
   orr     x10, x10, #0xfffffff000000000           // x10 = virtual address of framebuffer
   ldr     w9, [x9, pitch-fb_req]                  // w9 = pitch
-  adrp    x11, char_set-32*32
-  add     x11, x11, :lo12:(char_set-32*32)        // x11 = theoretical start of character table for char 0
+  adr     x11, char_set-32*32                     // x11 = theoretical start of character table for char 0
   1:
     ldrb    w12, [x0], 1                          // w12 = char from string, and update x0 to next char
     cbz     w12, 4f                               // if found end marker, jump to end of function and return

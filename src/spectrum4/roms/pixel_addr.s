@@ -33,8 +33,7 @@ pixel_addr:                              // L22AA
   add     x11, x14, x14, lsl #3                   // x11 = 9*(20*(16*((927-y)/320)+((927-y)&0x0f))+((927-y)%320>>4))
   lsl     x11, x11, #3                            // x11 = 72*(20*(16*((927-y)/320)+((927-y)&0x0f))+((927-y)%320>>4))
   add     x11, x11, x11, lsl #1                   // x11 = 216*(20*(16*((927-y)/320)+((927-y)&0x0f))+((927-y)%320>>4))
-  adrp    x12, display_file
-  add     x12, x12, :lo12:display_file            // x12 = display_file
+  adr     x12, display_file                       // x12 = display_file
   add     x11, x11, x12                           // x11 = display_file + 216*(20*(16*((927-y)/320)+((927-y)&0x0f))+((927-y)%320>>4))
   add     x11, x11, x13, lsr #3                   // x11 = display_file + 216*(20*(16*((927-y)/320)+((927-y)&0x0f))+((927-y)%320>>4))+x/8)
   and     x14, x13, #0x07                         // x14 = x13%8

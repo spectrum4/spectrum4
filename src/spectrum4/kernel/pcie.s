@@ -49,8 +49,7 @@ pcie_init_bcm2711:
   adrp    x4, 0xfd504000 + _start                 // x4 = Broadcom PCIe Set Top Box registers
   adrp    x13, 0xfd508000 + _start                // x13 = VL805 USB Controller config space base address (bus 1 via ECAM)
   adrp    x14, 0xfd509000 + _start                // x14 = ECAM Index register
-  adrp    x7, heap
-  add     x7, x7, :lo12:heap                      // x7 = heap
+  adrp    x7, heap                                // x7 = heap
 
   // Reset the PCI bridge
   //   https://github.com/raspberrypi/linux/blob/7ed6e66fa032a16a419718f19c77a634a92d1aec/drivers/pci/controller/pcie-brcmstb.c#L1378-L1390
@@ -1158,6 +1157,9 @@ vl805_reset_req:
                                                   //     https://github.com/raspberrypi/linux/blob/14b35093ca68bf2c81bbc90aace5007142b40b40/drivers/reset/reset-raspberrypi.c#L26-L66
   .word 0                                         // End Tags
 vl805_reset_req_end:
+
+
+.section bss_kernel, "aw", %nobits
 
 
 // xHCI runtime state: event ring dequeue pointer and consumer cycle status

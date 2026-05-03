@@ -38,7 +38,7 @@ function header {
   echo '.endif'
   echo
   echo
-  echo '.text'
+  echo '.section text_tests, "ax"'
   echo '.align 2'
 }
 

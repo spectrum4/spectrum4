@@ -3,7 +3,7 @@
 // (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
-.text
+.section text_tests, "ax"
 .align 2
 
 
@@ -22,7 +22,8 @@ display_sysvars_1_setup:
 //   otherwise: 0b0110
 display_sysvars_1_effects_regs:
   mov     x0, #0x0a
-  ldr     x1, aux_base
+  adrp    x1, aux_base
+  ldr     x1, [x1, :lo12:aux_base]
   movl    w2, 0x12323434
   movl    w3, 0x75364253
   ldr     x4, =0x0716253443526170

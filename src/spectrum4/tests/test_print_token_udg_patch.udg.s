@@ -51,7 +51,7 @@
 .set print_token_udg_patch_01_afaddr, attributes_file + 108*20*print_token_udg_patch_01_screenthird + print_token_udg_patch_01_yoffset*108 + print_token_udg_patch_01_x
 
 
-.text
+.section text_tests, "ax"
 .align 2
 print_token_udg_patch_01_setup:
   _str    char_set+('a'-' ')*32, UDG
@@ -214,7 +214,7 @@ print_token_udg_patch_01_effects_regs:
 .set print_token_udg_patch_02_afaddr, attributes_file + 108*20*print_token_udg_patch_02_screenthird + print_token_udg_patch_02_yoffset*108 + print_token_udg_patch_02_x
 
 
-.text
+.section text_tests, "ax"
 .align 2
 print_token_udg_patch_02_setup:
   _str    char_set+('A'-'U'+'k'-' ')*32, UDG      // set [UDG] such that UDG 'U' uses the char_set 'k' bitmap
@@ -368,7 +368,7 @@ print_token_udg_patch_02_effects_regs:
 .set print_token_udg_patch_03_afaddr, attributes_file + 108*20*print_token_udg_patch_03_screenthird + print_token_udg_patch_03_yoffset*108 + print_token_udg_patch_03_x
 
 
-.text
+.section text_tests, "ax"
 .align 2
 print_token_udg_patch_03_setup:
   _str    char_set+('a'-' ')*32, UDG

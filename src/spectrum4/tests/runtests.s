@@ -11,7 +11,7 @@
                                                   // in <test>_effects routine.
 
 
-.text
+.section text_tests, "ax"
 .align 2
 // ------------------------------------------------------------------------------
 // Run all system tests.
@@ -107,7 +107,8 @@ run_tests:
     // Prepare pre-test registers with random values
       mov     x0, sp                              // x0 = start of pre-test register block
       mov     x1, #0x100                          // Register storage on stack takes up 0x100 bytes.
-      ldr     x2, rand_block
+      adrp    x2, rand_block
+      ldr     x2, [x2, :lo12:rand_block]
       blr     x2                                  // Write random bytes to stack so registers are random when popped.
 
     // Set random values for NZCV flags
@@ -132,7 +133,6 @@ run_tests:
       ldp     x24, x25, [sp, #8 * 24]
       ldp     x26, x27, [sp, #8 * 26]
       adrp    x28, sysvars
-      add     x28, x28, :lo12:sysvars
       str     x28, [sp, #8 * 28]
 
       cbz     x30, 4f
@@ -211,7 +211,8 @@ run_tests:
       mov     w4, #0x20                           // w4 = random block length
       adr     x11, random_block_zeros
       bl      snapshot_memory                     // x2 = first address after end of snapshot
-      adr     x0, framebuffer
+      adrp    x0, framebuffer
+      add     x0, x0, :lo12:framebuffer
       ldp     w0, w1, [x0]
       orr     x0, x0, 0xfffffff000000000          // Convert to virtual address
       add     x1, x0, x1
@@ -326,7 +327,8 @@ run_tests:
         b.eq    9f
         adr     x16, log_register                 // x16 = function to log "Register x<index>"
         adr     x22, compare_registers
-        adr     x27, uart_x0
+        adrp    x27, uart_x0
+        add     x27, x27, :lo12:uart_x0
         bl      test_fail
       9:
         add     x9, x9, #1
@@ -631,7 +633,6 @@ snapshot_all_ram:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adrp    x0, sysvars
-  add     x0, x0, :lo12:sysvars
   adrp    x1, sysvars_end
   add     x1, x1, :lo12:sysvars_end
   1:                                              // Copy sysvars into buffer without compression
@@ -639,37 +640,57 @@ snapshot_all_ram:
     str     x4, [x2], #0x08
     cmp     x0, x1
     b.ne    1b
-  mov     x0, #3                                  // Number of RAM regions to snapshot
+  mov     x0, #4                                  // Number of RAM regions to snapshot
   str     x0, [x2], #8                            // Store number of RAM regions to snapshot
+
+
+// Region 1: kernel .text + .data (everything before bss_roms).
   adrp    x0, _start                              // Start address of region to snapshot
-  adrp    x1, sysvars
-  add     x1, x1, :lo12:sysvars
+  adrp    x1, __start_bss_roms
   adrp    x7, rand_seq_length
-  add     x7, x7, :lo12:rand_seq_length
-  ldrb    w4, [x7]                                // w4 = random block length
+  ldrb    w4, [x7, :lo12:rand_seq_length]         // w4 = random block length
   adrp    x11, rand_data
   add     x11, x11, :lo12:rand_data               // x11 = address of random data
   bl      snapshot_memory                         // x2 = first address after end of snapshot
+
+
+// Region 2: bss_roms tail (printer/display/attributes/fake_print_buffer).
+//   Sysvars sit at the start of bss_roms but were already saved as a literal
+//   uncompressed copy above, so this compressed region starts at sysvars_end.
   adrp    x0, sysvars_end
   add     x0, x0, :lo12:sysvars_end
-  adrp    x1, bss_debug_start
-  add     x1, x1, :lo12:bss_debug_start           // first address not to snapshot
+  adrp    x1, __stop_bss_roms
+  add     x1, x1, :lo12:__stop_bss_roms           // first address not to snapshot
   adrp    x7, rand_seq_length
-  add     x7, x7, :lo12:rand_seq_length
-  ldrb    w4, [x7]                                // w4 = random block length
+  ldrb    w4, [x7, :lo12:rand_seq_length]         // w4 = random block length
   adrp    x11, rand_data
   add     x11, x11, :lo12:rand_data               // x11 = address of random data
   bl      snapshot_memory                         // x2 = first address after end of snapshot
-  adr     x0, framebuffer
+
+
+// Region 3: text_tests (test code — snapshot detects accidental writes by tests).
+  adrp    x0, __start_text_tests
+  adrp    x1, __stop_text_tests
+  add     x1, x1, :lo12:__stop_text_tests         // first address not to snapshot
+  adrp    x7, rand_seq_length
+  ldrb    w4, [x7, :lo12:rand_seq_length]         // w4 = random block length
+  adrp    x11, rand_data
+  add     x11, x11, :lo12:rand_data               // x11 = address of random data
+  bl      snapshot_memory                         // x2 = first address after end of snapshot
+
+
+// Region 4: framebuffer.
+  adrp    x0, framebuffer
+  add     x0, x0, :lo12:framebuffer
   ldp     w0, w1, [x0]
   orr     x0, x0, 0xfffffff000000000              // Convert to virtual address
   add     x1, x0, x1
   adrp    x7, rand_seq_length
-  add     x7, x7, :lo12:rand_seq_length
-  ldrb    w4, [x7]                                // w4 = random block length
+  ldrb    w4, [x7, :lo12:rand_seq_length]         // w4 = random block length
   adrp    x11, rand_data
   add     x11, x11, :lo12:rand_data               // x11 = address of random data
   bl      snapshot_memory                         // x2 = first address after end of snapshot
+
   ldp     x29, x30, [sp], #16                     // Pop frame pointer, procedure link register off stack.
   ret
 
@@ -768,7 +789,6 @@ restore_all_ram:
   stp     x29, x30, [sp, #-16]!                   // Push frame pointer, procedure link register on stack.
   mov     x29, sp                                 // Update frame pointer to new stack location.
   adrp    x0, sysvars
-  add     x0, x0, :lo12:sysvars
   adrp    x1, sysvars_end
   add     x1, x1, :lo12:sysvars_end
   1:                                              // Copy sysvars into buffer without compression
@@ -996,7 +1016,8 @@ compare_snapshots:
     b.eq    6f
     adr     x16, log_ram                          // x16 = function to log "Memory location [0x<address>]"
     adr     x22, compare_registers
-    adr     x27, uart_x0
+    adrp    x27, uart_x0
+    add     x27, x27, :lo12:uart_x0
     bl      test_fail
   6:
     add     x8, x8, #8
@@ -1023,7 +1044,8 @@ fill_memory_with_junk:
   adr     x0, msg_filling_memory_with_junk
   bl      uart_puts
 // Choose random sequence length
-  ldr     x0, rand_x0
+  adrp    x0, rand_x0
+  ldr     x0, [x0, :lo12:rand_x0]
   blr     x0                                      // Fetch random bits in x0
   and     w1, w0, #0x00000070                     // 0x00/0x10/0x20/0x30/0x40/0x50/0x60/0x70
   add     w1, w1, #0x00000040                     // 0x40/0x50/0x60/0x70/0x80/0x90/0xa0/0xb0
@@ -1035,21 +1057,27 @@ fill_memory_with_junk:
   add     x5, x5, :lo12:rand_data
   mov     x0, x5
   mov     x4, x1                                  // Preserve sequence byte length in x4
-  ldr     x8, rand_block
+  adrp    x8, rand_block
+  ldr     x8, [x8, :lo12:rand_block]
   blr     x8
-// First random block: __bss_start -> bss_debug_start
-  add     x8, x28, bss_start-sysvars
-  adrp    x6, bss_debug_start
-  add     x6, x6, :lo12:bss_debug_start
+// First random block: bss_roms (sysvars + printer/display/attributes/fake_print_buffer).
+//   bss_kernel, bss_userheap, bss_coherent, text_tests and bss_tests are NOT
+//   junk-filled — they hold persistent kernel state, the user heap, DMA
+//   buffers, test code and test-harness state respectively.
+  adrp    x8, __start_bss_roms
+  adrp    x6, __stop_bss_roms
+  add     x6, x6, :lo12:__stop_bss_roms
   bl      fill_region_with_junk
-// Second random block: framebuffer
-  adr     x0, framebuffer
+// Second random block: framebuffer.
+  adrp    x0, framebuffer
+  add     x0, x0, :lo12:framebuffer
   ldp     w8, w6, [x0]
   orr     x8, x8, 0xfffffff000000000              // Convert to virtual address
   add     x6, x8, x6
   bl      fill_region_with_junk
 // Log completed
-  adr     x0, msg_done
+  adrp    x0, msg_done
+  add     x0, x0, :lo12:msg_done
   bl      uart_puts
   ret     x11
 
@@ -1252,12 +1280,7 @@ test_message_supper:
   .asciz "supper"
 
 
-.bss
-
-
-// Note, the start of this bss section is included in memory snapshots since
-// snapshots are from 0 -> bss_debug_start, and bss_debug_start is declared
-// further down in this file.
+.section bss_roms, "aw", %nobits
 
 
 .align 0
@@ -1265,13 +1288,7 @@ fake_print_buffer:
   .space 1024
 
 
-#########################################
-// End of RAM snapshots
-#########################################
-
-
-.align 4
-bss_debug_start:
+.section bss_tests, "aw", %nobits
 
 
 .align 0

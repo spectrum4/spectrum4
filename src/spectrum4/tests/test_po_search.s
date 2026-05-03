@@ -9,7 +9,7 @@
 .endif
 
 
-.text
+.section text_tests, "ax"
 .align 2
 
 
@@ -35,13 +35,15 @@ po_search_1_effects_regs:
 
 po_search_2_setup_regs:
   mov     x3, #0x22
-  adr     x4, tkn_table
+  adrp    x4, tkn_table
+  add     x4, x4, :lo12:tkn_table
   ret
 
 
 po_search_2_effects_regs:
   mov     x0, '<'                                 // x0 = first char of result if w3 >= 0x20; otherwise 0
-  adr     x4, tkn_less_equal                      // x4 = address of result
+  adrp    x4, tkn_less_equal
+  add     x4, x4, :lo12:tkn_less_equal            // x4 = address of result
   mov     x6, #0                                  // x6 = 0
   nzcv    #0b1000                                 // since w3 >= 0x20 && first char < 'A'
   ret
@@ -52,13 +54,15 @@ po_search_2_effects_regs:
 
 po_search_3_setup_regs:
   mov     x3, #0x20
-  adr     x4, tkn_table
+  adrp    x4, tkn_table
+  add     x4, x4, :lo12:tkn_table
   ret
 
 
 po_search_3_effects_regs:
   mov     x0, 'O'                                 // x0 = first char of result if w3 >= 0x20; otherwise 0
-  adr     x4, tkn_or                              // x4 = address of result
+  adrp    x4, tkn_or
+  add     x4, x4, :lo12:tkn_or                    // x4 = address of result
   mov     x6, #0                                  // x6 = 0
   nzcv    #0b0010                                 // since w3 >= 0x20 and first char > 'A'
   ret
@@ -69,13 +73,15 @@ po_search_3_effects_regs:
 
 po_search_4_setup_regs:
   mov     x3, #0x5a
-  adr     x4, tkn_table
+  adrp    x4, tkn_table
+  add     x4, x4, :lo12:tkn_table
   ret
 
 
 po_search_4_effects_regs:
   mov     x0, 'C'                                 // x0 = first char of result if w3 >= 0x20; otherwise 0
-  adr     x4, tkn_copy                            // x4 = address of result
+  adrp    x4, tkn_copy
+  add     x4, x4, :lo12:tkn_copy                  // x4 = address of result
   mov     x6, #0                                  // x6 = 0
   nzcv    #0b0010                                 // since w3 >= 0x20 and first char > 'A'
   ret
@@ -86,13 +92,15 @@ po_search_4_effects_regs:
 
 po_search_5_setup_regs:
   mov     x3, #0x0
-  adr     x4, tkn_table
+  adrp    x4, tkn_table
+  add     x4, x4, :lo12:tkn_table
   ret
 
 
 po_search_5_effects_regs:
   mov     x0, #0                                  // x0 = first char of result if w3 >= 0x20; otherwise 0
-  adr     x4, tkn_rnd                             // x4 = address of result
+  adrp    x4, tkn_rnd
+  add     x4, x4, :lo12:tkn_rnd                   // x4 = address of result
   mov     x6, #0                                  // x6 = 0
   nzcv    #0b1000                                 // since w3 < 0x20
   ret
@@ -103,13 +111,15 @@ po_search_5_effects_regs:
 
 po_search_6_setup_regs:
   mov     x3, #0x21
-  adr     x4, tkn_table
+  adrp    x4, tkn_table
+  add     x4, x4, :lo12:tkn_table
   ret
 
 
 po_search_6_effects_regs:
   mov     x0, 'A'                                 // x0 = first char of result if w3 >= 0x20; otherwise 0
-  adr     x4, tkn_and                             // x4 = address of result
+  adrp    x4, tkn_and
+  add     x4, x4, :lo12:tkn_and                   // x4 = address of result
   mov     x6, #0                                  // x6 = 0
   nzcv    #0b0110                                 // since w3 >= 0x20 and first char == 'A'
   ret

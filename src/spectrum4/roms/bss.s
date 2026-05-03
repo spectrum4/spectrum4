@@ -3,10 +3,7 @@
 // (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
-.bss
-
-
-bss_start:
+.section bss_roms, "aw", %nobits
 
 
 .align 12                                         // Ensure sysvars at 4KB boundary
@@ -506,6 +503,9 @@ attributes_file:
 attributes_file_end:
 
 
+.section bss_userheap, "aw", %nobits
+
+
 ram_disk:
   .space RAM_DISK_SIZE
 heap:
@@ -515,7 +515,7 @@ heap:
 .if PCI_INCLUDE
 
 
-.section .bss.coherent, "aw", %nobits
+.section bss_coherent, "aw", %nobits
 
 
 // 21 is 2MB boundary, which matches granularity of our MMU page tables.

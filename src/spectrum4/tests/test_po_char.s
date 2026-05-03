@@ -38,7 +38,7 @@
 .set po_char1_afaddr, attributes_file + 108*20*po_char1_screenthird + po_char1_yoffset*108 + po_char1_x
 
 
-.text
+.section text_tests, "ax"
 .align 2
 
 
@@ -160,7 +160,8 @@ po_char_1_effects_regs:
   mov     w1, (109-po_char1_x)-1
   ldr     x2, =po_char1_dfaddr+2
   ldr     x24, [sp], #0x10
-  adr     x4, char_set+('k'-' ')*32
+  adrp    x4, char_set+('k'-' ')*32
+  add     x4, x4, :lo12:(char_set+('k'-' ')*32)
   ldp     x29, x30, [sp], #0x10                   // Pop frame pointer, procedure link register off stack.
   ret
 

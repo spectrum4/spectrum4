@@ -308,10 +308,10 @@ post_gic_setup:
 
 
 // Configure page tables
-  adrp    x0, pg_dir                              // x0 = pg_dir (page aligned, so no additional add needed)
+  adr     x0, pg_dir                              // x0 = pg_dir
   mov     x1, pg_dir_end - pg_dir                 // clear 6 pages
   bl      memzero
-  adrp    x0, pg_dir
+  adr     x0, pg_dir
   mov     x1, #0x1003
   add     x1, x0, x1
   ldr     x3, peripherals_end
@@ -359,7 +359,7 @@ post_gic_setup:
 .if PCI_INCLUDE
   ldr     x0, pcie_init                           // Is PCIe available?
   cbz     x0, 9f                                  // Skip mapping xHCI region if no PCIe
-  adrp    x0, pg_dir
+  adr     x0, pg_dir
   adrp    x1, (pg_dir+0x5000)
   orr     x2, x1, #0b11                           // bit 0 = 1 => valid descriptor. bit 1 = 1 => table descriptor
   str     x2, [x0, 0xc0]                          // [pg_dir+0xc0] = pg_dir+0x5003. PUD table entry for xHCI region (entry 0x600000000-0x640000000 covers more than xHCI).
@@ -374,7 +374,7 @@ post_gic_setup:
 9:
 .endif
   dsb     sy                                      // Data Sync Barrier
-  adrp    x0, pg_dir
+  adr     x0, pg_dir
   msr     ttbr1_el1, x0                           // Configure page tables for virtual addresses with 1's in first 28 bits
   msr     ttbr0_el1, x0                           // Configure page tables for virtual addresses with 0's in first 28 bits
                                                   // This seems to be needed on qemu so that when sctlr_el1 is updated
@@ -437,7 +437,7 @@ post_gic_setup:
   br      x2                                      // jump to next instruction so that program counter starts using virtual address
 10:
   msr     ttbr0_el1, xzr                          // disable ttbr0 to force all accesses via ttbr1 (upper va space)
-  adrp    x28, sysvars                            // x28 at 4KB boundary, so adrp sufficient
+  adr     x28, sysvars                            // x28 = sysvars
 .if UART_DEBUG
   bl      uart_init                               // Initialise UART interface.
 .endif
@@ -685,21 +685,17 @@ poke_address:
   stp     x21, x22, [sp, #-16]!                   // Backup x21 / x22 on stack
   stp     x23, x24, [sp, #-16]!                   // Backup x23 / x24 on stack
   strb    w1, [x0]                                // Poke address
-  adrp    x9, display_file                        // Check if address is in display file
-  add     x9, x9, :lo12:display_file
-  adrp    x24, attributes_file
-  add     x24, x24, :lo12:attributes_file
+  adr     x9, display_file                        // Check if address is in display file
+  adr     x24, attributes_file
   subs    x11, x0, x9                             // x11 = display file offset
   b.lo    2f                                      // if x0 < x9, jump ahead since before display file
-  adrp    x10, display_file_end                   // Now compare address to upper limit of display file
-  add     x10, x10, :lo12:display_file_end
+  adr     x10, display_file_end                   // Now compare address to upper limit of display file
   cmp     x0, x10
   b.hs    2f                                      // if x0 >= x10 (display file end) jump ahead since after display file
 // x0 in display file
   // framebuffer addresses = pitch*(BORDER_TOP + 16*((x11/216)%20) + (x11/(216*20))%16 + 320*(x11/(216*20*16))) + address of framebuffer + 4 * (BORDER_LEFT + 8*(x11%216) + [0-7])
   // attribute address = attributes_file+((x11/2)%108)+108*(((x11/216)%20)+20*(x11/(216*20*16)))
-  adrp    x9, fb_req                              // x9 = address of mailbox request.
-  add     x9, x9, :lo12:fb_req
+  adr     x9, fb_req                              // x9 = address of mailbox request.
   ldr     w10, [x9, framebuffer-fb_req]           // w10 = physical address of framebuffer
   orr     x10, x10, #0xfffffff000000000           // x10 = virtual address of framebuffer
   ldr     w12, [x9, pitch-fb_req]                 // w12 = pitch
@@ -768,8 +764,7 @@ poke_address:
 2:
   subs    x11, x0, x24                            // x11 = attributes file offset
   b.lo    4f                                      // if x0 < x24, jump ahead since before attributes file
-  adrp    x10, attributes_file_end                // Now compare address to upper limit of attributes file
-  add     x10, x10, :lo12:attributes_file_end
+  adr     x10, attributes_file_end                // Now compare address to upper limit of attributes file
   cmp     x0, x10
   b.hs    4f                                      // if x0 >= x10 (attributes file end), jump ahead since after attributes file
 // x0 in attributes file

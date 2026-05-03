@@ -39,7 +39,7 @@
 .set rejoin_po_t_udg_1_afaddr, attributes_file + 108*20*rejoin_po_t_udg_1_screenthird + rejoin_po_t_udg_1_yoffset*108 + rejoin_po_t_udg_1_x
 
 
-.text
+.section text_tests, "ax"
 .align 2
 
 

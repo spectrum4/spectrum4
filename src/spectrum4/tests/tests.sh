@@ -38,7 +38,7 @@ function generate_unit_tests {
   done
   echo
   echo
-  echo ".text"
+  echo '.section text_tests, "ax"'
   all_suites=""
   if [ "${#files[@]}" -gt 0 ]; then
     all_labels="$(for file in "${files[@]}"; do cat "${file}"; done | sed -n 's/^[[:space:]]*\([^#[:space:]]*\):.*/\1/p')"

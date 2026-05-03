@@ -69,7 +69,7 @@ function header {
   echo '  .include "tkn_table.s"'
   echo '.endif'
   echo
-  echo '.text'
+  echo '.section text_tests, "ax"'
   echo '.align 2'
 }
 

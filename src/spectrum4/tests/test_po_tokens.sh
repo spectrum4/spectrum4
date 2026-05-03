@@ -126,7 +126,7 @@ for fake_or_fake_reg_update in f s; do
       echo '.endif'
       echo
       echo
-      echo '.text'
+      echo '.section text_tests, "ax"'
       echo '.align 2'
 
       tkntableoffset=2

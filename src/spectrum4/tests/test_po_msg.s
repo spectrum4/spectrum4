@@ -56,7 +56,7 @@
 .endif
 
 
-.text
+.section text_tests, "ax"
 
 
 // Need a loooooong table here, since leading space requires >= 32 entries
@@ -239,7 +239,8 @@ po_msg_paper_ink_9_1_setup_regs:
 
 po_msg_paper_ink_9_1_effects_regs:
   mov     x0, #0x00
-  adr     x1, po_cont
+  adrp    x1, po_cont
+  add     x1, x1, :lo12:po_cont
   add     x4, x4, #0x0a
   mov     x5, #0x00
   mov     x6, #0x09
@@ -304,7 +305,8 @@ po_msg_paper_ink_9_2_setup_regs:
 
 po_msg_paper_ink_9_2_effects_regs:
   mov     x0, #0x00
-  adr     x1, po_cont
+  adrp    x1, po_cont
+  add     x1, x1, :lo12:po_cont
   add     x4, x4, #0x0a
   mov     x5, #0x00
   mov     x6, #0x09

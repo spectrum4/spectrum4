@@ -50,11 +50,9 @@ tv_tuner:                                // L3C10
   b.eq    5f
   b       1b
 5:
-  adrp    x19, attributes_file
-  add     x19, x19, :lo12:attributes_file
+  adr     x19, attributes_file
   add     x20, x19, 108*8
-  adrp    x21, attributes_file_end
-  add     x21, x21, :lo12:attributes_file_end
+  adr     x21, attributes_file_end
 6:
   mov     x0, x20
   ldrb    w1, [x19], #0x01

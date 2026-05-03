@@ -9,7 +9,7 @@
 // have software on receiving end to convert to an image).
 
 
-.text
+.section text_tests, "ax"
 .align 2
 copy_buff_1_setup_regs:
   ret

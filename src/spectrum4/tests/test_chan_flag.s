@@ -64,7 +64,7 @@
 .endif
 
 
-.text
+.section text_tests, "ax"
 .align 2
 
 
@@ -77,10 +77,10 @@
 //   TODO
 test_chan_flag_init:
   adrp    x5, heap
-  add     x5, x5, #:lo12:heap                     // x5 = start of heap
   str     x5, [x28, CHANS-sysvars]                // [CHANS] = start of heap
   mov     x6, (initial_channel_info_END - initial_channel_info)/8
-  adr     x7, initial_channel_info
+  adrp    x7, initial_channel_info
+  add     x7, x7, :lo12:initial_channel_info
   2:                                              // Loop to copy initial_channel_info block to [CHANS] = start of heap
     ldr     x8, [x7], #8
     str     x8, [x5], #8

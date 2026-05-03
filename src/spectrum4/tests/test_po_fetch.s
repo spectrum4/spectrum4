@@ -3,7 +3,7 @@
 // (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
-.text
+.section text_tests, "ax"
 .align 2
 
 

@@ -153,7 +153,7 @@ for printer_in_use in 0 1; do
           echo '.endif'
           echo
           echo
-          echo '.text'
+          echo '.section text_tests, "ax"'
           echo '.align 2'
 
           for a in {163..255}; do

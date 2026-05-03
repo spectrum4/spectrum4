@@ -3,7 +3,7 @@
 // (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
 
 
-.text
+.section text_tests, "ax"
 .align 2
 
 
@@ -300,7 +300,7 @@ poke_address_4_effects_regs:
   ret
 
 
-.bss
+.section bss_roms, "aw", %nobits
 .align 0
 poke_address_test:
   .space 1

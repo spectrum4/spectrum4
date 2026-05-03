@@ -15,8 +15,7 @@
 restart:                                 // L0000
   msr     daifset, #3                             // Disable (mask) interrupts and fast interrupts.
   mov     x0, x28                                 // x0 = sys variable start address
-  adrp    x1, sysvars_end                         // x1 = sys variable end marker
-  add     x1, x1, :lo12:sysvars_end
+  adr     x1, sysvars_end                         // x1 = sys variable end marker
   1:                                              // Loop to clear all bits of all system variables.
     strb    wzr, [x0], #1                         // Clear byte.
     cmp     x0, x1                                // Check if all bytes updated.
@@ -37,8 +36,7 @@ restart:                                 // L0000
   sub     x14, x14, 1                             // x14 = last byte of dedicated RAM (not shared with GPU)
   str     x14, [x28, P_RAMT-sysvars]
   mov     x15, UDG_COUNT * 4                      // x15 = number of double words (8 bytes) of characters to copy to the user defined graphics region
-  adrp    x16, char_set + (FIRST_UDG_CHAR - 32) * 32
-  add     x16, x16, :lo12:(char_set + (FIRST_UDG_CHAR - 32) * 32)
+  adr     x16, char_set + (FIRST_UDG_CHAR - 32) * 32
                                                   // x16 = address of first UDG char to copy
   sub     x18, x14, UDG_COUNT * 32 - 1            // x18 = first byte of user defined graphics
   str     x18, [x28, UDG-sysvars]                 // [UDG] = first byte of user defined graphics

@@ -909,9 +909,9 @@ pcie_init_bcm2711:
   mov     x2, x1
   bfi     x2, x4, #32, #32                        // x2 = command_ring (DMA)
   adrp    x3, command_ring_end
-  str     x2, [x3, #-0x10]                        // link TRB data = command_ring (DMA)
-  str     wzr, [x3, #-0x08]                       // link TRB status = 0
-  str     w6, [x3, #-0x04]                        // link TRB control
+  stur    x2, [x3, #-0x10]                        // link TRB data = command_ring (DMA)
+  stur    wzr, [x3, #-0x08]                       // link TRB status = 0
+  stur    w6, [x3, #-0x04]                        // link TRB control
 
   // Slot 1 EP0 transfer ring link TRB
   adrp    x1, transfer_ring_slot1_EP0
@@ -919,18 +919,18 @@ pcie_init_bcm2711:
   mov     x2, x1
   bfi     x2, x4, #32, #32                        // x2 = transfer_ring_slot1_EP0 (DMA)
   add     x3, x1, #(transfer_ring_slot1_EP0_end - transfer_ring_slot1_EP0)
-  str     x2, [x3, #-0x10]                        // link TRB data
-  str     wzr, [x3, #-0x08]                       // link TRB status = 0
-  str     w6, [x3, #-0x04]                        // link TRB control
+  stur    x2, [x3, #-0x10]                        // link TRB data
+  stur    wzr, [x3, #-0x08]                       // link TRB status = 0
+  stur    w6, [x3, #-0x04]                        // link TRB control
 
   // Slot 1 EP1 transfer ring link TRB
   // x3 already = transfer_ring_slot1_EP0_end = transfer_ring_slot1_EP1 (contiguous)
   mov     x2, x3
   bfi     x2, x4, #32, #32                        // x2 = transfer_ring_slot1_EP1 (DMA)
   add     x3, x3, #(transfer_ring_slot1_EP1_end - transfer_ring_slot1_EP1)
-  str     x2, [x3, #-0x10]                        // link TRB data
-  str     wzr, [x3, #-0x08]                       // link TRB status = 0
-  str     w6, [x3, #-0x04]                        // link TRB control
+  stur    x2, [x3, #-0x10]                        // link TRB data
+  stur    wzr, [x3, #-0x08]                       // link TRB status = 0
+  stur    w6, [x3, #-0x04]                        // link TRB control
 
   // Slot 2 EP0 transfer ring link TRB
   adrp    x1, transfer_ring_slot2_EP0
@@ -938,17 +938,17 @@ pcie_init_bcm2711:
   mov     x2, x1
   bfi     x2, x4, #32, #32
   add     x3, x1, #(transfer_ring_slot2_EP0_end - transfer_ring_slot2_EP0)
-  str     x2, [x3, #-0x10]
-  str     wzr, [x3, #-0x08]
-  str     w6, [x3, #-0x04]
+  stur    x2, [x3, #-0x10]
+  stur    wzr, [x3, #-0x08]
+  stur    w6, [x3, #-0x04]
 
   // Slot 2 EP1 transfer ring link TRB
   mov     x2, x3
   bfi     x2, x4, #32, #32
   add     x3, x3, #(transfer_ring_slot2_EP1_end - transfer_ring_slot2_EP1)
-  str     x2, [x3, #-0x10]
-  str     wzr, [x3, #-0x08]
-  str     w6, [x3, #-0x04]
+  stur    x2, [x3, #-0x10]
+  stur    wzr, [x3, #-0x08]
+  stur    w6, [x3, #-0x04]
 
   // --- Continue with existing xHCI register setup ---
   adrp    x1, command_ring                        // x1 = command_ring (virtual)

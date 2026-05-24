@@ -770,7 +770,7 @@ snapshot_memory:
   cmp     x2, x3
   b.hs    6f
   stp     x27, x26, [x2, #-24]                    // Store "repeated value magic value", number of repeats (excluding original)
-  str     x5, [x2, #-8]                           // Store value
+  stur    x5, [x2, #-8]                           // Store value
   ret
 6:
   adr     x0, msg_out_of_memory

@@ -123,7 +123,7 @@ display_sysvar_value:
   bl      uart_puts                               // Log ": 0x"
   mov     x0, x4
   mov     x1, sp
-  mov     x2, x21, lsl #3                         // x2 = size of sysvar data in bits
+  lsl     x2, x21, #3                             // x2 = size of sysvar data in bits
   bl      hex_x0
   strb    wzr, [x1]                               // Add a trailing zero.
   mov     x0, sp

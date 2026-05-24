@@ -16,16 +16,10 @@ export SHELLOPTS
 
 : ${AARCH64_TOOLCHAIN_PREFIX:=aarch64-none-elf-}
 
-cd "$(dirname "${0}")/src/spectrum4/libextra"
-
-./sysvars.sh > sysvars.gen-s
-
-cd "../targets"
+cd "$(dirname "${0}")"
 
 for target in debug tests release; do
-  "${AARCH64_TOOLCHAIN_PREFIX}as" -I .. -I ../kernel -I ../roms -I ../tests -I ../demo -I ../libextra -o "${target}.o" "${target}.target"
-  "${AARCH64_TOOLCHAIN_PREFIX}ld" --fix-cortex-a53-835769 --fix-cortex-a53-843419 --no-warn-rwx-segments -T ../kernel/spectrum4.ld -o "${target}.elf" "${target}.o"
-  "${AARCH64_TOOLCHAIN_PREFIX}objcopy" --set-start=0xfffffff000000000 "${target}.elf" -O binary "${target}.img"
-  "${AARCH64_TOOLCHAIN_PREFIX}objdump" -z -d "${target}.elf" > "${target}.disassembly"
-  "${AARCH64_TOOLCHAIN_PREFIX}readelf" -W -s "${target}.elf" > "${target}.symbols"
+  ./tup-under-docker.sh "src/spectrum4/targets/${target}.img"
+  ./tup-under-docker.sh "src/spectrum4/targets/${target}.disassembly"
+  ./tup-under-docker.sh "src/spectrum4/targets/${target}.symbols"
 done

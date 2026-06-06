@@ -11,16 +11,12 @@ export SHELLOPTS
 cd "$(dirname "${0}")/.."
 TAG="$(cat docker/TAG)"
 
-# Build and push the multiarch docker images to docker.hub.com. Note, this
-# requires that `docker login` has run. It is intended that this script is
-# called by github actions, rather than being run manually by a person.
+# Builds and pushes the multiarch docker image for the tag in docker/TAG to
+# hub.docker.com. Requires that `docker login` has run first.
 #
-# In order to trigger the CI to push new docker images to hub.docker.com, bump
-# the version number in file TAG in this directory. If the tag does not exist
-# on hub.docker.com, multiarch images will be built and pushed on the next push
-# to main branch of github repo.
+# This script is for local/manual builds. CI builds the images by a different
+# mechanism (.github/workflows/ci.yml: a native per-arch build merged into a
+# manifest), triggered by bumping docker/TAG and pushing to the main branch.
 #
-# To regenerate an existing tag on docker.hub.com, first delete the tag from
-# docker.hub.com, and the next push to main branch of github repo should cause
-# github actions CI to recreate it.
+# To regenerate an existing tag, delete it from hub.docker.com first.
 docker pull "${TAG}" > /dev/null 2>&1 || docker buildx build --push --platform linux/arm64,linux/amd64 "-t=${TAG}" -f docker/Dockerfile .

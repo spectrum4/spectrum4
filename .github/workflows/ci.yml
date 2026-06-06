@@ -1,0 +1,144 @@
+# This file is part of the Spectrum +4 Project.
+# Licencing information can be found in the LICENCE file
+# (C) 2021-2026 Spectrum +4 Authors. All rights reserved.
+
+name: CI
+
+on: push
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Single source of truth for the rest of the workflow: read the target image
+  # tag from dev-setup/docker/TAG and determine whether it is already published
+  # on Docker Hub. A dedicated (non-matrix) job is used so that `tag` and
+  # `exists` are reliable job outputs -- outputs from matrix jobs are not.
+  # ---------------------------------------------------------------------------
+  preflight:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
+      exists: ${{ steps.exists.outputs.exists }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - id: tag
+        name: Read target image tag
+        run: echo "tag=$(cat dev-setup/docker/TAG)" >> "$GITHUB_OUTPUT"
+
+      - id: exists
+        name: Is this tag already published?
+        run: |
+          if docker manifest inspect "${{ steps.tag.outputs.tag }}" >/dev/null 2>&1; then
+            echo "exists=true"  >> "$GITHUB_OUTPUT"
+            echo "Image ${{ steps.tag.outputs.tag }} already on Docker Hub - nothing to build."
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Image ${{ steps.tag.outputs.tag }} not found - will build."
+          fi
+
+      # Building a brand-new image publishes it to Docker Hub, so it is only
+      # allowed from main. On a branch with an unpublished TAG, fail loudly.
+      - name: Refuse to publish a new image from a non-main branch
+        if: steps.exists.outputs.exists == 'false' && github.ref != 'refs/heads/main'
+        run: |
+          echo "::error::dev-setup/docker/TAG ($(cat dev-setup/docker/TAG)) is not published, and this is not the main branch."
+          echo "Bump the TAG and merge to main to publish the new dev-container first."
+          exit 1
+
+  # ---------------------------------------------------------------------------
+  # Build the dev-container image when its tag is not yet published. Each
+  # architecture builds on its own native runner (no QEMU) and pushes its layers
+  # by digest; the manifest job then stitches the digests into the final tag.
+  # ---------------------------------------------------------------------------
+  image-build:
+    needs: preflight
+    if: needs.preflight.outputs.exists == 'false'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux/amd64
+            arch: amd64
+            runner: ubuntu-latest
+          - platform: linux/arm64
+            arch: arm64
+            runner: ubuntu-24.04-arm   # native arm64; free on public repos
+    runs-on: ${{ matrix.runner }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+      # Build context is dev-setup/ (the Dockerfile COPYs ./ubuntu/... and
+      # ./docker/...).
+      - name: Build and push by digest
+        run: |
+          repo="${{ needs.preflight.outputs.tag }}"
+          repo="${repo%%:*}"
+          docker buildx build \
+            --platform "${{ matrix.platform }}" \
+            -f dev-setup/docker/Dockerfile \
+            --output "type=image,name=${repo},push-by-digest=true,name-canonical=true,push=true" \
+            --metadata-file /tmp/meta.json \
+            dev-setup
+          digest=$(jq -r '."containerimage.digest"' /tmp/meta.json)
+          mkdir -p /tmp/digests
+          touch "/tmp/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.arch }}
+          path: /tmp/digests/*
+          retention-days: 1
+          if-no-files-found: error
+
+  # ---------------------------------------------------------------------------
+  # Combine the per-arch digests into the final multiarch tag.
+  # ---------------------------------------------------------------------------
+  image-manifest:
+    needs: [preflight, image-build]
+    if: needs.preflight.outputs.exists == 'false'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: docker/setup-buildx-action@v3
+      - uses: actions/download-artifact@v4
+        with:
+          path: /tmp/digests
+          pattern: digest-*
+          merge-multiple: true
+      - name: Login to Docker Hub
+        run: echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+      - name: Create and push manifest
+        run: |
+          tag="${{ needs.preflight.outputs.tag }}"
+          repo="${tag%%:*}"
+          docker buildx imagetools create -t "$tag" \
+            $(printf "${repo}@sha256:%s " $(ls /tmp/digests))
+          docker buildx imagetools inspect "$tag"
+
+  # ---------------------------------------------------------------------------
+  # Build + test inside the dev-container, once the image is guaranteed to exist
+  # (either freshly built and stitched, or already published so the build and
+  # manifest jobs were skipped). This is always a clean full build: tup keys on
+  # ctime, which a fresh checkout resets, so caching tup state across runs can't
+  # help.
+  # ---------------------------------------------------------------------------
+  build-test:
+    needs: [preflight, image-build, image-manifest]
+    if: >-
+      always() &&
+      needs.preflight.result == 'success' &&
+      (needs.image-build.result == 'success' || needs.image-build.result == 'skipped') &&
+      (needs.image-manifest.result == 'success' || needs.image-manifest.result == 'skipped')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and test spectrum4
+        run: ./tup-under-docker.sh
+
+      - name: Ensure no local file changes present
+        run: git status && test "$(git status --porcelain | wc -l)" == 0

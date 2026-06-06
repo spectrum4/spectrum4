@@ -70,6 +70,7 @@ retry apt-get update
 retry apt-get upgrade -y
 
 # autoconf is needed for running autogen.sh when building libspectrum and fuse
+# automake is needed for running autogen.sh when building libspectrum and fuse
 # bison is needed for building fuse
 # bsdmainutils contains hexdump
 # build-essential is needed for building z80 binutils, aarch64 binutils and fuse
@@ -79,20 +80,20 @@ retry apt-get upgrade -y
 # git is needed to fetch fuse/libspectrum sources
 # golang-go is needed by shfmt and for building go programs in project
 # libfuse3-dev is needed by fuse
-# libglib2.0 is needed for building fuse-1.5.7 (seems to fix a pkg-config issue, might be overkill)
+# libglib2.0-dev is needed for building fuse-1.5.7 (seems to fix a pkg-config issue, might be overkill)
 # libgmp-dev is required to build aarch64-none-elf-gdb
 # libmpc-dev might be required to build aarch64-none-elf-gdb
 # libmpfr-dev might be required to build aarch64-none-elf-gdb
 # libncurses-dev might be useful for building aarch64-none-elf-gdb (not sure)
-# libpcre3-dev is required to build tup
 # libtool is needed by autogen.sh when building libspectrum and fuse
+# pkg-config is needed by tup's build.sh (pkg-config fuse3) and by autotools configure scripts
 # qemu-system-arm provides qemu-system-aarch64
 # texinfo is needed for building z80 binutils and aarch64 binutils
 # unzip is needed for unzipping tup
 # wget is needed for downloading curl
 # xz-utils is needed by tar commands below
 # zlib1g-dev might be needed to build aarch64-none-elf-gdb
-retry apt-get install -y autoconf bison bsdmainutils build-essential flex fuse-emulator-utils fuse3 git golang-go libfuse3-dev libglib2.0 libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libpcre3-dev libtool qemu-system-arm texinfo unzip wget xz-utils zlib1g-dev
+retry apt-get install -y autoconf automake bison bsdmainutils build-essential flex fuse-emulator-utils fuse3 git golang-go libfuse3-dev libglib2.0-dev libgmp-dev libmpc-dev libmpfr-dev libncurses-dev libtool pkg-config qemu-system-arm texinfo unzip wget xz-utils zlib1g-dev
 
 if ! hash curl 2> /dev/null; then
   retry wget -O /usr/local/bin/curl "https://github.com/moparisthebest/static-curl/releases/download/v7.84.0/curl-${ARCH}"
@@ -176,7 +177,15 @@ if ! hash aarch64-none-elf-gdb 2> /dev/null; then
 fi
 
 if ! hash tup 2> /dev/null; then
-  retry curl -fsSL 'https://github.com/gittup/tup/archive/b037d4b211de6025703b77c3287b76159656ef22.zip' > tup.zip
+  # tup must include at least commit b131d82b ("Disable FUSE_CAP_READDIRPLUS
+  # for fuse-3.17.1 support", tup issue #518), required for libfuse >= 3.17.
+  # The latest tagged release (v0.8) predates this fix, so we pin a master
+  # commit rather than a release tag. TUP_VERSION (nearest git tag +
+  # commits-since) and TUP_SHA together form the `tup --version` label below;
+  # update BOTH when moving the pin.
+  TUP_VERSION='v0.8-25'
+  TUP_SHA='2867b66e7105d432dce2609538117c1e6910bc73'
+  retry curl -fsSL "https://github.com/gittup/tup/archive/${TUP_SHA}.zip" > tup.zip
   unzip tup.zip
   cd tup-*
   # Note, we don't use ./bootstrap.sh here because it requires privileges which
@@ -185,7 +194,7 @@ if ! hash tup 2> /dev/null; then
   # appropriate privileges), and then copy it into the image that we build with a
   # COPY directive in the Dockerfile. For now though, this works and is
   # sufficient.
-  CFLAGS="-g" ./build.sh
+  TUP_LABEL="${TUP_VERSION}-g${TUP_SHA:0:8}" CFLAGS="-g" ./build.sh
   mv build/tup /usr/local/bin
   # only if apparmor is active on this system
   if [ -d /sys/kernel/security/apparmor ]; then

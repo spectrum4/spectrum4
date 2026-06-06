@@ -228,7 +228,15 @@ if ! hash tup 2> /dev/null; then
   # macfuse is needed by tup
   brew install --cask macfuse
   brew install pcre
-  retry curl -fsSL 'https://github.com/gittup/tup/archive/b037d4b211de6025703b77c3287b76159656ef22.zip' > tup.zip
+  # tup must include at least commit b131d82b ("Disable FUSE_CAP_READDIRPLUS
+  # for fuse-3.17.1 support", tup issue #518), required for libfuse >= 3.17.
+  # The latest tagged release (v0.8) predates this fix, so we pin a master
+  # commit rather than a release tag. TUP_VERSION (nearest git tag +
+  # commits-since) and TUP_SHA together form the `tup --version` label below;
+  # update BOTH when moving the pin.
+  TUP_VERSION='v0.8-25'
+  TUP_SHA='2867b66e7105d432dce2609538117c1e6910bc73'
+  retry curl -fsSL "https://github.com/gittup/tup/archive/${TUP_SHA}.zip" > tup.zip
   unzip tup.zip
   cd tup-*
 
@@ -238,7 +246,7 @@ if ! hash tup 2> /dev/null; then
   cat Tupfile.orig | sed 's/`pkg-config fuse --libs`/-L\/usr\/local\/lib -lfuse -pthread/' > Tupfile
   rm Tupfile.orig
 
-  if ! ./bootstrap.sh; then
+  if ! TUP_LABEL="${TUP_VERSION}-g${TUP_SHA:0:8}" ./bootstrap.sh; then
     echo
     echo "Now you (probably) need to enable kernel extensions for macFUSE. Follow the guide here: "
     echo

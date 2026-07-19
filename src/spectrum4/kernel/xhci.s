@@ -54,7 +54,7 @@ ring_write_trb:
   bfi     x2, x4, #32, #1                         // set cycle bit (bit 0 of Control dword = bit 32 of x2) to PCS
   str     x1, [x3, #0x00]                         // write TRB data (dwords 0-1)
   str     x2, [x3, #0x08]                         // write TRB status+control (dwords 2-3) with cycle bit
-  bfc     x2, #32, #1                             // clear cycle bit back out of x2 (restore caller's value)
+  and     x2, x2, #~0x100000000                   // clear cycle bit back out of x2 (restore caller's value)
   add     x3, x3, #16                             // advance enqueue to next slot
   ldr     x5, [x0, #0x18]                         // x5 = ring end
   sub     x5, x5, #16                             // x5 = last slot (link TRB position)
